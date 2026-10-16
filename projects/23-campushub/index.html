@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CampusHub — Student Portal with Lost &amp; Found</title>
+<title>CampusHub — Student Portal with Lost &amp; Found | FYP Template</title>
 <meta name="description" content="CampusHub: a bilingual (English and Urdu) university student portal with lost and found matching and verified claims, notices with read receipts, events with RSVP and calendar export, timetable clash detection, a free-classroom finder, societies, ride share, anonymous feedback and role-based moderation. Single-file FYP template.">
 <meta name="theme-color" content="#5b1521">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -141,7 +141,7 @@ html[lang='ur'] input, html[lang='ur'] textarea { line-height: 1.8; }
 html[lang='ur'] select { font-family: system-ui, 'Segoe UI', 'Noto Sans Arabic', sans-serif; line-height: normal; }
 [dir='rtl'] .flip { transform: scaleX(-1); }
 /* user-generated text may be English inside the Urdu UI (or the reverse): each paragraph takes its own direction */
-.txt, .preview, .thread .msg, .claim p, .ann p, .lf-detail p, .ride p, .li p, .notice .body, .item h3, .event h3, .mod-item h3, .match b { unicode-bidi: plaintext; }
+.txt, .preview, .thread .msg, .claim p, .ann p, .lf-detail p, .ride p, .li p, .notice .body, .item .t, .event h3, .mod-item h3, .match b { unicode-bidi: plaintext; }
 .ltr { direction: ltr; unicode-bidi: isolate; }
 
 /* ---------- app shell: sidebar dashboard ---------- */
@@ -646,7 +646,7 @@ html[lang='ur'] .campus .lbl { font-family: var(--font-ur); font-size: 15px; }
 .item .ph-img .type { position: absolute; top: 10px; inset-inline-start: 10px; }
 .item .ph-img .st { position: absolute; top: 10px; inset-inline-end: 10px; }
 .item .in { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-.item h3 { font-size: .98rem; }
+.item .t, .soc .t { display: block; font-size: .98rem; font-weight: 650; line-height: 1.3; }
 .item .meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); }
 .item .meta span { display: inline-flex; gap: 4px; align-items: center; }
 .item.hidden-mod { opacity: .55; }
@@ -3145,7 +3145,7 @@ function itemCard(it) {
   const hiddenTag = it.mod && it.mod.hidden ? chip(it.mod.removed ? t('removed') : t('hidden'), 'bad', 'eye-off') : '';
   return `<button class="item ${it.type} ${it.mod && it.mod.hidden ? 'hidden-mod' : ''}" data-item="${it.id}">
     <div class="ph-img">${itemArt(it)}<span class="chip type type-${it.type}">${t(it.type)}</span><span class="st">${statusChip(it.status)}</span></div>
-    <div class="in"><h3>${esc(itemTitle(it))}</h3>
+    <div class="in"><span class="t">${esc(itemTitle(it))}</span>
       <div class="meta"><span>${ic('map-pin')}${esc(placeName(it.place))}</span><span>${ic('calendar')}${esc(fmtDate(parseDate(it.date), { day: 'numeric', month: 'short' }))}</span><span>${ic(catById(it.cat).icon)}${esc(tx(catById(it.cat)))}</span></div>
       <div class="chips">${mCount ? chip(t('nMatches', { n: mCount }), 'ochre', 'swap') : ''}${hiddenTag}</div>
     </div></button>`;
@@ -3974,7 +3974,11 @@ const myNotices = () => visible(db('notices')).filter(n => inAudience(n));
 const unreadNotices = () => myNotices().filter(n => !noticeExpired(n) && !isRead(n));
 
 function renderNotices(arg) {
-  if (arg && db('notices').some(n => n.id === arg)) ntUi.open[arg] = true;
+  const linked = arg && db('notices').find(n => n.id === arg);
+  if (linked) {
+    ntUi.open[arg] = true;
+    markRead(linked);
+  }
   const actions = (unreadNotices().length ? `<button class="btn ghost" id="ntAllRead">${ic('check-check')} ${t('ntAllRead')}</button>` : '') + (canPostNotice() ? `<button class="btn" id="ntNew">${ic('plus')} ${t('ntNew')}</button>` : '');
   $('#page').innerHTML = pageHead('megaphone', t('nav_notices'), t('ntTitle'), t('ntSub'), actions) + '<div id="ntBody"></div>';
   if ($('#ntNew')) $('#ntNew').onclick = openNoticeForm;
@@ -4755,9 +4759,8 @@ function gapsCard(blocks) {
 function blockAction(id) {
   const sec = sectionById(id);
   if (sec) {
-    setHash('timetable/courses');
     ttUi.q = sec.code;
-    setTimeout(() => renderTimetable('courses'), 0);
+    setHash('timetable/courses');
     return;
   }
   const tt = myTt();
@@ -5081,9 +5084,9 @@ function societyCard(s) {
   const pres = s.members.find(x => x.role === 'president');
   const status = m ? chip(t('sr_' + m.role), 'teal', 'user-check') : pendingReq(s) ? chip(t('scPending'), 'ochre', 'hourglass') : '';
   return `<button class="card soc" data-soc="${s.id}" style="text-align:start;cursor:pointer;font:inherit;color:inherit">
-    <div class="row">${socLogo(s)}<div style="min-width:0;flex:1"><h3>${esc(tx(s.name))}</h3><span class="small muted">${esc(tx(SOC_CATS[s.cat]))} · ${t('scMembers', { n: memberCount(s) })}</span></div></div>
-    <p class="small muted" style="margin:0">${esc(tx(s.about))}</p>
-    <div class="between"><span class="small">${ic('award')} ${pres ? esc(userName(pres.userId)) : '—'}</span>${status}</div></button>`;
+    <span class="row">${socLogo(s)}<span style="min-width:0;flex:1"><span class="t">${esc(tx(s.name))}</span><span class="small muted" style="display:block">${esc(tx(SOC_CATS[s.cat]))} · ${t('scMembers', { n: memberCount(s) })}</span></span></span>
+    <span class="small muted">${esc(tx(s.about))}</span>
+    <span class="between"><span class="small">${ic('award')} ${pres ? esc(userName(pres.userId)) : '—'}</span>${status}</span></button>`;
 }
 
 function renderSociety(s) {
