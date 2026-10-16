@@ -150,7 +150,7 @@ body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{
 .bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:35;padding:6px 4px env(safe-area-inset-bottom)}
 .bottomnav a{flex:1;text-align:center;text-decoration:none;color:var(--muted);font-size:.72rem;font-weight:700;padding:6px 2px;border-radius:8px}
 .bottomnav a.active{color:var(--soil);background:var(--wheat-soft)}
-.bottomnav a span{display:block;font-size:1.15rem}
+.bottomnav a span{display:block;font-size:1.15rem} .bottomnav a span .ic{width:1.3em;height:1.3em} .topnav a{display:inline-flex;align-items:center;gap:6px}
 
 @media (max-width:980px){
   .layout{grid-template-columns:1fr;padding-top:14px}
@@ -168,9 +168,32 @@ body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{
   .brand small{display:none}
 }
 @media print{.topbar,.sidebar,.bottomnav,#toasts{display:none}}
+
+/* ---------- icon + motion kit ---------- */
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+:root{--ease:cubic-bezier(.2,.8,.2,1);--dur:.35s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes kFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.enter{animation:kFadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:kFadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*40ms)}
+.btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .2s}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
+<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.8-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+<symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+</svg>
 
 <header class="topbar">
   <div class="brand">
@@ -204,7 +227,7 @@ body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{
 
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-hidden="true">
-  <header><div id="drawerHead"></div><button class="close" id="drawerClose" aria-label="Close">✕</button></header>
+  <header><div id="drawerHead"></div><button class="close" id="drawerClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></header>
   <div class="body" id="drawerBody"></div>
 </aside>
 
@@ -229,6 +252,10 @@ const store = {
 };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const uid = () => Math.random().toString(36).slice(2, 9);
+
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const animateIn = root => { if (!root) return; root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); root.querySelectorAll('.grid,.list,.kpis,.tiles,.facts,.hist,.path,.badges,.checks,.steps,.docs').forEach(g => { g.classList.add('stagger'); [...g.children].forEach((el, i) => el.style.setProperty('--i', Math.min(i, 14))); }); };
+const drawPaths = root => root && root.querySelectorAll('.series').forEach(p => { try { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; } catch {} });
 const nf = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 });
 const nf1 = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 1 });
 const rs = n => 'Rs ' + nf.format(Math.round(n));
@@ -411,11 +438,11 @@ function lineChart(el, seriesList, labels) {
   let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
   grid.forEach(g => { svg += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="#e7dccb"/><text x="${P.l - 8}" y="${y(g) + 4}" font-size="11" text-anchor="end" fill="#7a6a5a">${nf.format(g * UNITS[state.unit])}</text>`; });
   [0, Math.floor(labels.length / 2), labels.length - 1].forEach(i => { svg += `<text x="${x(i)}" y="${H - 8}" font-size="11" text-anchor="middle" fill="#7a6a5a">${labels[i]}</text>`; });
-  seriesList.forEach(s => { const d = s.data.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' '); svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>`; });
+  seriesList.forEach(s => { const d = s.data.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' '); svg += `<path class="series" d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>`; });
   svg += `<line id="cursor" x1="0" x2="0" y1="${P.t}" y2="${H - P.b}" stroke="#6b4226" stroke-dasharray="3 3" style="display:none"/>`;
   seriesList.forEach((s, k) => { svg += `<circle class="dot" data-k="${k}" r="4" fill="${s.color}" stroke="#fff" stroke-width="2" style="display:none"/>`; });
   svg += '</svg><div class="tip"></div>';
-  el.innerHTML = svg;
+  el.innerHTML = svg; drawPaths(el);
   const svgEl = $('svg', el), tip = $('.tip', el), cursor = $('#cursor', el), dots = $$('.dot', el);
   const show = ev => {
     const rect = svgEl.getBoundingClientRect(); const px = (ev.clientX - rect.left) / rect.width * W;
@@ -428,12 +455,12 @@ function lineChart(el, seriesList, labels) {
   svgEl.addEventListener('mousemove', show); svgEl.addEventListener('touchmove', e => { show(e.touches[0]); e.preventDefault(); }, { passive: false });
   svgEl.addEventListener('mouseleave', () => { tip.style.display = 'none'; cursor.style.display = 'none'; dots.forEach(d => d.style.display = 'none'); });
 }
-const deltaHtml = (v, digits = 1) => `<span class="delta ${v > .05 ? 'up' : v < -.05 ? 'down' : 'flat'}">${v > .05 ? '▲' : v < -.05 ? '▼' : '•'} ${(v > 0 ? '+' : '') + v.toFixed(digits)}%</span>`;
+const deltaHtml = (v, digits = 1) => `<span class="delta ${v > .05 ? 'up' : v < -.05 ? 'down' : 'flat'}">${v > .05 ? ic('arrow-up') : v < -.05 ? ic('arrow-down') : ic('minus')} ${(v > 0 ? '+' : '') + v.toFixed(digits)}%</span>`;
 const dLabel = d => d.toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', { day: 'numeric', month: 'short' });
 
 // ---------- views ----------
 const view = $('#view');
-const NAV = [['rates', 'nav_rates', '▦'], ['advisor', 'nav_advisor', '⇄'], ['alerts', 'nav_alerts', '🔔'], ['contribute', 'nav_contribute', '✎'], ['about', 'nav_about', 'ⓘ']];
+const NAV = [['rates', 'nav_rates', 'grid'], ['advisor', 'nav_advisor', 'shuffle'], ['alerts', 'nav_alerts', 'bell'], ['contribute', 'nav_contribute', 'edit'], ['about', 'nav_about', 'info']];
 
 function visibleCommodities() {
   const q = state.q.trim().toLowerCase();
@@ -497,7 +524,7 @@ function renderDrawer(cId) {
     <div class="row" style="margin-top:12px;background:var(--surface-2)"><span><b>${t('d_forecast')}</b></span><span class="muted">${forecast(series(cId, drawerSel[0])) ? '' : t('d_forecastNA')}</span></div>
     <h3 style="margin:18px 0 8px;font-size:1rem">${t('d_todays')}</h3>
     <div class="tablewrap"><table><thead><tr><th>${t('col_mandi')}</th><th class="num">${t('col_price')}</th><th class="num">${t('col_d1')}</th><th class="num">${t('col_d7')}</th><th></th></tr></thead><tbody>
-    ${rows.map(r => `<tr><td><b>${esc(name(r.m))}</b><br><span class="muted" style="font-size:.75rem">${t(r.m.prov)}</span></td><td class="num"><b>${fmtP(r.s[DAYS - 1])}</b></td><td class="num">${deltaHtml(change(r.s, 1))}</td><td class="num">${deltaHtml(change(r.s, 7))}</td><td><button class="btn ghost sm" data-alert="${r.m.id}">🔔 ${t('d_alert')}</button></td></tr>`).join('')}
+    ${rows.map(r => `<tr><td><b>${esc(name(r.m))}</b><br><span class="muted" style="font-size:.75rem">${t(r.m.prov)}</span></td><td class="num"><b>${fmtP(r.s[DAYS - 1])}</b></td><td class="num">${deltaHtml(change(r.s, 1))}</td><td class="num">${deltaHtml(change(r.s, 7))}</td><td><button class="btn ghost sm" data-alert="${r.m.id}">${ic('bell')} ${t('d_alert')}</button></td></tr>`).join('')}
     </tbody></table></div>
     <h3 style="margin:18px 0 8px;font-size:1rem">${t('d_community')}</h3>
     ${reports.length ? `<div class="list">${reports.slice(0, 6).map(r => `<div class="row"><span><b>${esc(name(MM[r.m]))}</b> · ${r.date}${r.note ? ` · <span class="muted">${esc(r.note)}</span>` : ''}</span><b>${fmtP(r.price)}</b></div>`).join('')}</div>` : `<div class="note">${t('d_noReports')}</div>`}`;
@@ -571,7 +598,7 @@ function evalAlert(al) {
 }
 function checkAlertsOnLoad() {
   const als = store.get('alerts', []); const hits = als.filter(a => evalAlert(a).hit).length;
-  if (hits) toast(`🔔 ${hits} ${t('al_hit')}`, 'ok');
+  if (hits) toast(`${hits} ${t('al_hit')}`, 'ok');
   // TODO(student): deliver alerts by SMS/WhatsApp/push. Requires a backend + a scheduler that evaluates alerts daily when the farmer is offline.
 }
 function renderAlerts() {
@@ -585,7 +612,7 @@ function renderAlerts() {
     <div><div class="list" id="alList"></div></div></div>`;
   const draw = () => {
     const list = store.get('alerts', []);
-    $('#alList').innerHTML = list.length ? list.map(a => { const r = evalAlert(a); return `<div class="row ${r.hit ? 'hit' : ''}"><div><b>${esc(name(CM[a.c]))}</b> · ${a.m === 'any' ? t('al_any') : esc(name(MM[a.m]))}<br><span class="muted" style="font-size:.85rem">${t(a.cond === 'above' ? 'al_above' : 'al_below')} <b>${rs(a.price)}</b> · ${t('al_now')}: ${r.now == null ? t('offseason') : rs(r.now)}</span></div><div style="display:flex;gap:8px;align-items:center"><span class="delta ${r.hit ? 'up' : 'flat'}">${r.hit ? '✓ ' + t('al_triggered') : t('al_waiting')}</span><button class="btn danger sm" data-del="${a.id}">${t('delete')}</button></div></div>`; }).join('') : `<div class="panel muted">${t('al_none')}</div>`;
+    $('#alList').innerHTML = list.length ? list.map(a => { const r = evalAlert(a); return `<div class="row ${r.hit ? 'hit' : ''}"><div><b>${esc(name(CM[a.c]))}</b> · ${a.m === 'any' ? t('al_any') : esc(name(MM[a.m]))}<br><span class="muted" style="font-size:.85rem">${t(a.cond === 'above' ? 'al_above' : 'al_below')} <b>${rs(a.price)}</b> · ${t('al_now')}: ${r.now == null ? t('offseason') : rs(r.now)}</span></div><div style="display:flex;gap:8px;align-items:center"><span class="delta ${r.hit ? 'up' : 'flat'}">${r.hit ? ic('check') + ' ' + t('al_triggered') : t('al_waiting')}</span><button class="btn danger sm" data-del="${a.id}">${t('delete')}</button></div></div>`; }).join('') : `<div class="panel muted">${t('al_none')}</div>`;
     $$('[data-del]').forEach(b => b.onclick = () => { store.set('alerts', store.get('alerts', []).filter(x => x.id !== b.dataset.del)); draw(); });
   };
   $('#alAdd').onclick = () => { const price = +$('#alP').value; if (!price) { toast(t('c_invalid'), 'bad'); return; } const list = store.get('alerts', []); list.unshift({ id: uid(), c: $('#alC').value, m: $('#alM').value, cond: $('#alCond').value, price, created: Date.now() }); store.set('alerts', list); $('#alP').value = ''; toast(t('al_saved'), 'ok'); draw(); };
@@ -646,15 +673,15 @@ function renderSidebar() {
 }
 function renderNav() {
   const cur = (location.hash.slice(1) || 'rates').split('?')[0];
-  $('#topnav').innerHTML = NAV.map(([id, k]) => `<a href="#${id}" class="${cur === id ? 'active' : ''}">${t(k)}</a>`).join('');
-  $('#bottomnav').innerHTML = NAV.map(([id, k, ic]) => `<a href="#${id}" class="${cur === id ? 'active' : ''}"><span>${ic}</span>${t(k)}</a>`).join('');
+  $('#topnav').innerHTML = NAV.map(([id, k, i]) => `<a href="#${id}" class="${cur === id ? 'active' : ''}">${ic(i)} ${t(k)}</a>`).join('');
+  $('#bottomnav').innerHTML = NAV.map(([id, k, ic_]) => `<a href="#${id}" class="${cur === id ? 'active' : ''}"><span>${ic(ic_)}</span>${t(k)}</a>`).join('');
 }
 function route() {
   const page = (location.hash.slice(1) || 'rates').split('?')[0];
   document.body.dataset.page = page;
   renderNav();
   ({ rates: renderRates, advisor: renderAdvisor, alerts: renderAlerts, contribute: renderContribute, about: renderAbout }[page] || renderRates)();
-  window.scrollTo({ top: 0 });
+  animateIn(view); window.scrollTo({ top: 0 });
 }
 function applyLang() {
   document.documentElement.lang = lang; store.set('lang', lang);

@@ -122,9 +122,35 @@ label.f{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin
 @keyframes pop{from{transform:translateY(8px);opacity:0}}
 @media (max-width:900px){.scan,.train{grid-template-columns:minmax(0,1fr)}.hdr .in{flex-wrap:wrap}.tabs{order:5;flex-basis:100%;margin-left:0}.brand small{display:none}}
 @media print{.hdr,.tools,.samples,#toasts{display:none}.modal{max-height:none;box-shadow:none}}
+
+/* ---------- icon + motion kit ---------- */
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+:root{--ease:cubic-bezier(.2,.8,.2,1);--dur:.35s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes kFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.enter{animation:kFadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:kFadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*40ms)}
+.btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .2s}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-brain" viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.04z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></symbol>
+<symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+</svg>
 <header class="hdr"><div class="in">
   <div class="brand"><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c6 0 12-6 12-14-6 0-12 4-12 14Z"/><path d="M4 20c2-5 5-8 9-10"/><circle cx="18" cy="18" r="3"/><path d="m20.2 20.2 1.8 1.8"/></svg></div>
     <div><h1 data-i18n="title">Crop Doctor</h1><small data-i18n="tagline">Offline leaf diagnosis for Pakistani crops</small></div></div>
@@ -140,12 +166,12 @@ label.f{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin
     <div>
       <div id="stageSlot"></div>
       <div class="tools">
-        <button class="btn dark" id="camBtn">📷 <span data-i18n="camera">Camera</span></button>
-        <button class="btn" id="snapBtn" disabled>◉ <span data-i18n="capture">Capture</span></button>
-        <label class="btn ghost" for="file">⬆ <span data-i18n="upload">Upload photo</span></label><input id="file" type="file" accept="image/*" capture="environment" class="hidden">
-        <button class="btn ghost" id="ovBtn" disabled>▦ <span data-i18n="overlay">Overlay</span></button>
+        <button class="btn dark" id="camBtn"><svg class="ic"><use href="#i-camera"/></svg> <span data-i18n="camera">Camera</span></button>
+        <button class="btn" id="snapBtn" disabled><svg class="ic"><use href="#i-target"/></svg> <span data-i18n="capture">Capture</span></button>
+        <label class="btn ghost" for="file"><svg class="ic"><use href="#i-upload"/></svg> <span data-i18n="upload">Upload photo</span></label><input id="file" type="file" accept="image/*" capture="environment" class="hidden">
+        <button class="btn ghost" id="ovBtn" disabled><svg class="ic"><use href="#i-layers"/></svg> <span data-i18n="overlay">Overlay</span></button>
         <span class="spacer"></span>
-        <button class="btn ghost" id="saveBtn" disabled>💾 <span data-i18n="save">Save scan</span></button>
+        <button class="btn ghost" id="saveBtn" disabled><svg class="ic"><use href="#i-save"/></svg> <span data-i18n="save">Save scan</span></button>
       </div>
       <div class="samples"><span data-i18n="samples">No leaf handy? Try a synthetic sample:</span>
         <button class="chip" data-sample="healthy" data-i18n="s_healthy">Healthy</button><button class="chip" data-sample="chlorosis" data-i18n="s_chlorosis">Yellowing</button><button class="chip" data-sample="spots" data-i18n="s_spots">Brown spots</button><button class="chip" data-sample="powdery" data-i18n="s_powdery">Powdery</button></div>
@@ -175,7 +201,7 @@ label.f{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin
   <div class="train">
     <div>
       <div id="trainStageSlot"></div>
-      <div class="tools"><button class="btn dark" id="camBtn2">📷 <span data-i18n="camera">Camera</span></button><button class="btn" id="snapBtn2" disabled>◉ <span data-i18n="capture">Capture</span></button><label class="btn ghost" for="file2">⬆ <span data-i18n="upload">Upload photo</span></label><input id="file2" type="file" accept="image/*" class="hidden"></div>
+      <div class="tools"><button class="btn dark" id="camBtn2"><svg class="ic"><use href="#i-camera"/></svg> <span data-i18n="camera">Camera</span></button><button class="btn" id="snapBtn2" disabled><svg class="ic"><use href="#i-target"/></svg> <span data-i18n="capture">Capture</span></button><label class="btn ghost" for="file2"><svg class="ic"><use href="#i-upload"/></svg> <span data-i18n="upload">Upload photo</span></label><input id="file2" type="file" accept="image/*" class="hidden"></div>
       <div class="card" style="margin-top:16px"><h2 data-i18n="tr_protocol">Dataset protocol</h2>
         <div class="steps" id="protocol"></div></div>
     </div>
@@ -195,7 +221,7 @@ label.f{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin
 
 <!-- HISTORY -->
 <section data-page="history">
-  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><h2 style="font-size:1.15rem" data-i18n="hi_title">Saved scans</h2><span class="spacer"></span><button class="btn ghost sm" id="histExport">⬇ JSON</button><button class="btn danger sm" id="histClear" data-i18n="clear">Clear all</button></div>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><h2 style="font-size:1.15rem" data-i18n="hi_title">Saved scans</h2><span class="spacer"></span><button class="btn ghost sm" id="histExport"><svg class="ic"><use href="#i-download"/></svg> JSON</button><button class="btn danger sm" id="histClear" data-i18n="clear">Clear all</button></div>
   <div class="hist" id="hist"></div>
 </section>
 
@@ -214,7 +240,7 @@ label.f{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin
 <canvas id="work" class="hidden"></canvas>
 <div id="stageParking" class="hidden"></div>
 
-<div class="modal-scrim" id="modalScrim"><div class="modal" role="dialog" aria-modal="true"><header><div id="mHead"></div><button class="close" id="mClose" aria-label="Close">✕</button></header><div class="body" id="mBody"></div></div></div>
+<div class="modal-scrim" id="modalScrim"><div class="modal" role="dialog" aria-modal="true"><header><div id="mHead"></div><button class="close" id="mClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></header><div class="body" id="mBody"></div></div></div>
 <div id="toasts"></div>
 
 <script>
@@ -231,6 +257,10 @@ const store = { get(k, d) { try { const v = localStorage.getItem(NS + k); return
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const toast = (m, type = '') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = m; $('#toasts').append(t); setTimeout(() => t.remove(), 3200); };
 const uid = () => Math.random().toString(36).slice(2, 9);
+
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const animateIn = root => { if (!root) return; root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); root.querySelectorAll('.grid,.list,.kpis,.tiles,.facts,.hist,.path,.badges,.checks,.steps,.docs').forEach(g => { g.classList.add('stagger'); [...g.children].forEach((el, i) => el.style.setProperty('--i', Math.min(i, 14))); }); };
+const drawPaths = root => root && root.querySelectorAll('.series').forEach(p => { try { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; } catch {} });
 
 // ---------- i18n ----------
 const L = {
@@ -351,7 +381,7 @@ const stage = $('#stage'), video = $('#cam'), shot = $('#shot'), overlay = $('#o
 let stream = null, hasImage = false, lastAnalysis = null;
 let cropId = store.get('crop', 'cotton');
 function mountStage(slotId) { $('#' + slotId).append(stage); if (stream) video.play().catch(() => {}); }
-function setCamUI(on) { $$('#camBtn,#camBtn2').forEach(b => b.innerHTML = `📷 <span>${on ? t('stop') : t('camera')}</span>`); $$('#snapBtn,#snapBtn2').forEach(b => b.disabled = !on); }
+function setCamUI(on) { $$('#camBtn,#camBtn2').forEach(b => b.innerHTML = `${ic(on ? 'pause' : 'camera')} <span>${on ? t('stop') : t('camera')}</span>`); $$('#snapBtn,#snapBtn2').forEach(b => b.disabled = !on); }
 async function toggleCamera() {
   if (stream) { stream.getTracks().forEach(tr => tr.stop()); stream = null; video.classList.add('hidden'); setCamUI(false); if (!hasImage) $('#stageEmpty').classList.remove('hidden'); return; }
   try {
@@ -484,9 +514,9 @@ function restoreDataset() { const saved = store.get('knn', null); if (!saved) re
 function renderMLBox() {
   const box = $('#mlbox'); if (!box) return;
   const total = Object.values(counts()).reduce((a, b) => a + b, 0);
-  let inner = `<b style="color:var(--violet)">🧠 ${t('ml_title')}</b> `;
+  let inner = `<b style="color:var(--violet)">${ic('brain')} ${t('ml_title')}</b> `;
   if (ML.loading) inner += `<div class="status">${t('ml_loading')}</div>`;
-  else if (ML.error) inner += `<div class="status">${t('ml_fail')}</div><button class="btn violet sm" style="margin-top:8px" onclick="loadML()">↻ ${t('ml_enable')}</button>`;
+  else if (ML.error) inner += `<div class="status">${t('ml_fail')}</div><button class="btn violet sm" style="margin-top:8px" onclick="loadML()">${ic('refresh')} ${t('ml_enable')}</button>`;
   else if (!ML.ready) inner += `<div class="status">${t('ml_off')}</div><button class="btn violet sm" style="margin-top:8px" onclick="loadML()">${t('ml_enable')}</button>`;
   else if (!total) inner += `<div class="status">${t('ml_off')}</div>`;
   else if (lastAnalysis?.ml) inner += `<div style="font-size:1.1rem;font-weight:700;margin-top:4px">${esc(labelOf(lastAnalysis.ml.label))}</div><div class="status">${Math.round(lastAnalysis.ml.confidence * 100)}% ${t('ml_conf')} · ${total} ${t('ml_examples')}</div>`;
@@ -504,7 +534,7 @@ function renderTrain() {
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn violet" id="trAdd">＋ ${t('tr_add')}</button><button class="btn ghost" id="trPredict" ${total ? '' : 'disabled'}>${t('ml_predict')}</button></div>
     <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:18px">${t('tr_counts')} · ${total}</div>
     <div class="counts">${Object.keys(cnt).length ? Object.entries(cnt).map(([k, v]) => `<div class="bar"><span style="font-size:.8rem">${esc(labelOf(k))}</span><div class="track"><div class="fill" style="width:${v / max * 100}%;background:var(--violet)"></div></div><span class="n">${v}</span></div>`).join('') : `<div class="status">—</div>`}</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button class="btn ghost sm" id="trExport">⬇ ${t('tr_export')}</button><label class="btn ghost sm" for="trImport">⬆ ${t('tr_import')}</label><input type="file" id="trImport" accept="application/json" class="hidden"><button class="btn danger sm" id="trClear">${t('tr_clear')}</button></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button class="btn ghost sm" id="trExport">${ic('download')} ${t('tr_export')}</button><label class="btn ghost sm" for="trImport">${ic('upload')} ${t('tr_import')}</label><input type="file" id="trImport" accept="application/json" class="hidden"><button class="btn danger sm" id="trClear">${t('tr_clear')}</button></div>`;
   $('#trCrop').onchange = e => { cropId = e.target.value; store.set('crop', cropId); $('#cropSel').value = cropId; renderTrain(); };
   $('#trAdd').onclick = () => addExample($('#trClass').value);
   $('#trPredict').onclick = predictML;
@@ -552,9 +582,9 @@ function openDisease(id) {
   $('#mBody').innerHTML = `<h4>${t('conditions')}</h4><p style="margin:0">${esc(d.cond)}</p>
     <h4>${t('sym_list')}</h4><ul>${d.sym.map(s => `<li><b>${esc(nm(SYM[s]))}</b></li>`).join('')}${d.sym2.map(s => `<li class="muted">${esc(nm(SYM[s]))}</li>`).join('')}</ul>
     <h4>${t('treat')}</h4><ol>${d.treat.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
-    <h4 style="display:flex;align-items:center;gap:10px">${t('treat_ur')} <button class="btn ghost sm" id="speak">🔊 ${t('listen')}</button></h4><div class="urbox ur"><ol>${d.treat_ur.map(s => `<li>${esc(s)}</li>`).join('')}</ol></div>
+    <h4 style="display:flex;align-items:center;gap:10px">${t('treat_ur')} <button class="btn ghost sm" id="speak">${ic('volume')} ${t('listen')}</button></h4><div class="urbox ur"><ol>${d.treat_ur.map(s => `<li>${esc(s)}</li>`).join('')}</ol></div>
     <h4>${t('prevent')}</h4><ul>${d.prevent.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
-    <div style="margin-top:18px;display:flex;gap:8px"><button class="btn ghost sm" onclick="window.print()">🖨 ${t('print')}</button></div>`;
+    <div style="margin-top:18px;display:flex;gap:8px"><button class="btn ghost sm" onclick="window.print()">${ic('printer')} ${t('print')}</button></div>`;
   $('#speak').onclick = () => speakUrdu(d.treat_ur.join('۔ '));
   $('#modalScrim').classList.add('on');
 }
@@ -572,7 +602,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modalScr
 // ---------- history ----------
 function renderHistory() {
   const hist = store.get('history', []);
-  $('#hist').innerHTML = hist.length ? hist.map(h => `<div class="hcard"><img src="${h.thumb}" alt=""><div class="b"><div style="display:flex;justify-content:space-between;align-items:center"><b>${esc(nm(CROP[h.crop]))}</b><span class="pill ${h.health >= 85 ? 'sev1' : h.health >= 60 ? 'sev2' : 'sev3'}">${h.health}</span></div><div class="muted">${new Date(h.ts).toLocaleString()}</div>${h.top ? `<div style="margin-top:4px">👁 ${esc(nm(DIS[h.top]))}</div>` : ''}${h.ml ? `<div>🧠 ${esc(labelOf(h.ml.label))} · ${Math.round(h.ml.confidence * 100)}%</div>` : ''}<button class="btn danger sm" style="margin-top:8px" data-del="${h.id}">${t('delete')}</button></div></div>`).join('') : `<p class="muted">${t('hi_empty')}</p>`;
+  $('#hist').innerHTML = hist.length ? hist.map(h => `<div class="hcard"><img src="${h.thumb}" alt=""><div class="b"><div style="display:flex;justify-content:space-between;align-items:center"><b>${esc(nm(CROP[h.crop]))}</b><span class="pill ${h.health >= 85 ? 'sev1' : h.health >= 60 ? 'sev2' : 'sev3'}">${h.health}</span></div><div class="muted">${new Date(h.ts).toLocaleString()}</div>${h.top ? `<div style="margin-top:4px">${ic('eye')} ${esc(nm(DIS[h.top]))}</div>` : ''}${h.ml ? `<div>${ic('brain')} ${esc(labelOf(h.ml.label))} · ${Math.round(h.ml.confidence * 100)}%</div>` : ''}<button class="btn danger sm" style="margin-top:8px" data-del="${h.id}">${t('delete')}</button></div></div>`).join('') : `<p class="muted">${t('hi_empty')}</p>`;
   $$('[data-del]').forEach(b => b.onclick = () => { store.set('history', store.get('history', []).filter(h => h.id !== b.dataset.del)); renderHistory(); });
 }
 $('#histExport').onclick = () => { const blob = new Blob([JSON.stringify(store.get('history', []), null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cropdoctor-history.json'; a.click(); };
@@ -607,6 +637,7 @@ function go(page) {
   mountStage(page === 'scan' ? 'stageSlot' : page === 'train' ? 'trainStageSlot' : 'stageParking'); if (page === 'train') renderTrain();
   if (page === 'symptoms') renderSymptoms(); if (page === 'library') renderLibrary(); if (page === 'history') renderHistory(); if (page === 'about') renderAbout();
   if (location.hash !== '#' + page) history.replaceState(null, '', '#' + page);
+  animateIn($(`section[data-page="${page}"]`));
 }
 function applyLang() {
   document.documentElement.lang = lang; store.set('lang', lang);
