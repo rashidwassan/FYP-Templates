@@ -154,7 +154,13 @@ textarea{min-height:70px;resize:vertical}
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:var(--surface);flex-wrap:wrap}
 .row.done{opacity:.6}
 .row.unread{border-left:4px solid var(--violet)}
-.row .l{min-width:0;flex:1}
+.row .l{min-width:0;flex:1 1 240px}
+.medcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.medcard .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.medcard .top .st{margin-left:auto}
+.medcard .bar{grid-template-columns:1fr 80px;margin:10px 0 4px}
+.medcard .acts{margin-top:10px}
+.libcard .ex{font-size:.84rem;color:var(--muted);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .empty{padding:26px;text-align:center;color:var(--muted);background:var(--surface-2);border:1px dashed var(--line);border-radius:12px}
 .alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 12px;border-left:4px solid;font-size:.9rem}
 .alert.bad{background:var(--bad-soft);border-color:var(--bad)} .alert.warn{background:var(--warn-soft);border-color:var(--warn)} .alert.info{background:var(--info-soft);border-color:var(--info)} .alert.ok{background:var(--ok-soft);border-color:var(--ok)}
@@ -333,11 +339,9 @@ tr.sel td{background:var(--violet-soft)}
 <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
 <symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
 <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
-<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></symbol>
 <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
 <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
 <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
-<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
 <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
 <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.7a2 2 0 0 1 1.7 2z"/></symbol>
 <symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></symbol>
@@ -346,48 +350,34 @@ tr.sel td{background:var(--violet-soft)}
 <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5a5.5 5.5 0 0 0-10 3.5c0 2.3 1.5 4 3 5.5l7 7Z"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
 <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
-<symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
 <symbol id="i-trending-down" viewBox="0 0 24 24"><path d="m22 17-8.5-8.5-5 5L2 7M16 17h6v-6"/></symbol>
 <symbol id="i-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6"/></symbol>
-<symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
 <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
-<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01M15 12h.01M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></symbol>
 <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
-<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></symbol>
 <symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
-<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
 <symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
 <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
 <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
 <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></symbol>
-<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
 <symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-3"/></symbol>
 <symbol id="i-pie-chart" viewBox="0 0 24 24"><path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></symbol>
-<symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
 <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
 <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
 <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
 <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
-<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/></symbol>
 <symbol id="i-thermometer" viewBox="0 0 24 24"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></symbol>
 <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></symbol>
 <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.1 10.4a6 6 0 1 1-7.7 7.7"/><path d="M7 6h1v4"/></symbol>
 <symbol id="i-sticky-note" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9l7-7V5a2 2 0 0 0-2-2z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></symbol>
 <symbol id="i-graduation" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
-<symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><path d="M7 7h.01"/></symbol>
-<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5Z"/></symbol>
-<symbol id="i-thumbs-up" viewBox="0 0 24 24"><path d="M7 10v12M15 5.9 14 10h5.8a2 2 0 0 1 2 2.3l-1.4 9a2 2 0 0 1-2 1.7H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z"/></symbol>
 <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.5 13 17 22l-5-3-5 3 1.5-9"/></symbol>
 <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
-<symbol id="i-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></symbol>
-<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
 <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></symbol>
 <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
-<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-hash" viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></symbol>
 <!-- custom symbols in the same style -->
 <symbol id="i-magnet" viewBox="0 0 24 24"><path d="M6 15a6 6 0 0 0 12 0V4h-4v11a2 2 0 0 1-4 0V4H6Z"/><path d="M6 8h4M14 8h4"/></symbol>
-<symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H7a5 5 0 0 1-.6-9.96A7 7 0 0 1 20 11.5a3.75 3.75 0 0 1-2.5 7.5Z"/></symbol>
 <symbol id="i-ruler" viewBox="0 0 24 24"><path d="m3 17 14-14 4 4L7 21Z"/><path d="m7.5 12.5 1.5 1.5M10.5 9.5 12 11M13.5 6.5 15 8"/></symbol>
 <symbol id="i-dna" viewBox="0 0 24 24"><path d="M6 3c0 6 12 6 12 12M18 3c0 6-12 6-12 12M6 15c0 2 0 4 0 6M18 15c0 2 0 4 0 6M7 7h10M7 11h10M7 17h10"/></symbol>
 <symbol id="i-whatsapp" viewBox="0 0 24 24"><path d="M3 21l1.6-4.7A9 9 0 1 1 8 19.5Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1.2-1.4-1.8-1-1 .8a3.8 3.8 0 0 1-2.1-2.1l.8-1-1-1.8Z"/></symbol>
@@ -960,7 +950,11 @@ const L = {
     rx_recurrent: 'Two or more febrile or allergic reactions in 12 months — ask about leucodepleted or washed units and pre-medication.',
     rx_disclaimer: 'Illustrative summary of common guidance. Severe reactions are emergencies — call the transfusion staff immediately.',
     rx_withTx: 'with transfusion of {d}',
-    rx_noLink: 'not linked to a logged transfusion',
+    rx_noLink: 'Not linked',
+    rx_last: 'Most recent reaction',
+    lvl_bad: 'Urgent',
+    lvl_warn: 'Attention',
+    lvl_info: 'Info',
     cost_t: 'Treatment costs',
     cost_lead: 'Track what the family actually pays — and what a programme covered — to plan ahead and support assistance applications.',
     cost_add: 'Add an expense',
@@ -1550,7 +1544,11 @@ const L = {
     rx_recurrent: '12 مہینوں میں دو یا زیادہ بخار یا الرجی والے ری ایکشن — لیوکوڈیپلیٹڈ یا واشڈ یونٹ اور پہلے سے دوا کے بارے میں پوچھیں۔',
     rx_disclaimer: 'عام رہنمائی کا مثالی خلاصہ۔ شدید ری ایکشن ایمرجنسی ہے — فوراً عملے کو بلائیں۔',
     rx_withTx: '{d} کے انتقال کے ساتھ',
-    rx_noLink: 'کسی درج شدہ انتقال سے منسلک نہیں',
+    rx_noLink: 'منسلک نہیں',
+    rx_last: 'آخری ری ایکشن',
+    lvl_bad: 'فوری',
+    lvl_warn: 'توجہ',
+    lvl_info: 'معلومات',
     cost_t: 'علاج کے اخراجات',
     cost_lead: 'خاندان جو واقعی خرچ کرتا ہے — اور جو کسی پروگرام نے ادا کیا — درج کریں تاکہ منصوبہ بندی ہو اور امداد کی درخواست میں مدد ملے۔',
     cost_add: 'خرچ درج کریں',
@@ -2143,26 +2141,55 @@ const TOUR_STEPS = [
 // ---------- seed data (deterministic, relative to today) ----------
 const SEED_VERSION = 2;
 
+const SEED_TX_NOTES = ['', '', '', '', '', 'Leucodepleted unit', 'Mild urticaria — antihistamine given', '', 'Fever 38.1 °C after 1st unit, settled', '', 'Pre-medicated with paracetamol', ''];
+
+/** Transfusion episodes walking backwards from the most recent one. */
+function seedEpisodes(r, { interval, jitter, vol, unit, pre, post, lastDaysAgo, n, centre }) {
+  const out = [];
+  let d = addDays(today, -lastDaysAgo);
+  for (let i = 0; i < n; i++) {
+    // draw order (pre, post, notes) matches v1 so the demo values are unchanged
+    const preHb = r1(pre + (r() - .5) * 1.2);
+    const postHb = r1(post + (r() - .5) * 1.0);
+    const notes = SEED_TX_NOTES[Math.floor(r() * SEED_TX_NOTES.length)];
+    out.unshift({ id: uid(), date: dateKey(d), vol, unit, pre: preHb, post: postHb, centre, notes });
+    d = addDays(d, -(interval + Math.round((r() - .5) * jitter)));
+  }
+  return out;
+}
+
+/** 100 days of dose ticks; missed days get a reason drawn from the weighted map. */
+function seedDoseLog(r, pTaken, weights) {
+  const out = {};
+  const keys = Object.keys(weights);
+  for (let i = 1; i <= 100; i++) {
+    const k = dateKey(addDays(today, -i));
+    if (r() < pTaken) {
+      out[k] = { t: true };
+      continue;
+    }
+    let x = r();
+    let reason = keys[0];
+    for (const key of keys) {
+      if (x < weights[key]) {
+        reason = key;
+        break;
+      }
+      x -= weights[key];
+    }
+    out[k] = { t: false, r: reason };
+  }
+  return out;
+}
+
 function seedDemo() {
   const r = rng(20261016);
-  const pick = arr => arr[Math.floor(r() * arr.length)];
-  const NOTES = ['', '', '', '', '', 'Leucodepleted unit', 'Mild urticaria — antihistamine given', '', 'Fever 38.1 °C after 1st unit, settled', '', 'Pre-medicated with paracetamol', ''];
   const p1 = { id: 'p_ahmed', name: 'Ahmed Raza', dob: '2017-03-12', sex: 'M', type: 'major', bg: 'B+', weight: 26, targetHb: 9.5, chelator: 'deferasirox', dose: 20, centre: 'Fatimid Foundation, Karachi', emName: 'Raza Ahmed (father)', emPhone: '0300-2345678', notes: 'Spleen intact. HCV negative (Jan 2026). Hepatitis B vaccinated.' };
   const p2 = { id: 'p_fatima', name: 'Fatima Noor', dob: '2010-06-05', sex: 'F', type: 'major', bg: 'O+', weight: 42, targetHb: 9.5, chelator: 'deferiprone', dose: 80, centre: 'Sundas Foundation, Lahore', emName: 'Noor Muhammad (father)', emPhone: '0321-7654321', notes: 'Alloantibody screen pending. Joint pains on deferiprone reported Aug 2026.' };
 
-  // transfusion episodes walking backwards from the most recent one
-  const gen = ({ interval, jitter, vol, unit, pre, post, lastDaysAgo, n, centre }) => {
-    const out = [];
-    let d = addDays(today, -lastDaysAgo);
-    for (let i = 0; i < n; i++) {
-      out.unshift({ id: uid(), date: dateKey(d), vol, unit, pre: r1(pre + (r() - .5) * 1.2), post: r1(post + (r() - .5) * 1.0), centre, notes: pick(NOTES) });
-      d = addDays(d, -(interval + Math.round((r() - .5) * jitter)));
-    }
-    return out;
-  };
   const tx = {
-    p_ahmed: gen({ interval: 21, jitter: 4, vol: 280, unit: 'mL', pre: 9.0, post: 12.6, lastDaysAgo: 15, n: 20, centre: p1.centre }),
-    p_fatima: gen({ interval: 17, jitter: 3, vol: 2, unit: 'units', pre: 8.4, post: 12.2, lastDaysAgo: 14, n: 24, centre: p2.centre })
+    p_ahmed: seedEpisodes(r, { interval: 21, jitter: 4, vol: 280, unit: 'mL', pre: 9.0, post: 12.6, lastDaysAgo: 15, n: 20, centre: p1.centre }),
+    p_fatima: seedEpisodes(r, { interval: 17, jitter: 3, vol: 2, unit: 'units', pre: 8.4, post: 12.2, lastDaysAgo: 14, n: 24, centre: p2.centre })
   };
 
   const ferSeries = (vals, lastDaysAgo, step) => vals.map((v, i) => ({ id: uid(), date: dateKey(addDays(today, -lastDaysAgo - (vals.length - 1 - i) * step)), value: v }));
@@ -2171,32 +2198,9 @@ function seedDemo() {
     p_fatima: ferSeries([2350, 2480, 2620, 2790, 2950, 3080, 3220], 10, 90)
   };
 
-  // 100 days of dose ticks with weighted missed-dose reasons
-  const doseLog = (pTaken, weights) => {
-    const out = {};
-    const keys = Object.keys(weights);
-    for (let i = 1; i <= 100; i++) {
-      const k = dateKey(addDays(today, -i));
-      if (r() < pTaken) {
-        out[k] = { t: true };
-        continue;
-      }
-      let x = r();
-      let reason = keys[0];
-      for (const key of keys) {
-        if (x < weights[key]) {
-          reason = key;
-          break;
-        }
-        x -= weights[key];
-      }
-      out[k] = { t: false, r: reason };
-    }
-    return out;
-  };
   const doses = {
-    p_ahmed: doseLog(.9, { forgot: .5, side: .2, stock: .2, cost: .1 }),
-    p_fatima: doseLog(.7, { side: .4, forgot: .3, cost: .2, stock: .1 })
+    p_ahmed: seedDoseLog(r, .9, { forgot: .5, side: .2, stock: .2, cost: .1 }),
+    p_fatima: seedDoseLog(r, .7, { side: .4, forgot: .3, cost: .2, stock: .1 })
   };
 
   const ap = (off, type, note, done = false) => ({ id: uid(), date: dateKey(addDays(today, off)), type, note, done });
@@ -2219,8 +2223,17 @@ function seedDemo() {
 /** Seed data for the modules added in v2 (growth, MRI, labs, medicines, reactions, costs, notes, programmes). */
 function seedExtras(tx) {
   const r = rng(20261017);
-  const ago = n => dateKey(addDays(today, -n));
+  seedGrowthIron();
+  seedLabsMeds(r);
+  seedCareLog(r, tx);
+  if (!store.get('programmes', null)) store.set('programmes', PROGRAMMES_SEED);
+  store.set('progStatus', { p_ahmed: { pg_fatimid: 'enrolled', pg_pbm: 'applied' }, p_fatima: { pg_sundas: 'enrolled', pg_pbm: 'applied' } });
+}
+const seedAgo = n => dateKey(addDays(today, -n));
 
+/** Growth measurements and MRI iron scans. */
+function seedGrowthIron() {
+  const ago = seedAgo;
   // growth: six-monthly measurements over three years, tracking below the median
   const growth = {
     p_ahmed: [113.0, 115.8, 118.6, 121.2, 123.9, 126.4].map((h, i) => ({ id: uid(), date: ago(900 - i * 180), h, w: [18.0, 19.1, 20.4, 21.9, 23.8, 26.0][i] })),
@@ -2239,6 +2252,13 @@ function seedExtras(tx) {
       { id: uid(), date: ago(50), cardiac: 17, liverT2: 1.9, lic: 14.6 }
     ]
   };
+  store.set('growth', growth);
+  store.set('mri', mri);
+}
+
+/** Lab panel history and the home medicine inventory. */
+function seedLabsMeds(r) {
+  const ago = seedAgo;
 
   // labs: monthly liver/kidney panel plus yearly endocrine screen
   const monthly = (pid, series) => {
@@ -2285,6 +2305,13 @@ function seedExtras(tx) {
       { id: uid(), name: 'Vitamin D3 2000 IU', type: 'vitd', perDay: 1, stock: 45, countedOn: ago(5), pack: 30, price: 350, source: 'pharmacy' }
     ]
   };
+  store.set('labs', labs);
+  store.set('meds', meds);
+}
+
+/** Transfusion reactions (linked to seeded episodes), six months of costs and caregiver notes. */
+function seedCareLog(r, tx) {
+  const ago = seedAgo;
 
   // transfusion reactions linked to real episodes
   const txAt = (pid, fromEnd) => (tx[pid] || [])[(tx[pid] || []).length - fromEnd] || null;
@@ -2333,15 +2360,9 @@ function seedExtras(tx) {
     ]
   };
 
-  store.set('growth', growth);
-  store.set('mri', mri);
-  store.set('labs', labs);
-  store.set('meds', meds);
   store.set('reactions', reactions);
   store.set('costs', costs);
   store.set('notes', notes);
-  if (!store.get('programmes', null)) store.set('programmes', PROGRAMMES_SEED);
-  store.set('progStatus', { p_ahmed: { pg_fatimid: 'enrolled', pg_pbm: 'applied' }, p_fatima: { pg_sundas: 'enrolled', pg_pbm: 'applied' } });
 }
 
 // first run → full demo; data from v1 of this app → add only the new module records for the demo patients
@@ -2902,16 +2923,19 @@ function seriesChart(el, rows, opts) {
   const t1 = Math.max(today.getTime(), parseDate(rows[rows.length - 1].date).getTime()) + 10 * DAY;
   const x = ts => P.l + (ts - t0) / ((t1 - t0) || 1) * (W - P.l - P.r);
   const vals = rows.map(r => r.value).concat(opts.band || [], (opts.thresholds || []).map(th => th.v));
-  const lo = opts.yMin != null ? opts.yMin : Math.max(0, Math.floor(Math.min(...vals) * 0.85));
-  const hi = opts.yMax != null ? opts.yMax : Math.ceil(Math.max(...vals) * 1.15) || 1;
+  const dataHi = Math.max(...rows.map(r => r.value));
+  const rawLo = opts.yMin != null ? opts.yMin : Math.max(0, Math.min(...vals) * 0.85);
+  const rawHi = opts.yMax != null ? Math.max(opts.yMax, dataHi) : (Math.max(...vals) * 1.15 || 1);
+  // round the axis to a nice step so tick labels are whole numbers (e.g. 0, 10, 20 rather than 12.5)
+  const step = niceStep((rawHi - rawLo) / 4);
+  const lo = Math.floor(rawLo / step) * step;
+  const hi = Math.ceil(rawHi / step) * step;
   const y = v => P.t + (1 - (v - lo) / ((hi - lo) || 1)) * (H - P.t - P.b);
   const dec = opts.dec == null ? 0 : opts.dec;
 
   let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(opts.label || '')}">`;
-  const steps = 4;
-  for (let i = 0; i <= steps; i++) {
-    const g = lo + (hi - lo) * i / steps;
-    s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="${GRID}"/>` + axisText(P.l - 8, y(g) + 4, g.toFixed(dec), 'end');
+  for (let g = lo; g <= hi + step / 1000; g += step) {
+    s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="${GRID}"/>` + axisText(P.l - 8, y(g) + 4, String(Number(g.toFixed(3))), 'end');
   }
   if (opts.band) {
     const [b0, b1] = opts.band;
@@ -2987,19 +3011,28 @@ function growthChart(el, p, rows, kind) {
   });
 }
 
+/** A "nice" axis step (1, 2, 2.5 or 5 × 10^n) so tick labels are round numbers. */
+function niceStep(raw) {
+  const mag = Math.pow(10, Math.floor(Math.log10(raw || 1)));
+  const f = raw / mag;
+  const nice = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+  return nice * mag;
+}
+const kLabel = v => v >= 1000 ? `${Math.round(v / 100) / 10}K` : String(Math.round(v));
+
 /** Monthly stacked bars (out-of-pocket vs covered) for the cost tracker. */
 function monthBars(el, months) {
   const W = chartWidth(el);
   const H = 200;
   const P = { l: 48, r: 12, t: 16, b: 30 };
-  const max = Math.max(1000, ...months.map(m => m.oop + m.cov));
+  const step = niceStep(Math.max(1000, ...months.map(m => m.oop + m.cov)) / 4);
+  const max = step * Math.ceil(Math.max(1000, ...months.map(m => m.oop + m.cov)) / step);
   const y = v => P.t + (1 - v / max) * (H - P.t - P.b);
   const slot = (W - P.l - P.r) / months.length;
   const bw = Math.min(56, slot * 0.6);
   let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(t('cost_byMonth'))}">`;
-  for (let i = 0; i <= 4; i++) {
-    const g = max * i / 4;
-    s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="${GRID}"/>` + axisText(P.l - 8, y(g) + 4, g >= 1000 ? Math.round(g / 1000) + 'K' : Math.round(g), 'end');
+  for (let g = 0; g <= max + 1e-9; g += step) {
+    s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="${GRID}"/>` + axisText(P.l - 8, y(g) + 4, kLabel(g), 'end');
   }
   months.forEach((m, i) => {
     const cx = P.l + slot * i + slot / 2;
@@ -3008,7 +3041,7 @@ function monthBars(el, months) {
     const yTop = y(m.oop + m.cov);
     s += `<rect x="${x0}" y="${yOop}" width="${bw}" height="${Math.max(0, y(0) - yOop)}" rx="4" fill="#6d4fc2"><title>${esc(t('cost_oop'))}: ${pkr(m.oop)}</title></rect>`;
     s += `<rect x="${x0}" y="${yTop}" width="${bw}" height="${Math.max(0, yOop - yTop)}" rx="4" fill="#128f80" opacity=".75"><title>${esc(t('cost_cov'))}: ${pkr(m.cov)}</title></rect>`;
-    if (m.oop + m.cov > 0) s += `<text x="${cx}" y="${yTop - 5}" font-size="10.5" font-weight="700" text-anchor="middle" fill="${INK}">${nf.format((m.oop + m.cov) / 1000)}K</text>`;
+    if (m.oop + m.cov > 0) s += `<text x="${cx}" y="${yTop - 5}" font-size="10.5" font-weight="700" text-anchor="middle" fill="${INK}">${kLabel(m.oop + m.cov)}</text>`;
     s += axisText(cx, H - 8, fmtMonth(m.mk));
   });
   s += '</svg>';
@@ -3447,7 +3480,7 @@ function renderIron(p) {
     <div class="stack">${ferritinPanel(fer)}${mriPanel(p)}</div></div>`;
   ferritinChart($('#ferChart'), fer);
   const mri = mriOf(p.id);
-  seriesChart($('#mriHeart'), mri.filter(r => r.cardiac != null).map(r => ({ date: r.date, value: r.cardiac })), { label: t('mri_heart'), unit: 'ms', color: '#b3457a', yMin: 0, yMax: 50, thresholds: [{ v: 20, color: '#c98a1c', label: t('lg_cardiacThr') }, { v: 10, color: '#c23b32', dash: true }], emptyIcon: 'heart', emptyText: t('mri_none'), height: 190 });
+  seriesChart($('#mriHeart'), mri.filter(r => r.cardiac != null).map(r => ({ date: r.date, value: r.cardiac })), { label: t('mri_heart'), unit: 'ms', color: '#b3457a', yMin: 0, yMax: 40, thresholds: [{ v: 20, color: '#c98a1c', label: t('lg_cardiacThr') }, { v: 10, color: '#c23b32', dash: true }], emptyIcon: 'heart', emptyText: t('mri_none'), height: 190 });
   seriesChart($('#mriLiver'), mri.filter(r => r.lic != null).map(r => ({ date: r.date, value: r.lic })), { label: t('mri_liver'), unit: 'mg/g', color: '#6d4fc2', yMin: 0, yMax: 20, dec: 1, thresholds: [{ v: 7, color: '#c98a1c', label: t('lg_licThr') }, { v: 15, color: '#c23b32', dash: true }], emptyIcon: 'magnet', emptyText: t('mri_none'), height: 190 });
   bindIron(p);
 }
@@ -3627,16 +3660,22 @@ function rxForm(p) {
     <label class="f" for="rxAction">${T('rx_action')}</label><input id="rxAction" type="text" maxlength="160">
     <div class="acts" style="margin-top:14px"><button class="btn" id="rxSave">${ic('check')} ${T('save')}</button></div></div>`;
 }
-function rxTable(rows) {
+function rxTable(rows, eps) {
   if (!rows.length) return emptyBox('alert-circle', 'rx_none');
   const sevCls = { mild: 'info', moderate: 'warn', severe: 'bad' };
+  const txDate = id => {
+    const e = eps.find(x => x.id === id);
+    return e ? e.date : null;
+  };
   return `<div class="tablewrap"><table><thead><tr><th>${T('date')}</th><th>${T('rx_type')}</th><th>${T('rx_severity')}</th><th>${T('rx_signs')}</th><th>${T('rx_outcome')}</th><th></th></tr></thead><tbody>${rows.slice().reverse().map(r => {
     const def = RX_TYPES[r.type] || RX_TYPES.fnhtr;
-    return `<tr><td><b>${fmtDate(r.date)}</b></td><td>${ic(def.ic)} ${NM(def)}</td><td><span class="pill ${sevCls[r.severity] || ''}">${T('rx_' + r.severity)}</span></td><td class="fine">${esc(r.signs || '')}${r.action ? `<br><span class="muted">${esc(r.action)}</span>` : ''}</td><td>${T('rx_oc_' + (r.outcome || 'resolved'))}</td><td style="text-align:right">${delBtn(r.id)}</td></tr>`;
+    const linked = r.txId && txDate(r.txId);
+    return `<tr><td><b>${fmtDate(r.date)}</b><div class="fine">${linked ? T('rx_withTx', { d: fmtDate(linked, { day: 'numeric', month: 'short' }) }) : T('rx_noLink')}</div></td><td>${ic(def.ic)} ${NM(def)}</td><td><span class="pill ${sevCls[r.severity] || ''}">${T('rx_' + r.severity)}</span></td><td class="fine">${esc(r.signs || '')}${r.action ? `<br><span class="muted">${esc(r.action)}</span>` : ''}</td><td>${T('rx_oc_' + (r.outcome || 'resolved'))}</td><td style="text-align:right">${delBtn(r.id)}</td></tr>`;
   }).join('')}</tbody></table></div>`;
 }
 function renderReactions(p) {
   const rows = reactionsOf(p.id);
+  const last = rows[rows.length - 1];
   const st = reactionStats(p.id);
   const byType = {};
   rows.forEach(r => { byType[r.type] = (byType[r.type] || 0) + 1; });
@@ -3646,13 +3685,13 @@ function renderReactions(p) {
   view.innerHTML = `<div class="kpis three stagger">
     ${kpi('alert-circle', st.n ? 'warn' : 'ok', 'rx_count', `<span data-count="${st.n}">0</span>`, `${st.txYear} ${T('req_basis')}`)}
     ${kpi('activity', st.rate != null && st.rate > 0.1 ? 'warn' : 'teal', 'rx_rate', st.rate != null ? `<span data-count="${Math.round(st.rate * 100)}">0</span><small>%</small>` : `<small>${T('noData')}</small>`, '')}
-    ${kpi('droplet', '', 'rx_log', `<span data-count="${rows.length}">0</span>`, '')}
+    ${kpi('clock', '', 'rx_last', last ? fmtDate(last.date, { day: 'numeric', month: 'short' }) : `<small>${T('rx_none')}</small>`, last ? NM(RX_TYPES[last.type] || RX_TYPES.fnhtr) : '')}
   </div>
   ${st.recurrentMinor ? `<div class="warnbox" style="margin-bottom:14px">${ic('alert')} ${T('rx_recurrent')}</div>` : ''}
   <div class="two">
     <div class="stack">${rxForm(p)}<div class="panel">${panelTitle('bar-chart', 'rx_type')}${typeBars}</div>
       <div class="warnbox">${ic('alert')} ${T('rx_disclaimer')}</div></div>
-    <div class="stack"><div class="panel">${panelTitle('list', 'rx_log')}<p class="lead">${T('rx_lead')}</p>${rxTable(rows)}</div>
+    <div class="stack"><div class="panel">${panelTitle('list', 'rx_log')}<p class="lead">${T('rx_lead')}</p>${rxTable(rows, txOf(p.id))}</div>
       <div class="panel" style="padding:0;border:0;box-shadow:none;background:none"><h3 style="margin:4px 0 10px">${ic('shield-check')} ${T('rx_protocol')}</h3>
         <label class="f" for="rxPick">${T('rx_type')}</label><select id="rxPick">${Object.entries(RX_TYPES).map(([k, r]) => `<option value="${k}">${esc(nm(r))}</option>`).join('')}</select>
         <div id="rxCard" style="margin-top:12px"></div></div></div></div>`;
@@ -3816,13 +3855,11 @@ function renderLabs(p) {
     ${kpi('clock', overdue ? 'warn' : 'ok', 'lab_due_over', `<span data-count="${overdue}">0</span>`, T('lab_schedule'))}
     ${kpi('calendar', soon ? 'info' : 'ok', 'lab_due_soon', `<span data-count="${soon}">0</span>`, '')}
   </div>
+  <div class="panel" style="margin-bottom:16px">${panelTitle('list', 'lab_latest')}<p class="lead">${T('lab_lead')} ${T('lab_pick')}</p>${labLatestTable(p, summary)}</div>
   <div class="two">
-    <div class="stack">${labForm(p)}
-      <div class="panel">${panelTitle('activity', 'lab_trend', ` · ${NM(def)}`)}<div class="chart" id="lbChart"></div><div class="legend"><span><i class="sq" style="background:#128f80;opacity:.25"></i>${T('lab_ref')} ${r.lo}–${r.hi} ${def.unit}</span></div>${refNote()}</div>
-      ${edu('edu_lab_t', 'edu_lab', 'flask')}
-    </div>
+    <div class="stack">${labForm(p)}${edu('edu_lab_t', 'edu_lab', 'flask')}</div>
     <div class="stack">
-      <div class="panel">${panelTitle('list', 'lab_latest')}<p class="lead">${T('lab_lead')} ${T('lab_pick')}</p>${labLatestTable(p, summary)}</div>
+      <div class="panel">${panelTitle('activity', 'lab_trend', ` · ${NM(def)}`)}<div class="chart" id="lbChart"></div><div class="legend"><span><i class="sq" style="background:#128f80;opacity:.25"></i>${T('lab_ref')} ${r.lo}–${r.hi} ${def.unit}</span></div>${refNote()}</div>
       ${labHistory(rows)}
     </div></div>`;
   const series = rows.filter(x => x.test === labPick).map(x => ({ date: x.date, value: x.value }));
@@ -3863,13 +3900,12 @@ function medRow(m) {
   const s = medStatus(m);
   const pct = m.stock > 0 ? clamp(s.left / Math.max(m.stock, m.pack || 1) * 100, 0, 100) : 0;
   const col = { ok: 'var(--teal)', soon: 'var(--info)', urgent: 'var(--warn)', out: 'var(--bad)' }[s.level];
-  return `<div class="row" style="align-items:flex-start"><div class="l">
-      <b>${ic('box')} ${esc(m.name)}</b> <span class="pill violet">${T('med_t_' + m.type)}</span> <span class="pill">${T('med_src_' + (m.source || 'pharmacy'))}</span>
-      <div class="bar" style="grid-template-columns:1fr 70px;margin:8px 0 4px"><div class="track"><div class="fill" data-w="${pct}%" style="width:0;background:${col}"></div></div><span class="n">${s.left} / ${m.stock}</span></div>
-      <div class="fine">${m.perDay} ${T('perDay')} · ${T('med_monthly')}: ${Math.round(s.monthly)} (${T('med_packsMonth', { n: s.packsMonth ?? '—' })})${s.costMonth ? ` · ${pkr(s.costMonth)}` : ''}</div>
-      <div class="fine">${s.daysLeft != null ? `${T('med_daysLeft', { n: s.daysLeft })} · ${T('med_runOut')} ${fmtDate(s.runOut)} · ${T('med_refillBy')} <b>${fmtDate(s.refillBy)}</b>` : ''}</div></div>
-    <div class="acts" style="flex-direction:column;align-items:flex-end"><span class="pill ${MED_LEVEL_CLS[s.level]}">${T(MED_LEVEL_KEY[s.level])}</span>
-      <div class="acts"><button class="btn ok sm" data-refill="${m.id}">${ic('plus')} ${T('med_refill')}</button><button class="btn ghost sm" data-editmed="${m.id}">${ic('edit')} ${T('edit')}</button>${delBtn(m.id)}</div></div></div>`;
+  return `<div class="medcard">
+    <div class="top"><b>${ic('box')} ${esc(m.name)}</b><span class="pill violet">${T('med_t_' + m.type)}</span><span class="pill">${T('med_src_' + (m.source || 'pharmacy'))}</span><span class="pill st ${MED_LEVEL_CLS[s.level]}">${T(MED_LEVEL_KEY[s.level])}</span></div>
+    <div class="bar"><div class="track"><div class="fill" data-w="${pct}%" style="width:0;background:${col}"></div></div><span class="n">${s.left} / ${m.stock}</span></div>
+    <div class="fine">${m.perDay} ${T('perDay')} · ${T('med_monthly')}: ${Math.round(s.monthly)} (${T('med_packsMonth', { n: s.packsMonth ?? '—' })})${s.costMonth ? ` · ${pkr(s.costMonth)}` : ''}</div>
+    <div class="fine">${s.daysLeft != null ? `${T('med_daysLeft', { n: s.daysLeft })} · ${T('med_runOut')} ${fmtDate(s.runOut)} · ${T('med_refillBy')} <b>${fmtDate(s.refillBy)}</b>` : ''}</div>
+    <div class="acts"><button class="btn ok sm" data-refill="${m.id}">${ic('plus')} ${T('med_refill')}</button><button class="btn ghost sm" data-editmed="${m.id}">${ic('edit')} ${T('edit')}</button>${delBtn(m.id)}</div></div>`;
 }
 function refillPlanner(pid) {
   const plan = refillPlan(pid, 90);
@@ -4086,7 +4122,8 @@ let libOpen = null;
 const quiz = { active: false, i: 0, score: 0, answered: null, order: [] };
 
 function libCard(a) {
-  return `<button class="libcard" data-open="${a.id}"><span class="pill violet cat">${T('lr_cat_' + a.cat)}</span><h4 class="${urCls()}">${ic(a.ic)} ${esc(lang === 'ur' ? a.title_ur : a.title_en)}</h4><span class="fine">${ic('book')} ${T('lr_read')}</span></button>`;
+  const body = lang === 'ur' ? a.body_ur : a.body_en;
+  return `<button class="libcard" data-open="${a.id}"><span class="pill violet cat">${T('lr_cat_' + a.cat)}</span><h4 class="${urCls()}">${ic(a.ic)} ${esc(lang === 'ur' ? a.title_ur : a.title_en)}</h4><p class="ex ${urCls()}">${esc(body)}</p><span class="fine">${ic('book')} ${T('lr_read')}</span></button>`;
 }
 function libArticle(a) {
   const points = lang === 'ur' ? a.points_ur : a.points_en;
@@ -4717,7 +4754,7 @@ function inboxModal() {
   const items = buildInbox().sort((a, b) => (a.read - b.read) || (a.lvl === 'bad' ? -1 : b.lvl === 'bad' ? 1 : 0));
   const unread = items.filter(i => !i.read).length;
   const rows = items.map(it => `<div class="row ${it.read ? '' : 'unread'}"><div class="l"><div class="fine">${esc(it.who)}</div><b>${ic(it.ic)} ${esc(it.title)}</b><div class="muted ${urCls()}" style="font-size:.85rem">${esc(it.body)}</div></div>
-      <div class="acts"><span class="pill ${it.lvl}">${it.lvl}</span><button class="btn ghost sm" data-go="${it.pid}|${it.tab}|${it.id}">${ic('chevron-right')}</button>${it.read ? '' : `<button class="btn ghost sm" data-read="${it.id}" aria-label="${esc(t('ib_markRead'))}">${ic('check')}</button>`}</div></div>`).join('');
+      <div class="acts"><span class="pill ${it.lvl}">${T('lvl_' + it.lvl)}</span><button class="btn ghost sm" data-go="${it.pid}|${it.tab}|${it.id}">${ic('chevron-right')}</button>${it.read ? '' : `<button class="btn ghost sm" data-read="${it.id}" aria-label="${esc(t('ib_markRead'))}">${ic('check')}</button>`}</div></div>`).join('');
   openModal(`<div class="toolbar" style="margin-bottom:8px"><h3 style="margin:0">${ic('bell')} ${T('ib_t')} <span class="muted" style="font-weight:500;font-size:.9rem">· ${T('ib_unread', { n: unread })}</span></h3><span class="spacer"></span>${unread ? `<button class="btn ghost sm" id="ibAll">${ic('check-circle')} ${T('ib_markAll')}</button>` : ''}</div>
     <div class="list stagger" style="max-height:60vh;overflow:auto">${rows || `<div class="empty">${T('ib_none')}</div>`}</div>
     <div class="acts"><button class="btn ghost" id="ibClose">${T('close')}</button></div>`);
