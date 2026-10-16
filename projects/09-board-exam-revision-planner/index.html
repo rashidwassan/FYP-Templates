@@ -3242,7 +3242,12 @@ function renderMock() {
     const tips = `<section class="panel"><h2>${ic('lightbulb')} ${T('tips')}</h2><ul class="muted sm i18n" style="margin:8px 0 0;padding-left:18px">${['tip1', 'tip2', 'tip3', 'tip4'].map(k => `<li>${esc(t(k))}</li>`).join('')}</ul></section>`;
     main = `<div class="two"><div class="stack">${mockSetupHtml()}${tips}</div>${mockHistoryHtml()}</div>`;
   } else if (shown.status === 'running') {
-    main = `${mockHeaderHtml(shown)}<div class="two"><section class="panel"><div class="phead"><h2>${ic('clipboard')} ${T('paper')}</h2><div class="actions noprint" style="margin:0"><button class="btn sm" id="mkPrint">${ic('printer')} ${T('print_paper')}</button><button class="btn sm primary" id="mkFinish">${ic('check')} ${T('finish_mark')}</button><button class="btn sm ghost" id="mkAbandon">${T('abandon')}</button></div></div>${mockItemsHtml(shown, false)}</section>
+    const controls = `<div class="actions noprint" style="margin:0">
+        <button class="btn sm" id="mkPrint">${ic('printer')} ${T('print_paper')}</button>
+        <button class="btn sm primary" id="mkFinish">${ic('check')} ${T('finish_mark')}</button>
+        <button class="btn sm ghost" id="mkAbandon">${T('abandon')}</button></div>`;
+    main = `${mockHeaderHtml(shown)}<div class="two">
+      <section class="panel"><div class="phead"><h2>${ic('clipboard')} ${T('paper')}</h2>${controls}</div>${mockItemsHtml(shown, false)}</section>
       <section class="panel noprint"><h2>${ic('lightbulb')} ${T('tips')}</h2><ul class="muted sm i18n" style="margin:8px 0 0;padding-left:18px">${['tip1', 'tip2', 'tip3', 'tip4'].map(k => `<li>${esc(t(k))}</li>`).join('')}</ul></section></div>`;
   } else if (shown.status === 'marking') {
     main = `${mockHeaderHtml(shown)}<section class="panel"><div class="phead"><h2>${ic('edit')} ${T('marking')}</h2><span class="muted sm i18n">${esc(t('unattempted'))}</span></div>${mockItemsHtml(shown, true)}
@@ -4146,7 +4151,10 @@ function renderAbout() {
   view.innerHTML = `<div class="two"><div class="stack">
     <section class="panel"><h2>${ic('graduation')} Board Exam Revision Planner</h2>
       ${h3('The problem')}<p class="muted" style="margin:0">Matric and FSc students cram without a plan, do not know which chapters carry the most marks in their board's papers, and rarely revisit what they studied. Marks are lost on high-weightage chapters that were studied once, early, and forgotten.</p>
-      ${h3('How it works')}<p class="muted" style="margin:0">Each chapter gets a priority of <b>weightage x difficulty x (1 - mastery/5)</b>, boosted when past papers or mock exams flag it weak. Weightage comes from a seeded bank of five tagged papers per board. Sessions are spread over the days until the first paper, respecting daily hours and days off, interleaving subjects (at most two sessions of one subject per day) and keeping the last 7 days for revision. Every completed session updates mastery from your confidence rating and schedules spaced reviews; flashcard runs and mock results feed the same mastery score. Readiness = sum(weightage x mastery/5).</p>
+      ${h3('How it works')}<p class="muted" style="margin:0">Each chapter gets a priority of <b>weightage x difficulty x (1 - mastery/5)</b>, boosted when past papers or mock exams flag it weak.
+        Weightage comes from a seeded bank of five tagged papers per board. Sessions are spread over the days until the first paper, respecting daily hours and days off,
+        interleaving subjects (at most two sessions of one subject per day) and keeping the last 7 days for revision. Every completed session updates mastery from your
+        confidence rating and schedules spaced reviews; flashcard runs and mock results feed the same mastery score. Readiness = sum(weightage x mastery/5).</p>
       ${h3('Modules')}<div class="scrollx"><table>${moduleRows}</table></div>
       ${h3('Stack')}<p class="muted" style="margin:0">One HTML file, vanilla JS, hand-drawn SVG charts, localStorage (<code>${NS}</code>), HTML5 drag-and-drop, Web Notifications, print CSS and client-side .ics export. Google Fonts: Plus Jakarta Sans + Noto Nastaliq Urdu.</p>
       ${h3('Data notes')}<p class="muted" style="margin:0">Chapter lists follow Punjab Textbook Board editions. The paper bank, weightages and difficulties are <b>illustrative</b> and deterministic (hash-seeded), so they are identical on every device. Edit them per chapter from the Subjects heatmap or replace them with a real paper database (see extensions).</p></section>
