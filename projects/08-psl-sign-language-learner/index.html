@@ -1891,6 +1891,8 @@ function openLesson(i) {
   renderLearn();
 }
 
+// TODO(student): speech-to-sign — Web Speech API recognition → gloss → animated sign sequence,
+// so hearing family members can speak or type and see the signs.
 function speak(text) {
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
@@ -1989,14 +1991,16 @@ function questionHtml(q, s) {
   }
   if (q.type === 'word2sign') {
     const opts = q.opts.map((o, i) => optionButton(o, i, signSvg(S[o]))).join('');
-    return `<h3>${t('q_pick')} <span style="color:var(--teal)">${esc(s.en)}</span> <span class="ur" style="font-size:1.2rem">${esc(s.ur)}</span></h3><div class="opts">${opts}</div>`;
+    return `<h3>${t('q_pick')} <span style="color:var(--teal)">${esc(s.en)}</span> <span class="ur" style="font-size:1.2rem">${esc(s.ur)}</span></h3>
+      <div class="opts">${opts}</div>`;
   }
   if (q.type === 'shape') {
     const opts = q.opts.map((o, i) => optionButton(o, i, shapeChip(o))).join('');
     return `<h3>${t('q_shapeq')} <span style="color:var(--teal)">${esc(s.en)}</span></h3><div class="muted">${esc(descOf(s).en)}</div><div class="opts">${opts}</div>`;
   }
   const opts = q.opts.map((o, i) => optionButton(o, i, `${ic('target')} ${t('loc_' + o)}`)).join('');
-  return `<h3>${t('q_locq')} <span style="color:var(--teal)">${esc(s.en)}</span></h3><div class="figure" style="max-width:200px;margin:8px auto;padding:8px">${signSvg(s, { still: true })}</div><div class="opts">${opts}</div>`;
+  return `<h3>${t('q_locq')} <span style="color:var(--teal)">${esc(s.en)}</span></h3>
+    <div class="figure" style="max-width:200px;margin:8px auto;padding:8px">${signSvg(s, { still: true })}</div><div class="opts">${opts}</div>`;
 }
 
 function renderQuestion(body, q) {
@@ -2105,6 +2109,8 @@ function renderDict() {
 }
 $('#dq').addEventListener('input', renderDict);
 
+// TODO(student): show real PSL video clips (recorded with Deaf signers, consent, both hands)
+// beside each schematic; descOf().video is the slot the clip URL already flows through.
 function openSign(id) {
   const s = S[id];
   const d = descOf(s);
@@ -2114,7 +2120,8 @@ function openSign(id) {
     : `<button class="btn sun" id="mLearn">${ic('check')} ${t('markLearned')}</button>`;
 
   openModal(`<div class="mhead">
-      <div style="flex:1;min-width:0"><span class="pill teal">${t('cat_' + s.cat)}</span> <span class="pill ${e.verified ? 'mint' : 'sun'}">${e.verified ? t('verified') : t('unverified')}</span>
+      <div style="flex:1;min-width:0">
+        <span class="pill teal">${t('cat_' + s.cat)}</span> <span class="pill ${e.verified ? 'mint' : 'sun'}">${e.verified ? t('verified') : t('unverified')}</span>
         <h2 style="font-size:1.8rem;margin-top:6px">${esc(s.en)}</h2>
         <div class="word-ur ur" style="font-size:1.5rem">${esc(s.ur)} <button class="btn ghost sm" id="mSay" aria-label="${t('listen')}">${ic('volume')}</button></div></div>
       <button class="close" id="mClose" aria-label="Close">${ic('x')}</button></div>
@@ -2205,6 +2212,8 @@ const FINGERS = ['thumb', 'index', 'middle', 'ring', 'pinky'];
 const TIPS = [4, 8, 12, 16, 20];
 
 // a fingerspelling letter dressed up as a sign so the practice loop can use it
+// TODO(student): dynamic letters — letters that differ only by a tap or twist need the movement
+// component detected from landmark trajectories; the camera checks the handshape alone today.
 function letterTarget(id) {
   const l = LETTER[id.slice(3)];
   return { id, en: `${t('letter')} ${l.name}`, ur: l.ch, shape: l.shape, loc: 'neutral', move: l.move, den: t('fsPracNote'), dur: '', letter: l };
@@ -2478,7 +2487,8 @@ function sessionBars() {
   }
   const counts = days.map(k => CAM.sessions.filter(s => new Date(s.ts).toDateString() === k).length);
   const max = Math.max(1, ...counts);
-  return `<div class="bars" aria-label="${t('sessions14')}">${counts.map(c => `<i class="${c ? '' : 'zero'}" style="height:${Math.max(3, c / max * 100)}%" title="${c}"></i>`).join('')}</div>`;
+  return `<div class="bars" aria-label="${t('sessions14')}">${counts.map(c => `<i class="${c ? '' : 'zero'}" style="height:${Math.max(3, c / max * 100)}%" title="${c}">
+    </i>`).join('')}</div>`;
 }
 
 function analyticsHtml() {
@@ -2488,7 +2498,8 @@ function analyticsHtml() {
   const passRate = camSes.length ? Math.round(passes.length / camSes.length * 100) : 0;
   const avgMs = passes.length ? Math.round(passes.reduce((a, s) => a + s.ms, 0) / passes.length / 100) / 10 : 0;
   const rows = ses.slice(0, 8).map(s => `<tr><td>${fmtDate(s.ts)}</td><td>${esc(s.en)}</td><td>${s.mode === 'self' ? t('p_selfShort') : t('camera')}</td>
-      <td>${s.pass ? `<span class="pill mint">${t('passed')}</span>` : `<span class="pill coral">${t('missed')}</span>`}</td><td>${s.ms ? (s.ms / 1000).toFixed(1) + ' s' : '–'}</td></tr>`).join('');
+      <td>${s.pass ? `<span class="pill mint">${t('passed')}</span>` : `<span class="pill coral">${t('missed')}</span>`}</td>
+        <td>${s.ms ? (s.ms / 1000).toFixed(1) + ' s' : '–'}</td></tr>`).join('');
   if (!ses.length) return `<div class="empty"><div class="icw">${ic('activity')}</div>${t('noSessions')}</div>`;
   return `<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
       <div class="kpi"><div><div class="k">${t('sessions')}</div><div class="v">${ses.length}</div></div></div>
@@ -2496,8 +2507,11 @@ function analyticsHtml() {
       <div class="kpi"><div><div class="k">${t('avgTime')}</div><div class="v">${avgMs ? avgMs + ' s' : '–'}</div></div></div>
     </div>
     <div class="two">
-      <div><b class="small">${t('fingerHeat')}</b><p class="muted small" style="margin:2px 0 8px">${t('fingerHeatHint')} ${worstFinger() ? `<b>${t('weakest')}: ${worstFinger()}</b>` : ''}</p>${heatmapHtml()}</div>
-      <div><b class="small">${t('sessions14')}</b>${sessionBars()}<div class="tblwrap" style="margin-top:10px"><table class="tbl"><thead><tr><th>${t('date')}</th><th>${t('sign')}</th><th>${t('mode')}</th><th>${t('result')}</th><th>${t('time')}</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div><b class="small">${t('fingerHeat')}</b>
+        <p class="muted small" style="margin:2px 0 8px">${t('fingerHeatHint')} ${worstFinger() ? `<b>${t('weakest')}: ${worstFinger()}</b>` : ''}</p>${heatmapHtml()}</div>
+      <div><b class="small">${t('sessions14')}</b>${sessionBars()}<div class="tblwrap" style="margin-top:10px"><table class="tbl"><thead><tr>
+        <th>${t('date')}</th><th>${t('sign')}</th><th>${t('mode')}</th><th>${t('result')}</th><th>${t('time')}</th></tr></thead><tbody>${rows}</tbody></table>
+        </div></div>
     </div>`;
 }
 
@@ -2660,9 +2674,12 @@ async function playClip(id) {
   }
   const url = URL.createObjectURL(blob);
   const s = meta && S[meta.sign];
-  openModal(`<div class="mhead"><h2 style="font-size:1.3rem;flex:1">${ic('video')} ${esc(meta?.en || '')}</h2><button class="close" id="mClose" aria-label="Close">${ic('x')}</button></div>
-    <div class="two" style="margin-top:12px"><video data-blob src="${url}" controls autoplay playsinline style="width:100%;border-radius:16px;background:#000;transform:scaleX(-1)"></video>
-    ${s ? `<div><div class="figure" style="max-width:260px;margin:0 auto">${signSvg(s)}</div><p class="muted small" style="text-align:center">${t('compareHint')}</p></div>` : ''}</div>`);
+  openModal(`<div class="mhead"><h2 style="font-size:1.3rem;flex:1">${ic('video')} ${esc(meta?.en || '')}</h2>
+    <button class="close" id="mClose" aria-label="Close">${ic('x')}</button></div>
+    <div class="two" style="margin-top:12px">
+      <video data-blob src="${url}" controls autoplay playsinline style="width:100%;border-radius:16px;background:#000;transform:scaleX(-1)"></video>
+    ${s ? `<div><div class="figure" style="max-width:260px;margin:0 auto">${signSvg(s)}</div>
+      <p class="muted small" style="text-align:center">${t('compareHint')}</p></div>` : ''}</div>`);
 }
 
 async function deleteClip(id) {
@@ -2726,9 +2743,12 @@ function renderAlphabet(body) {
   const known = Object.keys(st.known).length;
   const acc = st.asked ? Math.round(st.correct / st.asked * 100) : 0;
   body.innerHTML = `<div class="kpis stagger">
-      <div class="kpi"><div class="icw" style="background:var(--teal-soft);color:var(--teal-deep)">${ic('type')}</div><div><div class="k">${t('fs_known')}</div><div class="v">${known}/${LETTERS.length}</div></div></div>
-      <div class="kpi"><div class="icw" style="background:var(--mint-soft);color:var(--mint-ink)">${ic('target')}</div><div><div class="k">${t('fs_acc')}</div><div class="v">${acc}%</div></div></div>
-      <div class="kpi"><div class="icw" style="background:var(--sun-soft);color:var(--sun-ink)">${ic('flame')}</div><div><div class="k">${t('fs_best')}</div><div class="v">${st.best}</div></div></div>
+      <div class="kpi"><div class="icw" style="background:var(--teal-soft);color:var(--teal-deep)">${ic('type')}</div><div>
+        <div class="k">${t('fs_known')}</div><div class="v">${known}/${LETTERS.length}</div></div></div>
+      <div class="kpi"><div class="icw" style="background:var(--mint-soft);color:var(--mint-ink)">${ic('target')}</div><div>
+        <div class="k">${t('fs_acc')}</div><div class="v">${acc}%</div></div></div>
+      <div class="kpi"><div class="icw" style="background:var(--sun-soft);color:var(--sun-ink)">${ic('flame')}</div><div>
+        <div class="k">${t('fs_best')}</div><div class="v">${st.best}</div></div></div>
     </div>
     <div class="note" style="margin-bottom:14px">${ic('alert')} ${t('fs_note')}</div>
     <div class="letters stagger">${LETTERS.map((l, i) => `<div class="letter ${st.known[l.ch] ? 'known' : ''}" data-ch="${l.ch}" style="--i:${Math.min(i, 14)}">
@@ -2815,7 +2835,9 @@ function renderSpellGame(body) {
 function readQuestionHtml(q) {
   return `<h3>${t('fs_readQ')}</h3><p class="muted small" style="margin:0 0 10px">${ic('arrow-right')} ${t('fs_order')}</p>
     <div class="seq">${q.letters.map(ch => glyphTile(ch, { showLetter: false })).join('')}</div>
-    <div class="opts">${q.opts.map((o, i) => `<button class="opt" data-o="${esc(o.ur)}"><span class="key">${i + 1}</span><span class="ur" style="font-size:1.3rem;display:block;color:var(--teal-deep)">${esc(o.ur)}</span><span class="muted small">${esc(o.en)}</span></button>`).join('')}</div>`;
+    <div class="opts">${q.opts.map((o, i) => `<button class="opt" data-o="${esc(o.ur)}"><span class="key">${i + 1}</span>
+      <span class="ur" style="font-size:1.3rem;display:block;color:var(--teal-deep)">${esc(o.ur)}</span><span class="muted small">${esc(o.en)}</span>
+      </button>`).join('')}</div>`;
 }
 
 function answerRead(q, btn) {
@@ -2862,7 +2884,8 @@ function wireSpellQuestion(q) {
     const got = q.picked.map(i => q.bank[i]);
     const ok = got.join('') === q.letters.join('');
     $('#fsAnswer').classList.toggle('shake', !ok);
-    $('#fsAnswer').innerHTML = q.letters.map((ch, i) => `<div class="gl" style="border-color:${got[i] === ch ? 'var(--mint)' : 'var(--coral)'}">${letterSvg(LETTER[got[i] || ch], { still: true })}<div class="ch">${ch}</div></div>`).join('');
+    $('#fsAnswer').innerHTML = q.letters.map((ch, i) => `<div class="gl" style="border-color:${got[i] === ch ? 'var(--mint)' : 'var(--coral)'}">${letterSvg(LETTER[got[i] || ch], { still: true })}<div class="ch">${ch}</div>
+      </div>`).join('');
     if (ok) q.letters.forEach(ch => fsMarkKnown(ch, 2));
     fsGame.results.push(ok);
     $('#fsCheck').disabled = true;
@@ -2907,7 +2930,8 @@ function renderNameSpeller(body) {
   body.innerHTML = `<div class="card enter">
       <label class="lbl" for="nameIn">${t('fs_nameLabel')}</label>
       <input type="text" id="nameIn" class="ur" value="${esc(nameText)}" placeholder="علی" style="font-size:1.3rem">
-      <div class="chips" style="margin:10px 0">${FS_NAMES.slice(0, 8).map(([ur, en]) => `<button class="chip" data-n="${esc(ur)}"><span class="ur">${esc(ur)}</span> ${esc(en)}</button>`).join('')}</div>
+      <div class="chips" style="margin:10px 0">${FS_NAMES.slice(0, 8).map(([ur, en]) => `<button class="chip" data-n="${esc(ur)}">
+        <span class="ur">${esc(ur)}</span> ${esc(en)}</button>`).join('')}</div>
       <p class="muted small" style="margin:0 0 8px">${ic('arrow-right')} ${t('fs_order')}</p>
       <div class="seq" id="nameSeq">${seq || `<span class="muted">${t('fs_typeName')}</span>`}</div>
       <div class="row" style="margin-top:12px">
@@ -2976,8 +3000,11 @@ function renderSentences() {
   const list = sentList();
   if (!list[sent.idx] || !sent.bank.length) loadSentence(sent.idx);
   const body = $('#sentBody');
-  body.innerHTML = `<details class="card" style="margin-bottom:14px" ${doneN === 0 ? 'open' : ''}><summary style="cursor:pointer;font-weight:600">${ic('lightbulb')} ${t('sb_rules')}</summary>
-      <div class="rules" style="margin-top:10px">${[['all', ''], ...RULES.map(r => [r, ''])].map(([r]) => `<div class="rule ${sent.rule === r ? 'on' : ''}" data-r="${r}"><b>${r === 'all' ? t('all') : t('r_' + r)}</b><div class="muted small">${r === 'all' ? `${SENTENCES.length} ${t('sb_sentences')}` : t('r_' + r + 'd')}</div></div>`).join('')}</div></details>
+  body.innerHTML = `<details class="card" style="margin-bottom:14px" ${doneN === 0 ? 'open' : ''}>
+    <summary style="cursor:pointer;font-weight:600">${ic('lightbulb')} ${t('sb_rules')}</summary>
+      <div class="rules" style="margin-top:10px">${[['all', ''], ...RULES.map(r => [r, ''])].map(([r]) => `<div class="rule ${sent.rule === r ? 'on' : ''}" data-r="${r}">
+        <b>${r === 'all' ? t('all') : t('r_' + r)}</b>
+        <div class="muted small">${r === 'all' ? `${SENTENCES.length} ${t('sb_sentences')}` : t('r_' + r + 'd')}</div></div>`).join('')}</div></details>
     <div id="sentEx"></div>`;
   $$('.rule').forEach(el => el.onclick = () => {
     sent.rule = el.dataset.r;
@@ -3113,6 +3140,8 @@ function wireExercise(sx) {
   };
 }
 
+// TODO(student): detect non-manual markers (eyebrows, head shake, nod) with a face-landmark
+// model so the sentence builder can check the face, not only the sign order.
 function checkSentence(sx) {
   const got = sent.answer.map(x => x.id).join(' ');
   const st = sentState();
@@ -3154,10 +3183,13 @@ function renderTalk() {
       const ids = scenarioIds(sc);
       const known = ids.filter(id => P.learned[id]).length;
       return `<div class="card lesson" data-sc="${sc.id}" style="--i:${i}">
-          <div style="display:flex;gap:12px;align-items:center"><div class="icw" style="width:48px;height:48px;border-radius:14px;background:var(--teal-soft);color:var(--teal-deep);display:grid;place-items:center">${ic(sc.icon)}</div>
+          <div style="display:flex;gap:12px;align-items:center">
+            <div class="icw" style="width:48px;height:48px;border-radius:14px;background:var(--teal-soft);color:var(--teal-deep);display:grid;place-items:center">${ic(sc.icon)}</div>
           <div><h3 style="margin:0">${t('sc_' + sc.id)}</h3><div class="muted small">${sc.turns.length} ${t('c_turns')} · ${ids.length} ${t('signs')}</div></div></div>
           <p class="muted small" style="margin:10px 0 0">${t('sc_' + sc.id + 'd')}</p>
-          <div class="row" style="margin-top:10px"><span class="pill ${known === ids.length ? 'mint' : ''}">${known}/${ids.length} ${t('f_learned')}</span>${st.done[sc.id] ? `<span class="pill mint">${ic('check')} ${t('done')}</span>` : ''}</div></div>`;
+          <div class="row" style="margin-top:10px">
+            <span class="pill ${known === ids.length ? 'mint' : ''}">${known}/${ids.length} ${t('f_learned')}</span>${st.done[sc.id] ? `<span class="pill mint">${ic('check')} ${t('done')}</span>` : ''}</div>
+            </div>`;
     }).join('')}</div>`;
     $$('[data-sc]').forEach(el => el.onclick = () => openScenario(el.dataset.sc));
     animateIn(body);
@@ -3182,7 +3214,8 @@ function turnHtml(tn, i) {
   const signs = ids.split(' ').filter(id => S[id]).map(id => `<button data-sign="${id}" title="${esc(S[id].en)}">${signSvg(S[id], { still: i !== turnOn })}${esc(glossOf(id))}</button>`).join('');
   return `<div class="turn ${who ? 'b' : ''} ${i === turnOn ? 'on' : ''}" data-t="${i}">
       <div class="avatar" aria-hidden="true">${(lang === 'ur' ? role[1] : role[0]).slice(0, 2)}</div>
-      <div class="bubble"><div class="who">${esc(lang === 'ur' ? role[1] : role[0])}</div><div>${esc(en)}</div><div class="ur">${esc(ur)}</div><div class="signrow">${signs}</div></div></div>`;
+      <div class="bubble"><div class="who">${esc(lang === 'ur' ? role[1] : role[0])}</div><div>${esc(en)}</div><div class="ur">${esc(ur)}</div>
+        <div class="signrow">${signs}</div></div></div>`;
 }
 
 function renderDialogue(body) {
@@ -3271,9 +3304,12 @@ function activityBars() {
   for (let i = 13; i >= 0; i--) days.push(startOfToday() - i * DAY);
   const xs = days.map(d0 => P.log.filter(l => l.ts >= d0 && l.ts < d0 + DAY).reduce((a, l) => a + l.xp, 0));
   const max = Math.max(SET.goalXp, ...xs);
-  const bars = xs.map((x, i) => `<i class="${x ? '' : 'zero'}" style="height:${Math.max(3, x / max * 100)}%;background:${x >= SET.goalXp ? 'var(--mint)' : 'var(--teal)'}" title="${new Date(days[i]).toLocaleDateString()} · ${x} XP"></i>`).join('');
+  const bars = xs.map((x, i) => `<i class="${x ? '' : 'zero'}" style="height:${Math.max(3, x / max * 100)}%;background:${x >= SET.goalXp ? 'var(--mint)' : 'var(--teal)'}" title="${new Date(days[i]).toLocaleDateString()} · ${x} XP">
+    </i>`).join('');
   return `<div class="card"><h3>${t('activity14')}</h3><div class="bars" style="height:90px">${bars}</div>
-    <div class="between muted small" style="margin-top:4px"><span>${new Date(days[0]).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span><span>${t('goalXp')} ${SET.goalXp}</span><span>${t('today')}</span></div></div>`;
+    <div class="between muted small" style="margin-top:4px">
+      <span>${new Date(days[0]).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span><span>${t('goalXp')} ${SET.goalXp}</span>
+      <span>${t('today')}</span></div></div>`;
 }
 
 function masteryRings() {
@@ -3295,7 +3331,8 @@ function logHtml() {
   const rows = P.log.slice(0, 10).map(l => {
     const [kind, ref] = l.why.split(':');
     const label = ref ? (S[ref]?.en || ref.replace('fs:', '')) : t('log_' + kind);
-    return `<div class="logrow"><span>${ic(LOG_ICON[kind] || 'check')} ${esc(label)}</span><span class="row" style="gap:6px"><span class="muted small">${fmtDate(l.ts)}</span><span class="pill sun">+${l.xp} XP</span></span></div>`;
+    return `<div class="logrow"><span>${ic(LOG_ICON[kind] || 'check')} ${esc(label)}</span><span class="row" style="gap:6px">
+      <span class="muted small">${fmtDate(l.ts)}</span><span class="pill sun">+${l.xp} XP</span></span></div>`;
   }).join('');
   return `<div class="card" style="margin-top:14px"><h3>${t('recent')}</h3><div class="list" style="gap:0">${rows}</div></div>`;
 }
@@ -3380,13 +3417,18 @@ function studentViewHtml(c) {
   const asgs = c.assignments.map(assignmentCard).join('');
   return `<div class="two">
     <div class="card"><h3>${ic('clipboard')} ${t('myAssignments')}</h3>
-      ${asgs ? `<div class="list">${asgs}</div>` : `<div class="empty"><div class="icw">${ic('clipboard')}</div>${t('noAssignments')}<div style="margin-top:8px"><button class="btn sm ghost" id="packIn">${ic('upload')} ${t('importPack')}</button></div></div>`}
+      ${asgs ? `<div class="list">${asgs}</div>` : `<div class="empty">
+        <div class="icw">${ic('clipboard')}</div>${t('noAssignments')}<div style="margin-top:8px">
+        <button class="btn sm ghost" id="packIn">${ic('upload')} ${t('importPack')}</button></div></div>`}
     </div>
     <div class="card"><h3>${ic('user')} ${t('myProfile')}</h3>
-      <div class="setrow"><div><b>${esc(SET.studentName || t('noName'))}</b><span class="small muted">${t('studentCode')}: <span class="code">${esc(SET.studentCode || '—')}</span></span></div>
+      <div class="setrow"><div><b>${esc(SET.studentName || t('noName'))}</b>
+        <span class="small muted">${t('studentCode')}: <span class="code">${esc(SET.studentCode || '—')}</span></span></div>
         <button class="btn sm ghost" onclick="go('settings')">${ic('edit')} ${t('edit')}</button></div>
-      <div class="setrow"><div><b>${t('exportForTeacher')}</b><span class="small muted">${t('teacherExportHint')}</span></div><button class="btn sm" id="stuExport2">${ic('send')} JSON</button></div>
-      <div class="setrow"><div><b>${t('importPack')}</b><span class="small muted">${t('importPackHint')}</span></div><button class="btn sm ghost" id="packIn2">${ic('upload')} ${t('import')}</button></div>
+      <div class="setrow"><div><b>${t('exportForTeacher')}</b><span class="small muted">${t('teacherExportHint')}</span></div>
+        <button class="btn sm" id="stuExport2">${ic('send')} JSON</button></div>
+      <div class="setrow"><div><b>${t('importPack')}</b><span class="small muted">${t('importPackHint')}</span></div>
+        <button class="btn sm ghost" id="packIn2">${ic('upload')} ${t('import')}</button></div>
     </div></div>`;
 }
 
@@ -3405,7 +3447,8 @@ function wireStudentView(c) {
 }
 
 function pinHtml() {
-  return `<div class="card pinbox enter" style="margin-top:16px"><div style="display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:var(--coral-soft);color:var(--coral-ink);margin:0 auto 10px">${ic('lock')}</div>
+  return `<div class="card pinbox enter" style="margin-top:16px">
+    <div style="display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:var(--coral-soft);color:var(--coral-ink);margin:0 auto 10px">${ic('lock')}</div>
     <h3>${t('k_pinTitle')}</h3><p class="muted small">${t('k_pinHint')}</p>
     <input type="password" id="pinIn" inputmode="numeric" maxlength="6" placeholder="••••" aria-label="PIN">
     <button class="btn" id="pinGo" style="margin-top:10px">${ic('unlock')} ${t('k_unlock')}</button></div>`;
@@ -3435,23 +3478,35 @@ function teacherViewHtml(c) {
   const stuRows = c.students.map(s => {
     const sn = s.snapshot;
     const asgCells = c.assignments.map(a => `<td>${sn ? Math.round((sn.assignments?.[a.id] || 0) * 100) + '%' : '—'}</td>`).join('');
-    return `<tr><td>${esc(s.name)}</td><td><span class="code">${esc(s.code)}</span></td><td>${sn ? sn.xp : '—'}</td><td>${sn ? sn.learned : '—'}</td><td>${sn ? sn.acc + '%' : '—'}</td><td>${sn ? sn.streak : '—'}</td>${asgCells}
-      <td class="muted">${sn ? fmtDate(sn.ts) : t('noData')}</td><td><button class="btn sm outline" data-delstu="${s.code}" aria-label="${t('delete')}">${ic('trash')}</button></td></tr>`;
+    return `<tr><td>${esc(s.name)}</td><td><span class="code">${esc(s.code)}</span></td><td>${sn ? sn.xp : '—'}</td><td>${sn ? sn.learned : '—'}</td>
+      <td>${sn ? sn.acc + '%' : '—'}</td><td>${sn ? sn.streak : '—'}</td>${asgCells}
+      <td class="muted">${sn ? fmtDate(sn.ts) : t('noData')}</td><td>
+        <button class="btn sm outline" data-delstu="${s.code}" aria-label="${t('delete')}">${ic('trash')}</button></td></tr>`;
   }).join('');
-  return `<div class="card" style="margin-top:16px"><div class="between"><h3 style="margin:0">${ic('plus')} ${t('newAssignment')}</h3><span class="pill teal" id="asgCount">${newAsgIds.length} ${t('signs')}</span></div>
+  return `<div class="card" style="margin-top:16px"><div class="between"><h3 style="margin:0">${ic('plus')} ${t('newAssignment')}</h3>
+    <span class="pill teal" id="asgCount">${newAsgIds.length} ${t('signs')}</span></div>
     <div class="three" style="margin-top:10px">
       <div class="field"><label class="lbl" for="asgTitle">${t('title')}</label><input type="text" id="asgTitle" placeholder="${t('asgPlaceholder')}"></div>
       <div class="field"><label class="lbl" for="asgDue">${t('due')}</label><input type="date" id="asgDue" value="${new Date(now() + 7 * DAY).toISOString().slice(0, 10)}"></div>
       <div class="field"><label class="lbl" for="asgMin">${t('minQuiz')} %</label><input type="number" id="asgMin" min="0" max="100" value="80"></div></div>
-    <div class="lbl">${t('addCategory')}</div><div class="chips" style="margin-bottom:8px">${CATS.map(cat => `<button class="chip" data-addcat="${cat}">${t('cat_' + cat)}</button>`).join('')}</div>
-    <div class="lbl">${t('pickSigns')}</div><div class="pick">${SIGNS.map(s => `<button class="chip ${newAsgIds.includes(s.id) ? 'on' : ''}" data-pick="${s.id}">${esc(s.en.split(' /')[0])}</button>`).join('')}</div>
-    <div class="row" style="margin-top:10px"><button class="btn" id="asgSave">${ic('save')} ${t('saveAssignment')}</button><button class="btn ghost" id="asgClear">${ic('x')} ${t('clear')}</button></div></div>
+    <div class="lbl">${t('addCategory')}</div>
+      <div class="chips" style="margin-bottom:8px">${CATS.map(cat => `<button class="chip" data-addcat="${cat}">${t('cat_' + cat)}</button>`).join('')}</div>
+    <div class="lbl">${t('pickSigns')}</div>
+      <div class="pick">${SIGNS.map(s => `<button class="chip ${newAsgIds.includes(s.id) ? 'on' : ''}" data-pick="${s.id}">${esc(s.en.split(' /')[0])}</button>`).join('')}</div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="asgSave">${ic('save')} ${t('saveAssignment')}</button>
+      <button class="btn ghost" id="asgClear">${ic('x')} ${t('clear')}</button></div></div>
   <div class="card" style="margin-top:14px"><h3>${ic('clipboard')} ${t('assignments')}</h3>
-    ${asgRows ? `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('title')}</th><th>${t('signs')}</th><th>${t('due')}</th><th>${t('minQuiz')}</th><th></th></tr></thead><tbody>${asgRows}</tbody></table></div>` : `<p class="muted">${t('noAssignments')}</p>`}
-    <div class="row" style="margin-top:10px"><button class="btn sm ghost" id="packOut" ${c.assignments.length ? '' : 'disabled'}>${ic('download')} ${t('exportPack')}</button></div></div>
+    ${asgRows ? `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('title')}</th><th>${t('signs')}</th><th>${t('due')}</th>
+      <th>${t('minQuiz')}</th><th></th></tr></thead><tbody>${asgRows}</tbody></table></div>` : `<p class="muted">${t('noAssignments')}</p>`}
+    <div class="row" style="margin-top:10px">
+      <button class="btn sm ghost" id="packOut" ${c.assignments.length ? '' : 'disabled'}>${ic('download')} ${t('exportPack')}</button></div></div>
   <div class="card" style="margin-top:14px"><div class="between"><h3 style="margin:0">${ic('users')} ${t('roster')} (${c.students.length})</h3>
-      <div class="row"><input type="text" id="stuName" placeholder="${t('studentName')}" style="width:180px"><button class="btn sm" id="stuAdd">${ic('plus')} ${t('add')}</button></div></div>
-    <div class="tblwrap" style="margin-top:10px">${stuRows ? `<table class="tbl"><thead><tr><th>${t('name')}</th><th>${t('studentCode')}</th><th>XP</th><th>${t('k_learned')}</th><th>${t('k_quiz')}</th><th>${t('k_streak')}</th>${c.assignments.map(a => `<th>${esc(a.title)}</th>`).join('')}<th>${t('updated')}</th><th></th></tr></thead><tbody>${stuRows}</tbody></table>` : `<p class="muted">${t('noStudents')}</p>`}</div>
+      <div class="row"><input type="text" id="stuName" placeholder="${t('studentName')}" style="width:180px">
+        <button class="btn sm" id="stuAdd">${ic('plus')} ${t('add')}</button></div></div>
+    <div class="tblwrap" style="margin-top:10px">${stuRows ? `<table class="tbl"><thead><tr><th>${t('name')}</th><th>${t('studentCode')}</th>
+      <th>XP</th><th>${t('k_learned')}</th><th>${t('k_quiz')}</th>
+      <th>${t('k_streak')}</th>${c.assignments.map(a => `<th>${esc(a.title)}</th>`).join('')}<th>${t('updated')}</th><th></th></tr></thead>
+      <tbody>${stuRows}</tbody></table>` : `<p class="muted">${t('noStudents')}</p>`}</div>
     <div class="row" style="margin-top:10px">
       <button class="btn sm" id="stuImport">${ic('upload')} ${t('importStudent')}</button>
       <button class="btn sm ghost" id="csvOut" ${c.students.length ? '' : 'disabled'}>${ic('download')} CSV</button>
@@ -3588,25 +3643,34 @@ function renderSettings() {
   const used = Math.round(Object.keys(localStorage).filter(k => k.startsWith(NS)).reduce((a, k) => a + (localStorage.getItem(k) || '').length, 0) / 1024);
   $('#settingsBody').innerHTML = `<div class="two">
     <div class="card"><h3>${ic('eye')} ${t('st_display')}</h3>
-      <div class="setrow"><div><b>${t('st_lang')}</b><span class="small muted">English / اردو</span></div><button class="lang" id="langBtn2">${lang === 'en' ? 'اردو' : 'English'}</button></div>
+      <div class="setrow"><div><b>${t('st_lang')}</b><span class="small muted">English / اردو</span></div>
+        <button class="lang" id="langBtn2">${lang === 'en' ? 'اردو' : 'English'}</button></div>
       ${switchRow('largeText', 'st_large', 'st_largeHint')}${switchRow('contrast', 'st_contrast', 'st_contrastHint')}${switchRow('reduceMotion', 'st_motion', 'st_motionHint')}</div>
     <div class="card"><h3>${ic('camera')} ${t('st_practice')}</h3>
       ${switchRow('leftHand', 'p_left', 'st_leftHint')}${switchRow('autoSpeak', 'st_speak', 'st_speakHint')}
-      <div class="setrow" style="display:block"><b>${t('st_hold')}: <span id="holdVal">${(SET.holdMs / 1000).toFixed(1)} s</span></b><span class="small muted">${t('st_holdHint')}</span>
+      <div class="setrow" style="display:block"><b>${t('st_hold')}: <span id="holdVal">${(SET.holdMs / 1000).toFixed(1)} s</span></b>
+        <span class="small muted">${t('st_holdHint')}</span>
         <input type="range" id="holdRange" min="600" max="2500" step="100" value="${SET.holdMs}" aria-label="${t('st_hold')}"></div></div>
     <div class="card"><h3>${ic('target')} ${t('todayGoal')}</h3>
       <div class="field"><label class="lbl" for="goalXp">${t('goalXp')}</label><input type="number" id="goalXp" min="10" max="500" step="10" value="${SET.goalXp}"></div>
       <div class="field"><label class="lbl" for="goalSigns">${t('goalSigns')}</label><input type="number" id="goalSigns" min="1" max="30" value="${SET.goalSigns}"></div></div>
     <div class="card"><h3>${ic('user')} ${t('myProfile')}</h3>
       <div class="field"><label class="lbl" for="stName">${t('name')}</label><input type="text" id="stName" value="${esc(SET.studentName)}" placeholder="${t('studentName')}"></div>
-      <div class="field"><label class="lbl" for="stCode">${t('studentCode')}</label><div class="row" style="flex-wrap:nowrap"><input type="text" id="stCode" value="${esc(SET.studentCode)}" placeholder="ISH-XXXX"><button class="btn ghost sm" id="codeGen">${ic('refresh')}</button></div></div>
+      <div class="field"><label class="lbl" for="stCode">${t('studentCode')}</label><div class="row" style="flex-wrap:nowrap">
+        <input type="text" id="stCode" value="${esc(SET.studentCode)}" placeholder="ISH-XXXX">
+        <button class="btn ghost sm" id="codeGen">${ic('refresh')}</button></div></div>
       <details><summary style="cursor:pointer;font-weight:600">${ic('key')} ${t('changePin')}</summary>
-        <div class="row" style="margin-top:8px"><input type="password" id="pinOld" placeholder="${t('currentPin')}" style="width:130px"><input type="password" id="pinNew" placeholder="${t('newPin')}" style="width:130px"><button class="btn sm" id="pinSave">${ic('save')} ${t('save')}</button></div></details></div>
+        <div class="row" style="margin-top:8px"><input type="password" id="pinOld" placeholder="${t('currentPin')}" style="width:130px">
+          <input type="password" id="pinNew" placeholder="${t('newPin')}" style="width:130px">
+          <button class="btn sm" id="pinSave">${ic('save')} ${t('save')}</button></div></details></div>
     <div class="card"><h3>${ic('save')} ${t('st_data')}</h3><p class="muted small">${t('st_dataHint')} · ${used} KB</p>
-      <div class="row"><button class="btn sm" id="allOut">${ic('download')} ${t('exportAll')}</button><button class="btn sm ghost" id="allIn">${ic('upload')} ${t('import')}</button>
-        <button class="btn sm ghost" id="demoBtn">${ic('sparkles')} ${t('loadDemo')}</button><button class="btn sm outline" id="wipeBtn">${ic('trash')} ${t('resetAll')}</button></div></div>
+      <div class="row"><button class="btn sm" id="allOut">${ic('download')} ${t('exportAll')}</button>
+        <button class="btn sm ghost" id="allIn">${ic('upload')} ${t('import')}</button>
+        <button class="btn sm ghost" id="demoBtn">${ic('sparkles')} ${t('loadDemo')}</button>
+          <button class="btn sm outline" id="wipeBtn">${ic('trash')} ${t('resetAll')}</button></div></div>
     <div class="card"><h3>${ic('help')} ${t('st_help')}</h3>
-      <div class="row"><button class="btn sm ghost" id="tourBtn">${ic('play')} ${t('startTour')}</button><button class="btn sm ghost" id="keysBtn">${ic('keyboard')} ${t('shortcuts')}</button></div></div>
+      <div class="row"><button class="btn sm ghost" id="tourBtn">${ic('play')} ${t('startTour')}</button>
+        <button class="btn sm ghost" id="keysBtn">${ic('keyboard')} ${t('shortcuts')}</button></div></div>
   </div>`;
   wireSettings();
   animateIn($('#settingsBody'));
@@ -3711,6 +3775,10 @@ function pickFile(onJson) {
 // realistic seed state so the app looks alive during a demo
 function loadDemoProgress() {
   if (!confirm(t('confirmDemo'))) return;
+  seedDemo();
+  location.reload();
+}
+function seedDemo() {
   const ids = LESSONS.slice(0, 4).flatMap(L => L.ids);
   ids.forEach((id, i) => {
     P.learned[id] = now() - (ids.length - i) * 6 * 36e5;
@@ -3733,7 +3801,6 @@ function loadDemoProgress() {
   CAM.bad = [[30, 4, 9, 12, 6], [12, 20, 8, 7, 9], [8, 10, 14, 30, 22]];
   saveCam();
   store.set('tour', 'done');
-  location.reload();
 }
 
 // =====================================================================
@@ -3815,8 +3882,10 @@ window.addEventListener('resize', () => {
 // =====================================================================
 const SHORTCUTS = [['1 – 9', 'sc_pages'], ['1 – 4', 'sc_answer'], ['/', 'sc_search'], ['L', 'sc_lang'], ['N', 'sc_inbox'], ['?', 'sc_help'], ['Esc', 'sc_close']];
 function openShortcuts() {
-  openModal(`<div class="mhead"><h2 style="font-size:1.4rem;flex:1">${ic('keyboard')} ${t('shortcuts')}</h2><button class="close" id="mClose" aria-label="Close">${ic('x')}</button></div>
-    <div class="list" style="margin-top:12px">${SHORTCUTS.map(([k, d]) => `<div class="between" style="border-bottom:1px solid var(--line);padding:8px 0"><span>${t(d)}</span><span class="kbd">${k}</span></div>`).join('')}</div>`, true);
+  openModal(`<div class="mhead"><h2 style="font-size:1.4rem;flex:1">${ic('keyboard')} ${t('shortcuts')}</h2>
+    <button class="close" id="mClose" aria-label="Close">${ic('x')}</button></div>
+    <div class="list" style="margin-top:12px">${SHORTCUTS.map(([k, d]) => `<div class="between" style="border-bottom:1px solid var(--line);padding:8px 0">
+      <span>${t(d)}</span><span class="kbd">${k}</span></div>`).join('')}</div>`, true);
 }
 
 function onKey(e) {
@@ -3866,8 +3935,11 @@ function renderAbout() {
       <p class="muted">${t('a_p1')}</p><p class="muted">${t('a_p2')}</p>
       <div class="note" style="margin-top:10px">${t('a_note')}</div>
       <p class="muted small" style="margin-top:10px">${t('a_stack')}</p>
-      <div class="row" style="margin-top:10px"><span class="pill teal">${SIGNS.length} ${t('signs')}</span><span class="pill teal">${LETTERS.length} ${t('letters')}</span><span class="pill teal">${SENTENCES.length} ${t('sb_sentences')}</span><span class="pill teal">${SCENARIOS.length} ${t('c_scenarios')}</span><span class="pill teal">${LESSONS.length} ${t('lessons')}</span></div></div>
-    <div><h3 style="margin:0 0 10px">${t('a_todo')}</h3><div class="list stagger">${TODOS.map(([h, b, tag]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div></div>`).join('')}</div></div>`;
+      <div class="row" style="margin-top:10px"><span class="pill teal">${SIGNS.length} ${t('signs')}</span>
+        <span class="pill teal">${LETTERS.length} ${t('letters')}</span><span class="pill teal">${SENTENCES.length} ${t('sb_sentences')}</span>
+        <span class="pill teal">${SCENARIOS.length} ${t('c_scenarios')}</span><span class="pill teal">${LESSONS.length} ${t('lessons')}</span></div></div>
+    <div><h3 style="margin:0 0 10px">${t('a_todo')}</h3><div class="list stagger">${TODOS.map(([h, b, tag]) => `<div class="todo">
+      <h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div></div>`).join('')}</div></div>`;
   animateIn($('#about'));
 }
 
