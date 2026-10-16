@@ -1091,3 +1091,543 @@ TXT.en = {
   ]
 };
 
+TXT.ur = {
+  title: 'کمیٹی منیجر', tag: 'ہر روپیہ، ہر مہینہ، ریکارڈ پر', newC: 'نئی کمیٹی', noC: 'ابھی کوئی کمیٹی نہیں',
+  nav_dashboard: 'ڈیش بورڈ', nav_overview: 'خلاصہ', nav_members: 'ممبران', nav_payments: 'ادائیگیاں', nav_schedule: 'شیڈول',
+  nav_disputes: 'تنازعات', nav_people: 'افراد', nav_planner: 'منصوبہ ساز', nav_reports: 'رپورٹس', nav_agreement: 'معاہدہ',
+  nav_settings: 'ترتیبات', nav_about: 'تعارف',
+  ago_m: '{a} منٹ پہلے', ago_h: '{a} گھنٹے پہلے', ago_d: '{a} دن پہلے',
+  confirm: 'تصدیق', cancel: 'منسوخ', close: 'بند کریں', copy: 'کاپی', none: 'کوئی نہیں', unknown: 'نامعلوم', yes: 'ہاں', no: 'نہیں',
+  months: 'ماہ', m_short: 'ماہ', edit: 'ترمیم', view: 'دیکھیں', all: 'سب', apply: 'لاگو کریں', open: 'کھولیں', back: 'واپس', today: 'آج',
+  not_built: 'یہ طلبہ کے لیے توسیعی کام ہے — تعارف دیکھیں۔', saved: 'محفوظ ہو گیا', deleted: 'حذف ہو گیا', added: 'شامل ہو گیا',
+
+  pot_title: 'اس مہینے کی وصولی', pot_of: '{a} میں سے وصول · {b}', pot_paid: '{b} میں سے {a} حصے ادا', pot_recipient: 'وصول کنندہ',
+  pot_due: 'آخری تاریخ {a}', pot_overdue: '{a} دن تاخیر', pot_days: '{a} دن باقی', pot_late: '{a} تاخیر سے', pot_unpaid: '{a} غیر ادا',
+  pot_empty: 'قسطوں کا حساب شروع کرنے کے لیے پہلی کمیٹی بنائیں۔', pot_notStarted: 'آغاز {a}', pot_finished: 'تمام سائیکل مکمل',
+  pot_payments: 'ادائیگیاں دیکھیں', pot_remind: 'یاد دہانی بھیجیں', pot_unassigned: 'خالی حصہ', pot_grace: 'رعایت {a} تک',
+  tour_banner: 'نئے ہیں؟ رجسٹر کا 60 سیکنڈ کا دورہ کریں۔', tour_start: 'دورہ شروع کریں', tour_dismiss: 'بند کریں',
+  tour_next: 'اگلا', tour_back: 'پچھلا', tour_done: 'مکمل', tour_skip: 'چھوڑیں', tour_step: '{b} میں سے {a}',
+  tour_1_t: 'کمیٹی بدلیں', tour_1_b: 'آپ کی تمام کمیٹیاں یہاں ہیں۔ ڈیش بورڈ سب کو ایک ساتھ دکھاتا ہے۔',
+  tour_2_t: 'وصولی', tour_2_b: 'اس مہینے کا خلاصہ: کتنی رقم آ چکی، کس کی باری ہے اور کون تاخیر سے ہے۔',
+  tour_3_t: 'حصے', tour_3_b: 'ممبران اور ترتیب، ادائیگیوں کا جدول، شیڈول اور نادہندگی سمیولیٹر، تنازعات، افراد، منصوبہ ساز اور پرنٹ رپورٹس۔',
+  tour_4_t: 'ان باکس', tour_4_b: 'واجب الادا قسطیں، آنے والی ادائیگیاں اور تنازعات کی یاد دہانیاں یہاں آتی ہیں، مکمل سرگرمی لاگ کے ساتھ۔',
+  tour_5_t: 'ترتیبات', tour_5_b: 'زبان، ڈارک تھیم، رعایتی دن، منتظم کا PIN لاک اور JSON بیک اپ۔',
+  tour_6_t: 'نئی کمیٹی', tour_6_b: 'ایک منٹ میں کمیٹی شروع کریں: رقم، ممبران، وصولی کی تاریخ اور ادائیگی کا طریقہ۔',
+
+  db_title: 'تمام کمیٹیاں', db_kpi_committees: 'کمیٹیاں', db_kpi_people: 'افراد', db_kpi_collected: 'اب تک وصولی',
+  db_kpi_pending: 'واجب الادا', db_kpi_disputes: 'کھلے تنازعات', db_running: '{a} جاری', db_people_s: 'فون نمبر کے لحاظ سے منفرد',
+  db_notstarted: 'ابھی شروع نہیں', db_finished: 'مکمل', db_active: 'جاری', db_cycles: '{b} میں سے {a} سائیکل', db_next: 'اگلی ادائیگی',
+  db_cal: 'نقد بہاؤ کیلنڈر', db_cal_s: 'تمام کمیٹیوں کے وصولی کے دن (رقم اندر) اور ادائیگی کے دن (رقم باہر)۔',
+  db_in: 'اندر', db_out: 'باہر', db_month_in: 'متوقع وصولی', db_month_out: 'ادائیگیاں', db_events: 'اس مہینے کے واقعات',
+  db_noevents: 'اس مہینے کوئی وصولی یا ادائیگی نہیں۔', db_6m: 'چھ ماہ کی آمد', db_6m_s: 'متوقع قسطیں بمقابلہ اصل وصولی، تمام کمیٹیاں۔',
+  db_expected: 'متوقع', db_collected: 'وصول شدہ', db_open_c: 'کمیٹی کھولیں', db_recent: 'حالیہ سرگرمی',
+
+  kpi_collected: 'اس ماہ وصولی', kpi_pending: 'باقی', kpi_members: 'ممبران', kpi_cycles: 'مکمل سائیکل', kpi_slots: '{a} حصے',
+  kpi_ofpot: '{a} میں سے', kpi_overdue: '{a} واجب الادا', kpi_onTrack: 'سب ٹھیک', kpi_total: 'کل {a}',
+  ch_rate: 'ماہانہ وصولی کی شرح', ch_ontime: 'ممبر کے لحاظ سے بروقت ادائیگی', ch_cum: 'مجموعی آمد بمقابلہ ادائیگی', ch_in: 'وصول شدہ', ch_out: 'ادا شدہ',
+  ch_rate_s: 'ہر سائیکل میں متوقع رقم کا کتنا حصہ واقعی وصول ہوا۔', ch_ontime_s: 'وصولی کی تاریخ (مع رعایت) تک ادا کی گئی قسطوں کا تناسب۔',
+  ch_cum_s: 'پاٹ میں آنے والی رقم بمقابلہ دی گئی ادائیگیاں۔', ch_nodata: 'ابھی کوئی سائیکل واجب نہیں۔',
+  ov_terms: 'کمیٹی کی شرائط', ov_edit: 'ترمیم', ov_delete: 'حذف', ov_contrib: 'ماہانہ قسط', ov_pot: 'فی سائیکل رقم', ov_cycles: 'سائیکل',
+  ov_start: 'آغاز', ov_day: 'وصولی کی تاریخ', ov_method: 'ادائیگی کا طریقہ', ov_late: 'تاخیری جرمانہ', ov_grace: 'رعایتی مدت', ov_grace_v: '{a} دن',
+  ov_cap: 'جرمانے کی حد', ov_org: 'منتظم', ov_notes: 'نوٹس', ov_alerts: 'توجہ درکار', ov_alerts_s: 'موجودہ سائیکل میں غیر ادا یا جزوی ادائیگیاں۔',
+  ov_allgood: 'اس مہینے سب نے ادائیگی کر دی۔', ov_due: 'آخری تاریخ {a}',
+  m_fixed: 'مقررہ ترتیب', m_lottery: 'قرعہ اندازی', m_organizer: 'منتظم کا فیصلہ', m_need: 'ضرورت کی بنیاد پر',
+  lf_none: 'کوئی تاخیری جرمانہ نہیں', lf_flat: 'ہر تاخیری ادائیگی پر {a} روپے', lf_pct: 'ہر ہفتے کی تاخیر پر قسط کا {a}%',
+
+  mem_title: 'ممبران', mem_add: 'ممبر شامل کریں', mem_name: 'ممبر', mem_phone: 'فون', mem_cnic: 'شناختی کارڈ', mem_slots: 'حصے', mem_turn: 'باری',
+  mem_trust: 'اعتماد', mem_month: 'اس ماہ', mem_actions: 'عمل', mem_statement: 'گوشوارہ', mem_edit: 'ترمیم', mem_delete: 'نکالیں',
+  mem_empty: 'ابھی کوئی ممبر نہیں۔ اس کمیٹی کے لوگ شامل کریں۔', mem_slot_n: 'حصہ {a}', mem_profile: 'پروفائل',
+  ord_title: 'ادائیگی کی ترتیب', ord_s: 'ترتیب بدلنے کے لیے قطار کو گھسیٹیں یا تیر استعمال کریں۔ قرعہ اندازی ترتیب خود مقرر کرتی ہے؛ ضرورت کی بنیاد پر درخواستوں کی درجہ بندی ہوتی ہے۔',
+  ord_draw: 'قرعہ اندازی', ord_unassigned: 'خالی', ord_locked: 'ادائیگی ہو چکی', ord_count: '{b} میں سے {a} حصے پُر',
+  trust_s: 'اعتماد کا اسکور 0–100: اس ڈیوائس پر تمام کمیٹیوں میں بروقت، تاخیری اور چھوٹی ہوئی ادائیگیوں سے۔',
+  nd_title: 'ضرورت کی درخواستیں', nd_s: 'ممبران بتاتے ہیں کہ انہیں جلد باری کیوں چاہیے۔ "ضرورت کے مطابق ترتیب" باقی حصوں کے لیے ترتیب تجویز کرتی ہے۔',
+  nd_add: 'درخواست شامل کریں', nd_rank: 'ضرورت کے مطابق ترتیب', nd_member: 'ممبر', nd_reason: 'وجہ', nd_urgency: 'فوری ضرورت', nd_amount: 'درکار رقم',
+  nd_by: 'کب تک درکار', nd_status: 'حالت', nd_open: 'کھلی', nd_granted: 'منظور', nd_declined: 'مسترد', nd_empty: 'ابھی کوئی درخواست نہیں۔',
+  nd_score: 'ضرورت اسکور', nd_proposed: 'تجویز کردہ ترتیب', nd_apply: 'تجویز کردہ ترتیب لاگو کریں', nd_applied: 'ترتیب ضرورت کے مطابق ہو گئی',
+  nd_score_s: 'اسکور = فوری ضرورت × 2 + انتظار کے مہینے + اعتماد ÷ 25۔ جو ممبر رقم لے چکے ہیں وہ آخر میں؛ ادا شدہ حصے اپنی جگہ رہتے ہیں۔',
+  nd_add_t: 'نئی ضرورت کی درخواست', nd_waiting: '{a} ماہ انتظار', nd_detail: 'تفصیل (اختیاری)', nd_need_two: 'پہلے کم از کم دو کھلی درخواستیں شامل کریں۔',
+  nd_r_medical: 'علاج', nd_r_wedding: 'شادی', nd_r_education: 'تعلیم / فیس', nd_r_rent: 'کرایہ / مکان', nd_r_business: 'کاروباری مال',
+  nd_r_debt: 'قرض کی ادائیگی', nd_r_other: 'دیگر', nd_mark: 'نشان لگائیں',
+
+  f_name: 'کمیٹی کا نام', f_contrib: 'ماہانہ قسط (روپے)', f_planned: 'ممبران کی تعداد (= سائیکل)', f_start: 'آغاز کا مہینہ', f_day: 'وصولی کی تاریخ (1–28)',
+  f_method: 'ادائیگی کا طریقہ', f_late: 'تاخیری جرمانے کا اصول', f_lateval: 'رقم / فیصد', f_grace: 'رعایتی دن (0–10)', f_cap: 'جرمانے کی حد (روپے، 0 = کوئی نہیں)',
+  f_org: 'منتظم کا نام', f_orgphone: 'منتظم کا فون', f_notes: 'نوٹس', f_save: 'محفوظ کریں', f_cancel: 'منسوخ', f_create: 'کمیٹی بنائیں',
+  f_edit: 'کمیٹی میں ترمیم', f_delete: 'کمیٹی حذف کریں', f_required: 'لازمی', f_phone_err: 'فارمیٹ 03xx-xxxxxxx استعمال کریں',
+  f_cnic_err: 'فارمیٹ 12345-1234567-1 استعمال کریں', f_num_err: 'درست نمبر درج کریں', f_day_err: '1 سے 28',
+  mf_add: 'ممبر شامل کریں', mf_edit: 'ممبر میں ترمیم', mf_name: 'پورا نام', mf_phone: 'موبائل (03xx-xxxxxxx)', mf_cnic: 'شناختی کارڈ (اختیاری، صرف آخری 4 ہندسے محفوظ ہوں گے)',
+  mf_slots: 'حصوں کی تعداد', mf_pos: 'باری کا نمبر', mf_pos_any: 'اگلا خالی', mf_cnic_hint: 'اس طرح محفوظ ہوگا: •••••-•••••••-{a}',
+  del_c: '"{a}" اور اس کی تمام ادائیگیاں حذف کریں؟ یہ واپس نہیں ہو سکتا۔', del_m: '{a} کو اس کمیٹی سے نکالیں؟ اس کمیٹی میں ان کا ادائیگی ریکارڈ حذف ہو جائے گا۔', del_ok: 'حذف کریں',
+
+  pay_title: 'ادائیگیوں کا جدول', pay_hint: 'خانے پر کلک کریں تو حالت بدلتی ہے (غیر ادا ← ادا ← تاخیر ← جزوی ← معاف)۔ رقم، تاریخ، نوٹ، رسید یا تنازعے کے لیے دیر تک دبائیں یا رائٹ کلک کریں۔ سرخ نقطہ متنازعہ خانہ ظاہر کرتا ہے۔',
+  pay_month: 'مہینہ', pay_markall: 'سب ادا شدہ کریں', pay_remind: 'واٹس ایپ یاد دہانی', pay_csv: 'CSV برآمد', pay_expected: 'متوقع رقم', pay_collected: 'وصول شدہ',
+  pay_pending: 'باقی', pay_fees: 'تاخیری جرمانہ', pay_recipient: 'وصول کنندہ', pay_progress: 'پیش رفت', pay_recip_row: 'وصول کنندہ',
+  pay_marked: '{a} ادائیگیاں ادا شدہ کر دی گئیں', pay_none_unpaid: 'اس مہینے کوئی قسط باقی نہیں', pay_future: 'ابھی واجب نہیں',
+  st_unpaid: 'غیر ادا', st_paid: 'ادا', st_late: 'تاخیر', st_partial: 'جزوی', st_waived: 'معاف', st_overdue: 'واجب الادا', st_balance: '{b} میں سے {a}',
+  gr_auto: 'تاخیر درج ہوئی: {a} دن کی رعایتی مدت کے بعد ادا کی گئی۔',
+  ce_title: 'ادائیگی میں ترمیم', ce_amount: 'رقم (روپے)', ce_date: 'ادائیگی کی تاریخ', ce_note: 'نوٹ', ce_expected: 'متوقع {a}', ce_ack: 'OTP تصدیق طلب کریں',
+  ce_settle: 'بقایا ادا کریں', ce_balance: 'بقایا {a}', ce_receipt: 'رسید', ce_dispute: 'تنازعہ درج کریں',
+  wa_title: 'واٹس ایپ یاد دہانی', wa_s: 'ایک ٹیپ پر واٹس ایپ پیغام کے ساتھ کھلتا ہے۔ نمبر خود بخود +92 فارمیٹ میں بدل جاتے ہیں۔', wa_copy: 'سب کاپی کریں',
+  wa_send: 'بھیجیں', wa_sms: 'SMS', wa_copied: 'کاپی ہو گیا',
+  wa_text: 'سلام {name}، "{c}" کی طرف سے یاد دہانی: {m} کی آپ کی قسط {amt} کی آخری تاریخ {d} تھی۔ براہ کرم {org} کو ادا کریں اور تصدیق بھیجیں۔ شکریہ!',
+  wa_text_partial: 'سلام {name}، "{c}" کی طرف سے یاد دہانی: {m} کی قسط میں {amt} باقی ہیں (آخری تاریخ {d})۔ براہ کرم {org} کو ادا کریں۔ شکریہ!',
+
+  sch_title: 'ادائیگی کا شیڈول', sch_next: 'اگلی ادائیگی', sch_days: 'دن', sch_in: 'بعد', sch_today: 'آج', sch_ago: 'پہلے', sch_to: 'کو', sch_expected: 'متوقع',
+  sch_payout: 'ادائیگی', sch_done: 'ادا ہو گئی', sch_current: 'موجودہ', sch_upcoming: 'آنے والی', sch_pending: 'ادائیگی باقی', sch_record: 'ادائیگی درج کریں',
+  sch_recorded: 'ادائیگی درج ہو گئی', sch_undo: 'ادائیگی واپس', sch_on: '{a} کو', sch_fees: 'بشمول {a} تاخیری جرمانہ', sch_complete: 'تمام ادائیگیاں مکمل۔', sch_receipt: 'رسید',
+  sim_title: 'اگر کوئی ممبر ادائیگی روک دے؟', sim_s: 'ایک ممبر چنیں اور باقی ہر سائیکل میں کمی اور اسے سنبھالنے کے عام طریقے دیکھیں۔',
+  sim_pick: 'ادائیگی روکنے والا ممبر', sim_month: 'سائیکل', sim_short: 'کمی', sim_pot: 'کمی کے بعد رقم', sim_total: 'باقی {a} سائیکلوں میں کل کمی',
+  sim_split: 'باقی ممبران میں تقسیم', sim_split_s: 'ہر باقی ممبر فی سائیکل اضافی ادا کرے', sim_org: 'منتظم ادا کرے', sim_org_s: 'منتظم کو کل اتنی رقم پیشگی دینی ہوگی',
+  sim_swap: 'باری بدلیں', sim_swap_s: 'ان کی باری آخری سائیکل میں کر دیں تاکہ رقم محفوظ رہے',
+  sim_swap_done: '{b} کو {a} وصول کر چکے ہیں — گروپ کو یہ رقم واپس لینی ہوگی۔', sim_none: 'کوئی سائیکل باقی نہیں۔', sim_received: 'ادائیگی وصول', sim_notyet: 'باری ابھی نہیں آئی',
+
+  ds_title: 'تنازعات کا لاگ', ds_s: 'ادائیگی، جرمانے یا باری سے متعلق ہر اختلاف اپنی مکمل تاریخ کے ساتھ درج ہوتا ہے تاکہ کوئی یادداشت سے بحث نہ کرے۔',
+  ds_new: 'نیا تنازعہ', ds_type: 'قسم', ds_t_amount: 'رقم میں فرق', ds_t_missing: 'ادائیگی درج نہیں', ds_t_fee: 'تاخیری جرمانے پر اعتراض',
+  ds_t_payout: 'ادائیگی پر اختلاف', ds_t_other: 'دیگر', ds_status: 'حالت', ds_open: 'کھلا', ds_review: 'زیرِ غور', ds_resolved: 'حل شدہ', ds_rejected: 'مسترد',
+  ds_note: 'تفصیل', ds_cycle: 'سائیکل', ds_raised: 'درج', ds_history: 'تاریخ', ds_update: 'حالت بدلیں', ds_add_note: 'اس تبدیلی کا نوٹ',
+  ds_empty: 'کوئی تنازعہ نہیں — اچھی علامت۔', ds_open_count: '{a} کھلے', ds_evidence: 'ثبوت منسلک کریں', ds_updated: 'تنازعہ اپڈیٹ ہو گیا', ds_created: 'تنازعہ درج ہو گیا',
+  ds_who: 'درج کنندہ', ds_detail: 'تنازعہ', ds_days: '{a} دن سے کھلا',
+
+  pp_title: 'تمام کمیٹیوں کے افراد', pp_s: 'ممبران فون نمبر سے ملائے جاتے ہیں، اس لیے دو کمیٹیوں میں شامل ایک شخص کی اعتماد کی ایک ہی تاریخ ہوتی ہے۔',
+  pp_search: 'نام یا فون تلاش کریں', pp_committees: 'کمیٹیاں', pp_slots: 'حصے', pp_paid: 'ادا کیا', pp_received: 'وصول کیا', pp_trend: 'اعتماد کا رجحان',
+  pp_profile: 'ممبر پروفائل', pp_history: 'ادائیگی کی تاریخ', pp_outcomes: 'نتائج', pp_ontime: 'بروقت', pp_late: 'تاخیر', pp_partial: 'جزوی', pp_missed: 'چھوٹی',
+  pp_empty: 'کوئی فرد نہیں ملا۔', pp_turns: 'باریاں', pp_open_disputes: 'کھلے تنازعات', pp_trend_s: 'ہر واجب قسط کے بعد اسکور، پرانے سے نئے تک۔', pp_none_due: 'ابھی کوئی قسط واجب نہیں۔',
+
+  pl_title: 'منصوبہ ساز: اگر ایسا ہو تو؟', pl_s: 'کیا کمیٹی فائدہ مند ہے؟ ہر باری کے لیے وصول شدہ رقم کا بینک بچت اکاؤنٹ اور مہنگائی سے موازنہ کریں۔',
+  pl_contrib: 'ماہانہ رقم (روپے)', pl_months: 'مہینے (= ممبران)', pl_turn: 'آپ کی باری', pl_bank: 'بینک بچت کی شرح (سالانہ %)', pl_infl: 'مہنگائی (سالانہ %)',
+  pl_kameti: 'کمیٹی کی رقم', pl_kameti_s: 'مہینہ {a} میں وصول شدہ رقم', pl_real: 'آج کی حقیقی قدر', pl_real_s: 'مہنگائی کے حساب سے آج کی قدر',
+  pl_bank_fv: 'آخر میں بینک بیلنس', pl_bank_s: 'ماہانہ جمع {a}% پر بڑھتے ہوئے', pl_gain: 'قسطوں کے مقابلے حقیقی فائدہ', pl_gain_s: 'مثبت = کمیٹی نے مہنگائی کو مات دی',
+  pl_irr: 'مضمر سالانہ شرح', pl_irr_s: 'وہ شرح جس پر آپ کی قسطیں اور رقم برابر ہو جاتے ہیں',
+  pl_chart: 'ماہانہ مجموعی پوزیشن', pl_chart_s: 'کمیٹی بیلنس (قسطیں باہر، رقم اندر) بمقابلہ بڑھتی بینک بچت۔',
+  pl_turn_chart: 'باری کے لحاظ سے فائدہ', pl_turn_s: 'ہر باری کا حقیقی فائدہ: پہلی باریاں بلا سود قرض لیتی ہیں، آخری باریاں قرض دیتی ہیں۔',
+  pl_col_turn: 'باری', pl_col_month: 'مہینہ', pl_col_real: 'حقیقی قدر', pl_col_gain: 'حقیقی فائدہ', pl_col_rate: 'مضمر شرح',
+  pl_verdict_early: 'باری {a} بلا سود قرض جیسی ہے: آپ {b} جلد وصول کرتے ہیں اور بعد کی قسطوں سے واپس کرتے ہیں۔',
+  pl_verdict_late: 'باری {a} کا مطلب ہے کہ آپ گروپ کو قرض دے رہے ہیں۔ {r}% پر بینک اکاؤنٹ میں آپ کے پاس {b} ہوتے، جبکہ رقم کی حقیقی قدر {c} ہے۔',
+  pl_bank_label: 'بینک بچت', pl_kameti_label: 'کمیٹی', pl_from: 'موجودہ کمیٹی سے لیں', pl_live: 'براہِ راست شرحیں',
+
+  rp_title: 'پرنٹ رپورٹس', rp_s: 'رپورٹ چنیں، پیش منظر دیکھیں، پھر پرنٹ کریں یا PDF محفوظ کریں۔ سب کچھ ادائیگی جدول سے بنتا ہے۔',
+  rp_monthly: 'ماہانہ وصولی رپورٹ', rp_ledger: 'مکمل کھاتہ', rp_payouts: 'ادائیگی رجسٹر', rp_statements: 'تمام ممبر گوشوارے', rp_disputes: 'تنازعات کا لاگ',
+  rp_print: 'پرنٹ', rp_cycle: 'سائیکل', rp_prepared: 'تیار کردہ {a} · منتظم {b}', rp_sign_org: 'منتظم کے دستخط', rp_sign_rec: 'وصول کنندہ کے دستخط',
+  rp_total: 'کل', rp_recv_by: 'وصول کنندہ', rp_no_payouts: 'ابھی کوئی ادائیگی درج نہیں۔', rp_fee: 'جرمانہ', rp_date: 'تاریخ',
+
+  rc_title: 'ادائیگی کی رسید', rc_payout_title: 'ادائیگی کی تصدیق', rc_no: 'رسید نمبر', rc_member: 'ممبر', rc_committee: 'کمیٹی', rc_month: 'سائیکل',
+  rc_amount: 'رقم', rc_date: 'تاریخ', rc_status: 'حالت', rc_org: 'منتظم', rc_code: 'تصدیقی کوڈ',
+  rc_qr_s: 'رسید کے ہیش سے بنا QR طرز کا کوڈ — ایک ہی ڈیٹا ہمیشہ ایک ہی نقش بناتا ہے، اس لیے دوبارہ پرنٹ شدہ رسید کا موازنہ ممکن ہے۔',
+  rc_share: 'واٹس ایپ پر بھیجیں', rc_received: 'شکریے کے ساتھ وصول', rc_none: 'اس خانے میں ابھی کوئی ادائیگی درج نہیں۔',
+  rc_text: 'رسید {no}: {who} نے {d} کو "{c}" میں {m} کی {amt} ادا کی۔ تصدیق {code}۔',
+  rc_payout_text: 'ادائیگی {no}: {who} نے {d} کو "{c}" سے {m} کی {amt} وصول کی۔ تصدیق {code}۔',
+
+  ag_title: 'کمیٹی معاہدہ', ag_s: 'کمیٹی کی شرائط سے انگریزی اور اردو میں تیار کیا گیا۔ پرنٹ کریں، سب سے دستخط لیں اور ایک نقل منتظم کے پاس رکھیں۔',
+  ag_print: 'معاہدہ پرنٹ کریں', ag_sign: 'ای-دستخط', ag_faq: 'کمیٹی کیسے چلتی ہے — اور اس کے خطرات',
+  ag_risk: 'کمیٹی کو کوئی قانونی تحفظ نہیں۔ صرف بھروسے کے لوگوں کے ساتھ شامل ہوں، تحریری ریکارڈ رکھیں اور دستخط شدہ اندراج کے بغیر نقد رقم کبھی نہ دیں۔',
+  stm_title: 'ممبر گوشوارہ', stm_print: 'پرنٹ', stm_paid: 'کل ادا', stm_fees: 'تاخیری جرمانہ', stm_received: 'وصول کیا', stm_ontime: 'بروقت',
+  stm_dispute: 'تنازعہ درج کریں', stm_s: '{a} · {b} حصے · باری {c}',
+  lot_title: 'قرعہ اندازی', lot_s: 'تمام حصوں کو بے ترتیب ادائیگی ترتیب میں پھینٹتا ہے۔ جن حصوں کی ادائیگی ہو چکی وہ اپنی جگہ رہتے ہیں۔', lot_draw: 'قرعہ نکالیں',
+  lot_again: 'دوبارہ نکالیں', lot_apply: 'یہ ترتیب لاگو کریں', lot_applied: 'ادائیگی کی ترتیب اپڈیٹ ہو گئی', lot_need: 'پہلے کم از کم دو ممبر شامل کریں',
+
+  in_title: 'ان باکس', in_notifs: 'اطلاعات', in_activity: 'سرگرمی', in_empty: 'سب کچھ دیکھ لیا گیا۔', in_log_empty: 'ابھی کوئی سرگرمی نہیں۔',
+  in_markall: 'سب پڑھی ہوئی کریں', in_clear: 'پڑھی ہوئی ہٹائیں', in_unread: '{a} غیر پڑھی',
+  n_overdue_t: '{c} میں {a} غیر ادا', n_overdue_b: '{m} کی قسطیں {d} کو واجب تھیں۔', n_payout_t: 'ادائیگی قریب: {c}', n_payout_b: '{m} کی {amt} رقم {d} کو {who} کو ملے گی۔',
+  n_dispute_t: 'تنازعہ {a} دن سے کھلا', n_dispute_b: '{who} · {c} · {m}', n_start_t: '{c} اگلے مہینے شروع', n_start_b: 'پہلی وصولی {d} کو۔ {b} میں سے {a} حصے مقرر۔',
+  n_done_t: 'کمیٹی مکمل: {c}', n_done_b: 'تمام {a} ادائیگیاں درج۔ اب آخری گوشوارے بنائیں۔',
+  lg_pay: '{who} · {m} · {s}', lg_payout: 'ادائیگی #{a} {who} کو درج ({amt})', lg_undo: 'ادائیگی #{a} واپس', lg_member_add: 'ممبر شامل: {who}',
+  lg_member_edit: 'ممبر میں ترمیم: {who}', lg_member_del: 'ممبر نکالا گیا: {who}', lg_c_new: 'کمیٹی بنی: {c}', lg_c_edit: 'کمیٹی کی شرائط میں ترمیم',
+  lg_c_del: 'کمیٹی حذف: {c}', lg_order: 'ادائیگی کی ترتیب بدلی', lg_lottery: 'قرعہ اندازی لاگو', lg_need: '{who} کی ضرورت کی درخواست',
+  lg_need_rank: 'ترتیب ضرورت کے مطابق', lg_dispute: '{who} کا تنازعہ · {m}', lg_dispute_st: 'تنازعہ #{a} ← {s}', lg_remind: '{a} ممبران کے لیے یاد دہانی تیار',
+  lg_import: 'بیک اپ درآمد ہوا', lg_reset: 'ڈیمو ڈیٹا بحال', lg_pin: 'منتظم کا PIN بدلا', lg_markall: '{a} ادائیگیاں ادا شدہ · {m}', lg_receipt: 'رسید {a} جاری',
+
+  se_title: 'ترتیبات', se_appearance: 'ظاہری شکل', se_lang: 'زبان', se_theme: 'تھیم', se_light: 'روشن', se_dark: 'تاریک', se_system: 'سسٹم',
+  se_motion: 'حرکت کم کریں', se_motion_s: 'اینیمیشن اور ٹرانزیشن بند کریں۔', se_compact: 'مختصر اعداد', se_compact_s: 'خلاصوں میں Rs 1,200,000 کی جگہ Rs 1.2M دکھائیں۔',
+  se_rules: 'نئی کمیٹیوں کے لیے ڈیفالٹ', se_grace: 'رعایتی دن', se_remind: 'یاد دہانی (وصولی سے کتنے دن پہلے)', se_remind_s: 'ان باکس اتنے دن پہلے ادائیگی کی اطلاع دیتا ہے۔',
+  se_security: 'منتظم کا لاک', se_pin_set: 'PIN مقرر کریں', se_pin_change: 'PIN بدلیں', se_pin_remove: 'PIN ہٹائیں',
+  se_pin_s: '4–6 ہندسوں کا PIN رجسٹر کو ہر اٹھانے والے سے چھپاتا ہے۔ صرف اسی ڈیوائس پر ہیش کی صورت میں محفوظ۔',
+  se_autolock: 'غیر فعالی پر خودکار لاک', se_never: 'کبھی نہیں', se_min: '{a} منٹ', se_data: 'ڈیٹا', se_storage: 'استعمال شدہ جگہ', se_export: 'سب کچھ برآمد کریں (JSON)',
+  se_import: 'JSON درآمد', se_clear: 'تمام ڈیٹا مٹائیں', se_clear_q: 'اس ڈیوائس پر ہر کمیٹی، ترتیب اور لاگ مٹا دیں؟', se_cleared: 'تمام ڈیٹا مٹ گیا',
+  se_demo: 'ڈیمو ڈیٹا', se_tour: 'تعارفی دورہ دوبارہ', se_shortcuts: 'کی بورڈ شارٹ کٹ', se_saved: 'ترتیب محفوظ',
+  sc_1: 'حصہ 1–9 پر جائیں (ڈیش بورڈ … رپورٹس)', sc_2: 'ان باکس کھولیں / بند کریں', sc_3: 'نئی کمیٹی', sc_4: 'زبان بدلیں', sc_5: 'ڈائیلاگ یا دراز بند کریں', sc_6: 'رجسٹر لاک کریں (جب PIN مقرر ہو)',
+  pin_title: 'PIN درج کریں', pin_s: 'یہ رجسٹر منتظم نے لاک کیا ہے۔', pin_wrong: 'غلط PIN', pin_new: 'نیا PIN چنیں (4–6 ہندسے)', pin_confirm: 'PIN دوبارہ درج کریں',
+  pin_mismatch: 'PIN مطابقت نہیں رکھتے', pin_set: 'PIN مقرر ہو گیا', pin_removed: 'PIN ہٹا دیا گیا', pin_len: '4 سے 6 ہندسے', pin_current: 'موجودہ PIN', lock_now: 'ابھی لاک کریں', pin_locked: 'رجسٹر لاک ہو گیا',
+
+  ab_title: 'اس پروجیکٹ کے بارے میں', ab_problem: 'مسئلہ',
+  ab_problem_t: 'پاکستان کے لاکھوں گھرانے غیر رسمی کمیٹیوں (بیسی) کے ذریعے بچت کرتے ہیں۔ یہ یادداشت، کاغذ اور واٹس ایپ پر چلتی ہیں، اس لیے کس نے ادا کیا، اگلی باری کس کی ہے اور تاخیری ادائیگیوں پر جھگڑے عام ہیں — اور معاملہ خراب ہو تو کوئی قانونی تحفظ نہیں۔',
+  ab_how: 'یہ کیسے کام کرتا ہے',
+  ab_how_t: 'ہر کمیٹی اپنے ممبران، ادائیگی کی ترتیب اور سائیکل × ممبر ادائیگی جدول آپ کے براؤزر میں محفوظ رکھتی ہے۔ سکرین پر ہر عدد — وصولی، باقی، جرمانے، وصول کنندہ، اعتماد اسکور، کیلنڈر، رپورٹس اور چارٹ — اسی جدول سے نکلتا ہے، لہٰذا ایک خانے پر ٹیپ سب کچھ اپڈیٹ کر دیتا ہے۔',
+  ab_stack: 'ایک HTML فائل، سادہ جاوا اسکرپٹ، ہاتھ سے بنے SVG چارٹ، کینوس رسیدیں، localStorage، کوئی بیک اینڈ نہیں۔', ab_todo: 'طلبہ کے لیے باقی کام', ab_modules: 'ماڈیول نقشہ',
+  ab_data: 'ڈیٹا اور بیک اپ', ab_data_t: 'سب کچھ اسی براؤزر میں "kameti:" کے تحت محفوظ ہے۔ باقاعدگی سے JSON بیک اپ لیں؛ دوسرے آلے پر درآمد کر کے کمیٹیاں منتقل کریں۔',
+  ab_export: 'JSON برآمد کریں', ab_import: 'JSON درآمد کریں', ab_reset: 'ڈیمو ڈیٹا بحال کریں', ab_imported: '{a} کمیٹیاں درآمد ہوئیں', ab_import_err: 'فائل پڑھی نہ جا سکی',
+  ab_reset_q: 'تمام ڈیٹا کی جگہ ڈیمو کمیٹیاں رکھ دیں؟', ab_reset_ok: 'ڈیمو ڈیٹا بحال ہو گیا',
+  faq: [
+    ['کمیٹی کیا ہے؟', 'کمیٹی (بیسی) گھومتی بچت کا طریقہ ہے: ہر ممبر ہر مہینے ایک مقررہ رقم جمع کرتا ہے اور ہر سائیکل میں ایک ممبر پوری رقم لے جاتا ہے، یہاں تک کہ سب کی باری آ جائے۔ یہ بڑے خرچ کے لیے بلا سود بچت کا ذریعہ ہے۔'],
+    ['پہلی باری کا فائدہ کسے؟', 'پہلی باری والے ممبر کو گویا بلا سود قرض ملتا ہے، جبکہ آخری باری والے دراصل قرض دیتے ہیں۔ اسی لیے ترتیب اہم ہے اور شفاف ہونی چاہیے — قرعہ اندازی، سب کے سامنے ضرورت کی درجہ بندی، یا متفقہ فہرست جس پر سب دستخط کریں۔ منصوبہ ساز ٹیب اس کے اعداد دکھاتا ہے۔'],
+    ['خطرات کیا ہیں؟', 'کوئی قانونی تحفظ نہیں: اگر منتظم یا پہلی باری والا ممبر غائب ہو جائے تو بعد والے ممبران کا نقصان ہوتا ہے۔ صرف جانے پہچانے لوگوں کی کمیٹی میں شامل ہوں، تحریری ریکارڈ اور رسیدیں رکھیں، اور دستخط شدہ اندراج کے بغیر نقد رقم کبھی نہ دیں۔'],
+    ['اگر کوئی ادائیگی روک دے؟', 'شروع کرنے سے پہلے اصول طے کر لیں (معاہدے کی شق ۵)۔ شیڈول میں نادہندگی سمیولیٹر سے کمی اور اختیارات دیکھیں: تقسیم کریں، منتظم ادا کرے، یا نادہندہ کی باری آخر میں کر دیں۔'],
+    ['رعایتی دن اور جرمانے کی حد کیا ہے؟', 'رعایتی مدت وصولی کی تاریخ کے بعد چند دن دیتی ہے جن میں ادائیگی تاخیر شمار نہیں ہوتی۔ جرمانے کی حد فیصدی جرمانے کو بے حد بڑھنے سے روکتی ہے۔ دونوں معاہدے میں لکھے جاتے ہیں۔'],
+    ['کیا کمیٹی بینک اکاؤنٹ جیسی ہے؟', 'نہیں۔ بینک ریگولیٹڈ ہوتے ہیں اور رقم ایک حد تک محفوظ ہوتی ہے؛ کمیٹی مکمل طور پر اعتماد پر چلتی ہے۔ پھر بھی بہت سے گھرانے اسے پسند کرتے ہیں کیونکہ یہ بچت کی پابندی لاتی ہے اور اس میں سود نہیں۔']
+  ]
+};
+const t = k => TXT[lang][k] ?? TXT.en[k] ?? k;
+const tf = (k, v = {}) => String(t(k)).replace(/\{(\w+)\}/g, (_, n) => v[n] ?? '');
+/* English-only lookups for printed documents that are always bilingual */
+const tEn = k => TXT.en[k] ?? k;
+
+// ---------- 3. settings ----------
+const DEFAULT_SETTINGS = {
+  theme: 'system',      // light | dark | system
+  motion: true,         // false = reduce motion
+  compact: false,       // Rs 1.2M style in summaries
+  graceDays: 3,         // default for new committees
+  remindDays: 3,        // inbox warns about payouts this many days ahead
+  pinHash: '',          // FNV hash of the organizer PIN ('' = no lock)
+  autoLock: 0,          // minutes of inactivity, 0 = never
+  bannerDismissed: false,
+  tourDone: false
+};
+let SETTINGS = Object.assign({}, DEFAULT_SETTINGS, store.get('settings', {}));
+
+function saveSettings(patch) {
+  Object.assign(SETTINGS, patch);
+  store.set('settings', SETTINGS);
+}
+const prefersDark = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+function applyTheme() {
+  const dark = SETTINGS.theme === 'dark' || (SETTINGS.theme === 'system' && prefersDark());
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.documentElement.dataset.motion = SETTINGS.motion ? 'on' : 'off';
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+}
+
+// ---------- 4. activity log + inbox ----------
+let LOG = store.get('log', []);
+let INBOX = store.get('inbox', []);
+const LOG_CAP = 300;
+
+/* Log entries store the i18n key + variables, so the list re-renders in either language. */
+function logEvent(key, vars = {}, cid = null) {
+  LOG.unshift({ id: uid(), at: new Date().toISOString(), key, vars, cid: cid || DB?.activeId || null });
+  if (LOG.length > LOG_CAP) LOG.length = LOG_CAP;
+  store.set('log', LOG);
+}
+const logText = e => tf(e.key, e.vars);
+
+/* Notifications are deduplicated by key, so re-scanning never spams the inbox. */
+function notify(key, data) {
+  if (INBOX.some(n => n.key === key)) return false;
+  INBOX.unshift({ id: uid(), key, at: new Date().toISOString(), read: false, ...data });
+  if (INBOX.length > 120) INBOX.length = 120;
+  store.set('inbox', INBOX);
+  return true;
+}
+const unreadCount = () => INBOX.filter(n => !n.read).length;
+function markRead(id) {
+  const n = INBOX.find(x => x.id === id);
+  if (n) n.read = true;
+  store.set('inbox', INBOX);
+  renderBell();
+}
+function markAllRead() {
+  INBOX.forEach(n => (n.read = true));
+  store.set('inbox', INBOX);
+  renderBell();
+}
+function clearRead() {
+  INBOX = INBOX.filter(n => !n.read);
+  store.set('inbox', INBOX);
+  renderBell();
+}
+function renderBell() {
+  const n = unreadCount();
+  const dot = $('#bellDot');
+  dot.textContent = n > 9 ? '9+' : String(n);
+  dot.classList.toggle('hidden', n === 0);
+}
+
+/* Scan every committee for things the organizer should know about. Called on load and after every save. */
+function scanAlerts() {
+  for (const c of DB.committees) {
+    const n = c.order.length;
+    if (!n) continue;
+    scanOverdue(c);
+    scanPayouts(c);
+    scanDisputes(c);
+    const status = committeeStatus(c);
+    if (status === 'notstarted' && monthOf(c, 0) === addMonths(curMonth, 1)) {
+      const filled = c.order.filter(Boolean).length;
+      notify(`start:${c.id}`, { kind: 'gold', icon: 'calendar', title: tf('n_start_t', { c: c.name }), body: tf('n_start_b', { d: dateLabel(iso(dueDate(c, 0)), true), a: filled, b: n }), cid: c.id, route: 'members' });
+    }
+    if (status === 'finished' && Object.keys(c.payouts).length === n) {
+      notify(`done:${c.id}`, { kind: '', icon: 'check-circle', title: tf('n_done_t', { c: c.name }), body: tf('n_done_b', { a: n }), cid: c.id, route: 'reports' });
+    }
+  }
+  renderBell();
+}
+function scanOverdue(c) {
+  for (let i = 0; i < c.order.length; i++) {
+    const due = dueDate(c, i);
+    if (due > today || c.payouts[i]) continue;
+    const st = monthStats(c, i);
+    if (!st.unpaid && !st.partial) continue;
+    const key = `overdue:${c.id}:${i}:${iso(today)}`;
+    notify(key, { kind: 'bad', icon: 'alert-circle', title: tf('n_overdue_t', { a: st.unpaid + st.partial, c: c.name }), body: tf('n_overdue_b', { m: monthLabel(monthOf(c, i), true), d: dateLabel(iso(due), true) }), cid: c.id, route: 'payments', cycle: i });
+  }
+}
+function scanPayouts(c) {
+  for (let i = 0; i < c.order.length; i++) {
+    if (c.payouts[i]) continue;
+    const due = dueDate(c, i);
+    const dd = daysBetween(today, due);
+    if (dd < 0 || dd > SETTINGS.remindDays) continue;
+    const st = monthStats(c, i);
+    const who = st.recipient ? st.recipient.name : t('ord_unassigned');
+    notify(`payout:${c.id}:${i}`, { kind: 'gold', icon: 'award', title: tf('n_payout_t', { c: c.name }), body: tf('n_payout_b', { m: monthLabel(monthOf(c, i), true), amt: rsFull(st.expected), who, d: dateLabel(iso(due), true) }), cid: c.id, route: 'schedule' });
+  }
+}
+function scanDisputes(c) {
+  for (const d of c.disputes || []) {
+    if (d.status === 'resolved' || d.status === 'rejected') continue;
+    const days = daysBetween(fromIso(d.created.slice(0, 10)), today);
+    if (days < 7) continue;
+    const m = memberById(c, d.memberId);
+    notify(`dispute:${d.id}:${Math.floor(days / 7)}`, { kind: 'bad', icon: 'flag', title: tf('n_dispute_t', { a: days }), body: tf('n_dispute_b', { who: m ? m.name : '—', c: c.name, m: monthLabel(monthOf(c, d.cycle), true) }), cid: c.id, route: 'disputes' });
+  }
+}
+
+// ---------- 5. model ----------
+const curMonth = ym(today);
+const totalSlots = c => c.members.reduce((a, m) => a + (m.slots || 1), 0);
+const monthOf = (c, i) => addMonths(c.startMonth, i);
+function dueDate(c, i) {
+  const [y, m] = monthOf(c, i).split('-').map(Number);
+  return new Date(y, m - 1, clamp(c.collectionDay || 1, 1, 28));
+}
+const graceEnd = (c, i) => addDays(dueDate(c, i), c.graceDays || 0);
+const memberById = (c, id) => c.members.find(m => m.id === id) || null;
+const committeeById = id => DB.committees.find(c => c.id === id) || null;
+const expectedFor = (c, m) => c.contribution * (m.slots || 1);
+const cell = (c, i, mid) => c.payments[`${i}:${mid}`] || null;
+const METHODS = ['fixed', 'lottery', 'organizer', 'need'];
+const methodName = m => t({ fixed: 'm_fixed', lottery: 'm_lottery', organizer: 'm_organizer', need: 'm_need' }[m] || 'm_fixed');
+function lateRuleName(lf, dict = null) {
+  const T = dict ? k => dict[k] : t;
+  if (!lf || lf.type === 'none') return T('lf_none');
+  if (lf.type === 'flat') return String(T('lf_flat')).replace('{a}', nf.format(lf.value || 0));
+  return String(T('lf_pct')).replace('{a}', lf.value || 0);
+}
+function committeeStatus(c) {
+  const n = c.order.length;
+  if (!n) return 'notstarted';
+  if (monthOf(c, 0) > curMonth) return 'notstarted';
+  if (monthOf(c, n - 1) < curMonth) return 'finished';
+  return 'running';
+}
+
+/* The payout order is an array with one entry per cycle (= slot). A member holding two slots appears twice; null = unassigned. */
+function syncOrder(c) {
+  c.members = c.members || [];
+  c.payments = c.payments || {};
+  c.payouts = c.payouts || {};
+  c.disputes = c.disputes || [];
+  c.needs = c.needs || [];
+  if (c.graceDays == null) c.graceDays = 0;
+  if (c.feeCap == null) c.feeCap = 0;
+  const n = Math.max(c.planned || 0, totalSlots(c));
+  const ids = new Set(c.members.map(m => m.id));
+  const o = (c.order || []).map(id => (ids.has(id) ? id : null));
+  for (const m of c.members) {
+    const want = m.slots || 1;
+    let have = o.filter(x => x === m.id).length;
+    while (have > want) {
+      o[o.lastIndexOf(m.id)] = null;
+      have--;
+    }
+    while (have < want) {
+      const free = o.indexOf(null);
+      if (free >= 0) o[free] = m.id;
+      else o.push(m.id);
+      have++;
+    }
+  }
+  while (o.length < n) o.push(null);
+  while (o.length > n && o.includes(null)) o.splice(o.lastIndexOf(null), 1);
+  c.order = o;
+}
+function currentCycle(c) {
+  const n = c.order.length;
+  if (!n) return 0;
+  const idx = c.order.findIndex((_, i) => monthOf(c, i) === curMonth);
+  if (idx >= 0) return idx;
+  return monthOf(c, 0) > curMonth ? 0 : n - 1;
+}
+function cycleState(c, i) {
+  if (c.payouts[i]) return 'done';
+  const m = monthOf(c, i);
+  if (m === curMonth) return 'current';
+  return m < curMonth ? 'pending' : 'upcoming';
+}
+
+/* Late fee: flat per late payment, or % of the contribution per week (or part) after the grace period, optionally capped. */
+function lateFeeFor(c, i, m, p) {
+  if (!p || p.s !== 'late') return 0;
+  const lf = c.lateFee || { type: 'none' };
+  let fee = 0;
+  if (lf.type === 'flat') fee = +lf.value || 0;
+  if (lf.type === 'pct') {
+    const paidOn = p.date ? fromIso(p.date) : today;
+    const days = Math.max(1, daysBetween(graceEnd(c, i), paidOn));
+    fee = Math.round((expectedFor(c, m) * (+lf.value || 0)) / 100) * Math.ceil(days / 7);
+  }
+  if (c.feeCap > 0) fee = Math.min(fee, c.feeCap);
+  return fee;
+}
+const paidAfterGrace = (c, i, dateIso) => !!dateIso && fromIso(dateIso) > graceEnd(c, i);
+
+/* Everything shown for a month derives from this one function. */
+function monthStats(c, i) {
+  const expected = c.contribution * totalSlots(c);
+  const st = { expected, collected: 0, waived: 0, fees: 0, paidSlots: 0, late: 0, unpaid: 0, partial: 0 };
+  for (const m of c.members) {
+    const p = cell(c, i, m.id);
+    const exp = expectedFor(c, m);
+    if (!p || p.s === 'unpaid') {
+      st.unpaid++;
+      continue;
+    }
+    if (p.s === 'waived') {
+      st.waived += exp;
+      continue;
+    }
+    st.collected += p.amt || 0;
+    if (p.s === 'late') {
+      st.late++;
+      st.fees += lateFeeFor(c, i, m, p);
+    }
+    if (p.s === 'partial') st.partial++;
+    if ((p.s === 'paid' || p.s === 'late') && (p.amt || 0) >= exp) st.paidSlots += m.slots || 1;
+  }
+  const rid = c.order[i];
+  st.pending = Math.max(0, expected - st.collected - st.waived);
+  st.recipient = rid ? memberById(c, rid) : null;
+  st.payout = st.collected + st.fees;
+  st.progress = expected ? Math.min(1, st.collected / expected) : 0;
+  return st;
+}
+const turnsOf = (c, id) => c.order.map((x, k) => (x === id ? k : -1)).filter(k => k >= 0);
+const disputesFor = (c, i, mid) => (c.disputes || []).filter(d => d.cycle === i && d.memberId === mid && d.status !== 'resolved' && d.status !== 'rejected');
+const openDisputes = c => (c.disputes || []).filter(d => d.status === 'open' || d.status === 'review');
+
+/* Trust: every due cell of every member with the same phone number, across all committees on this device. */
+function outcomes(phone) {
+  const key = digits(phone);
+  const out = [];
+  if (!key) return out;
+  for (const c of DB.committees) {
+    for (const m of c.members) {
+      if (digits(m.phone) !== key) continue;
+      for (let i = 0; i < c.order.length; i++) {
+        const due = dueDate(c, i);
+        if (due > today) continue;
+        const kind = outcomeOf(c, i, m);
+        if (kind) out.push({ kind, due, c, i });
+      }
+    }
+  }
+  out.sort((a, b) => a.due - b.due);
+  return out;
+}
+function outcomeOf(c, i, m) {
+  const p = cell(c, i, m.id);
+  if (!p || p.s === 'unpaid') return 'missed';
+  if (p.s === 'waived') return null;
+  if (p.s === 'partial') return 'partial';
+  if (p.s === 'late') return 'late';
+  return paidAfterGrace(c, i, p.date) ? 'late' : 'ontime';
+}
+const TRUST_W = { ontime: 1, late: 0.5, partial: 0.4, missed: 0 };
+/* Bayesian smoothing: new members start near 70 and move with evidence. */
+function scoreFrom(list) {
+  const pts = list.reduce((a, o) => a + TRUST_W[o.kind], 0);
+  const k = 2;
+  const prior = 0.7;
+  return Math.round((100 * (pts + prior * k)) / (list.length + k));
+}
+// TODO(student): portable trust score — sign each member's outcome history with the organizer's key and publish it to a shared
+// registry (or a verifiable credential) so reputation travels between committees, devices and organizers.
+const trustScore = phone => scoreFrom(outcomes(phone));
+const trustHistory = phone => {
+  const o = outcomes(phone);
+  return o.map((_, i) => ({ due: o[i].due, score: scoreFrom(o.slice(0, i + 1)) }));
+};
+
+/* Need-based ranking: urgency, waiting time and trust, with members who already received the pot pushed last. */
+function needScore(c, nd) {
+  const m = memberById(c, nd.memberId);
+  if (!m) return 0;
+  const waited = Math.max(0, daysBetween(fromIso(nd.created.slice(0, 10)), today) / 30);
+  const received = turnsOf(c, m.id).some(k => c.payouts[k]);
+  const base = (nd.urgency || 3) * 2 + waited + trustScore(m.phone) / 25;
+  return Math.round((received ? base - 100 : base) * 10) / 10;
+}
+function rankByNeed(c) {
+  const open = (c.needs || []).filter(nd => nd.status === 'open' && memberById(c, nd.memberId));
+  const ranked = open.map(nd => ({ nd, score: needScore(c, nd) })).sort((a, b) => b.score - a.score);
+  const freeSlots = c.order.map((id, k) => k).filter(k => cycleState(c, k) !== 'done');
+  const proposed = c.order.slice();
+  const remainingIds = freeSlots.map(k => c.order[k]);
+  const placed = [];
+  for (const r of ranked) {
+    const idx = remainingIds.indexOf(r.nd.memberId);
+    if (idx < 0) continue;
+    remainingIds.splice(idx, 1);
+    placed.push(r.nd.memberId);
+  }
+  const finalIds = placed.concat(remainingIds);
+  freeSlots.forEach((k, j) => (proposed[k] = finalIds[j]));
+  return { ranked, proposed };
+}
+
+/* People directory: one entry per phone number across all committees. */
+function allPeople() {
+  const map = new Map();
+  for (const c of DB.committees) {
+    for (const m of c.members) {
+      const key = digits(m.phone) || m.id;
+      if (!map.has(key)) map.set(key, { key, name: m.name, phone: m.phone, cnic4: m.cnic4 || '', entries: [] });
+      map.get(key).entries.push({ c, m });
+    }
+  }
+  const people = [...map.values()];
+  for (const p of people) {
+    p.committees = p.entries.length;
+    p.slots = sum(p.entries.map(e => e.m.slots || 1));
+    p.paid = 0;
+    p.received = 0;
+    for (const { c, m } of p.entries) {
+      for (let i = 0; i < c.order.length; i++) {
+        const pay = cell(c, i, m.id);
+        if (pay && pay.s !== 'waived') p.paid += pay.amt || 0;
+        if (c.order[i] === m.id && c.payouts[i]) p.received += c.payouts[i].amt;
+      }
+    }
+    p.outcomes = outcomes(p.phone);
+    p.trust = scoreFrom(p.outcomes);
+    p.openDisputes = sum(p.entries.map(e => openDisputes(e.c).filter(d => d.memberId === e.m.id).length));
+  }
+  return people.sort((a, b) => b.trust - a.trust || a.name.localeCompare(b.name));
+}
+
+/* Cash-flow events for one calendar month across all committees */
+function monthEvents(ymS) {
+  const events = [];
+  for (const c of DB.committees) {
+    for (let i = 0; i < c.order.length; i++) {
+      if (monthOf(c, i) !== ymS) continue;
+      const st = monthStats(c, i);
+      const due = dueDate(c, i);
+      events.push({ kind: 'in', date: iso(due), c, i, amt: st.expected, collected: st.collected });
+      const payDate = c.payouts[i] ? c.payouts[i].date : iso(addDays(due, 1));
+      events.push({ kind: 'out', date: payDate, c, i, amt: c.payouts[i] ? c.payouts[i].amt : st.expected, who: st.recipient, done: !!c.payouts[i] });
+    }
+  }
+  return events.sort((a, b) => a.date.localeCompare(b.date) || (a.kind === 'in' ? -1 : 1));
+}
+

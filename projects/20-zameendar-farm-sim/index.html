@@ -169,6 +169,7 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .ptitle h2{font-size:1.2rem}
 .stat{display:flex;justify-content:space-between;gap:8px;font-size:.86rem;padding:4px 0;border-bottom:1px dashed var(--line)}
 .stat b{white-space:nowrap}
+.stat.wrap b{white-space:normal;text-align:right;max-width:62%}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .actions .btn{justify-content:flex-start;font-size:.86rem;padding:8px 10px}
 .tip{background:#fff8e1;border:1px solid #f1d98a;border-radius:12px;padding:10px 12px;font-size:.86rem}
@@ -626,7 +627,7 @@ const L = {
     // print
     p_title: 'Farm report', p_lead: 'Printable summary of the current game.', p_print: 'Print', p_plots: 'Plot register', p_stock: 'Stock & receivables', p_debt: 'Debt position', p_generated: 'Generated',
     // spending categories
-    cat_inputs: 'Seed, fertiliser & sprays', cat_labour: 'Labour', cat_machinery: 'Machinery & solar', cat_water: 'Tubewell diesel', cat_finance: 'Interest', cat_storage: 'Storage', cat_upkeep: 'Orchard upkeep', cat_insurance: 'Insurance', cat_other: 'Other',
+    cat_inputs: 'Seed, fertiliser & sprays', cat_labour: 'Labour', cat_machinery: 'Machinery & solar', cat_water: 'Tubewell diesel', cat_finance: 'Interest', cat_storage: 'Storage', cat_upkeep: 'Orchard upkeep', cat_insurance: 'Insurance', cat_other: 'Household & abiana',
     // misc
     close: 'Close', cancel: 'Cancel', got_it: 'Got it', not_enough: 'Not enough cash — visit the Bank.', not_window: 'Not in the sowing window this month.',
     plot_busy: 'This plot already has a crop.', not_ready: 'Not ready to harvest yet.', already_fert: 'Already fertilised this cycle.', no_pest: 'No pest on this plot.',
@@ -755,7 +756,7 @@ const L = {
     k_title: 'کی بورڈ شارٹ کٹ', k_end: 'مہینہ ختم', k_nav: 'فارم / منڈی / بینک / منصوبہ / رپورٹس', k_plot: 'قطعہ منتخب کریں (A1–D4 ترتیب سے)', k_move: 'انتخاب منتقل کریں',
     k_sow: 'بیجائی مینو کھولیں', k_harvest: 'منتخب قطعہ کاٹیں', k_irrig: 'آبپاشی آن/آف', k_sheet: 'یہ فہرست', k_esc: 'ڈائیلاگ بند کریں',
     p_title: 'فارم رپورٹ', p_lead: 'موجودہ کھیل کا قابلِ پرنٹ خلاصہ۔', p_print: 'پرنٹ', p_plots: 'قطعوں کا رجسٹر', p_stock: 'ذخیرہ اور وصولیاں', p_debt: 'قرض کی صورتحال', p_generated: 'تیار کردہ',
-    cat_inputs: 'بیج، کھاد اور سپرے', cat_labour: 'مزدوری', cat_machinery: 'مشینری اور سولر', cat_water: 'ٹیوب ویل ڈیزل', cat_finance: 'سود', cat_storage: 'گودام', cat_upkeep: 'باغ کی دیکھ بھال', cat_insurance: 'انشورنس', cat_other: 'دیگر',
+    cat_inputs: 'بیج، کھاد اور سپرے', cat_labour: 'مزدوری', cat_machinery: 'مشینری اور سولر', cat_water: 'ٹیوب ویل ڈیزل', cat_finance: 'سود', cat_storage: 'گودام', cat_upkeep: 'باغ کی دیکھ بھال', cat_insurance: 'انشورنس', cat_other: 'گھریلو خرچ اور آبیانہ',
     close: 'بند', cancel: 'منسوخ', got_it: 'سمجھ گیا', not_enough: 'رقم کم ہے — بینک جائیں۔', not_window: 'اس ماہ بیجائی کا وقت نہیں۔',
     plot_busy: 'اس قطعے پر پہلے سے فصل ہے۔', not_ready: 'ابھی کٹائی کے لیے تیار نہیں۔', already_fert: 'اس بار کھاد پہلے ڈال دی گئی ہے۔', no_pest: 'اس قطعے پر کوئی کیڑا نہیں۔',
     confirm_new: 'نیا کھیل شروع کریں؟ غیر محفوظ پیش رفت ضائع ہو جائے گی۔', planned: 'آبپاشی طے ہو گئی', unplanned: 'آبپاشی منسوخ', sprayed: 'سپرے ہو گیا',
@@ -954,6 +955,7 @@ const TRACTOR = 2500;
 const FERT_COST = 8000;
 const PREV_SPRAY = 3000;
 const OVERHEAD = 20000;   // monthly household, abiana and machinery upkeep
+const PAR_PER_ACRE_YEAR = 90000;   // benchmark net income per acre per year used by the financial score
 const TURNS = 60;
 
 const mOf = turn => (turn + 3) % 12;            // turn 0 = April
@@ -1232,7 +1234,7 @@ const MECH = [
   { icon: 'building', en: 'Finance', ur: 'مالیات',
     body: { en: 'A bank loan costs 15 % a year, needs a credit score of 50 and is capped at Rs 15 lac; the score falls while you sit above 70 % of the limit and rises with repayments and mandi sales. The arhti advance is instant but grows 2 % a month, forces sales through him at 5 % commission and 5 % below mandi, and silently covers any cash shortfall by adding to itself. Insurance costs 2 % of standing crop value for six months.', ur: 'بینک قرض 15٪ سالانہ، کریڈٹ سکور 50 درکار اور حد 15 لاکھ؛ حد کے 70٪ سے اوپر رہنے پر سکور گرتا ہے اور ادائیگیوں اور منڈی فروخت سے بڑھتا ہے۔ آڑھتی کا پیشگی قرض فوری مگر ہر ماہ 2٪ بڑھتا ہے، فروخت اسی کے ذریعے 5٪ کمیشن اور منڈی سے 5٪ کم پر، اور نقد کی کمی خاموشی سے قرض میں جوڑ دیتا ہے۔ انشورنس چھ ماہ کے لیے کھڑی فصل کی قیمت کا 2٪۔' } },
   { icon: 'trophy', en: 'Scoring', ur: 'سکور',
-    body: { en: 'After 60 turns: financial score = 50 + 50 × log₂(net worth ÷ starting cash), so doubling your money scores 100. Sustainability = 0.4 × average soil + 0.3 × water efficiency (harvest value per acre-inch vs Rs 12,000) + 0.3 × diversity (distinct crops and rotation discipline). Final score = 60 % financial + 40 % sustainability; A+ from 90, A from 80, B from 65, C from 50, D from 35.', ur: '60 باریوں کے بعد: مالی سکور = 50 + 50 × log₂(کل مالیت ÷ ابتدائی رقم)، یعنی رقم دگنی کرنے پر 100۔ پائیداری = 0.4 × اوسط زمین + 0.3 × پانی کی کارکردگی (فی ایکڑ انچ فصل کی قیمت بمقابلہ 12,000 روپے) + 0.3 × رنگا رنگی (مختلف فصلیں اور ادل بدل)۔ آخری سکور = 60٪ مالی + 40٪ پائیداری؛ A+ 90 سے، A 80 سے، B 65 سے، C 50 سے، D 35 سے۔' } }
+    body: { en: 'After 60 turns: financial score = 50 + 50 × log₂(net worth ÷ par), where par is your starting cash plus Rs 90,000 per acre per year (about Rs 80 lac on Normal); doubling par scores 100, halving it scores 0. Sustainability = 0.4 × average soil + 0.3 × water efficiency (harvest value per acre-inch vs Rs 12,000) + 0.3 × diversity (distinct crops and rotation discipline). Final score = 60 % financial + 40 % sustainability; A+ from 90, A from 80, B from 65, C from 50, D from 35.', ur: '60 باریوں کے بعد: مالی سکور = 50 + 50 × log₂(کل مالیت ÷ معیار)، جہاں معیار آپ کی ابتدائی رقم جمع 90,000 روپے فی ایکڑ فی سال ہے (معمول پر تقریباً 80 لاکھ)؛ معیار سے دگنا 100 اور آدھا 0۔ پائیداری = 0.4 × اوسط زمین + 0.3 × پانی کی کارکردگی (فی ایکڑ انچ فصل کی قیمت بمقابلہ 12,000 روپے) + 0.3 × رنگا رنگی (مختلف فصلیں اور ادل بدل)۔ آخری سکور = 60٪ مالی + 40٪ پائیداری؛ A+ 90 سے، A 80 سے، B 65 سے، C 50 سے، D 35 سے۔' } }
 ];
 const GLOSSARY = [
   { term: 'Warabandi', ur: 'وارہ بندی', def: { en: 'The rotational canal-water schedule that gives each farm a fixed weekly turn; in the game, your monthly share in acre-inches.', ur: 'نہری پانی کی باری کا نظام جو ہر فارم کو ہفتہ وار مقررہ وقت دیتا ہے؛ کھیل میں آپ کی ماہانہ باری ایکڑ انچ میں۔' } },
@@ -1989,7 +1991,8 @@ function sustainability() {
 function grade() {
   const nw = netWorth();
   const s = sustainability();
-  const fin = clamp(50 + 25 * Math.log2(Math.max(nw, 1) / g.startCash), 0, 100);
+  const par = g.startCash + PAR_PER_ACRE_YEAR * 16 * 5;
+  const fin = clamp(50 + 50 * Math.log2(Math.max(nw, 1) / par), 0, 100);
   const score = Math.round(.6 * fin + .4 * s.index);
   let letter = 'F';
   if (score >= 90) letter = 'A+';
@@ -3192,14 +3195,14 @@ function cropCard(c) {
   return `<article class="card paper panelbox" data-search="${esc((cr.en + ' ' + cr.ur + ' ' + cr.note.en + ' ' + cr.note.ur).toLowerCase())}">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:16px;height:16px;border-radius:5px;background:${cr.color};border:1px solid rgba(0,0,0,.15);flex:none"></span><h3 style="margin:0">${tx(cr)}</h3><span class="tag soil" style="margin-left:auto">${cr.cat}</span></div>
     <svg viewBox="0 0 140 56" width="140" height="56" aria-hidden="true" style="display:block;margin:0 auto 6px">${cropSprite({ crop: c, stage: cr.dur, dur: cr.dur, age: 40, ready: true, over: 0, soil: 70, i: 0 }, 70, 48)}</svg>
-    <div class="stat"><span>${t('al_sow')}</span><b style="white-space:normal;text-align:right">${monthRange(cr.sow)}</b></div>
+    <div class="stat wrap"><span>${t('al_sow')}</span><b>${monthRange(cr.sow)}</b></div>
     <div class="stat"><span>${t('al_dur')}</span><b class="num">${cr.dur} ${t('months')}</b></div>
     <div class="stat"><span>${t('al_water')}</span><b class="num">${cr.water} ${t('acre_in')}${t('per_mo')}</b></div>
     <div class="stat"><span>${t('al_inputs')}</span><b class="num">${rs(inputs)}</b></div>
     <div class="stat"><span>${t('al_yield')}</span><b class="num">${yieldLine}</b></div>
-    <div class="stat"><span>${t('al_price')}</span><b class="num">${priceLine}</b></div>
+    <div class="stat wrap"><span>${t('al_price')}</span><b class="num">${priceLine}</b></div>
     <div class="stat"><span>${t('al_soil')}</span><b class="num">${drain}</b></div>
-    <div class="stat"><span>${t('al_pests')}</span><b>${pests}</b></div>
+    <div class="stat wrap"><span>${t('al_pests')}</span><b>${pests}</b></div>
     <p class="small muted txt" style="margin:8px 0 0">${tx(cr.note)}</p></article>`;
 }
 // A 12-column strip showing when each crop can be sown.

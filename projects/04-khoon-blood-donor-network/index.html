@@ -1283,7 +1283,8 @@ const L = {
     ro_added: 'Patient added to the rota',
     ro_invalid: 'Enter initials, hospital, 1–4 units and a day between 1 and 28.',
     ro_needed: 'needed',
-    ro_assigned: 'assigned',
+    ro_assigned: 'Assigned',
+    ro_assignOne: 'Assign',
     ro_assign: 'Assign donors',
     ro_assignMe: 'Assign me',
     ro_candidates: 'Compatible donors in the city who will be eligible by that date',
@@ -1762,7 +1763,8 @@ const L = {
     ro_added: 'مریض روٹا میں شامل',
     ro_invalid: 'مخفف، ہسپتال، 1 سے 4 بوتلیں اور 1 سے 28 کے بیچ دن درج کریں۔',
     ro_needed: 'درکار',
-    ro_assigned: 'مقرر',
+    ro_assigned: 'مقرر شدہ',
+    ro_assignOne: 'مقرر کریں',
     ro_assign: 'ڈونر مقرر کریں',
     ro_assignMe: 'مجھے مقرر کریں',
     ro_candidates: 'شہر کے مطابق ڈونر جو اس تاریخ تک اہل ہوں گے',
@@ -3621,9 +3623,11 @@ function openAssign(pid) {
   const assignedRows = assigned.length
     ? assigned.map(d => `<div class="assignee"><span>${ic('check-circle')} ${esc(d.name)} <span class="muted small">${d.group} · ${esc(d.area)}</span></span><button class="btn ghost sm" data-un="${d.id}">${t('ro_unassign')}</button></div>`).join('')
     : `<p class="muted small" style="margin:0">${t('ro_zero')}</p>`;
-  const candRows = candidates.length
-    ? candidates.map(d => `<div class="assignee"><span>${esc(d.name)} <span class="bg inline" style="font-size:.75rem;padding:2px 6px">${d.group}</span> <span class="muted small">${esc(d.area)} · ${d.count} ${t('donations')}</span>${d.ok ? '' : `<span class="pill wait" style="margin-left:6px">${ic('clock')} ${t('ro_notEligible')}</span>`}</span><button class="btn sm ${d.ok ? '' : 'ghost'}" data-as="${d.id}" ${d.ok ? '' : 'disabled'}>${d.isMe ? t('ro_assignMe') : t('ro_assign')}</button></div>`).join('')
-    : `<p class="muted small" style="margin:0">${t('ro_none')}</p>`;
+  const candRow = d => `<div class="assignee">
+      <span>${esc(d.name)} <span class="bg inline" style="font-size:.75rem;padding:2px 6px">${d.group}</span> <span class="muted small">${esc(d.area)} · ${d.count} ${t('donations')}</span>${d.ok ? '' : `<span class="pill wait" style="margin-left:6px">${ic('clock')} ${t('ro_notEligible')}</span>`}</span>
+      <button class="btn sm ${d.ok ? '' : 'ghost'}" data-as="${d.id}" ${d.ok ? '' : 'disabled'}>${d.isMe ? t('ro_assignMe') : t('ro_assignOne')}</button>
+    </div>`;
+  const candRows = candidates.length ? candidates.map(candRow).join('') : `<p class="muted small" style="margin:0">${t('ro_none')}</p>`;
   openModal(`<h3>${ic('heart')} ${esc(p.name)} · ${p.group} · ${p.units} ${t('units')}</h3>
     <div class="meta">${esc(p.hospital)}, ${esc(p.city)} · ${t('ro_due')} ${bdi(dateStr(needDate(p, key)))}</div>
     <h4 class="mt">${t('ro_assigned')} (${assigned.length}/${p.units})</h4>${assignedRows}
@@ -3864,7 +3868,11 @@ function cityDemandTable(reqs, donors) {
     return { c, n: cr.length, demand, supply, ratio: supply ? demand / supply : demand };
   }).sort((a, b) => b.ratio - a.ratio);
   const maxR = Math.max(0.1, ...rows.map(r => r.ratio));
-  const tr = rows.map(r => `<tr><td><b>${r.c}</b></td><td class="num">${r.n}</td><td class="num">${r.demand}</td><td class="num">${r.supply}</td><td class="num">${r.ratio.toFixed(1)}</td><td style="min-width:90px"><div class="track" style="height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden"><div class="fill" style="height:100%;width:${(r.ratio / maxR) * 100}%;background:${r.ratio > 2 ? 'var(--crimson)' : r.ratio > 1 ? 'var(--gold)' : 'var(--green)'};border-radius:999px"></div></div></td></tr>`).join('');
+  const barColor = r => (r.ratio > 2 ? 'var(--crimson)' : r.ratio > 1 ? 'var(--gold)' : 'var(--green)');
+  const tr = rows.map(r => `<tr>
+      <td><b>${r.c}</b></td><td class="num">${r.n}</td><td class="num">${r.demand}</td><td class="num">${r.supply}</td><td class="num">${r.ratio.toFixed(1)}</td>
+      <td style="min-width:90px"><div class="track" style="height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden"><div class="fill" style="height:100%;width:${(r.ratio / maxR) * 100}%;background:${barColor(r)};border-radius:999px"></div></div></td>
+    </tr>`).join('');
   return { html: `<div class="scrollx"><table class="tbl"><thead><tr><th>${t('city')}</th><th>${t('an_requests')}</th><th>${t('an_demand')}</th><th>${t('an_supply')}</th><th>${t('an_ratio')}</th><th></th></tr></thead><tbody>${tr}</tbody></table></div>`, top: rows[0] };
 }
 
@@ -3956,7 +3964,14 @@ function renderInbox() {
   const list = inbox().filter(n => inboxFilter === 'all' || !n.read);
   const unread = unreadCount();
   $('#inboxHead').innerHTML = `<div><h2>${ic('bell')} ${t('in_title')}</h2><p>${t('in_lead')}</p></div>`;
-  $('#inboxBar').innerHTML = `<div class="seg"><button class="${inboxFilter === 'all' ? 'on' : ''}" data-if="all">${t('in_all')}</button><button class="${inboxFilter === 'unread' ? 'on' : ''}" data-if="unread">${t('in_unreadOnly')} <span class="pill red" style="margin-left:4px">${unread}</span></button></div><span class="spacer"></span><button class="btn ghost sm" id="inAll" ${unread ? '' : 'disabled'}>${ic('check-circle')} ${t('in_markAll')}</button><button class="btn outline sm" id="inClear">${ic('trash')} ${t('in_clear')}</button>`;
+  $('#inboxBar').innerHTML = `
+    <div class="seg">
+      <button class="${inboxFilter === 'all' ? 'on' : ''}" data-if="all">${t('in_all')}</button>
+      <button class="${inboxFilter === 'unread' ? 'on' : ''}" data-if="unread">${t('in_unreadOnly')} <span class="pill red" style="margin-left:4px">${unread}</span></button>
+    </div>
+    <span class="spacer"></span>
+    <button class="btn ghost sm" id="inAll" ${unread ? '' : 'disabled'}>${ic('check-circle')} ${t('in_markAll')}</button>
+    <button class="btn outline sm" id="inClear">${ic('trash')} ${t('in_clear')}</button>`;
   $('#inbox').innerHTML = list.length ? list.map(messageRow).join('') : `<div class="empty">${ic('bell')}${t('in_none')}</div>`;
   $$('[data-if]').forEach(b => {
     b.onclick = () => {

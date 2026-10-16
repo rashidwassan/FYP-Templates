@@ -209,7 +209,7 @@ table.compact th,table.compact td{padding:7px 10px;font-size:.84rem}
 
 /* ---------- Horizontal bars (cost breakdown, rankings) ---------- */
 .bars{display:flex;flex-direction:column;gap:8px}
-.bars .brow{display:grid;grid-template-columns:minmax(90px,.9fr) minmax(0,2fr) auto;gap:10px;align-items:center;font-size:.85rem}
+.bars .brow{display:grid;grid-template-columns:minmax(130px,1fr) minmax(0,1.6fr) auto;gap:10px;align-items:center;font-size:.85rem}
 .bars .brow .lbl{display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar{height:10px;background:var(--surface-2);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
 .bar>i{display:block;height:100%;background:var(--leaf);border-radius:6px;transition:width .6s var(--ease)}
@@ -261,7 +261,8 @@ body.drawer-open .drawer{transform:none}
 .buyer .meta{font-size:.8rem;color:var(--muted)}
 .stars{display:inline-flex;gap:1px;color:var(--wheat-deep)}
 .stars .ic{width:1em;height:1em}
-.stars .ic.dim{opacity:.25}
+.stars .ic.dim{opacity:.3}
+.stars .ic:not(.dim){fill:currentColor}
 .stars.pick .ic{cursor:pointer;width:1.5em;height:1.5em}
 .tags{display:flex;flex-wrap:wrap;gap:4px}
 .notif{display:flex;gap:12px;align-items:flex-start}
@@ -346,7 +347,10 @@ body.tour-on .tourspot,body.tour-on .tourcard{display:block}
   .qres{left:0;right:auto;width:100%}
   .brand h1{font-size:.95rem}
   .monthgrid{grid-template-columns:repeat(6,minmax(0,1fr))}
-  .bars .brow{grid-template-columns:minmax(70px,.8fr) minmax(0,2fr) auto}
+  .bars .brow{grid-template-columns:minmax(96px,.9fr) minmax(0,1.6fr) auto}
+}
+@media (max-width:600px){
+  .mlabel{display:none}
 }
 @media (max-width:480px){
   .kpi .v{font-size:1.05rem}
@@ -1671,24 +1675,24 @@ const COST_ITEMS = [
   ['transport', 'cc_transport', 'tractor'],
 ];
 const COST_PROFILES = {
-  wheat: { seed: 9000, fert: 38000, pest: 6000, water: 9000, labour: 18000, rent: 45000, harvest: 14000, transport: 5000, yield: 32 },
-  rice_basmati: { seed: 6000, fert: 40000, pest: 12000, water: 18000, labour: 30000, rent: 50000, harvest: 16000, transport: 6000, yield: 28 },
-  rice_irri: { seed: 4000, fert: 38000, pest: 10000, water: 18000, labour: 26000, rent: 40000, harvest: 14000, transport: 6000, yield: 45 },
-  maize: { seed: 14000, fert: 45000, pest: 8000, water: 12000, labour: 20000, rent: 45000, harvest: 12000, transport: 6000, yield: 70 },
-  cotton: { seed: 8000, fert: 42000, pest: 35000, water: 14000, labour: 35000, rent: 50000, harvest: 28000, transport: 5000, yield: 22 },
+  wheat: { seed: 7000, fert: 30000, pest: 4000, water: 8000, labour: 14000, rent: 35000, harvest: 10000, transport: 4000, yield: 36 },
+  rice_basmati: { seed: 5000, fert: 32000, pest: 9000, water: 15000, labour: 24000, rent: 35000, harvest: 12000, transport: 5000, yield: 40 },
+  rice_irri: { seed: 4000, fert: 30000, pest: 8000, water: 15000, labour: 22000, rent: 35000, harvest: 12000, transport: 5000, yield: 60 },
+  maize: { seed: 14000, fert: 45000, pest: 8000, water: 12000, labour: 20000, rent: 45000, harvest: 12000, transport: 6000, yield: 75 },
+  cotton: { seed: 8000, fert: 36000, pest: 28000, water: 12000, labour: 30000, rent: 40000, harvest: 22000, transport: 4000, yield: 25 },
   sugarcane: { seed: 35000, fert: 55000, pest: 8000, water: 22000, labour: 30000, rent: 55000, harvest: 40000, transport: 25000, yield: 650 },
   chana: { seed: 7000, fert: 8000, pest: 5000, water: 3000, labour: 12000, rent: 25000, harvest: 10000, transport: 3000, yield: 9 },
-  moong: { seed: 4000, fert: 10000, pest: 7000, water: 6000, labour: 14000, rent: 30000, harvest: 10000, transport: 3000, yield: 9 },
+  moong: { seed: 4000, fert: 10000, pest: 7000, water: 6000, labour: 14000, rent: 30000, harvest: 10000, transport: 3000, yield: 10 },
   masoor: { seed: 5000, fert: 8000, pest: 4000, water: 4000, labour: 12000, rent: 25000, harvest: 9000, transport: 3000, yield: 8 },
   onion: { seed: 25000, fert: 40000, pest: 15000, water: 16000, labour: 50000, rent: 50000, harvest: 30000, transport: 15000, yield: 220 },
   tomato: { seed: 30000, fert: 45000, pest: 30000, water: 18000, labour: 60000, rent: 50000, harvest: 40000, transport: 25000, yield: 250 },
   potato: { seed: 90000, fert: 60000, pest: 20000, water: 14000, labour: 40000, rent: 55000, harvest: 30000, transport: 20000, yield: 280 },
-  garlic: { seed: 120000, fert: 40000, pest: 12000, water: 14000, labour: 50000, rent: 55000, harvest: 35000, transport: 8000, yield: 70 },
+  garlic: { seed: 180000, fert: 40000, pest: 12000, water: 14000, labour: 50000, rent: 55000, harvest: 35000, transport: 8000, yield: 70 },
   chilli: { seed: 12000, fert: 40000, pest: 35000, water: 18000, labour: 60000, rent: 50000, harvest: 45000, transport: 10000, yield: 80 },
-  apple: { seed: 20000, fert: 35000, pest: 40000, water: 20000, labour: 50000, rent: 60000, harvest: 40000, transport: 20000, yield: 180 },
-  banana: { seed: 30000, fert: 50000, pest: 15000, water: 30000, labour: 45000, rent: 55000, harvest: 30000, transport: 20000, yield: 300 },
-  kinnow: { seed: 15000, fert: 40000, pest: 35000, water: 20000, labour: 40000, rent: 60000, harvest: 35000, transport: 15000, yield: 250 },
-  mango: { seed: 15000, fert: 35000, pest: 45000, water: 20000, labour: 40000, rent: 70000, harvest: 40000, transport: 20000, yield: 150 },
+  apple: { seed: 25000, fert: 40000, pest: 50000, water: 40000, labour: 60000, rent: 80000, harvest: 50000, transport: 30000, yield: 140 },
+  banana: { seed: 30000, fert: 50000, pest: 15000, water: 30000, labour: 45000, rent: 55000, harvest: 30000, transport: 20000, yield: 250 },
+  kinnow: { seed: 15000, fert: 40000, pest: 35000, water: 20000, labour: 40000, rent: 60000, harvest: 35000, transport: 15000, yield: 200 },
+  mango: { seed: 15000, fert: 35000, pest: 45000, water: 20000, labour: 40000, rent: 70000, harvest: 40000, transport: 20000, yield: 100 },
 };
 
 // Buyer directory seed: arhtis (commission agents), mills, exporters and wholesalers per mandi.
@@ -2550,7 +2554,7 @@ function calcBreakdown(cfg) {
 }
 
 function calcMandiTable(res, cfg) {
-  const rows = [...res.s.rows].sort((a, b) => b.s[DAYS - 1] - a.s[DAYS - 1]).slice(0, 8);
+  const rows = [...res.s.rows].sort((a, b) => b.s[DAYS - 1] - a.s[DAYS - 1]).slice(0, 10);
   const body = rows.map(r => {
     const price = (r.s[DAYS - 1] * cfg.fp) / 100;
     const margin = price - res.breakEven;
@@ -2570,15 +2574,12 @@ function calcResults(res, cfg) {
       ${kpiHtml(res.profitAvg >= 0 ? 'rise' : 'fall', 'cc_profitAcre', `<span id="ccPA">${rs(res.profitAvg / cfg.acres)}</span>`, `${t('cc_total')}: ${rsk(res.profitAvg)} · ${cfg.acres} ${t('cc_acresU')}`, 'coins')}
       ${kpiHtml('', 'cc_margin', nf1.format(res.marginAvg) + '%', `${t('cc_revenue')}: ${rsk(res.revenueAvg)}`, 'percent')}
     </div>
-    <div class="two even">
-      <div class="panel"><h3 style="margin-top:0">${ic('pie-chart')}${t('cc_breakdown')}</h3>${calcBreakdown(cfg)}<div class="muted small mt">${t('cc_total')}: <b>${rs(res.costPerAcre)}</b> ${t('cc_perAcre')} · ${t('cc_yield')}: <b>${nf1.format(res.yieldPerAcre)}</b></div></div>
-      <div class="panel"><h3 style="margin-top:0">${ic('map-pin')}${t('cc_byMandi')}</h3><p class="lead small">${t('cc_byMandi_lead')}</p>${calcMandiTable(res, cfg)}</div>
-    </div>`;
+    <div class="panel"><h3 style="margin-top:0">${ic('pie-chart')}${t('cc_breakdown')}</h3>${calcBreakdown(cfg)}<div class="muted small mt">${t('cc_total')}: <b>${rs(res.costPerAcre)}</b> ${t('cc_perAcre')} · ${t('cc_yield')}: <b>${nf1.format(res.yieldPerAcre)}</b></div></div>`;
 }
 
 function renderCalculator() {
   const cfg = calcLoad();
-  view.innerHTML = `<div class="two">${calcForm(cfg)}<div><div id="ccOut"></div>${calcSliders(cfg)}</div></div>`;
+  view.innerHTML = `<div class="two">${calcForm(cfg)}<div><div id="ccOut"></div>${calcSliders(cfg)}</div></div><div class="panel mt" id="ccMandi"></div>`;
   const readForm = () => {
     cfg.acres = Math.max(.25, +$('#ccA').value || .25);
     cfg.yield = Math.max(1, +$('#ccY').value || 1);
@@ -2592,6 +2593,7 @@ function renderCalculator() {
     ['Fy', 'Fp', 'Fc'].forEach(k => ($('#cc' + k + 'V').textContent = $('#cc' + k).value + '%'));
     const res = calcCompute(cfg, state.region);
     $('#ccOut').innerHTML = calcResults(res, cfg);
+    $('#ccMandi').innerHTML = `<h3 style="margin-top:0">${ic('map-pin')}${t('cc_byMandi')}</h3><p class="lead small">${t('cc_byMandi_lead')}</p>${calcMandiTable(res, cfg)}`;
     countUp($('#ccBE'), res.breakEven, v => rs(v));
     countUp($('#ccPA'), res.profitAvg / cfg.acres, v => rs(v));
   };
@@ -2774,7 +2776,7 @@ function renderAnalytics() {
       <p class="lead">${t('an_lead')}</p>
       ${analyticsCallouts(cId)}
       <div class="sect">${ic('calendar')}${t('an_monthly')}</div>
-      <div class="chart tall" id="anChart"></div>
+      <div class="chart" id="anChart"></div>
       <div class="legend"><span><i style="background:#c9b79a"></i>${curYear - 1}</span><span><i style="background:#2f7d32"></i>${curYear}</span><span><i style="background:#2f7d32;opacity:.45"></i>${t('an_projected')}</span></div>
       <div class="sect">${ic('activity')}${t('an_seasonal')}</div>
       ${seasonalGrid(cId)}
@@ -3825,9 +3827,9 @@ applyTheme();
 ensureDemoData();
 const lastSync = store.get('lastSync');
 if (!lastSync || dayKey(new Date(lastSync.ts)) !== dayKey(today)) store.set('lastSync', { ts: Date.now(), source: 'simulated' });
+syncNotifications();
 applyLang();
 checkAlertsOnLoad();
-syncNotifications();
 if (!store.get('tourDone') && currentPage() === 'rates') setTimeout(startTour, 900);
 </script>
 </body>
