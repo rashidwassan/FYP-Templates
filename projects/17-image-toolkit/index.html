@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client-Side Image Toolkit</title>
+<meta name="description" content="Resize, crop, compress, convert, adjust and strip EXIF from photos entirely in the browser — nothing is uploaded. Passport / CNIC presets, target-size compression, batch ZIP export. Single-file FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: pro-tool neutral grey, white panels, charcoal ink, magenta accent ---------- */
+:root{
+  --bg:#f2f3f5; --surface:#ffffff; --surface-2:#f7f7f9; --surface-3:#eceef2; --ink:#23262d; --muted:#6b7080; --line:#e3e5ea; --line-2:#d3d6dd;
+  --accent:#d61f69; --accent-deep:#b3185a; --accent-soft:#fde7f1; --accent-ink:#8f1247;
+  --ok:#1a8a4a; --ok-soft:#e2f5e9; --warn:#b26a00; --warn-soft:#fff1d6; --bad:#c62828; --bad-soft:#fde4e2; --info:#2458c5; --info-soft:#e4ecfb;
+  --radius:14px; --radius-sm:9px; --shadow:0 8px 24px -16px rgba(35,38,45,.35);
+  --font:"Urbanist",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --topbar:58px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+body{min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent-deep)}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.01em}
+.muted{color:var(--muted)} .small{font-size:.84rem} .hidden{display:none!important} .mono{font-family:var(--mono);font-size:.82rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:3px solid var(--accent-soft);outline-offset:1px;border-radius:6px}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+.ic.lg{width:1.45em;height:1.45em} .ic.xl{width:2.4em;height:2.4em}
+
+/* ---------- Motion kit ---------- */
+:root{--ease:cubic-bezier(.2,.8,.2,1);--dur:.35s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(214,31,105,.35)}70%{box-shadow:0 0 0 18px rgba(214,31,105,0)}100%{box-shadow:0 0 0 0 rgba(214,31,105,0)}}
+@keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-8px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.enter{animation:fadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
+.btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.card,.tile{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
+.card:hover{transform:translateY(-2px)}
+.fill,.bar>i{transition:width .6s var(--ease)}
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+.spin{animation:spin .9s linear infinite}
+
+/* ---------- Top bar ---------- */
+.topbar{position:sticky;top:0;z-index:30;height:var(--topbar);background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 16px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .logo{width:36px;height:36px;border-radius:10px;background:var(--ink);display:grid;place-items:center;color:#fff;flex:none}
+.brand h1{font-size:1rem;font-weight:800;white-space:nowrap} .brand small{display:block;font-size:.72rem;color:var(--muted);font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:.78rem;font-weight:700;background:var(--ok-soft);color:var(--ok);white-space:nowrap}
+.pill.accent{background:var(--accent-soft);color:var(--accent-ink)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.grey{background:var(--surface-3);color:var(--muted)} .pill.info{background:var(--info-soft);color:var(--info)}
+.spacer{flex:1}
+.topbar .actions{display:flex;gap:8px;align-items:center}
+
+/* ---------- Buttons, inputs ---------- */
+.btn{border:1px solid transparent;border-radius:10px;min-height:40px;padding:8px 14px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;line-height:1.2;white-space:nowrap}
+.btn:hover{background:var(--accent-deep)}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line-2)} .btn.ghost:hover{background:var(--surface-2)}
+.btn.soft{background:var(--accent-soft);color:var(--accent-ink)} .btn.soft:hover{background:#fbd3e4}
+.btn.dark{background:var(--ink);color:#fff} .btn.dark:hover{background:#000}
+.btn.danger{background:var(--bad-soft);color:var(--bad)} .btn.danger:hover{background:#fbcfcb}
+.btn.sm{min-height:34px;padding:5px 10px;font-size:.84rem;border-radius:8px} .btn.block{width:100%} .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.iconbtn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:10px;width:40px;height:40px;display:inline-grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s,transform .15s var(--ease)}
+.iconbtn:hover{background:var(--surface-2);border-color:var(--accent)} .iconbtn:active{transform:scale(.96)} .iconbtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.iconbtn:disabled{opacity:.4;cursor:not-allowed}
+label.f{display:block;font-size:.76rem;font-weight:700;color:var(--muted);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+select,input[type=text],input[type=number],input[type=search]{width:100%;min-height:40px;border:1px solid var(--line-2);background:var(--surface);border-radius:10px;padding:8px 10px;outline:0;min-width:0}
+select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input[type=range]{width:100%;accent-color:var(--accent);height:28px;margin:0}
+input[type=color]{width:40px;height:40px;border:1px solid var(--line-2);border-radius:10px;padding:2px;background:var(--surface);cursor:pointer}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:4px 10px} .cols>*{min-width:0}
+.rowf{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chk{display:flex;align-items:center;gap:10px;min-height:40px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-weight:600;font-size:.9rem}
+.chk.on{border-color:var(--accent);background:var(--accent-soft)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:var(--surface-2);max-width:100%}
+.seg button{border:0;background:none;min-height:38px;padding:6px 12px;cursor:pointer;font-weight:700;font-size:.86rem;color:var(--muted)} .seg button.on{background:var(--ink);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;min-height:34px;padding:4px 12px;font-size:.82rem;font-weight:700;cursor:pointer;color:var(--ink);transition:background .15s,border-color .15s}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff} .chip:disabled{opacity:.45;cursor:not-allowed}
+.readout{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;padding:6px 0;border-bottom:1px dashed var(--line)} .readout:last-child{border-bottom:0}
+.readout b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.note{background:var(--info-soft);border-left:4px solid var(--info);padding:9px 12px;border-radius:8px;font-size:.84rem;margin-top:10px}
+.note.accent{background:var(--accent-soft);border-color:var(--accent)} .note.warn{background:var(--warn-soft);border-color:var(--warn)} .note.ok{background:var(--ok-soft);border-color:var(--ok)}
+.bar{height:8px;background:var(--surface-3);border-radius:999px;overflow:hidden} .bar>i{display:block;height:100%;background:var(--accent);width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.card h3{font-size:1rem;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+
+/* ---------- Empty state ---------- */
+.empty{max-width:980px;margin:0 auto;padding:36px 16px 60px}
+.drop{border:2px dashed var(--line-2);border-radius:22px;background:var(--surface);padding:48px 24px;text-align:center;transition:border-color .2s,background .2s,transform .2s var(--ease)}
+.drop.drag,body.dragging .drop{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.01)}
+.drop .ring{width:84px;height:84px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:0 auto 18px;animation:pulseRing 2.2s var(--ease) infinite}
+.drop h2{font-size:1.7rem;font-weight:800} .drop p{color:var(--muted);margin:8px 0 18px}
+.drop .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.formats{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.formats span{font-size:.74rem;font-weight:800;border:1px solid var(--line-2);border-radius:6px;padding:3px 8px;color:var(--muted);background:var(--surface-2)}
+.formats span.no{text-decoration:line-through;opacity:.6}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:22px}
+.feat .tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.feat .tile .ic{color:var(--accent)} .feat .tile b{display:block;margin:6px 0 2px}
+
+/* ---------- Workspace ---------- */
+.ws{display:grid;grid-template-columns:76px minmax(0,1fr) 352px;grid-template-rows:minmax(0,1fr) auto;height:calc(100vh - var(--topbar));min-height:560px}
+.rail{background:var(--surface);border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.rail button{border:0;background:none;border-radius:12px;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.66rem;font-weight:800;letter-spacing:.02em;color:var(--muted);cursor:pointer;transition:background .15s,color .15s,transform .15s var(--ease);text-transform:uppercase}
+.rail button .ic{width:22px;height:22px}
+.rail button:hover{background:var(--surface-2);color:var(--ink)} .rail button.on{background:var(--accent);color:#fff}
+.rail button:active{transform:scale(.96)}
+.rail .sep{flex:1}
+.centre{min-width:0;display:flex;flex-direction:column;background:var(--bg)}
+.stagebar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap;min-height:50px}
+.stagebar .dims{font-weight:700;font-variant-numeric:tabular-nums;font-size:.86rem;white-space:nowrap}
+.stagebar .zoomv{min-width:46px;text-align:center;font-weight:800;font-size:.84rem;font-variant-numeric:tabular-nums}
+.stagebar .iconbtn{width:36px;height:36px;border-radius:9px}
+.stage{flex:1;min-height:0;overflow:auto;position:relative;display:grid;place-items:center;padding:24px;background:var(--bg)}
+.frame{position:relative;flex:none;overflow:hidden;border-radius:4px;box-shadow:0 12px 30px -16px rgba(35,38,45,.45);background:conic-gradient(#e2e4e9 25%,#fff 0 50%,#e2e4e9 0 75%,#fff 0) 0 0/20px 20px;touch-action:none}
+.frame canvas{display:block;position:absolute;left:0;top:0;width:100%;height:100%}
+.frame.pix canvas{image-rendering:pixelated}
+.before{position:absolute;left:0;top:0;height:100%;overflow:hidden;pointer-events:none;background:conic-gradient(#e2e4e9 25%,#fff 0 50%,#e2e4e9 0 75%,#fff 0) 0 0/20px 20px}
+.before canvas{width:auto;height:100%}
+.before .tag,.aftertag{position:absolute;top:8px;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:rgba(35,38,45,.78);color:#fff;border-radius:6px;padding:3px 7px;pointer-events:none}
+.before .tag{left:8px} .aftertag{right:8px}
+.cmp{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);transform:translateX(-1px);cursor:ew-resize;touch-action:none}
+.cmp .grip{position:absolute;top:50%;left:50%;width:38px;height:38px;border-radius:50%;background:var(--surface);color:var(--accent);border:2px solid var(--accent);display:grid;place-items:center;transform:translate(-50%,-50%);box-shadow:0 6px 16px -6px rgba(0,0,0,.4);transition:transform .15s var(--ease),background .15s}
+.cmp:hover .grip,.cmp.drag .grip{transform:translate(-50%,-50%) scale(1.1);background:var(--accent);color:#fff}
+.peek{position:absolute;z-index:5;pointer-events:none;background:rgba(35,38,45,.92);color:#fff;border-radius:9px;padding:7px 9px;font-size:.74rem;font-family:var(--mono);display:none;white-space:nowrap;line-height:1.35}
+.peek i{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(255,255,255,.5);vertical-align:-3px;margin-right:6px}
+.shade{position:absolute;inset:0;background:rgba(35,38,45,.55);pointer-events:none}
+.cropbox{position:absolute;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.3);cursor:move;touch-action:none}
+.cropbox::before,.cropbox::after{content:"";position:absolute;inset:0;pointer-events:none}
+.cropbox.grid::before{background:linear-gradient(to right,transparent calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+.cropbox.grid::after{background:linear-gradient(to bottom,transparent calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
+.cropbox .h{position:absolute;width:22px;height:22px;transform:translate(-50%,-50%);display:grid;place-items:center}
+.cropbox .h::after{content:"";width:12px;height:12px;background:#fff;border:2px solid var(--accent);border-radius:3px}
+.cropbox .h.n{left:50%;top:0;cursor:ns-resize} .cropbox .h.s{left:50%;top:100%;cursor:ns-resize} .cropbox .h.e{left:100%;top:50%;cursor:ew-resize} .cropbox .h.w{left:0;top:50%;cursor:ew-resize}
+.cropbox .h.nw{left:0;top:0;cursor:nwse-resize} .cropbox .h.se{left:100%;top:100%;cursor:nwse-resize} .cropbox .h.ne{left:100%;top:0;cursor:nesw-resize} .cropbox .h.sw{left:0;top:100%;cursor:nesw-resize}
+.cropbox .lbl{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);background:rgba(35,38,45,.85);color:#fff;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* ---------- Properties panel ---------- */
+.props{background:var(--surface);border-left:1px solid var(--line);overflow:auto;display:flex;flex-direction:column;min-width:0}
+.props .ptitle{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:2}
+.props .ptitle h2{font-size:1.05rem;font-weight:800} .props .ptitle .ic{color:var(--accent)} .props .ptitle p{margin:0;font-size:.8rem;color:var(--muted)}
+.props .body{padding:6px 16px 16px}
+.props .sect{padding:10px 0;border-bottom:1px solid var(--line)} .props .sect:last-child{border-bottom:0}
+.props h4{font-size:.76rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:4px 0 8px;display:flex;align-items:center;gap:6px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.export{margin-top:auto;border-top:2px solid var(--line);background:var(--surface-2);padding:14px 16px 16px}
+.export .big{font-size:1.75rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.export .est{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:6px 0 10px}
+.preset{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;cursor:pointer;min-height:44px;transition:border-color .15s,background .15s}
+.preset:hover{border-color:var(--accent)} .preset.on{border-color:var(--accent);background:var(--accent-soft)}
+.preset b{font-size:.88rem} .preset small{display:block;color:var(--muted);font-size:.74rem} .preset .dim{font-variant-numeric:tabular-nums;font-weight:700;font-size:.8rem;white-space:nowrap;color:var(--accent-ink)}
+.presets{display:grid;gap:6px}
+.fmtgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fmt{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;min-height:62px;transition:border-color .15s,background .15s}
+.fmt:hover{border-color:var(--accent)} .fmt.on{border-color:var(--accent);background:var(--accent-soft)} .fmt:disabled{opacity:.5;cursor:not-allowed}
+.fmt b{display:block;font-size:.95rem} .fmt small{color:var(--muted);font-size:.74rem;line-height:1.3;display:block}
+table.meta{width:100%;border-collapse:collapse;font-size:.86rem} table.meta td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top} table.meta td:first-child{color:var(--muted);width:42%;font-weight:600} table.meta td:last-child{font-variant-numeric:tabular-nums;word-break:break-word}
+.hist{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:6px} .hist svg{width:100%;height:110px;display:block}
+.slider{display:grid;grid-template-columns:1fr 56px;gap:8px;align-items:center;margin:4px 0}
+.slider .lab{grid-column:1/-1;display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:var(--muted)} .slider .lab b{color:var(--ink);font-variant-numeric:tabular-nums}
+.slider input[type=number]{min-height:34px;padding:4px 6px;font-size:.84rem}
+.results{display:grid;gap:6px;margin-top:10px}
+.results .r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.84rem;background:var(--surface)}
+.results .r .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .results .r .sz{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
+.kpi .k{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800} .kpi .v{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px} .kpi.ok .v{color:var(--ok)}
+
+/* ---------- Filmstrip ---------- */
+.film{grid-column:1/-1;background:var(--surface);border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:6px 12px 4px;min-height:124px}
+.film .strip{flex:1;min-width:0;display:flex;gap:10px;overflow-x:auto;padding:4px 2px 4px;scrollbar-width:thin}
+.thumb{flex:none;width:118px;border:2px solid var(--line);border-radius:12px;padding:6px;background:var(--surface);cursor:pointer;position:relative;text-align:left;transition:border-color .15s,transform .15s var(--ease),box-shadow .15s}
+.thumb:hover{transform:translateY(-2px);box-shadow:var(--shadow)} .thumb.on{border-color:var(--accent)} .thumb.sel .pick{background:var(--accent);color:#fff;border-color:var(--accent)}
+.thumb .pic{height:58px;border-radius:8px;overflow:hidden;background:conic-gradient(#e2e4e9 25%,#fff 0 50%,#e2e4e9 0 75%,#fff 0) 0 0/12px 12px;display:grid;place-items:center}
+.thumb .pic canvas{max-width:100%;max-height:100%;display:block}
+.thumb .nm{font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px} .thumb .in{font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thumb .pick,.thumb .rm{position:absolute;top:3px;width:24px;height:24px;border-radius:7px;border:1px solid var(--line-2);background:rgba(255,255,255,.95);display:grid;place-items:center;cursor:pointer;color:var(--ink);padding:0}
+.thumb .pick{left:3px} .thumb .rm{right:3px} .thumb .rm:hover{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.thumb .pick .ic{width:14px;height:14px}
+.film .side{flex:none;display:flex;flex-direction:column;gap:6px;align-items:flex-end;font-size:.8rem;color:var(--muted);text-align:right;max-width:220px}
+.film .side b{color:var(--ink);font-variant-numeric:tabular-nums}
+.film .add{flex:none;width:92px;min-height:96px;border:2px dashed var(--line-2);border-radius:12px;background:var(--surface-2);display:grid;place-items:center;cursor:pointer;color:var(--muted);font-weight:800;font-size:.72rem;text-align:center;transition:border-color .15s,color .15s}
+.film .add:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- Drawer (About / Settings) ---------- */
+.scrim{position:fixed;inset:0;background:rgba(35,38,45,.45);backdrop-filter:blur(2px);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(600px,100vw);background:var(--surface);z-index:50;transform:translateX(102%);transition:transform .3s var(--ease);box-shadow:-20px 0 60px -30px rgba(0,0,0,.5);display:flex;flex-direction:column}
+body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{transform:none}
+.drawer header{display:flex;align-items:center;gap:10px;padding:16px 20px 12px;border-bottom:1px solid var(--line)} .drawer header h2{font-size:1.25rem;font-weight:800;flex:1}
+.drawer .dbody{padding:16px 20px 30px;overflow:auto}
+.todo{border:1px dashed var(--accent);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
+.todo h4{margin:0 0 4px;font-size:.95rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap} .todo .tag{font-size:.68rem;background:var(--accent);color:#fff;border-radius:6px;padding:2px 7px;font-weight:800}
+.list{display:grid;gap:10px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)} .setrow>div{min-width:0} .setrow b{display:block} .setrow .muted{font-size:.8rem}
+.switch{position:relative;width:46px;height:26px;border-radius:999px;background:var(--line-2);border:0;cursor:pointer;flex:none;transition:background .2s} .switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.3)} .switch.on{background:var(--accent)} .switch.on::after{transform:translateX(20px)}
+
+/* ---------- Toasts ---------- */
+#toasts{position:fixed;left:50%;top:calc(var(--topbar) + 10px);transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;width:max-content;max-width:calc(100vw - 32px)}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:0 12px 30px -10px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;animation:toastIn .3s var(--ease) both;font-size:.9rem}
+.toast.out{animation:toastOut .3s var(--ease) both} .toast.ok{background:var(--ok)} .toast.bad{background:var(--bad)} .toast.accent{background:var(--accent)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px){.ws{grid-template-columns:72px minmax(0,1fr) 312px}}
+@media (max-width:900px){
+  .ws{display:flex;flex-direction:column;height:auto;min-height:0}
+  .rail{flex-direction:row;border-right:0;border-bottom:1px solid var(--line);padding:8px 10px;overflow-x:auto;gap:4px}
+  .rail button{flex:none;min-width:64px;min-height:52px} .rail .sep{display:none}
+  .centre{height:52vh;min-height:360px}
+  .stage{padding:14px}
+  .props{border-left:0;border-top:1px solid var(--line)} .props .ptitle{position:static}
+  .export{margin-top:0}
+  .film{min-height:0} .film .side{display:none}
+  .topbar .pill span{display:none} .topbar .pill{padding:8px} .brand small{display:none} .topbar .btn span{display:none} .topbar .btn{padding:8px 10px}
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:480px){.fmtgrid{grid-template-columns:1fr 1fr} .drop{padding:34px 16px} .drop h2{font-size:1.35rem}}
+@media print{.topbar,.rail,.props,.film,.stagebar,#toasts,.drawer,.scrim,.peek{display:none!important} .ws{display:block;height:auto} .stage{overflow:visible;padding:0}}
+</style>
+</head>
+<body>
+<!-- Icon sprite (Lucide-style, 24×24, stroke 2). Only the symbols used below are kept; custom ones at the end. -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+<symbol id="i-rotate" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-3"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+<symbol id="i-crop" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></symbol>
+<symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
+<symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
+<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.8-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></symbol>
+<symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></symbol>
+<symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M8 11h6"/></symbol>
+<symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+<!-- custom symbols in the same style -->
+<symbol id="i-compress" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></symbol>
+<symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8M3 3v5h5"/></symbol>
+<symbol id="i-flip-h" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 20v2M12 14v2M12 8v2M12 2v2"/></symbol>
+<symbol id="i-flip-v" viewBox="0 0 24 24"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3M4 12H2M10 12H8M16 12h-2M22 12h-2"/></symbol>
+<symbol id="i-compare" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18M7 9l-2 3 2 3M17 9l2 3-2 3"/></symbol>
+<symbol id="i-archive" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M10 12v-1M10 18v-2"/><circle cx="10" cy="20" r="2"/></symbol>
+<symbol id="i-fit" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></symbol>
+<symbol id="i-grip" viewBox="0 0 24 24"><path d="m9 7-4 5 4 5M15 7l4 5-4 5"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="3.2" stroke="#d61f69"/><path d="M3 15.5 7.5 11l3 3M13.5 20l4.5-4.5 3 3"/></svg></div>
+    <div><h1>Image Toolkit</h1><small>Resize · crop · compress · convert · strip EXIF — all on your device</small></div>
+  </div>
+  <span class="pill" title="Every pixel is processed by your browser. No upload, no server, no copies."><svg class="ic" aria-hidden="true"><use href="#i-shield-check"/></svg><span>100% in-browser · nothing uploaded</span></span>
+  <div class="spacer"></div>
+  <div class="actions">
+    <button class="btn ghost" id="addBtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span>Add images</span></button>
+    <a class="iconbtn" href="#settings" aria-label="Settings" title="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></a>
+    <a class="iconbtn" href="#about" aria-label="About and student extensions" title="About"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg></a>
+  </div>
+</header>
+<input type="file" id="fileInput" class="hidden" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif" multiple aria-label="Choose images">
+
+<main id="app">
+  <!-- Empty state: drop zone -->
+  <section class="empty enter" id="empty">
+    <div class="drop" id="drop" role="button" tabindex="0" aria-label="Drop images here or press to choose files">
+      <div class="ring"><svg class="ic xl" aria-hidden="true"><use href="#i-image"/></svg></div>
+      <h2>Drop images here</h2>
+      <p>Or choose files, or paste from the clipboard (Ctrl / ⌘ + V). Your photos never leave this device.</p>
+      <div class="actions">
+        <button class="btn" id="chooseBtn"><svg class="ic" aria-hidden="true"><use href="#i-upload"/></svg> Choose images</button>
+        <button class="btn ghost" id="sampleBtn"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg> Try sample images</button>
+      </div>
+      <div class="formats" id="formats"></div>
+    </div>
+    <div class="feat stagger" id="featTiles"></div>
+  </section>
+
+  <!-- Workspace -->
+  <section class="ws hidden" id="ws">
+    <nav class="rail" id="rail" aria-label="Tools"></nav>
+    <div class="centre">
+      <div class="stagebar">
+        <span class="dims" id="dims">—</span>
+        <span class="pill grey" id="estPill" title="Estimated output size with the current export settings">…</span>
+        <span class="spacer"></span>
+        <button class="iconbtn" id="undoBtn" aria-label="Undo last edit" title="Undo"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></button>
+        <button class="iconbtn" id="resetBtn" aria-label="Reset to original" title="Reset to original"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+        <button class="iconbtn on" id="cmpBtn" aria-label="Toggle before/after comparison" aria-pressed="true" title="Before / after"><svg class="ic" aria-hidden="true"><use href="#i-compare"/></svg></button>
+        <button class="iconbtn" id="zoomOut" aria-label="Zoom out" title="Zoom out"><svg class="ic" aria-hidden="true"><use href="#i-zoom-out"/></svg></button>
+        <span class="zoomv" id="zoomv">100%</span>
+        <button class="iconbtn" id="zoomIn" aria-label="Zoom in" title="Zoom in"><svg class="ic" aria-hidden="true"><use href="#i-zoom-in"/></svg></button>
+        <button class="iconbtn" id="zoomFit" aria-label="Fit to screen" title="Fit"><svg class="ic" aria-hidden="true"><use href="#i-fit"/></svg></button>
+      </div>
+      <div class="stage" id="stage">
+        <div class="frame" id="frame">
+          <canvas id="cAfter" aria-label="Edited image preview"></canvas>
+          <div class="before" id="beforeWrap"><canvas id="cBefore" aria-hidden="true"></canvas><span class="tag">Before</span></div>
+          <span class="aftertag" id="afterTag">After</span>
+          <div class="cmp" id="cmp" role="slider" aria-label="Comparison position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"><div class="grip"><svg class="ic" aria-hidden="true"><use href="#i-grip"/></svg></div></div>
+          <div class="shade hidden" id="cropShade"></div>
+          <div class="cropbox hidden grid" id="cropbox"><div class="h n" data-h="n"></div><div class="h s" data-h="s"></div><div class="h e" data-h="e"></div><div class="h w" data-h="w"></div><div class="h nw" data-h="nw"></div><div class="h ne" data-h="ne"></div><div class="h sw" data-h="sw"></div><div class="h se" data-h="se"></div><span class="lbl" id="cropLbl"></span></div>
+        </div>
+        <div class="peek" id="peek"></div>
+      </div>
+    </div>
+    <aside class="props" id="props" aria-live="polite"></aside>
+    <footer class="film" id="film"></footer>
+  </section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+  <header><h2 id="drawerTitle"></h2><button class="iconbtn" id="drawerClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></header>
+  <div class="dbody" id="drawerBody"></div>
+</aside>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Client-Side Image Toolkit — single-file app
+   Sections: utils · settings & pipeline (persisted) · state (memory only) · canvas ops ·
+             metadata parsers · encoder & estimates · ZIP writer · samples · stage ·
+             tool panels · filmstrip · batch · drawers (about, settings) · router & boot
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+
+// ---------- utils ----------
+const NS = 'imgkit:';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(NS + k); } catch {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const fmtBytes = n => n == null ? '—' : n < 1024 ? `${Math.round(n)} B` : n < 1048576 ? `${(n / 1024).toFixed(n < 10240 ? 1 : 0)} KB` : `${(n / 1048576).toFixed(2)} MB`;
+const pct = (a, b) => b ? Math.round((1 - a / b) * 100) : 0;
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const tick = () => new Promise(r => setTimeout(r, 0));
+const toast = (msg, type = '', icon = 'info') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = ic(icon) + `<span>${esc(msg)}</span>`; $('#toasts').append(t); setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 3400); };
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i))); };
+const countUp = (el, to, { dur = 700, fmt = v => Math.round(v).toLocaleString('en-PK'), from = 0 } = {}) => { if (!el) return; const t0 = performance.now(); const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(from + (to - from) * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const drawPath = p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; };
+const mkCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
+const ctx2d = c => c.getContext('2d', { willReadFrequently: true });
+
+// ---------- settings & pipeline (persisted) — images themselves are never stored ----------
+const FORMATS = [['image/jpeg', 'JPEG', 'jpg', 'Photos. Smallest for camera shots; no transparency.'], ['image/png', 'PNG', 'png', 'Lossless. Logos, screenshots, transparency.'], ['image/webp', 'WebP', 'webp', '25–35 % smaller than JPEG at equal quality; alpha supported.'], ['image/avif', 'AVIF', 'avif', 'Newest codec; encoder support varies by browser.']];
+const support = {}; { const c = mkCanvas(1, 1); FORMATS.forEach(([t]) => { support[t] = c.toDataURL(t).startsWith('data:' + t); }); }
+const fmtInfo = t => FORMATS.find(f => f[0] === t) || FORMATS[0];
+const DEFAULT_SETTINGS = { format: 'image/jpeg', quality: 82, rememberPipeline: true, suffix: true, bg: '#ffffff' };
+let settings = Object.assign({}, DEFAULT_SETTINGS, store.get('settings', {}));
+if (!support[settings.format]) settings.format = 'image/jpeg';
+const saveSettings = () => store.set('settings', settings);
+const PIPE_DEFAULT = () => ({ resize: { mode: 'px', w: 1080, h: 1080, pct: 50, fit: 'fit', lock: true, preset: '' }, format: settings.format, quality: settings.quality, targetKB: 200, targetOn: false, quantize: false, bg: settings.bg, rotBg: true, batchResize: false });
+let pipe = PIPE_DEFAULT();
+if (settings.rememberPipeline) { const p = store.get('pipeline', null); if (p) { pipe = Object.assign(pipe, p); pipe.resize = Object.assign(PIPE_DEFAULT().resize, p.resize || {}); } }
+if (!support[pipe.format]) pipe.format = 'image/jpeg';
+const savePipe = () => { if (settings.rememberPipeline) store.set('pipeline', pipe); };
+
+// ---------- state (memory only) ----------
+const TOOLS = [['resize', 'Resize', 'maximize', 'Pixels, percent or a preset'], ['crop', 'Crop', 'crop', 'Drag the box, pick an aspect'], ['compress', 'Compress', 'compress', 'Quality, target size, palette'], ['convert', 'Convert', 'shuffle', 'JPEG ↔ PNG ↔ WebP'], ['adjust', 'Adjust', 'sliders', 'Light, colour, auto-level'], ['rotate', 'Rotate', 'rotate', '90°, flip, free angle'], ['metadata', 'Metadata', 'file', 'EXIF, GPS, privacy'], ['batch', 'Batch', 'layers', 'Run the pipeline on all']];
+const S = { images: [], active: null, selected: new Set(), tool: TOOLS.some(t => t[0] === store.get('tool')) ? store.get('tool') : 'resize', zoom: 1, zoomFit: true, cmp: 0.5, cmpOn: true, crop: null, cropAspect: 0, rotAngle: 0, adj: null, batch: null, est: { size: null, seq: 0 }, beforeId: null };
+const ADJ_DEFAULT = () => ({ brightness: 100, contrast: 100, saturate: 100, grayscale: 0, sepia: 0, blur: 0 });
+S.adj = ADJ_DEFAULT();
+const active = () => S.images.find(i => i.id === S.active) || null;
+const byId = id => S.images.find(i => i.id === id);
+const cur = img => img.preview || img.work;
+
+// ---------- canvas ops ----------
+async function decode(file) {
+  let bmp;
+  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch { bmp = await new Promise((res, rej) => { const u = URL.createObjectURL(file); const im = new Image(); im.onload = () => { URL.revokeObjectURL(u); res(im); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('decode')); }; im.src = u; }); }
+  const w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight; if (!w || !h) throw new Error('empty');
+  const c = mkCanvas(w, h); ctx2d(c).drawImage(bmp, 0, 0); if (bmp.close) bmp.close(); return c;
+}
+// High-quality downscale: halve repeatedly (box filter) until within 2× of the target, then one smooth draw.
+// Alternative: createImageBitmap(src, { resizeWidth, resizeHeight, resizeQuality: 'high' }) — async, not in every browser.
+function resample(src, w, h) {
+  let c = src, cw = src.width, ch = src.height;
+  while (cw / 2 >= w && ch / 2 >= h) { cw = Math.round(cw / 2); ch = Math.round(ch / 2); const n = mkCanvas(cw, ch); const x = ctx2d(n); x.imageSmoothingQuality = 'high'; x.drawImage(c, 0, 0, cw, ch); c = n; }
+  const out = mkCanvas(w, h); const x = ctx2d(out); x.imageSmoothingQuality = 'high'; x.drawImage(c, 0, 0, w, h); return out;
+}
+function cropCanvas(src, x, y, w, h) { const c = mkCanvas(w, h); ctx2d(c).drawImage(src, x, y, w, h, 0, 0, w, h); return c; }
+function resizeTo(src, tw, th, fit) {
+  tw = Math.max(1, Math.round(tw)); th = Math.max(1, Math.round(th)); const sw = src.width, sh = src.height;
+  if (fit === 'stretch') return resample(src, tw, th);
+  if (fit === 'fit') { const s = Math.min(tw / sw, th / sh); return resample(src, Math.max(1, Math.round(sw * s)), Math.max(1, Math.round(sh * s))); }
+  const s = Math.max(tw / sw, th / sh); const cw = Math.min(sw, Math.round(tw / s)), ch = Math.min(sh, Math.round(th / s)); // fill = cover + centre crop
+  return resample(cropCanvas(src, Math.round((sw - cw) / 2), Math.round((sh - ch) / 2), cw, ch), tw, th);
+}
+function rotate90(src, dir) { const c = mkCanvas(src.height, src.width); const x = ctx2d(c); x.translate(c.width / 2, c.height / 2); x.rotate(dir * Math.PI / 2); x.drawImage(src, -src.width / 2, -src.height / 2); return c; }
+function flip(src, horizontal) { const c = mkCanvas(src.width, src.height); const x = ctx2d(c); x.translate(horizontal ? src.width : 0, horizontal ? 0 : src.height); x.scale(horizontal ? -1 : 1, horizontal ? 1 : -1); x.drawImage(src, 0, 0); return c; }
+function rotateFree(src, deg, bg) { // auto-expanded canvas so no corner is lost
+  const r = deg * Math.PI / 180, w = src.width, h = src.height, cs = Math.abs(Math.cos(r)), sn = Math.abs(Math.sin(r));
+  const c = mkCanvas(Math.ceil(w * cs + h * sn), Math.ceil(w * sn + h * cs)); const x = ctx2d(c);
+  if (bg) { x.fillStyle = bg; x.fillRect(0, 0, c.width, c.height); } x.translate(c.width / 2, c.height / 2); x.rotate(r); x.drawImage(src, -w / 2, -h / 2); return c;
+}
+function flatten(src, bg) { const c = mkCanvas(src.width, src.height); const x = ctx2d(c); x.fillStyle = bg || '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(src, 0, 0); return c; }
+const alphaCache = new WeakMap();
+function hasAlpha(src) { // sampled on a 64×64 copy, cached per canvas
+  if (alphaCache.has(src)) return alphaCache.get(src);
+  const s = mkCanvas(64, 64); const x = ctx2d(s); x.drawImage(src, 0, 0, 64, 64); const d = x.getImageData(0, 0, 64, 64).data; let a = false;
+  for (let i = 3; i < d.length; i += 4) if (d[i] < 250) { a = true; break; } alphaCache.set(src, a); return a;
+}
+function applyFilters(src, a) {
+  const c = mkCanvas(src.width, src.height); const x = ctx2d(c);
+  const f = `brightness(${a.brightness}%) contrast(${a.contrast}%) saturate(${a.saturate}%) grayscale(${a.grayscale}%) sepia(${a.sepia}%)` + (a.blur ? ` blur(${a.blur}px)` : '');
+  if ('filter' in x) { x.filter = f; x.drawImage(src, 0, 0); return c; }
+  x.drawImage(src, 0, 0); const id = x.getImageData(0, 0, c.width, c.height); pixelAdjust(id.data, a); x.putImageData(id, 0, 0); return c; // fallback (no blur)
+}
+function pixelAdjust(d, a) { // CSS-filter-equivalent pixel maths for browsers without ctx.filter
+  const br = a.brightness / 100, ct = a.contrast / 100, sa = a.saturate / 100, gr = a.grayscale / 100, se = a.sepia / 100;
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i] * br, g = d[i + 1] * br, b = d[i + 2] * br;
+    r = (r - 128) * ct + 128; g = (g - 128) * ct + 128; b = (b - 128) * ct + 128;
+    const l = .2126 * r + .7152 * g + .0722 * b; r = l + (r - l) * sa; g = l + (g - l) * sa; b = l + (b - l) * sa;
+    if (gr) { r += (l - r) * gr; g += (l - g) * gr; b += (l - b) * gr; }
+    if (se) { const sr = .393 * r + .769 * g + .189 * b, sg = .349 * r + .686 * g + .168 * b, sb = .272 * r + .534 * g + .131 * b; r += (sr - r) * se; g += (sg - g) * se; b += (sb - b) * se; }
+    d[i] = clamp(r, 0, 255); d[i + 1] = clamp(g, 0, 255); d[i + 2] = clamp(b, 0, 255);
+  }
+}
+function histogram(src) { // 256 bins × RGB from a ≤ 256×256 downsample
+  const s = Math.min(1, 256 / Math.max(src.width, src.height)); const c = mkCanvas(src.width * s, src.height * s); const x = ctx2d(c); x.drawImage(src, 0, 0, c.width, c.height);
+  const d = x.getImageData(0, 0, c.width, c.height).data; const H = [new Uint32Array(256), new Uint32Array(256), new Uint32Array(256)];
+  for (let i = 0; i < d.length; i += 4) { H[0][d[i]]++; H[1][d[i + 1]]++; H[2][d[i + 2]]++; } return { H, n: d.length / 4 };
+}
+function autoLevel(src) { // histogram stretch per channel, clipping 0.5 % at each end
+  const c = mkCanvas(src.width, src.height); const x = ctx2d(c); x.drawImage(src, 0, 0); const id = x.getImageData(0, 0, c.width, c.height); const d = id.data;
+  const H = [new Uint32Array(256), new Uint32Array(256), new Uint32Array(256)]; for (let i = 0; i < d.length; i += 4) { H[0][d[i]]++; H[1][d[i + 1]]++; H[2][d[i + 2]]++; }
+  const n = d.length / 4, clip = n * .005; const lut = H.map(h => { let lo = 0, hi = 255, acc = 0; while (lo < 255 && (acc += h[lo]) < clip) lo++; acc = 0; while (hi > 0 && (acc += h[hi]) < clip) hi--; if (hi <= lo) { lo = 0; hi = 255; } const t = new Uint8ClampedArray(256); for (let v = 0; v < 256; v++) t[v] = (v - lo) * 255 / (hi - lo); return t; });
+  for (let i = 0; i < d.length; i += 4) { d[i] = lut[0][d[i]]; d[i + 1] = lut[1][d[i + 1]]; d[i + 2] = lut[2][d[i + 2]]; } x.putImageData(id, 0, 0); return c;
+}
+// Median-cut palette quantization (≤ 256 colours). Fewer unique colours make the browser's PNG deflate far smaller.
+// TODO(student): write a real indexed PNG (IHDR colour type 3 + PLTE/tRNS + zlib via CompressionStream) so the output is 8-bit, not 32-bit RGBA.
+function quantize(src, n = 256) {
+  const c = mkCanvas(src.width, src.height); const x = ctx2d(c); x.drawImage(src, 0, 0); const id = x.getImageData(0, 0, c.width, c.height); const d = id.data;
+  const step = Math.max(1, Math.floor(d.length / 4 / 60000)); const px = []; for (let i = 0; i < d.length; i += 4 * step) if (d[i + 3] > 8) px.push([d[i], d[i + 1], d[i + 2]]);
+  let boxes = [px];
+  while (boxes.length < n) {
+    let bi = -1, br = -1, bc = 0;
+    boxes.forEach((b, i) => { if (b.length < 2) return; for (let ch = 0; ch < 3; ch++) { let mn = 255, mx = 0; for (const p of b) { if (p[ch] < mn) mn = p[ch]; if (p[ch] > mx) mx = p[ch]; } if (mx - mn > br) { br = mx - mn; bi = i; bc = ch; } } });
+    if (bi < 0 || br === 0) break; const b = boxes[bi]; b.sort((p, q) => p[bc] - q[bc]); const mid = b.length >> 1; boxes.splice(bi, 1, b.slice(0, mid), b.slice(mid));
+  }
+  const pal = boxes.filter(b => b.length).map(b => b.reduce((a, p) => [a[0] + p[0], a[1] + p[1], a[2] + p[2]], [0, 0, 0]).map(v => Math.round(v / b.length)));
+  const cache = new Map();
+  for (let i = 0; i < d.length; i += 4) {
+    const key = (d[i] >> 2) << 12 | (d[i + 1] >> 2) << 6 | (d[i + 2] >> 2); let k = cache.get(key);
+    if (k === undefined) { let bd = 1e9; k = 0; for (let j = 0; j < pal.length; j++) { const p = pal[j], dd = (p[0] - d[i]) ** 2 + (p[1] - d[i + 1]) ** 2 + (p[2] - d[i + 2]) ** 2; if (dd < bd) { bd = dd; k = j; } } cache.set(key, k); }
+    d[i] = pal[k][0]; d[i + 1] = pal[k][1]; d[i + 2] = pal[k][2];
+  }
+  x.putImageData(id, 0, 0); c.colors = pal.length; return c;
+}
+
+// ---------- metadata parsers (JPEG EXIF / APPn segments, PNG chunks) ----------
+const IFD0_TAGS = { 0x010F: 'make', 0x0110: 'model', 0x0112: 'orientation', 0x0131: 'software', 0x0132: 'dateTime', 0x013B: 'artist', 0x8298: 'copyright' };
+const EXIF_TAGS = { 0x829A: 'exposure', 0x829D: 'fNumber', 0x8827: 'iso', 0x9003: 'dateOriginal', 0x920A: 'focal', 0xA002: 'pixelX', 0xA003: 'pixelY', 0xA405: 'focal35', 0xA434: 'lens' };
+const GPS_TAGS = { 1: 'latRef', 2: 'lat', 3: 'lngRef', 4: 'lng', 5: 'altRef', 6: 'alt' };
+const TSIZE = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
+const ORIENT = { 1: 'Normal', 2: 'Mirrored', 3: 'Rotated 180°', 4: 'Mirrored, 180°', 5: 'Mirrored, 90° CCW', 6: 'Rotated 90° CW', 7: 'Mirrored, 90° CW', 8: 'Rotated 90° CCW' };
+function parseExif(buf) {
+  const v = new DataView(buf); if (v.byteLength < 4 || v.getUint16(0) !== 0xFFD8) return null;
+  const out = { kind: 'JPEG', tags: null, segments: [], metaBytes: 0 }; let off = 2;
+  while (off + 4 <= v.byteLength && v.getUint8(off) === 0xFF) {
+    const marker = v.getUint8(off + 1); if (marker === 0xDA || marker === 0xD9) break; const len = v.getUint16(off + 2);
+    if ((marker >= 0xE0 && marker <= 0xEF) || marker === 0xFE) {
+      const head = String.fromCharCode(...new Uint8Array(buf, off + 4, Math.max(0, Math.min(28, len - 2, v.byteLength - off - 4)))).replace(/\0[\s\S]*$/, '');
+      const kind = marker === 0xE1 && head.startsWith('Exif') ? 'EXIF' : marker === 0xE1 && head.includes('ns.adobe.com/xap') ? 'XMP' : marker === 0xE2 && head.startsWith('ICC_PROFILE') ? 'ICC profile' : marker === 0xED ? 'IPTC / Photoshop' : marker === 0xE0 ? 'JFIF' : marker === 0xFE ? 'Comment' : 'APP' + (marker - 0xE0);
+      out.segments.push({ kind, bytes: len + 2 }); if (kind !== 'JFIF') out.metaBytes += len + 2;
+      if (kind === 'EXIF' && !out.tags) { try { out.tags = parseTiff(v, off + 10, Math.min(v.byteLength, off + 2 + len)); } catch { out.tags = null; } }
+    }
+    off += 2 + len;
+  }
+  return out;
+}
+function parseTiff(v, start, end) {
+  const le = v.getUint16(start) === 0x4949; if (v.getUint16(start + 2, le) !== 42) return null;
+  const u16 = o => v.getUint16(start + o, le), u32 = o => v.getUint32(start + o, le), i32 = o => v.getInt32(start + o, le); const tags = {};
+  const val = (type, count, o) => {
+    if (type === 2) { let s = ''; for (let i = 0; i < count; i++) { const ch = v.getUint8(start + o + i); if (!ch) break; s += String.fromCharCode(ch); } return s.trim(); }
+    const one = i => type === 1 || type === 7 ? v.getUint8(start + o + i) : type === 3 ? u16(o + i * 2) : type === 4 ? u32(o + i * 4) : type === 9 ? i32(o + i * 4) : type === 5 ? u32(o + i * 8) / (u32(o + i * 8 + 4) || 1) : i32(o + i * 8) / (i32(o + i * 8 + 4) || 1);
+    return count === 1 ? one(0) : Array.from({ length: Math.min(count, 64) }, (_, i) => one(i));
+  };
+  const readIFD = (o, map, depth) => {
+    if (depth > 2 || o < 8 || start + o + 2 > end) return; const n = Math.min(u16(o), 200);
+    for (let i = 0; i < n; i++) {
+      const e = o + 2 + i * 12; if (start + e + 12 > end) return; const tag = u16(e), type = u16(e + 2), count = u32(e + 4); if (!TSIZE[type]) continue;
+      const size = TSIZE[type] * count, vo = size > 4 ? u32(e + 8) : e + 8; if (start + vo + size > end) continue;
+      if (tag === 0x8769) readIFD(u32(e + 8), EXIF_TAGS, depth + 1); else if (tag === 0x8825) readIFD(u32(e + 8), GPS_TAGS, depth + 1); else if (map[tag]) tags[map[tag]] = val(type, count, vo);
+    }
+  };
+  readIFD(u32(4), IFD0_TAGS, 0); return tags;
+}
+function parsePng(buf) {
+  const v = new DataView(buf); if (v.byteLength < 8 || v.getUint32(0) !== 0x89504E47) return null;
+  const out = { kind: 'PNG', tags: null, segments: [], metaBytes: 0 }; let off = 8;
+  while (off + 8 <= v.byteLength) {
+    const len = v.getUint32(off), type = String.fromCharCode(v.getUint8(off + 4), v.getUint8(off + 5), v.getUint8(off + 6), v.getUint8(off + 7));
+    if (['tEXt', 'zTXt', 'iTXt', 'eXIf', 'iCCP', 'tIME', 'pHYs'].includes(type)) { out.segments.push({ kind: type, bytes: len + 12 }); if (type !== 'pHYs') out.metaBytes += len + 12; }
+    if (type === 'eXIf' && off + 8 + len <= v.byteLength) { try { out.tags = parseTiff(v, off + 8, off + 8 + len); } catch { out.tags = null; } }
+    if (type === 'IEND') break; off += 12 + len;
+  }
+  return out;
+}
+const dms = a => Array.isArray(a) ? a[0] + (a[1] || 0) / 60 + (a[2] || 0) / 3600 : +a;
+const gpsOf = t => t && t.lat != null && t.lng != null ? { lat: dms(t.lat) * (t.latRef === 'S' ? -1 : 1), lng: dms(t.lng) * (t.lngRef === 'W' ? -1 : 1) } : null;
+
+// ---------- encoder, naming, estimates ----------
+const encode = (canvas, type, q) => new Promise(res => canvas.toBlob(b => res(b), type, q / 100));
+const qcache = new WeakMap();
+function prepareExport(src, fmt, opts = {}) { // flatten alpha for JPEG, quantize for PNG — re-encoding pixels only, so no metadata survives
+  let c = src; const bg = opts.bg ?? pipe.bg;
+  if (fmt === 'image/jpeg' && hasAlpha(c)) c = flatten(c, bg);
+  if (fmt === 'image/png' && (opts.quantize ?? pipe.quantize)) { if (!qcache.has(src)) qcache.set(src, quantize(src)); c = qcache.get(src); }
+  return c;
+}
+async function exportBlob(src, fmt = pipe.format, quality = pipe.quality, opts = {}) {
+  const c = prepareExport(src, fmt, opts);
+  if (fmt !== 'image/png' && (opts.targetOn ?? pipe.targetOn)) { const q = await findQuality(c, fmt, (opts.targetKB ?? pipe.targetKB) * 1024); return { blob: await encode(c, fmt, q.quality), quality: q.quality, hit: q.hit }; }
+  return { blob: await encode(c, fmt, quality), quality, hit: null };
+}
+// Binary search the highest quality whose encoded size fits the target (7 encodes max).
+async function findQuality(c, fmt, targetBytes) {
+  let lo = 1, hi = 100, best = null;
+  while (lo <= hi) { const mid = (lo + hi) >> 1; const b = await encode(c, fmt, mid); if (b.size <= targetBytes) { best = mid; lo = mid + 1; } else hi = mid - 1; }
+  return best == null ? { quality: 1, hit: false } : { quality: best, hit: true };
+}
+const outName = (img, c, fmt = pipe.format) => { const base = img.name.replace(/\.[^.]+$/, '') || 'image'; const dims = settings.suffix && (c.width !== img.orig.width || c.height !== img.orig.height) ? `-${c.width}x${c.height}` : ''; return `${base}${dims}.${fmtInfo(fmt)[2]}`; };
+const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+
+// ---------- ZIP writer (STORE method, CRC-32, UTF-8 names) — no library ----------
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = u8 => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function makeZip(files) { // files: [{ name, data: Uint8Array }]
+  const enc = new TextEncoder(), parts = [], central = [], now = new Date(); let offset = 0;
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1), dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.data), n = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30)); lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true); lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true); lh.setUint32(18, n, true); lh.setUint32(22, n, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), name, f.data);
+    const ch = new DataView(new ArrayBuffer(46)); ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true); ch.setUint32(20, n, true); ch.setUint32(24, n, true); ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name); offset += 30 + name.length + n;
+  }
+  const cdSize = central.reduce((s, p) => s + p.length, 0);
+  const eocd = new DataView(new ArrayBuffer(22)); eocd.setUint32(0, 0x06054b50, true); eocd.setUint16(8, files.length, true); eocd.setUint16(10, files.length, true); eocd.setUint32(12, cdSize, true); eocd.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(eocd.buffer)], { type: 'application/zip' });
+}
+
+// ---------- sample images (generated on the fly so the app looks alive without any files) ----------
+// A ready-made EXIF APP1 payload (Make/Model, DateTime, exposure 1/250 f/1.8 ISO 200, GPS 31.5497 N 74.3436 E — Minar-e-Pakistan, Lahore).
+const SAMPLE_EXIF = 'RXhpZgAATU0AKgAAAAgABwEPAAIAAAAIAAAAYgEQAAIAAAAQAAAAagESAAMAAAABAAEAAAExAAIAAAALAAAAegEyAAIAAAAUAAAAhodpAAQAAAABAAAAmoglAAQAAAABAAABPAAAAABJbmZpbml4AEluZmluaXggTm90ZSA0MABDYW1lcmEgMy4yAAAyMDI2OjEwOjE0IDE3OjQyOjA5AAAIgpoABQAAAAEAAAEAgp0ABQAAAAEAAAEIiCcAAwAAAAEAyAAAkAMAAgAAABQAAAEQkgoABQAAAAEAAAEkoAIABAAAAAEAAAZAoAMABAAAAAEAAASwpDQAAgAAABAAAAEsAAAAAAAAAAEAAAD6AAAAEgAAAAoyMDI2OjEwOjE0IDE3OjQyOjA5AAAAABoAAAABV2lkZSAyNm1tIGYvMS44AAAGAAEAAgAAAAJOAAAAAAIABQAAAAMAAAGKAAMAAgAAAAJFAAAAAAQABQAAAAMAAAGiAAUAAQAAAAEAAAAAAAYABQAAAAEAAAG6AAAAAAAAAB8AAAABAAAAIAAAAAEAAOYoAAAD6AAAAEoAAAABAAAAFAAAAAEAAJBgAAAD6AAAANkAAAAB';
+function seeded(seed) { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+function drawPhoto() { // 1600×1200 "sunset over Lahore" with grain so the JPEG size is realistic
+  const c = mkCanvas(1600, 1200), x = ctx2d(c), rnd = seeded(7);
+  const sky = x.createLinearGradient(0, 0, 0, 900); sky.addColorStop(0, '#2b2a5a'); sky.addColorStop(.45, '#c2436b'); sky.addColorStop(.8, '#f6a23a'); sky.addColorStop(1, '#fde7b0'); x.fillStyle = sky; x.fillRect(0, 0, 1600, 1200);
+  x.fillStyle = 'rgba(255,236,170,.95)'; x.beginPath(); x.arc(1120, 760, 110, 0, 7); x.fill();
+  for (let i = 0; i < 14; i++) { x.fillStyle = `rgba(255,255,255,${.08 + rnd() * .12})`; x.beginPath(); x.ellipse(rnd() * 1600, 120 + rnd() * 420, 140 + rnd() * 220, 18 + rnd() * 30, 0, 0, 7); x.fill(); }
+  x.fillStyle = '#3a2238'; x.beginPath(); x.moveTo(0, 900); for (let i = 0; i <= 32; i++) x.lineTo(i * 50, 860 + Math.sin(i * .7) * 25 + rnd() * 30); x.lineTo(1600, 1200); x.lineTo(0, 1200); x.fill();
+  x.fillStyle = '#241526'; for (let i = 0; i < 40; i++) { const w = 30 + rnd() * 70, h = 60 + rnd() * 200; x.fillRect(i * 42, 950 - h, w, h + 300); }
+  x.fillStyle = '#1b0f1d'; x.fillRect(560, 480, 44, 500); x.beginPath(); x.moveTo(538, 500); x.lineTo(582, 400); x.lineTo(626, 500); x.fill(); x.fillRect(470, 820, 220, 200); x.beginPath(); x.arc(580, 820, 110, Math.PI, 0); x.fill();
+  const id = x.getImageData(0, 0, 1600, 1200), d = id.data; for (let i = 0; i < d.length; i += 4) { const g = (rnd() - .5) * 18; d[i] += g; d[i + 1] += g; d[i + 2] += g; } x.putImageData(id, 0, 0);
+  x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '700 34px Urbanist, sans-serif'; x.fillText('Sample photo · Lahore, 14 Oct 2026', 48, 1150); return c;
+}
+function drawLogo() { // 800×800 PNG with transparency (checkerboard + palette quantization demo)
+  const c = mkCanvas(800, 800), x = ctx2d(c); const g = x.createLinearGradient(0, 0, 800, 800); g.addColorStop(0, '#d61f69'); g.addColorStop(1, '#5b2a86');
+  x.fillStyle = g; x.beginPath(); x.roundRect(80, 80, 640, 640, 150); x.fill();
+  x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 46; x.lineCap = 'round'; x.beginPath(); x.arc(400, 400, 190, Math.PI * .8, Math.PI * 2.2); x.stroke();
+  x.fillStyle = '#fff'; x.beginPath(); x.arc(400, 400, 70, 0, 7); x.fill(); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.arc(560, 230, 60, 0, 7); x.fill(); return c;
+}
+function drawScan() { // 1240×1754 "scanned form" (A4 @150 dpi) — the typical 1–3 MB phone scan people need under 200 KB
+  const c = mkCanvas(1240, 1754), x = ctx2d(c), rnd = seeded(3); x.fillStyle = '#f3efe6'; x.fillRect(0, 0, 1240, 1754);
+  const id = x.getImageData(0, 0, 1240, 1754), d = id.data; for (let i = 0; i < d.length; i += 4) { const g = (rnd() - .5) * 26; d[i] += g; d[i + 1] += g; d[i + 2] += g; } x.putImageData(id, 0, 0);
+  x.fillStyle = '#1d2a4a'; x.font = '800 44px Urbanist, sans-serif'; x.fillText('UNIVERSITY ADMISSION FORM 2026', 120, 170); x.font = '600 24px Urbanist, sans-serif'; x.fillStyle = '#44506b'; x.fillText('Attach passport-size photo (35 × 45 mm) · Upload limit 200 KB', 120, 220);
+  x.strokeStyle = '#8a92a8'; x.lineWidth = 2; for (let i = 0; i < 22; i++) { const y = 320 + i * 60; x.beginPath(); x.moveTo(120, y); x.lineTo(1120, y); x.stroke(); x.fillStyle = '#2c3550'; x.font = '500 22px Urbanist, sans-serif'; x.fillText(['Name', 'Father name', 'CNIC / B-Form', 'Date of birth', 'Domicile', 'Programme', 'Matric marks', 'Intermediate marks', 'Mobile', 'Email', 'Address'][i % 11] + ' : ' + '_'.repeat(28), 130, y - 14); }
+  x.strokeStyle = '#1d2a4a'; x.lineWidth = 3; x.strokeRect(880, 120, 240, 300); x.fillStyle = '#6b7080'; x.font = '600 20px Urbanist, sans-serif'; x.fillText('PHOTO', 962, 280); return c;
+}
+async function loadSamples() {
+  const jpgBlob = await encode(drawPhoto(), 'image/jpeg', 92); const jpg = new Uint8Array(await jpgBlob.arrayBuffer());
+  const payload = Uint8Array.from(atob(SAMPLE_EXIF), ch => ch.charCodeAt(0)); const seg = new Uint8Array(4 + payload.length); seg.set([0xFF, 0xE1, (payload.length + 2) >> 8, (payload.length + 2) & 255]); seg.set(payload, 4);
+  const files = [new File([jpg.slice(0, 2), seg, jpg.slice(2)], 'lahore-sunset.jpg', { type: 'image/jpeg' }), new File([await encode(drawLogo(), 'image/png')], 'logo-transparent.png', { type: 'image/png' }), new File([await encode(drawScan(), 'image/jpeg', 95)], 'admission-form-scan.jpg', { type: 'image/jpeg' })];
+  await addFiles(files);
+}
+
+// ---------- input: files, drag-and-drop, clipboard paste ----------
+async function addFiles(list) {
+  const files = [...list].filter(f => f && (f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name)));
+  if (!files.length) { toast('No supported image files found', 'bad', 'alert'); return 0; }
+  let added = 0;
+  for (const f of files) {
+    try {
+      const orig = await decode(f); const buf = await f.arrayBuffer(); const isJpg = /jpe?g/i.test(f.type) || /\.jpe?g$/i.test(f.name);
+      const meta = isJpg ? parseExif(buf) : f.type === 'image/png' || /\.png$/i.test(f.name) ? parsePng(buf) : null;
+      const s = Math.min(104 / orig.width, 58 / orig.height, 1);
+      const img = { id: uid(), name: f.name || `pasted-${Date.now()}.png`, type: f.type || 'image/png', size: f.size, orig, work: orig, preview: null, history: [], meta, thumb: resample(orig, Math.max(1, orig.width * s), Math.max(1, orig.height * s)) };
+      S.images.push(img); S.selected.add(img.id); if (!S.active) { S.active = img.id; S.zoomFit = true; } added++;
+    } catch { toast(`Could not decode ${f.name || 'file'}`, 'bad', 'alert'); }
+  }
+  if (added) { toast(`${added} image${added > 1 ? 's' : ''} loaded — nothing left your device`, 'ok', 'shield-check'); render(); }
+  return added;
+}
+$('#fileInput').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+['#addBtn', '#chooseBtn', '#drop'].forEach(s => $(s).addEventListener('click', e => { if (e.target.closest('#sampleBtn')) return; $('#fileInput').click(); }));
+$('#drop').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#fileInput').click(); } });
+$('#sampleBtn').addEventListener('click', async e => { e.stopPropagation(); const b = e.currentTarget; b.disabled = true; b.innerHTML = ic('refresh', 'spin') + ' Generating…'; await loadSamples(); b.disabled = false; b.innerHTML = ic('sparkles') + ' Try sample images'; });
+document.addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dragging'); });
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('dragging'); });
+document.addEventListener('drop', e => { e.preventDefault(); document.body.classList.remove('dragging'); if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files); });
+document.addEventListener('paste', e => { const files = [...(e.clipboardData?.files || [])]; if (files.length) { e.preventDefault(); addFiles(files); } });
+
+// ---------- render root ----------
+function render() {
+  const has = S.images.length > 0; $('#empty').classList.toggle('hidden', has); $('#ws').classList.toggle('hidden', !has);
+  if (!has) { S.active = null; S.beforeId = null; animateIn($('#empty')); return; }
+  if (!active()) { S.active = S.images[0].id; S.zoomFit = true; }
+  renderRail(); renderFilm(); renderStage(); renderPanel(); scheduleEstimate();
+}
+function renderRail() {
+  $('#rail').innerHTML = TOOLS.map(([id, label, icon, hint]) => `<button class="${S.tool === id ? 'on' : ''}" data-tool="${id}" aria-label="${label} — ${hint}" aria-pressed="${S.tool === id}" title="${label} — ${hint}">${ic(icon)}<span>${label}</span></button>`).join('') + '<span class="sep"></span>';
+  $$('#rail button').forEach(b => b.onclick = () => { location.hash = '#' + b.dataset.tool; });
+}
+
+// ---------- stage: zoom, before/after, pixel peek ----------
+const ZOOMS = [.25, .33, .5, .67, .75, 1, 1.5, 2, 3, 4];
+function fitZoom() { const st = $('#stage'), img = active(); if (!img) return 1; const c = cur(img); return clamp(Math.floor(Math.min((st.clientWidth - 48) / c.width, (st.clientHeight - 48) / c.height) * 100) / 100, .05, 4); }
+function renderStage() {
+  const img = active(); if (!img) return; const src = cur(img);
+  const cA = $('#cAfter'); if (cA.width !== src.width || cA.height !== src.height) { cA.width = src.width; cA.height = src.height; }
+  const ax = cA.getContext('2d'); ax.clearRect(0, 0, cA.width, cA.height); ax.drawImage(src, 0, 0);
+  const cB = $('#cBefore'); if (S.beforeId !== img.id) { cB.width = img.orig.width; cB.height = img.orig.height; cB.getContext('2d').drawImage(img.orig, 0, 0); S.beforeId = img.id; }
+  if (S.zoomFit) S.zoom = fitZoom();
+  const W = Math.max(1, Math.round(src.width * S.zoom)), H = Math.max(1, Math.round(src.height * S.zoom)), fr = $('#frame');
+  fr.style.width = W + 'px'; fr.style.height = H + 'px'; fr.classList.toggle('pix', S.zoom > 1.01); cB.style.width = W + 'px'; cB.style.height = H + 'px';
+  $('#zoomv').textContent = Math.round(S.zoom * 100) + '%';
+  const changed = src.width !== img.orig.width || src.height !== img.orig.height;
+  $('#dims').innerHTML = `${src.width} × ${src.height} px${changed ? ` <span class="muted small">(from ${img.orig.width} × ${img.orig.height})</span>` : ''}`;
+  $('#undoBtn').disabled = !img.history.length; $('#resetBtn').disabled = img.work === img.orig && !img.preview;
+  applyCmp(); renderCropBox();
+}
+function applyCmp() { const on = S.cmpOn && S.tool !== 'crop'; const bw = $('#beforeWrap'), h = $('#cmp'); bw.classList.toggle('hidden', !on); h.classList.toggle('hidden', !on); $('#afterTag').classList.toggle('hidden', !on); bw.style.width = S.cmp * 100 + '%'; h.style.left = S.cmp * 100 + '%'; h.setAttribute('aria-valuenow', Math.round(S.cmp * 100)); $('#cmpBtn').classList.toggle('on', S.cmpOn); $('#cmpBtn').setAttribute('aria-pressed', S.cmpOn); }
+const setZoom = z => { S.zoomFit = false; S.zoom = clamp(z, .25, 4); renderStage(); };
+$('#zoomIn').onclick = () => setZoom(ZOOMS.find(z => z > S.zoom + .001) || 4);
+$('#zoomOut').onclick = () => setZoom([...ZOOMS].reverse().find(z => z < S.zoom - .001) || .25);
+$('#zoomFit').onclick = () => { S.zoomFit = true; renderStage(); };
+$('#cmpBtn').onclick = () => { S.cmpOn = !S.cmpOn; applyCmp(); };
+$('#undoBtn').onclick = () => { const img = active(); if (!img || !img.history.length) return; img.work = img.history.pop(); afterEdit(img); toast('Undone', '', 'undo'); };
+$('#resetBtn').onclick = () => { const img = active(); if (!img) return; img.work = img.orig; img.history = []; afterEdit(img); toast('Back to the original pixels', '', 'refresh'); };
+window.addEventListener('resize', debounce(() => { if (S.images.length && S.zoomFit) renderStage(); }, 150));
+{ // comparison handle drag + keyboard
+  const h = $('#cmp'); let drag = false;
+  h.addEventListener('pointerdown', e => { e.preventDefault(); drag = true; S.drag = true; h.classList.add('drag'); h.setPointerCapture(e.pointerId); });
+  h.addEventListener('pointermove', e => { if (!drag) return; const r = $('#frame').getBoundingClientRect(); S.cmp = clamp((e.clientX - r.left) / r.width, 0, 1); applyCmp(); });
+  const end = () => { drag = false; S.drag = false; h.classList.remove('drag'); }; h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
+  h.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); S.cmp = clamp(S.cmp + (e.key === 'ArrowLeft' ? -.02 : .02), 0, 1); applyCmp(); } });
+}
+{ // pixel peek on hover
+  const fr = $('#frame'), pk = $('#peek'), st = $('#stage');
+  fr.addEventListener('pointermove', e => {
+    const img = active(); if (!img || S.drag || e.target.closest('.cropbox,.cmp')) { pk.style.display = 'none'; return; }
+    const src = cur(img), r = fr.getBoundingClientRect(), ix = Math.floor((e.clientX - r.left) / r.width * src.width), iy = Math.floor((e.clientY - r.top) / r.height * src.height);
+    if (ix < 0 || iy < 0 || ix >= src.width || iy >= src.height) { pk.style.display = 'none'; return; }
+    const d = ctx2d(src).getImageData(ix, iy, 1, 1).data, hex = '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+    pk.innerHTML = `<i style="background:rgba(${d[0]},${d[1]},${d[2]},${(d[3] / 255).toFixed(2)})"></i>${hex} · α ${d[3]}<br>rgb(${d[0]}, ${d[1]}, ${d[2]}) · x ${ix}, y ${iy}`;
+    const sr = st.getBoundingClientRect(); let left = e.clientX - sr.left + st.scrollLeft + 16, top = e.clientY - sr.top + st.scrollTop + 16; if (left + 190 > st.scrollLeft + sr.width) left -= 210; if (top + 60 > st.scrollTop + sr.height) top -= 76;
+    pk.style.left = left + 'px'; pk.style.top = top + 'px'; pk.style.display = 'block';
+  });
+  fr.addEventListener('pointerleave', () => { pk.style.display = 'none'; });
+}
+
+// ---------- crop overlay ----------
+function initCrop(img) {
+  const w = img.work.width, h = img.work.height; let cw = Math.round(w * .8), ch = Math.round(h * .8), a = S.cropAspect;
+  if (a) { if (cw / ch > a) cw = Math.round(ch * a); else ch = Math.round(cw / a); }
+  S.crop = { x: Math.round((w - cw) / 2), y: Math.round((h - ch) / 2), w: cw, h: ch, base: img.work };
+}
+function renderCropBox() {
+  const box = $('#cropbox'), shade = $('#cropShade'), img = active(), show = img && S.tool === 'crop' && !img.preview; box.classList.toggle('hidden', !show); shade.classList.toggle('hidden', !show); if (!show) return;
+  if (!S.crop || S.crop.base !== img.work) initCrop(img);
+  const c = S.crop, z = S.zoom, L = c.x * z, T = c.y * z, R = (c.x + c.w) * z, B = (c.y + c.h) * z; box.style.left = L + 'px'; box.style.top = T + 'px'; box.style.width = c.w * z + 'px'; box.style.height = c.h * z + 'px'; box.classList.toggle('grid', S.cropGrid !== false);
+  shade.style.clipPath = `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${L}px ${T}px, ${L}px ${B}px, ${R}px ${B}px, ${R}px ${T}px, ${L}px ${T}px)`;
+  $('#cropLbl').textContent = `${c.w} × ${c.h}`; ['x', 'y', 'w', 'h'].forEach(k => { const el = $('#cp_' + k); if (el && document.activeElement !== el) el.value = c[k]; });
+}
+function cropDrag(hd, s, dx, dy, W, H, asp) {
+  if (hd === 'move') return { x: Math.round(clamp(s.x + dx, 0, W - s.w)), y: Math.round(clamp(s.y + dy, 0, H - s.h)), w: s.w, h: s.h };
+  let x1 = s.x, y1 = s.y, x2 = s.x + s.w, y2 = s.y + s.h;
+  if (hd.includes('e')) x2 = clamp(x2 + dx, x1 + 8, W); if (hd.includes('w')) x1 = clamp(x1 + dx, 0, x2 - 8);
+  if (hd.includes('s')) y2 = clamp(y2 + dy, y1 + 8, H); if (hd.includes('n')) y1 = clamp(y1 + dy, 0, y2 - 8);
+  if (asp) {
+    let w = x2 - x1, h = y2 - y1; const vert = hd === 'n' || hd === 's', horiz = hd === 'e' || hd === 'w';
+    if (vert) w = h * asp; else if (horiz) h = w / asp; else if (w / h > asp) w = h * asp; else h = w / asp;
+    if (hd.includes('w')) x1 = x2 - w; else x2 = x1 + w; if (hd.includes('n')) y1 = y2 - h; else y2 = y1 + h;
+    if (vert) { const cx = s.x + s.w / 2; x1 = cx - w / 2; x2 = cx + w / 2; } if (horiz) { const cy = s.y + s.h / 2; y1 = cy - h / 2; y2 = cy + h / 2; }
+    if (x1 < 0 || y1 < 0 || x2 > W || y2 > H || w < 8 || h < 8) return s; // would leave the image: keep the previous box
+  }
+  return { x: Math.round(x1), y: Math.round(y1), w: Math.round(x2 - x1), h: Math.round(y2 - y1) };
+}
+{ const box = $('#cropbox'); let st = null;
+  box.addEventListener('pointerdown', e => { const img = active(); if (!img) return; e.preventDefault(); e.stopPropagation(); st = { hd: e.target.dataset.h || 'move', s: { ...S.crop }, px: e.clientX, py: e.clientY, W: img.work.width, H: img.work.height }; S.drag = true; box.setPointerCapture(e.pointerId); });
+  box.addEventListener('pointermove', e => { if (!st) return; const r = cropDrag(st.hd, st.s, (e.clientX - st.px) / S.zoom, (e.clientY - st.py) / S.zoom, st.W, st.H, S.cropAspect); S.crop = { ...S.crop, ...r }; renderCropBox(); });
+  const end = () => { st = null; S.drag = false; }; box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+}
+function setCropAspect(a) { // re-fit the current box around its centre
+  S.cropAspect = a; const img = active(); if (!img || !S.crop) return; const W = img.work.width, H = img.work.height, c = S.crop;
+  if (a) { let w = c.w, h = Math.round(w / a); if (h > H) { h = H; w = Math.round(h * a); } if (w > W) { w = W; h = Math.round(w / a); } const cx = c.x + c.w / 2, cy = c.y + c.h / 2; S.crop = { ...c, w, h, x: Math.round(clamp(cx - w / 2, 0, W - w)), y: Math.round(clamp(cy - h / 2, 0, H - h)) }; }
+  renderCropBox();
+}
+function setCropField(k, v) {
+  const img = active(); if (!img || !S.crop) return; const W = img.work.width, H = img.work.height; let c = { ...S.crop }; v = Math.round(+v || 0);
+  if (k === 'x') c.x = clamp(v, 0, W - c.w); if (k === 'y') c.y = clamp(v, 0, H - c.h);
+  if (k === 'w') { c.w = clamp(v, 8, W - c.x); if (S.cropAspect) c.h = clamp(Math.round(c.w / S.cropAspect), 8, H - c.y); }
+  if (k === 'h') { c.h = clamp(v, 8, H - c.y); if (S.cropAspect) c.w = clamp(Math.round(c.h * S.cropAspect), 8, W - c.x); }
+  S.crop = c; renderCropBox();
+}
+
+// ---------- edits: commit, estimate ----------
+function commit(img, canvas) { img.history.push(img.work); if (img.history.length > 6) img.history.shift(); img.work = canvas; afterEdit(img); }
+function afterEdit(img) { img.preview = null; S.crop = null; S.adj = ADJ_DEFAULT(); S.rotAngle = 0; S.zoomFit = true; renderFilm(); renderStage(); renderPanel(); scheduleEstimate(); }
+async function estimateNow() {
+  const img = active(); if (!img) return; const seq = ++S.est.seq; const pill = $('#estPill'); if (pill) pill.innerHTML = ic('refresh', 'spin') + ' estimating…';
+  const r = await exportBlob(cur(img)); if (seq !== S.est.seq) return;
+  const prev = S.est.size; S.est = { ...S.est, size: r.blob.size, quality: r.quality, hit: r.hit, id: img.id }; updateEstimateUI(prev === null ? 0 : prev);
+}
+const scheduleEstimate = debounce(estimateNow, 260);
+function updateEstimateUI(prev) {
+  const img = active(); if (!img) return; const size = S.est.size, save = pct(size, img.size), fmtName = fmtInfo(pipe.format)[1];
+  const cls = save > 0 ? 'ok' : 'warn', txt = `${save > 0 ? '−' : '+'}${Math.abs(save)} %`;
+  const pill = $('#estPill'); if (pill) { pill.className = 'pill ' + cls; pill.innerHTML = `${ic('download')} ${fmtName} ≈ <b id="estPillV"></b> · ${txt}`; countUp($('#estPillV'), size, { from: prev, dur: 500, fmt: fmtBytes }); }
+  const big = $('#exEst'); if (big) countUp(big, size, { from: prev, dur: 600, fmt: fmtBytes });
+  const sv = $('#exSave'); if (sv) { sv.className = 'pill ' + cls; sv.textContent = txt + (save > 0 ? ' smaller' : ' larger'); }
+  const ce = $('#cpEst'); if (ce) countUp(ce, size, { from: prev, dur: 600, fmt: fmtBytes });
+  const cs = $('#cpSave'); if (cs) { cs.className = 'pill ' + cls; cs.textContent = txt; }
+  const q = $('#exQ'); if (q) q.textContent = pipe.format === 'image/png' ? (pipe.quantize ? '256 colours' : 'lossless') : `quality ${S.est.quality}${pipe.targetOn ? (S.est.hit ? ` · under ${pipe.targetKB} KB` : ' · target not reachable') : ''}`;
+  const tr = $('#tgResult'); if (tr && pipe.targetOn && pipe.format !== 'image/png') tr.innerHTML = S.est.hit ? `${ic('check-circle')} Quality <b>${S.est.quality}</b> gives <b>${fmtBytes(size)}</b> — under ${pipe.targetKB} KB.` : `${ic('alert')} Even quality 1 gives ${fmtBytes(size)}. Shrink to about <b>${Math.max(10, Math.floor(Math.sqrt(pipe.targetKB * 1024 / size) * 100 / 5) * 5)} %</b> in Resize, then try again.`;
+}
+
+// ---------- filmstrip ----------
+function renderFilm() {
+  const f = $('#film'), tot = S.images.reduce((s, i) => s + i.size, 0), firstRender = S.filmCount !== S.images.length; S.filmCount = S.images.length;
+  f.innerHTML = `<div class="strip ${firstRender ? 'stagger' : ''}" id="strip">${S.images.map(i => { const sel = S.selected.has(i.id), ed = i.work !== i.orig; return `<div class="thumb ${i.id === S.active ? 'on' : ''} ${sel ? 'sel' : ''}" data-id="${i.id}" role="button" tabindex="0" aria-label="${esc(i.name)}, ${i.orig.width} by ${i.orig.height}, ${fmtBytes(i.size)}">
+    <button class="pick" data-pick="${i.id}" aria-label="Select for batch" aria-pressed="${sel}">${sel ? ic('check') : ''}</button><button class="rm" data-rm="${i.id}" aria-label="Remove image">${ic('x')}</button>
+    <div class="pic"></div><div class="nm" title="${esc(i.name)}">${esc(i.name)}</div><div class="in">${ed ? `${i.work.width}×${i.work.height} ←` : `${i.orig.width}×${i.orig.height} ·`} ${fmtBytes(i.size)}</div></div>`; }).join('')}
+    <button class="add" id="filmAdd" aria-label="Add more images">${ic('plus', 'lg')}<br>Add</button></div>
+    <div class="side"><div><b>${S.images.length}</b> image${S.images.length > 1 ? 's' : ''} · <b>${fmtBytes(tot)}</b> · <b>${S.selected.size}</b> selected</div>
+    <div class="rowf" style="justify-content:flex-end"><button class="btn sm ghost" id="selAll">Select all</button><button class="btn sm ghost" id="selNone">None</button><button class="btn sm danger" id="clearAll">${ic('trash')} Clear</button></div>
+    <div class="small">${ic('lock')} Images stay in memory only — never saved or uploaded.</div></div>`;
+  $$('.thumb', f).forEach(t => { $('.pic', t).append(byId(t.dataset.id).thumb); t.onclick = e => { if (e.target.closest('button')) return; activate(t.dataset.id); }; t.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(t.dataset.id); } }; });
+  $$('[data-pick]', f).forEach(b => b.onclick = () => { const id = b.dataset.pick; S.selected.has(id) ? S.selected.delete(id) : S.selected.add(id); renderFilm(); if (S.tool === 'batch' || S.tool === 'convert') renderPanel(); });
+  $$('[data-rm]', f).forEach(b => b.onclick = () => removeImage(b.dataset.rm));
+  $('#filmAdd').onclick = () => $('#fileInput').click();
+  $('#selAll').onclick = () => { S.images.forEach(i => S.selected.add(i.id)); renderFilm(); renderPanel(); };
+  $('#selNone').onclick = () => { S.selected.clear(); renderFilm(); renderPanel(); };
+  $('#clearAll').onclick = () => { if (!confirm('Remove all images from the workspace? (They were never saved anywhere.)')) return; S.images = []; S.selected.clear(); S.est.size = null; render(); };
+  if (firstRender) animateIn(f);
+}
+function activate(id) { if (id === S.active) return; const prev = active(); if (prev) prev.preview = null; S.active = id; S.zoomFit = true; S.crop = null; S.adj = ADJ_DEFAULT(); S.rotAngle = 0; S.est.size = null; renderStage(); renderPanel(); renderFilm(); scheduleEstimate(); animateIn($('#props')); }
+function removeImage(id) { S.images = S.images.filter(i => i.id !== id); S.selected.delete(id); if (S.active === id) { S.active = S.images[0]?.id || null; S.zoomFit = true; S.est.size = null; } render(); }
+
+// ---------- properties panel ----------
+const slider = (id, label, val, min, max, step = 1, unit = '') => `<div class="slider"><div class="lab"><span>${label}</span><b id="${id}_v">${val}${unit}</b></div><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}" aria-label="${label}"><input type="number" id="${id}_n" min="${min}" max="${max}" step="${step}" value="${val}" aria-label="${label} value"></div>`;
+function bindSlider(id, onInput, onChange, unit = '') {
+  const r = $('#' + id), n = $('#' + id + '_n'), v = $('#' + id + '_v'); if (!r) return;
+  const set = (val, src) => { val = clamp(+val || 0, +r.min, +r.max); if (src !== r) r.value = val; if (src !== n) n.value = val; v.textContent = val + unit; onInput(val); };
+  r.oninput = () => set(r.value, r); n.oninput = () => set(n.value, n); r.onchange = n.onchange = () => onChange && onChange(+r.value);
+}
+const seg = (id, items, on) => `<div class="seg" id="${id}" role="group">${items.map(([k, l]) => `<button data-k="${k}" class="${on === k ? 'on' : ''}" aria-pressed="${on === k}">${l}</button>`).join('')}</div>`;
+const bindSeg = (id, fn) => $$(`#${id} button`).forEach(b => b.onclick = () => fn(b.dataset.k));
+function renderPanel() {
+  const img = active(); if (!img) return; const [, label, icon, hint] = TOOLS.find(t => t[0] === S.tool);
+  const p = { resize: panelResize, crop: panelCrop, compress: panelCompress, convert: panelConvert, adjust: panelAdjust, rotate: panelRotate, metadata: panelMetadata, batch: panelBatch }[S.tool](img);
+  $('#props').innerHTML = `<div class="ptitle">${ic(icon, 'lg')}<div><h2>${label}</h2><p>${hint}</p></div></div><div class="body">${p.html}</div>${exportCard(img)}`;
+  p.bind && p.bind(img); bindExport(img); if (S.est.size != null && S.est.id === img.id) updateEstimateUI(S.est.size);
+}
+function exportCard(img) {
+  const n = S.selected.size;
+  return `<div class="export"><div class="rowf" style="justify-content:space-between"><h4 style="margin:0">${ic('download')} Export</h4><span class="pill" title="The file is re-encoded from pixels: EXIF, GPS, XMP, ICC and comments are all gone.">${ic('shield-check')} metadata removed</span></div>
+  <div class="rowf" style="margin-top:8px"><select id="exFmt" aria-label="Export format" style="flex:1">${FORMATS.map(f => `<option value="${f[0]}" ${pipe.format === f[0] ? 'selected' : ''} ${support[f[0]] ? '' : 'disabled'}>${f[1]}${support[f[0]] ? '' : ' — not supported here'}</option>`).join('')}</select><span class="small muted" id="exQ"></span></div>
+  <div class="est"><div><div class="small muted">Estimated size</div><div class="big" id="exEst">…</div></div><div style="text-align:right"><div class="small muted">Original ${fmtBytes(img.size)}</div><span class="pill grey" id="exSave">…</span></div></div>
+  <button class="btn block" id="exDl">${ic('download')} Download ${esc(outName(img, cur(img)))}</button>
+  <button class="btn ghost block" id="exZip" style="margin-top:8px" ${n ? '' : 'disabled'}>${ic('archive')} ${n} selected as ZIP</button></div>`;
+}
+function bindExport() { $('#exFmt').onchange = e => setFormat(e.target.value); $('#exDl').onclick = downloadActive; $('#exZip').onclick = () => runBatch({ resize: false }); }
+function setFormat(f) { if (!support[f]) return; pipe.format = f; savePipe(); renderPanel(); scheduleEstimate(); }
+async function downloadActive() { const img = active(); if (!img) return; const src = cur(img), r = await exportBlob(src); saveBlob(r.blob, outName(img, src)); const s = pct(r.blob.size, img.size); toast(`Saved ${fmtBytes(r.blob.size)} · ${s > 0 ? '−' + s + ' %' : 'larger than the original'} · metadata removed`, 'ok', 'shield-check'); }
+
+// Resize
+const PRESETS = [['pp', 'Passport photo', 413, 531, '35 × 45 mm @ 300 dpi · Pakistan passport, most visa forms', 'fill'], ['cnic', 'CNIC / NADRA photo', 300, 300, '1 × 1 inch @ 300 dpi · NADRA & Pak-Identity uploads', 'fill'], ['visa', 'US visa / DV lottery', 600, 600, '2 × 2 inch @ 300 dpi', 'fill'], ['wa', 'WhatsApp DP', 640, 640, 'Square profile photo', 'fill'], ['ig1', 'Instagram post', 1080, 1080, '1:1 feed post', 'fill'], ['ig2', 'Instagram portrait', 1080, 1350, '4:5 feed post', 'fill'], ['fb', 'Facebook cover', 820, 312, 'Page / profile cover', 'fill'], ['yt', 'YouTube thumbnail', 1280, 720, '16:9', 'fill'], ['a4', 'A4 @ 300 dpi', 2480, 3508, 'Print-ready page', 'fit'], ['a4s', 'A4 scan @ 150 dpi', 1240, 1754, 'Light document upload', 'fit']];
+const FIT_HINT = { fit: 'Fit: whole image inside the box, aspect kept — result may be smaller than the box.', fill: 'Fill: cover the box, aspect kept, centre-cropped to the exact size (use for ID photos).', stretch: 'Stretch: exact size, aspect ignored — distorts.' };
+function resizeTarget(img) { const r = pipe.resize, w = img.work.width, h = img.work.height; if (r.mode === 'pct') return { w: Math.max(1, Math.round(w * r.pct / 100)), h: Math.max(1, Math.round(h * r.pct / 100)) }; if (r.fit === 'fit') { const s = Math.min(r.w / w, r.h / h); return { w: Math.max(1, Math.round(w * s)), h: Math.max(1, Math.round(h * s)) }; } return { w: r.w, h: r.h }; }
+function panelResize(img) {
+  const r = pipe.resize, w = img.work.width, h = img.work.height, out = resizeTarget(img);
+  const html = `<div class="sect">${seg('rzMode', [['px', 'Pixels'], ['pct', 'Percent']], r.mode)}
+    ${r.mode === 'px' ? `<div class="cols" style="margin-top:6px"><div><label class="f" for="rzW">Width</label><input id="rzW" type="number" min="1" max="16384" value="${r.w}"></div><div><label class="f" for="rzH">Height</label><input id="rzH" type="number" min="1" max="16384" value="${r.h}"></div></div><button class="chk ${r.lock ? 'on' : ''}" id="rzLock" aria-pressed="${r.lock}" style="margin-top:8px;width:100%">${ic(r.lock ? 'lock' : 'unlock')} Keep aspect ratio</button>` : `<div style="margin-top:8px">${slider('rzPct', 'Scale', r.pct, 1, 400, 1, ' %')}</div>`}
+    <h4 style="margin-top:12px">Fit</h4>${seg('rzFit', [['fit', 'Fit'], ['fill', 'Fill'], ['stretch', 'Stretch']], r.fit)}<p class="small muted" id="rzHint" style="margin:6px 0 0">${FIT_HINT[r.fit]}</p>
+    <div class="readout" style="margin-top:8px"><span>Current</span><b>${w} × ${h}</b></div><div class="readout"><span>Result</span><b id="rzOut">${out.w} × ${out.h}</b></div>
+    <div class="actions"><button class="btn block" id="rzApply">${ic('maximize')} Apply resize</button></div></div>
+    <div class="sect"><h4>${ic('target')} Presets</h4><div class="presets">${PRESETS.map(p => `<button class="preset ${r.preset === p[0] ? 'on' : ''}" data-preset="${p[0]}"><span><b>${p[1]}</b><small>${p[4]}</small></span><span class="dim">${p[2]}×${p[3]}</span></button>`).join('')}</div></div>`;
+  const bind = () => {
+    const upd = () => { const o = resizeTarget(img); $('#rzOut').textContent = `${o.w} × ${o.h}`; };
+    bindSeg('rzMode', k => { r.mode = k; savePipe(); renderPanel(); }); bindSeg('rzFit', k => { r.fit = k; savePipe(); renderPanel(); });
+    const W = $('#rzW'), H = $('#rzH');
+    if (W) { W.oninput = () => { r.w = clamp(+W.value || 1, 1, 16384); if (r.lock) { r.h = Math.max(1, Math.round(r.w * h / w)); H.value = r.h; } r.preset = ''; upd(); }; H.oninput = () => { r.h = clamp(+H.value || 1, 1, 16384); if (r.lock) { r.w = Math.max(1, Math.round(r.h * w / h)); W.value = r.w; } r.preset = ''; upd(); }; W.onchange = H.onchange = savePipe; $('#rzLock').onclick = () => { r.lock = !r.lock; if (r.lock) r.h = Math.max(1, Math.round(r.w * h / w)); savePipe(); renderPanel(); }; }
+    bindSlider('rzPct', v => { r.pct = v; upd(); }, savePipe, ' %');
+    $$('[data-preset]').forEach(b => b.onclick = () => { const p = PRESETS.find(x => x[0] === b.dataset.preset); Object.assign(r, { mode: 'px', w: p[2], h: p[3], fit: p[5], preset: p[0], lock: false }); savePipe(); renderPanel(); toast(`${p[1]} — ${p[2]} × ${p[3]} px, ${p[5]} mode`, '', 'target'); });
+    $('#rzApply').onclick = () => { const t = resizeTarget(img); const tw = r.mode === 'pct' ? t.w : r.w, th = r.mode === 'pct' ? t.h : r.h; if (tw * th > 64e6) return toast('That is over 64 megapixels — too large for the canvas', 'bad', 'alert'); if (t.w === w && t.h === h) return toast('Already that size', '', 'info'); commit(img, resizeTo(img.work, tw, th, r.mode === 'pct' ? 'stretch' : r.fit)); toast(`Resized to ${img.work.width} × ${img.work.height}`, 'ok', 'maximize'); };
+  };
+  return { html, bind };
+}
+// Crop
+const ASPECTS = [['Free', 0], ['1:1', 1], ['4:3', 4 / 3], ['3:4', 3 / 4], ['16:9', 16 / 9], ['35:45 passport', 35 / 45], ['2:3', 2 / 3]];
+function panelCrop(img) {
+  if (!S.crop || S.crop.base !== img.work) initCrop(img); const c = S.crop;
+  const html = `<div class="sect"><h4>Aspect</h4><div class="chips">${ASPECTS.map(a => `<button class="chip ${Math.abs(S.cropAspect - a[1]) < 1e-6 ? 'on' : ''}" data-asp="${a[1]}">${a[0]}</button>`).join('')}</div>
+    <h4 style="margin-top:12px">Box (px)</h4><div class="cols" style="grid-template-columns:repeat(4,minmax(0,1fr))">${['x', 'y', 'w', 'h'].map(k => `<div><label class="f" for="cp_${k}">${k.toUpperCase()}</label><input id="cp_${k}" type="number" min="0" value="${c[k]}"></div>`).join('')}</div>
+    <label class="chk ${S.cropGrid !== false ? 'on' : ''}" style="margin-top:8px"><input type="checkbox" id="cpGrid" ${S.cropGrid !== false ? 'checked' : ''}> Rule-of-thirds grid</label>
+    <div class="actions"><button class="btn" id="cpApply">${ic('crop')} Apply crop</button><button class="btn ghost" id="cpCentre">Centre box</button><button class="btn ghost" id="cpMax">Whole image</button></div></div>
+    <div class="sect"><button class="btn soft block" id="cpFace">${ic('user')} Auto-centre on face</button><p class="note accent">ID photo recipe: pick <b>35:45 passport</b>, frame head and shoulders with the eyes on the upper grid line, Apply, then Resize → Passport preset (413 × 531).</p></div>`;
+  const bind = () => {
+    $$('[data-asp]').forEach(b => b.onclick = () => { setCropAspect(+b.dataset.asp); renderPanel(); });
+    ['x', 'y', 'w', 'h'].forEach(k => $('#cp_' + k).oninput = e => setCropField(k, e.target.value));
+    $('#cpGrid').onchange = e => { S.cropGrid = e.target.checked; e.target.closest('.chk').classList.toggle('on', S.cropGrid); renderCropBox(); };
+    $('#cpCentre').onclick = () => { S.crop.x = Math.round((img.work.width - S.crop.w) / 2); S.crop.y = Math.round((img.work.height - S.crop.h) / 2); renderCropBox(); };
+    $('#cpMax').onclick = () => { S.cropAspect = 0; S.crop = { x: 0, y: 0, w: img.work.width, h: img.work.height, base: img.work }; renderPanel(); renderCropBox(); };
+    $('#cpApply').onclick = () => { const k = S.crop; if (k.w === img.work.width && k.h === img.work.height) return toast('The box already covers the whole image', '', 'info'); commit(img, cropCanvas(img.work, k.x, k.y, k.w, k.h)); toast(`Cropped to ${img.work.width} × ${img.work.height}`, 'ok', 'crop'); };
+    // TODO(student): face-centred auto-crop. Use window.FaceDetector (Chrome, behind a flag) or a TF.js BlazeFace model on a downscaled copy, take the largest face box, and set S.crop to a 35:45 rectangle whose height is ~1.35× the face height, centred on the face; then renderCropBox().
+    $('#cpFace').onclick = () => toast('Face detection is a student extension (see About)', '', 'user');
+  };
+  return { html, bind };
+}
+// Compress
+function panelCompress(img) {
+  const png = pipe.format === 'image/png';
+  const html = `<div class="sect"><h4>Output format</h4><div class="chips">${FORMATS.map(f => `<button class="chip ${pipe.format === f[0] ? 'on' : ''}" data-f="${f[0]}" ${support[f[0]] ? '' : 'disabled'}>${f[1]}</button>`).join('')}</div>
+    ${png ? `<p class="note" style="margin-top:10px">PNG is lossless — quality does not apply. Reduce the palette below, or switch to WebP / JPEG for photos.</p>` : `<div style="margin-top:8px">${slider('cpQ', 'Quality', pipe.quality, 1, 100)}</div>`}
+    <div class="readout" style="margin-top:8px"><span>Original (${esc(fmtInfo(img.type)[0] === img.type ? fmtInfo(img.type)[1] : img.type.replace('image/', '').toUpperCase())})</span><b>${fmtBytes(img.size)}</b></div><div class="readout"><span>Estimated output</span><b id="cpEst">…</b></div><div class="readout"><span>Savings</span><span class="pill grey" id="cpSave">…</span></div></div>
+    <div class="sect ${png ? 'hidden' : ''}"><h4>${ic('target')} Target size</h4><label class="chk ${pipe.targetOn ? 'on' : ''}"><input type="checkbox" id="tgOn" ${pipe.targetOn ? 'checked' : ''}> Always fit under a size limit</label>
+    <div class="rowf" style="margin-top:8px"><input type="number" id="tgKB" min="5" max="50000" value="${pipe.targetKB}" style="width:110px" aria-label="Target size in KB"><span class="muted">KB</span><button class="btn sm dark" id="tgFind">${ic('zap')} Find quality</button></div>
+    <div class="chips" style="margin-top:8px">${[100, 200, 500, 1024].map(k => `<button class="chip ${pipe.targetKB === k ? 'on' : ''}" data-kb="${k}">${k >= 1024 ? '1 MB' : k + ' KB'}</button>`).join('')}</div>
+    <div class="small" id="tgResult" style="margin-top:8px"></div><p class="small muted" style="margin:6px 0 0">Typical form limits: university / HEC portals 200 KB, job portals 500 KB, visa sites 240 KB.</p></div>
+    <div class="sect ${png ? '' : 'hidden'}"><h4>${ic('grid')} PNG palette</h4><label class="chk ${pipe.quantize ? 'on' : ''}"><input type="checkbox" id="qzOn" ${pipe.quantize ? 'checked' : ''}> Reduce to 256 colours (median cut)</label><p class="small muted" style="margin:6px 0 0">Great for logos, screenshots and charts; photos may show banding. The browser still writes 32-bit PNG — a real indexed writer is a student extension.</p></div>`;
+  const bind = () => {
+    $$('[data-f]').forEach(b => b.onclick = () => setFormat(b.dataset.f));
+    bindSlider('cpQ', v => { pipe.quality = v; const q = $('#exQ'); if (q) q.textContent = `quality ${v}`; scheduleEstimate(); }, savePipe);
+    $('#tgOn').onchange = e => { pipe.targetOn = e.target.checked; savePipe(); renderPanel(); scheduleEstimate(); };
+    $('#tgKB').oninput = e => { pipe.targetKB = clamp(+e.target.value || 5, 5, 50000); $$('[data-kb]').forEach(b => b.classList.toggle('on', +b.dataset.kb === pipe.targetKB)); }; $('#tgKB').onchange = () => { savePipe(); if (pipe.targetOn) scheduleEstimate(); };
+    $$('[data-kb]').forEach(b => b.onclick = () => { pipe.targetKB = +b.dataset.kb; $('#tgKB').value = pipe.targetKB; savePipe(); $$('[data-kb]').forEach(x => x.classList.toggle('on', x === b)); if (pipe.targetOn) scheduleEstimate(); });
+    $('#tgFind').onclick = async () => { const b = $('#tgFind'); b.disabled = true; b.innerHTML = ic('refresh', 'spin') + ' Searching…'; const c = prepareExport(cur(img), pipe.format); const r = await findQuality(c, pipe.format, pipe.targetKB * 1024); const blob = await encode(c, pipe.format, r.quality); pipe.quality = r.quality; savePipe(); renderPanel();
+      $('#tgResult').innerHTML = r.hit ? `${ic('check-circle')} Quality <b>${r.quality}</b> gives <b>${fmtBytes(blob.size)}</b> — under ${pipe.targetKB} KB.` : `${ic('alert')} Even quality 1 gives ${fmtBytes(blob.size)}. Shrink to about <b>${Math.max(10, Math.floor(Math.sqrt(pipe.targetKB * 1024 / blob.size) * 100 / 5) * 5)} %</b> in Resize, then try again.`; scheduleEstimate(); toast(r.hit ? `Quality ${r.quality} → ${fmtBytes(blob.size)}` : 'Target not reachable by quality alone', r.hit ? 'ok' : 'bad', r.hit ? 'zap' : 'alert'); };
+    $('#qzOn').onchange = e => { pipe.quantize = e.target.checked; savePipe(); renderPanel(); scheduleEstimate(); };
+  };
+  return { html, bind };
+}
+// Convert
+function panelConvert(img) {
+  const alpha = hasAlpha(img.work), n = S.selected.size, F = fmtInfo(pipe.format)[1];
+  const html = `<div class="sect"><h4>Target format</h4><div class="fmtgrid">${FORMATS.map(f => `<button class="fmt ${pipe.format === f[0] ? 'on' : ''}" data-f="${f[0]}" ${support[f[0]] ? '' : 'disabled'}><b>${f[1]} ${pipe.format === f[0] ? ic('check') : ''}</b><small>${support[f[0]] ? f[3] : 'Encoder not available in this browser'}</small></button>`).join('')}</div>
+    <div class="readout" style="margin-top:10px"><span>Source</span><b>${esc(img.type.replace('image/', '').toUpperCase())} · ${fmtBytes(img.size)}</b></div></div>
+    <div class="sect"><h4>Transparency</h4>${alpha ? `<p class="note warn" style="margin-top:0">This image has transparent pixels. ${pipe.format === 'image/jpeg' ? 'JPEG has no alpha channel — they will be filled with:' : `They are kept in ${F}; switching to JPEG fills them with:`}</p><div class="rowf" style="margin-top:8px"><input type="color" id="cvBg" value="${pipe.bg}" aria-label="Background fill colour"><div class="chips">${[['#ffffff', 'White'], ['#000000', 'Black'], ['#f2f3f5', 'Light grey'], ['#1d6fd6', 'ID blue']].map(([c, nm]) => `<button class="chip ${pipe.bg === c ? 'on' : ''}" data-bg="${c}">${nm}</button>`).join('')}</div></div>` : `<p class="small muted" style="margin:0">${ic('check-circle')} No transparent pixels detected — every format is safe.</p>`}</div>
+    <div class="sect"><h4>Many files</h4><button class="btn block dark" id="cvAll" ${n ? '' : 'disabled'}>${ic('archive')} Convert ${n} selected → ${F} ZIP</button><button class="btn ghost block" id="cvOcr" style="margin-top:8px">${ic('type')} Extract text (OCR)</button><p class="small muted" style="margin:6px 0 0">OCR is a student extension — see About.</p></div>`;
+  const bind = () => {
+    $$('[data-f]').forEach(b => b.onclick = () => setFormat(b.dataset.f));
+    const bg = $('#cvBg'); if (bg) { bg.oninput = () => { pipe.bg = bg.value; savePipe(); scheduleEstimate(); }; $$('[data-bg]').forEach(b => b.onclick = () => { pipe.bg = b.dataset.bg; bg.value = pipe.bg; savePipe(); $$('[data-bg]').forEach(x => x.classList.toggle('on', x === b)); scheduleEstimate(); }); }
+    $('#cvAll').onclick = () => runBatch({ resize: false });
+    // TODO(student): OCR. Lazily import Tesseract.js (import('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js')), run recognize() on autoLevel(applyFilters(img.work, {grayscale:100,...})), languages 'eng+urd', show the text with a copy button.
+    $('#cvOcr').onclick = () => toast('OCR is a student extension (see About)', '', 'type');
+  };
+  return { html, bind };
+}
+// Adjust
+function panelAdjust(img) {
+  const a = S.adj, changed = JSON.stringify(a) !== JSON.stringify(ADJ_DEFAULT());
+  const html = `<div class="sect">${slider('adBr', 'Brightness', a.brightness, 0, 200, 1, ' %')}${slider('adCt', 'Contrast', a.contrast, 0, 200, 1, ' %')}${slider('adSa', 'Saturation', a.saturate, 0, 200, 1, ' %')}${slider('adGr', 'Grayscale', a.grayscale, 0, 100, 1, ' %')}${slider('adSe', 'Sepia', a.sepia, 0, 100, 1, ' %')}${slider('adBl', 'Blur', a.blur, 0, 10, .5, ' px')}
+    <div class="actions"><button class="btn" id="adApply" ${changed ? '' : 'disabled'}>${ic('check')} Apply</button><button class="btn ghost" id="adReset">Reset</button><button class="btn soft" id="adAuto">${ic('sparkles')} Auto-level</button></div></div>
+    <div class="sect"><h4>${ic('bar-chart')} Histogram (RGB)</h4><div class="hist" id="hist"></div><p class="small muted" style="margin:6px 0 0">Auto-level stretches each channel so 0.5 % of pixels clip at both ends.</p></div>
+    <div class="sect"><button class="btn ghost block" id="adBg">${ic('user')} Remove background</button><p class="small muted" style="margin:6px 0 0">Student extension (TF.js segmentation) — see About.</p></div>`;
+  const bind = () => {
+    const preview = debounce(() => { const ch = JSON.stringify(S.adj) !== JSON.stringify(ADJ_DEFAULT()); img.preview = ch ? applyFilters(img.work, S.adj) : null; renderStage(); const ap = $('#adApply'); if (ap) ap.disabled = !ch; drawHist(cur(img)); scheduleEstimate(); }, 40);
+    [['adBr', 'brightness', ' %'], ['adCt', 'contrast', ' %'], ['adSa', 'saturate', ' %'], ['adGr', 'grayscale', ' %'], ['adSe', 'sepia', ' %'], ['adBl', 'blur', ' px']].forEach(([id, k, u]) => bindSlider(id, v => { S.adj[k] = v; preview(); }, null, u));
+    $('#adApply').onclick = () => { if (!img.preview) return; commit(img, img.preview); toast('Adjustments applied', 'ok', 'sliders'); };
+    $('#adReset').onclick = () => { S.adj = ADJ_DEFAULT(); img.preview = null; renderStage(); renderPanel(); scheduleEstimate(); };
+    $('#adAuto').onclick = () => { S.adj = ADJ_DEFAULT(); commit(img, autoLevel(img.work)); toast('Auto-level applied (histogram stretch)', 'ok', 'sparkles'); };
+    // TODO(student): background removal. Load @tensorflow-models/body-segmentation (MediaPipe SelfieSegmentation) in a Worker, get the person mask for img.work, feather it 2–3 px, and commit(img, maskedCanvas) — or composite onto a solid colour for ID photos.
+    $('#adBg').onclick = () => toast('Background removal is a student extension (see About)', '', 'user');
+    drawHist(cur(img));
+  };
+  return { html, bind };
+}
+function drawHist(src) {
+  const el = $('#hist'); if (!el) return; const { H } = histogram(src); const all = [...H[0], ...H[1], ...H[2]].sort((a, b) => a - b), max = Math.max(1, all[Math.floor(all.length * .99)]); // log scale, spikes clipped
+  const pts = h => Array.from(h, (v, i) => `${(i / 255 * 256).toFixed(1)},${(100 - Math.log1p(Math.min(v, max)) / Math.log1p(max) * 96).toFixed(1)}`);
+  el.innerHTML = `<svg viewBox="0 0 256 100" preserveAspectRatio="none" aria-label="RGB histogram">${[['#e53935', 0], ['#43a047', 1], ['#1e88e5', 2]].map(([c, i]) => `<path d="M0,100 L${pts(H[i]).join(' L')} L256,100 Z" fill="${c}" opacity=".16"/>`).join('')}${[['#e53935', 0], ['#43a047', 1], ['#1e88e5', 2]].map(([c, i]) => `<path class="ln" d="M${pts(H[i]).join(' L')}" fill="none" stroke="${c}" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`).join('')}</svg>`;
+  $$('.ln', el).forEach(drawPath);
+}
+// Rotate
+function panelRotate(img) {
+  const html = `<div class="sect"><h4>Quarter turns & flips</h4><div class="cols" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"><button class="btn ghost" id="rtCcw">${ic('rotate-ccw')} 90° left</button><button class="btn ghost" id="rtCw">${ic('rotate')} 90° right</button><button class="btn ghost" id="rtFh">${ic('flip-h')} Flip horizontal</button><button class="btn ghost" id="rtFv">${ic('flip-v')} Flip vertical</button></div></div>
+    <div class="sect"><h4>Free rotation / straighten</h4>${slider('rtAng', 'Angle', S.rotAngle, -45, 45, .5, '°')}
+    <label class="chk ${pipe.rotBg ? 'on' : ''}" style="margin-top:6px"><input type="checkbox" id="rtBg" ${pipe.rotBg ? 'checked' : ''}> Fill corners with <input type="color" id="rtBgC" value="${pipe.bg}" aria-label="Corner colour" style="width:30px;height:30px;padding:1px;margin-left:4px"></label>
+    <p class="small muted" id="rtNote" style="margin:6px 0 0">The canvas grows so no corner is cut off${S.rotAngle ? ` — now ${cur(img).width} × ${cur(img).height}` : ''}. Unticked = transparent corners (PNG / WebP).</p>
+    <div class="actions"><button class="btn" id="rtApply" ${S.rotAngle ? '' : 'disabled'}>${ic('check')} Apply rotation</button><button class="btn ghost" id="rtCancel">Cancel</button></div></div>`;
+  const bind = () => {
+    $('#rtCcw').onclick = () => { commit(img, rotate90(img.work, -1)); toast('Rotated 90° left', 'ok', 'rotate-ccw'); }; $('#rtCw').onclick = () => { commit(img, rotate90(img.work, 1)); toast('Rotated 90° right', 'ok', 'rotate'); };
+    $('#rtFh').onclick = () => { commit(img, flip(img.work, true)); toast('Flipped horizontally', 'ok', 'flip-h'); }; $('#rtFv').onclick = () => { commit(img, flip(img.work, false)); toast('Flipped vertically', 'ok', 'flip-v'); };
+    const preview = debounce(() => { img.preview = S.rotAngle ? rotateFree(img.work, S.rotAngle, pipe.rotBg ? pipe.bg : null) : null; renderStage(); $('#rtApply').disabled = !S.rotAngle; $('#rtNote').textContent = `The canvas grows so no corner is cut off${S.rotAngle ? ` — now ${cur(img).width} × ${cur(img).height}` : ''}. Unticked = transparent corners (PNG / WebP).`; scheduleEstimate(); }, 30);
+    bindSlider('rtAng', v => { S.rotAngle = v; preview(); }, null, '°');
+    $('#rtBg').onchange = e => { pipe.rotBg = e.target.checked; e.target.closest('.chk').classList.toggle('on', pipe.rotBg); savePipe(); preview(); }; $('#rtBgC').oninput = e => { pipe.bg = e.target.value; savePipe(); preview(); };
+    $('#rtApply').onclick = () => { if (!img.preview) return; commit(img, img.preview); toast('Rotation applied', 'ok', 'rotate'); };
+    $('#rtCancel').onclick = () => { S.rotAngle = 0; img.preview = null; renderStage(); renderPanel(); scheduleEstimate(); };
+  };
+  return { html, bind };
+}
+// Metadata
+const fmtExifDate = s => { const m = /^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/.exec(String(s)); return m ? `${m[3]}-${m[2]}-${m[1]} ${m[4]}:${m[5]}` : String(s); };
+function panelMetadata(img) {
+  const m = img.meta, t = m && m.tags, gps = gpsOf(t), rows = [];
+  if (t) {
+    if (t.make || t.model) rows.push(['Camera', t.model && t.make && t.model.toLowerCase().startsWith(t.make.toLowerCase()) ? t.model : [t.make, t.model].filter(Boolean).join(' ')]); if (t.lens) rows.push(['Lens', t.lens]); if (t.dateOriginal || t.dateTime) rows.push(['Taken', fmtExifDate(t.dateOriginal || t.dateTime)]);
+    if (t.exposure) rows.push(['Exposure', t.exposure < 1 ? `1/${Math.round(1 / t.exposure)} s` : `${t.exposure} s`]); if (t.fNumber) rows.push(['Aperture', `f/${+(+t.fNumber).toFixed(1)}`]); if (t.iso) rows.push(['ISO', t.iso]); if (t.focal) rows.push(['Focal length', `${+(+t.focal).toFixed(1)} mm${t.focal35 ? ` (${t.focal35} mm eq.)` : ''}`]);
+    if (t.orientation) rows.push(['Orientation', `${t.orientation} — ${ORIENT[t.orientation] || 'unknown'}${t.orientation > 1 ? ' · applied when loading' : ''}`]); if (t.software) rows.push(['Software', t.software]); if (t.artist) rows.push(['Artist', t.artist]); if (t.copyright) rows.push(['Copyright', t.copyright]);
+    if (t.pixelX) rows.push(['EXIF size', `${t.pixelX} × ${t.pixelY}`]); if (gps) rows.push(['GPS', `${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)}${t.alt ? ` · ${Math.round(t.alt)} m` : ''}`]);
+  }
+  const badges = [gps && ['bad', 'map-pin', 'Location embedded'], t && (t.make || t.model) && ['warn', 'camera', 'Device identity'], (!m || (!rows.length && !m.metaBytes)) && ['ok', 'check-circle', 'No metadata found'], m && m.metaBytes && ['grey', 'file', fmtBytes(m.metaBytes) + ' of metadata']].filter(Boolean);
+  const html = `<div class="sect"><div class="chips">${badges.map(b => `<span class="pill ${b[0]}">${ic(b[1])} ${b[2]}</span>`).join('')}</div>
+    ${rows.length ? `<table class="meta" style="margin-top:10px">${rows.map(r => `<tr><td>${r[0]}</td><td>${esc(String(r[1]))}</td></tr>`).join('')}</table>` : `<p class="small muted" style="margin:10px 0 0">${m ? `No EXIF tags inside this ${m.kind}.` : 'WebP / GIF / BMP / AVIF metadata is not parsed by this toolkit (yet).'}</p>`}
+    ${gps ? `<a class="btn ghost block" style="margin-top:10px" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${gps.lat.toFixed(6)},${gps.lng.toFixed(6)}">${ic('map-pin')} Open location in Google Maps ${ic('external')}</a><p class="note warn">Anyone who receives the original file can see exactly where it was taken.</p>` : ''}</div>
+    ${m && m.segments.length ? `<div class="sect"><h4>Embedded blocks</h4>${m.segments.map(s => `<div class="readout"><span>${esc(s.kind)}</span><b>${fmtBytes(s.bytes)}</b></div>`).join('')}</div>` : ''}
+    <div class="sect"><p class="note ok" style="margin-top:0">${ic('shield-check')} Every export from this toolkit re-encodes pixels only, so <b>all</b> of this is removed — EXIF, GPS, XMP, ICC, IPTC, comments.</p><button class="btn block dark" id="mdClean" style="margin-top:10px">${ic('shield-check')} Download clean copy</button></div>`;
+  const bind = () => { $('#mdClean').onclick = async () => { const fmt = support[img.type] ? img.type : 'image/jpeg'; const r = await exportBlob(img.work, fmt, 92, { targetOn: false, quantize: false }); saveBlob(r.blob, outName(img, img.work, fmt).replace(/(\.[^.]+)$/, '-clean$1')); toast(`Clean copy saved — ${fmtBytes(r.blob.size)}, metadata removed`, 'ok', 'shield-check'); }; };
+  return { html, bind };
+}
+// Batch
+function panelBatch() {
+  const n = S.selected.size, r = pipe.resize, b = S.batch, rzTxt = r.mode === 'pct' ? `${r.pct} %` : `${r.fit} ${r.w} × ${r.h}`;
+  const html = `<div class="sect"><h4>Pipeline for ${n} selected</h4>
+    <label class="chk ${pipe.batchResize ? 'on' : ''}"><input type="checkbox" id="bzRz" ${pipe.batchResize ? 'checked' : ''}> <span>Resize — ${esc(rzTxt)}<br><span class="small muted">settings from the Resize panel</span></span></label>
+    <div class="chk on" style="margin-top:6px;cursor:default">${ic('check')} <span>Encode as ${fmtInfo(pipe.format)[1]} ${pipe.format === 'image/png' ? (pipe.quantize ? '· 256 colours' : '· lossless') : pipe.targetOn ? `· under ${pipe.targetKB} KB` : `· quality ${pipe.quality}`}<br><span class="small muted">from Compress / Convert · metadata stripped</span></span></div>
+    <p class="small muted" style="margin:8px 0 0">Crops, rotations and adjustments already applied per image are kept.</p>
+    <div class="actions"><button class="btn block" id="bzRun" ${n && !(b && b.running) ? '' : 'disabled'}>${ic('play')} Run on ${n} image${n !== 1 ? 's' : ''}</button></div>
+    ${b ? `<div class="bar" style="margin-top:12px"><i id="bzBar" style="width:${b.done / b.total * 100}%"></i></div><div class="small muted" id="bzStatus" style="margin-top:4px">${b.running ? `Processing ${Math.min(b.done + 1, b.total)} of ${b.total}…` : `Done — ${b.total} file${b.total !== 1 ? 's' : ''} in ${(b.ms / 1000).toFixed(1)} s`}</div>` : ''}</div>
+    ${b && !b.running ? `<div class="sect"><h4>Results</h4><div class="kpis"><div class="kpi"><div class="k">Before</div><div class="v" id="bzBefore">0</div></div><div class="kpi"><div class="k">After</div><div class="v" id="bzAfter">0</div></div><div class="kpi ok"><div class="k">Saved</div><div class="v" id="bzSaved">0</div></div></div>
+      <div class="results stagger">${b.items.map((it, i) => `<div class="r"><span class="nm" title="${esc(it.name)}">${esc(it.name)}</span><button class="btn sm ghost" data-dl="${i}" aria-label="Download ${esc(it.name)}">${ic('download')}</button><span class="sz" style="grid-column:1/-1">${it.w} × ${it.h} · ${fmtBytes(it.before)} → <b>${fmtBytes(it.after)}</b> (${it.after <= it.before ? '−' : '+'}${Math.abs(pct(it.after, it.before))} %)</span></div>`).join('')}</div>
+      <div class="actions"><button class="btn block dark" id="bzZip">${ic('archive')} Download all as ZIP</button><button class="btn ghost block" id="bzPdf">${ic('file')} Export as one PDF</button></div></div>` : ''}`;
+  const bind = () => {
+    $('#bzRz').onchange = e => { pipe.batchResize = e.target.checked; savePipe(); e.target.closest('.chk').classList.toggle('on', pipe.batchResize); };
+    $('#bzRun').onclick = () => runBatch({ resize: pipe.batchResize });
+    if (b && !b.running) {
+      countUp($('#bzBefore'), b.before, { fmt: fmtBytes }); countUp($('#bzAfter'), b.after, { fmt: fmtBytes }); countUp($('#bzSaved'), Math.max(0, b.before - b.after), { fmt: v => `${fmtBytes(v)} · ${Math.round(v / (b.before || 1) * 100)} %` });
+      $$('[data-dl]').forEach(x => x.onclick = () => { const it = b.items[+x.dataset.dl]; saveBlob(it.blob, it.name); }); $('#bzZip').onclick = downloadZip;
+      // TODO(student): multi-image PDF export. Build a PDF by hand: for each item encode as JPEG, write an /XObject /Subtype /Image /Filter /DCTDecode stream, one page per image sized to A4, then the xref table; saveBlob(new Blob([...], {type:'application/pdf'}), 'scans.pdf').
+      $('#bzPdf').onclick = () => toast('PDF export is a student extension (see About)', '', 'file');
+      animateIn($('.results'));
+    }
+  };
+  return { html, bind };
+}
+async function runBatch(opts = {}) {
+  const ids = [...S.selected]; if (!ids.length) return toast('Select at least one image in the filmstrip', 'bad', 'alert');
+  if (S.tool !== 'batch') { S.tool = 'batch'; store.set('tool', 'batch'); if (location.hash !== '#batch') location.replace('#batch'); renderRail(); }
+  const t0 = performance.now(); S.batch = { running: true, done: 0, total: ids.length, items: [], before: 0, after: 0, ms: 0 }; renderPanel();
+  for (const id of ids) {
+    const img = byId(id); if (!img) continue; let c = img.work;
+    if (opts.resize) { const r = pipe.resize, t = resizeTarget(img); c = resizeTo(c, r.mode === 'pct' ? t.w : r.w, r.mode === 'pct' ? t.h : r.h, r.mode === 'pct' ? 'stretch' : r.fit); }
+    const res = await exportBlob(c); S.batch.items.push({ id, name: outName(img, c), blob: res.blob, before: img.size, after: res.blob.size, w: c.width, h: c.height, quality: res.quality });
+    S.batch.before += img.size; S.batch.after += res.blob.size; S.batch.done++;
+    const bar = $('#bzBar'); if (bar) bar.style.width = S.batch.done / S.batch.total * 100 + '%'; const stt = $('#bzStatus'); if (stt) stt.textContent = `Processing ${Math.min(S.batch.done + 1, S.batch.total)} of ${S.batch.total}…`; await tick();
+  }
+  S.batch.running = false; S.batch.ms = performance.now() - t0; renderPanel(); toast(`Batch done — ${fmtBytes(S.batch.before)} → ${fmtBytes(S.batch.after)}`, 'ok', 'check-circle'); return S.batch;
+}
+async function downloadZip() {
+  const b = S.batch; if (!b || !b.items.length) return null; const names = new Set(), files = [];
+  for (const it of b.items) { let name = it.name, k = 2; while (names.has(name)) name = it.name.replace(/(\.[^.]+)$/, ` (${k++})$1`); names.add(name); files.push({ name, data: new Uint8Array(await it.blob.arrayBuffer()) }); }
+  const zip = makeZip(files); saveBlob(zip, `image-toolkit-${new Date().toISOString().slice(0, 10)}.zip`); toast(`ZIP ready — ${files.length} files, ${fmtBytes(zip.size)}`, 'ok', 'archive'); return zip;
+}
+
+// ---------- drawers: About (student extensions) and Settings ----------
+const TODOS = [
+  ['WASM codecs (mozjpeg · oxipng · avif)', 'Replace canvas.toBlob with WebAssembly encoders for 20–40 % smaller files at equal quality, true indexed PNG and AVIF in every browser.', 'codecs', 'encode(), exportBlob()'],
+  ['Background removal', 'Run a TF.js / MediaPipe selfie-segmentation model in a Worker, feather the mask and output PNG with alpha or a solid ID-photo backdrop.', 'ML', 'panelAdjust() → #adBg'],
+  ['Multi-image PDF export', 'Hand-write a minimal PDF (one DCTDecode image XObject per A4 page) in the same spirit as the ZIP writer so scanned pages become one document.', 'documents', 'panelBatch() → #bzPdf'],
+  ['PWA with share-target', 'Add manifest.json and a service worker so phones can "Share to" the app; the SW receives the POSTed files and hands them to addFiles().', 'mobile', 'boot() — serviceWorker stub'],
+  ['OCR of scanned documents', 'Lazy-load Tesseract.js, pre-process with auto-level + grayscale, recognise eng+urd and show copyable text.', 'ML', 'panelConvert() → #cvOcr'],
+  ['Face-centred auto-crop for passport photos', 'Detect the largest face (FaceDetector API or BlazeFace) and set a 35:45 crop with the head at 70–80 % of the height.', 'ML', 'panelCrop() → #cpFace'],
+  ['Real indexed PNG writer', 'After median cut, emit a colour-type-3 PNG (PLTE / tRNS / IDAT via CompressionStream) so quantized output is 8-bit, 3–4× smaller than RGBA.', 'codecs', 'quantize()'],
+  ['Keep or write chosen metadata', 'Let users keep harmless EXIF (date, copyright, author) by rebuilding an APP1 segment and splicing it into the JPEG — the inverse of the default strip.', 'privacy', 'exportBlob(), loadSamples() shows the splice']
+];
+const aboutHtml = () => `<div class="card" style="box-shadow:none"><h3>${ic('shield-check')} Why this exists</h3><p class="muted small" style="margin:0 0 8px">Students and small businesses upload photos to random "compress online" sites that keep copies; passport and CNIC photo sizes are confusing; EXIF location data leaks in shared pictures. This toolkit does all of it on the device — no upload, no account, no server.</p><p class="muted small" style="margin:0">Stack: one HTML file, vanilla JS, Canvas 2D, hand-written EXIF / PNG parsers, median-cut quantizer and ZIP writer. Works from <code>file://</code>, offline. Preferences live in localStorage (<code>imgkit:</code>); images are never persisted.</p></div>
+  <div class="card" style="box-shadow:none;margin-top:12px"><h3>${ic('layers')} What is built</h3><div class="chips">${['Drag-drop · picker · paste', 'Resize with Pakistani ID presets', 'Crop with handles & thirds grid', 'Quality & target-size compression', 'Median-cut PNG palette', 'JPEG ↔ PNG ↔ WebP', 'Adjust · auto-level · histogram', 'Rotate · flip · straighten', 'EXIF & GPS reader', 'Metadata stripping', 'Before/after slider · pixel peek', 'Batch → ZIP (own writer)'].map(c => `<span class="pill grey">${esc(c)}</span>`).join('')}</div></div>
+  <h3 style="margin:18px 0 10px">${ic('code')} Left for students to build</h3><div class="list stagger">${TODOS.map(([h, b, tag, where]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted small">${esc(b)}</div><div class="small" style="margin-top:6px">Start here: <code>${esc(where)}</code></div></div>`).join('')}</div>
+  <p class="small muted" style="margin-top:14px">Search the source for <code>TODO(student)</code> to find the exact hooks.</p>`;
+const sw = (id, on, label) => `<button class="switch ${on ? 'on' : ''}" id="${id}" role="switch" aria-checked="${on}" aria-label="${label}"></button>`;
+const settingsHtml = () => `<div class="setrow"><div><b>Default export format</b><span class="muted">Starting format for new sessions</span></div><select id="stFmt" style="width:150px" aria-label="Default format">${FORMATS.map(f => `<option value="${f[0]}" ${settings.format === f[0] ? 'selected' : ''} ${support[f[0]] ? '' : 'disabled'}>${f[1]}</option>`).join('')}</select></div>
+  <div class="setrow"><div><b>Default quality</b><span class="muted">JPEG / WebP, 1–100</span></div><div class="rowf"><input type="range" id="stQ" min="1" max="100" value="${settings.quality}" style="width:130px" aria-label="Default quality"><b id="stQv" style="min-width:28px;text-align:right">${settings.quality}</b></div></div>
+  <div class="setrow"><div><b>Remember last pipeline</b><span class="muted">Resize, format, quality, target size — never images</span></div>${sw('stRemember', settings.rememberPipeline, 'Remember last pipeline')}</div>
+  <div class="setrow"><div><b>Add dimensions to file names</b><span class="muted">photo-413x531.jpg when the size changed</span></div>${sw('stSuffix', settings.suffix, 'Add dimensions to file names')}</div>
+  <div class="setrow"><div><b>Default background fill</b><span class="muted">For transparency → JPEG and rotation corners</span></div><input type="color" id="stBg" value="${settings.bg}" aria-label="Default background colour"></div>
+  <div class="setrow"><div><b>Encoders in this browser</b><span class="muted">Decoding of AVIF / WebP depends on the browser too</span></div><div class="chips">${FORMATS.map(f => `<span class="pill ${support[f[0]] ? 'ok' : 'grey'}">${ic(support[f[0]] ? 'check' : 'x')} ${f[1]}</span>`).join('')}</div></div>
+  <div class="actions"><button class="btn ghost" id="stExport">${ic('download')} Export settings JSON</button><button class="btn ghost" id="stImport">${ic('upload')} Import</button><button class="btn danger" id="stReset">${ic('trash')} Reset</button></div><input type="file" id="stFile" class="hidden" accept="application/json,.json">
+  <p class="note" style="margin-top:14px">${ic('lock')} Only these preferences are stored (localStorage, prefix <code>imgkit:</code>). Images stay in memory and vanish when the tab is closed or refreshed.</p>`;
+function bindSettings() {
+  const apply = () => { saveSettings(); pipe.format = support[settings.format] ? settings.format : pipe.format; pipe.quality = settings.quality; pipe.bg = settings.bg; savePipe(); if (S.images.length) { renderPanel(); scheduleEstimate(); } };
+  $('#stFmt').onchange = e => { settings.format = e.target.value; apply(); };
+  $('#stQ').oninput = e => { settings.quality = +e.target.value; $('#stQv').textContent = settings.quality; }; $('#stQ').onchange = apply;
+  $('#stRemember').onclick = e => { settings.rememberPipeline = !settings.rememberPipeline; e.currentTarget.classList.toggle('on', settings.rememberPipeline); e.currentTarget.setAttribute('aria-checked', settings.rememberPipeline); saveSettings(); if (settings.rememberPipeline) savePipe(); else store.del('pipeline'); };
+  $('#stSuffix').onclick = e => { settings.suffix = !settings.suffix; e.currentTarget.classList.toggle('on', settings.suffix); e.currentTarget.setAttribute('aria-checked', settings.suffix); apply(); };
+  $('#stBg').oninput = e => { settings.bg = e.target.value; apply(); };
+  $('#stExport').onclick = () => saveBlob(new Blob([JSON.stringify({ app: 'image-toolkit', settings, pipeline: pipe }, null, 2)], { type: 'application/json' }), 'image-toolkit-settings.json');
+  $('#stImport').onclick = () => $('#stFile').click();
+  $('#stFile').onchange = async e => { try { const j = JSON.parse(await e.target.files[0].text()); if (j.app !== 'image-toolkit') throw 0; settings = Object.assign({}, DEFAULT_SETTINGS, j.settings || {}); if (j.pipeline) { pipe = Object.assign(PIPE_DEFAULT(), j.pipeline); pipe.resize = Object.assign(PIPE_DEFAULT().resize, j.pipeline.resize || {}); } if (!support[pipe.format]) pipe.format = 'image/jpeg'; saveSettings(); savePipe(); openDrawer('settings'); if (S.images.length) renderPanel(); toast('Settings imported', 'ok', 'check-circle'); } catch { toast('That is not an Image Toolkit settings file', 'bad', 'alert'); } e.target.value = ''; };
+  $('#stReset').onclick = () => { if (!confirm('Reset all preferences to defaults?')) return; ['settings', 'pipeline', 'tool'].forEach(store.del); settings = { ...DEFAULT_SETTINGS }; pipe = PIPE_DEFAULT(); openDrawer('settings'); if (S.images.length) { renderPanel(); scheduleEstimate(); } toast('Preferences reset', 'ok', 'refresh'); };
+}
+function openDrawer(kind) { $('#drawerTitle').textContent = kind === 'about' ? 'About this toolkit' : 'Settings'; $('#drawerBody').innerHTML = kind === 'about' ? aboutHtml() : settingsHtml(); if (kind === 'settings') bindSettings(); document.body.classList.add('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'false'); animateIn($('#drawerBody')); setTimeout(() => $('#drawerClose').focus(), 60); }
+function closeDrawer(nav = true) { if (!document.body.classList.contains('drawer-open')) return; document.body.classList.remove('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'true'); if (nav && /^#(about|settings)$/.test(location.hash)) location.hash = '#' + S.tool; }
+$('#scrim').onclick = () => closeDrawer(); $('#drawerClose').onclick = () => closeDrawer();
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+// ---------- router & boot ----------
+function route() {
+  const h = location.hash.slice(1);
+  if (h === 'about' || h === 'settings') { openDrawer(h); return; }
+  closeDrawer(false);
+  if (!TOOLS.some(t => t[0] === h)) { location.replace('#' + S.tool); return; }
+  if (h !== S.tool) { S.tool = h; store.set('tool', h); const img = active(); if (img) { img.preview = null; S.adj = ADJ_DEFAULT(); S.rotAngle = 0; } }
+  if (S.images.length) { renderRail(); renderStage(); renderPanel(); animateIn($('#props')); scheduleEstimate(); }
+}
+window.addEventListener('hashchange', route);
+const FEATURES = [['target', 'Passport & CNIC presets', '35 × 45 mm and 1 × 1 inch at 300 dpi, plus WhatsApp, Instagram, YouTube and A4.'], ['compress', 'Hit the upload limit', 'Binary-search JPEG / WebP quality to land under 200 KB (or any limit) with a live size estimate.'], ['shield-check', 'Strip EXIF & GPS', 'See what a photo reveals — camera, time, exact location — then export a clean copy.'], ['crop', 'Crop, rotate, adjust', 'Aspect-locked crop with handles, straighten on an auto-expanding canvas, auto-level with a histogram.'], ['shuffle', 'Convert formats', 'JPEG ↔ PNG ↔ WebP (AVIF where supported) with transparency handling and palette reduction.'], ['archive', 'Batch → ZIP', 'Run one pipeline over every selected image and download a ZIP assembled in JavaScript.']];
+function boot() {
+  $('#formats').innerHTML = [['JPEG', true], ['PNG', true], ['WebP', support['image/webp']], ['GIF · first frame', true], ['BMP', true], ['AVIF · if your browser decodes it', true]].map(([n, ok]) => `<span class="${ok ? '' : 'no'}">${n}</span>`).join('');
+  $('#featTiles').innerHTML = FEATURES.map(([i, h, p]) => `<div class="tile">${ic(i, 'lg')}<b>${h}</b><span class="small muted">${p}</span></div>`).join('');
+  animateIn($('#empty')); route();
+  // TODO(student): PWA share-target. Add <link rel="manifest" href="manifest.json"> with "share_target": {"action":"/share","method":"POST","enctype":"multipart/form-data","params":{"files":[{"name":"images","accept":["image/*"]}]}},
+  // register sw.js here (navigator.serviceWorker.register('sw.js')), and in the SW's fetch handler for /share read formData().getAll('images') and post them to the open client, which calls addFiles().
+}
+window.ImageToolkit = { addFiles, loadSamples, runBatch, downloadZip, makeZip, exportBlob, parseExif, quantize, state: S, get pipe() { return pipe; }, get settings() { return settings; } };
+boot();
+</script>
+</body>
+</html>

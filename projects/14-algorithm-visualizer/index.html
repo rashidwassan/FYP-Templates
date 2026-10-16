@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algorithm Visualizer</title>
+<meta name="description" content="Offline, single-file visual lab for sorting, pathfinding, graph and data-structure algorithms. Every algorithm is a JavaScript generator; a generic player records steps so you can scrub, step back and race two algorithms. FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: IDE purple-black + syntax palette ---------- */
+:root{
+  --bg:#13111c; --panel:#1b1826; --panel-2:#221e30; --panel-3:#2a2640; --line:#2a2640; --line-2:#3a3554;
+  --ink:#e0def4; --muted:#908caa; --dim:#6e6a86; --bar:#5b5775;
+  --cmp:#f6c177; --swp:#eb6f92; --srt:#9ccfd8; --piv:#c4a7e7; --vis:#31748f; --pth:#f6c177; --fro:#9ccfd8;
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Fira Code",ui-monospace,Menlo,Consolas,monospace;
+  --radius:12px; --radius-sm:8px; --ease:cubic-bezier(.2,.8,.2,1); --dur:.35s;
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(246,193,119,.6)}100%{box-shadow:0 0 0 10px rgba(246,193,119,0)}}
+.enter{animation:fadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
+.btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.card,.tile{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
+.card:hover{transform:translateY(-2px);border-color:var(--line-2)}
+.fill,.bar>i{transition:width .6s var(--ease)}
+.skeleton{background:linear-gradient(90deg,var(--panel-2) 25%,var(--panel) 50%,var(--panel-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.01em}
+a{color:var(--srt)}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+:focus-visible{outline:2px solid var(--piv);outline-offset:2px}
+::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:var(--panel-3);border-radius:8px} ::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- App frame ---------- */
+.app{min-height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:14px;padding:0 16px;height:56px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;min-width:0}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--piv),var(--srt));display:grid;place-items:center;color:#13111c;flex:none}
+.brand .logo svg{width:20px;height:20px;stroke:#13111c;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.brand h1{font-size:.98rem;font-weight:800;white-space:nowrap}
+.brand small{display:block;font-size:.7rem;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.tabs{display:flex;gap:2px;position:relative;margin-left:10px;height:56px;align-items:stretch}
+.tabs a{display:flex;align-items:center;gap:7px;padding:0 13px;color:var(--muted);text-decoration:none;font-weight:700;font-size:.88rem;white-space:nowrap;transition:color .2s}
+.tabs a:hover{color:var(--ink)} .tabs a.active{color:var(--ink)}
+.tabs .inkbar{position:absolute;bottom:-1px;height:2px;background:var(--piv);border-radius:2px;transition:left .3s var(--ease),width .3s var(--ease);box-shadow:0 0 12px var(--piv)}
+.spacer{flex:1}
+.kbd-hint{font-size:.74rem;color:var(--dim);white-space:nowrap}
+.kbd-hint kbd{font-family:var(--mono);background:var(--panel-2);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px;color:var(--muted)}
+.iconbtn{width:40px;height:40px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.iconbtn:hover{color:var(--ink);border-color:var(--line-2)}
+.work{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:0}
+.stage{padding:14px 18px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.codepane{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-width:0}
+.cp-toggle{display:none}
+.cp-body{display:flex;flex-direction:column;min-height:0;flex:1}
+.cp-head{padding:14px 14px 8px;border-bottom:1px solid var(--line)}
+.cp-head h2{font-size:.98rem;font-weight:800;display:flex;align-items:center;gap:8px}
+.cp-head .sub{font-size:.76rem;color:var(--muted);margin-top:2px}
+.badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.badge{font-family:var(--mono);font-size:.68rem;padding:3px 7px;border-radius:6px;background:var(--panel-2);border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+.badge b{color:var(--ink);font-weight:600}
+.badge.good{border-color:rgba(156,207,216,.5);color:var(--srt)} .badge.bad{border-color:rgba(235,111,146,.5);color:var(--swp)}
+.code{list-style:none;margin:0;padding:8px 0;font-family:var(--mono);font-size:.76rem;line-height:1.6;counter-reset:ln;overflow:auto;flex:0 1 auto;min-height:90px}
+.code li{display:flex;gap:10px;padding:1px 12px 1px 0;border-left:3px solid transparent;transition:background .2s,border-color .2s}
+.code li .src{white-space:pre;min-width:0}
+.code li::before{counter-increment:ln;content:counter(ln);width:2em;text-align:right;color:var(--dim);flex:none;padding-left:6px}
+.code li.on{background:rgba(196,167,231,.14);border-left-color:var(--piv)}
+.code li.on::before{color:var(--piv)}
+.kw{color:var(--piv)} .num{color:var(--cmp)} .fn{color:var(--srt)} .cm{color:var(--dim);font-style:italic}
+.cp-note{margin:10px 12px;padding:10px 12px;background:var(--panel-2);border-left:3px solid var(--cmp);border-radius:8px;font-size:.85rem;min-height:3.4em;transition:border-color .2s}
+.cp-note.swap{border-left-color:var(--swp)} .cp-note.sorted{border-left-color:var(--srt)} .cp-note.pivot{border-left-color:var(--piv)} .cp-note.visit{border-left-color:var(--vis)} .cp-note.path{border-left-color:var(--pth)}
+.cp-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;padding:0 12px 12px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.stat .k{font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700}
+.stat .v{font-family:var(--mono);font-size:1rem;font-weight:600}
+.stat.cmp .v{color:var(--cmp)} .stat.swp .v{color:var(--swp)} .stat.srt .v{color:var(--srt)} .stat.piv .v{color:var(--piv)}
+
+/* ---------- Controls ---------- */
+.ctrl{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.ctrl label,.f{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);font-weight:700}
+select,input[type=text],input[type=number]{background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink);border-radius:8px;padding:7px 9px;min-height:40px;outline:0}
+select:focus,input:focus{border-color:var(--piv);box-shadow:0 0 0 3px rgba(196,167,231,.18)}
+input[type=range]{accent-color:var(--piv);height:40px;margin:0}
+.btn{border:1px solid var(--line-2);background:var(--panel-2);color:var(--ink);border-radius:9px;padding:0 12px;min-height:40px;font-weight:700;font-size:.84rem;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn.primary{background:var(--piv);color:#13111c;border-color:var(--piv)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--swp);border-color:rgba(235,111,146,.4)}
+.btn.sm{min-height:34px;padding:0 10px;font-size:.78rem}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn[aria-pressed=true]{background:rgba(196,167,231,.18);border-color:var(--piv);color:var(--piv)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;background:var(--panel-2);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{border:0;background:none;padding:0 12px;min-height:40px;cursor:pointer;font-weight:700;font-size:.82rem;color:var(--muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:none}
+.seg button.on{background:var(--panel-3);color:var(--ink)}
+.seg.sm button{min-height:34px;padding:0 10px;font-size:.76rem}
+.sw{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:.78rem;color:var(--muted);font-weight:700;min-height:40px}
+.sw input{appearance:none;width:36px;height:20px;border-radius:999px;background:var(--panel-3);position:relative;margin:0;cursor:pointer;transition:background .2s}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:transform .2s var(--ease),background .2s}
+.sw input:checked{background:var(--piv)} .sw input:checked::after{transform:translateX(16px);background:#13111c}
+
+/* ---------- Stage pieces ---------- */
+.cv{position:relative;flex:1;min-height:280px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.cv .hint{position:absolute;left:12px;bottom:6px;font-size:.72rem;color:var(--dim);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 24px)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.74rem;color:var(--muted);font-weight:600}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0}
+.tile .k{font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;white-space:nowrap}
+.tile .v{font-family:var(--mono);font-size:1.15rem;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.cmp .v{color:var(--cmp)} .tile.swp .v{color:var(--swp)} .tile.srt .v{color:var(--srt)} .tile.piv .v{color:var(--piv)} .tile.vis .v{color:#5ab0cc}
+.race{display:grid;grid-template-rows:1fr 1fr;gap:10px;flex:1;min-height:0}
+.racer{display:flex;flex-direction:column;min-height:0;gap:6px}
+.racer .rh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.8rem}
+.racer .rh b{font-size:.9rem}
+.racer .rh .c{font-family:var(--mono);color:var(--muted)} .racer .rh .c span{color:var(--ink)}
+.racer .cv{min-height:150px}
+.banner{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--piv);color:var(--ink);padding:8px 14px;border-radius:10px;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:8px;animation:pop .3s var(--ease);box-shadow:0 10px 30px -10px rgba(0,0,0,.6);max-width:calc(100% - 24px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banner.win{border-color:var(--cmp);color:var(--cmp)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
+.panel h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.adj{font-family:var(--mono);font-size:.76rem;line-height:1.7;max-height:150px;overflow:auto;white-space:pre}
+.adj b{color:var(--piv);font-weight:600}
+table.t{width:100%;border-collapse:collapse;font-size:.8rem}
+table.t th,table.t td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+table.t th{font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+table.t td.n{font-family:var(--mono);text-align:right}
+table.t tr.hl td{background:rgba(246,193,119,.1)}
+.twrap{overflow:auto;max-height:150px}
+.twrap.tall{max-height:none}
+
+/* ---------- Data structures ---------- */
+.ds-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;flex:1}
+.ds-view{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-height:320px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.cells{display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap}
+.cell{width:46px;height:46px;border-radius:9px;background:var(--panel-3);border:1px solid var(--line-2);display:grid;place-items:center;font-family:var(--mono);font-weight:600;transition:transform .3s var(--ease),opacity .3s,background .2s,border-color .2s;position:relative}
+.cell.enter{animation:fadeUp .3s var(--ease) both}
+.cell.leave{opacity:0;transform:translateY(-14px) scale(.9)}
+.cell.lo{border-color:var(--srt);color:var(--srt)} .cell.hi{border-color:var(--swp);color:var(--swp)} .cell.mid{background:var(--cmp);color:#13111c;border-color:var(--cmp)} .cell.found{background:var(--srt);color:#13111c} .cell.dead{opacity:.3}
+.cell .tag{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.62rem;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.stack-col{display:flex;flex-direction:column-reverse;gap:6px;width:120px;min-height:260px;justify-content:flex-start;border:1px dashed var(--line-2);border-top:0;border-radius:0 0 10px 10px;padding:8px}
+.stack-col .cell{width:100%;height:38px}
+.queue-row{display:flex;gap:6px;min-height:60px;align-items:center;border:1px dashed var(--line-2);border-left:0;border-right:0;padding:12px 8px;overflow-x:auto}
+.ptr{font-size:.7rem;color:var(--muted);font-family:var(--mono)}
+svg.tree{width:100%;height:100%;min-height:300px;display:block}
+svg.tree .node{transition:transform .45s var(--ease)}
+svg.tree .node circle{fill:var(--panel-3);stroke:var(--line-2);stroke-width:2;transition:fill .25s,stroke .25s}
+svg.tree .node text{fill:var(--ink);font-family:var(--mono);font-size:13px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+svg.tree .node.visit circle{stroke:var(--cmp);fill:rgba(246,193,119,.18)}
+svg.tree .node.found circle{fill:var(--srt);stroke:var(--srt)} svg.tree .node.found text{fill:#13111c}
+svg.tree .node.new circle{fill:var(--piv);stroke:var(--piv)} svg.tree .node.new text{fill:#13111c}
+svg.tree .node.del circle{fill:var(--swp);stroke:var(--swp)} svg.tree .node.del text{fill:#13111c}
+svg.tree .node.order circle{fill:var(--vis);stroke:var(--vis)}
+svg.tree .node .ord{font-size:10px;fill:var(--cmp)}
+svg.tree line{stroke:var(--line-2);stroke-width:2;transition:all .45s var(--ease)}
+.ds-ctrl input[type=number]{width:90px}
+
+/* ---------- Learn ---------- */
+.learn{display:flex;flex-direction:column;gap:12px}
+.quiz .opt{display:block;width:100%;text-align:left;margin-top:8px;padding:12px 14px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line-2);cursor:pointer;font-weight:600}
+.quiz .opt:hover{border-color:var(--piv)}
+.quiz .opt.right{border-color:var(--srt);background:rgba(156,207,216,.14)} .quiz .opt.wrong{border-color:var(--swp);background:rgba(235,111,146,.14)}
+.bar{height:8px;background:var(--panel-3);border-radius:999px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--piv);width:0}
+.score{font-family:var(--mono);font-size:2.4rem;font-weight:600;color:var(--cmp)}
+.growth svg.chart{width:100%;height:auto;display:block}
+.growth .tip{position:absolute;pointer-events:none;background:var(--panel-2);border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;font-family:var(--mono);font-size:.72rem;line-height:1.6;white-space:nowrap;box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
+
+/* ---------- Transport ---------- */
+.transport{display:flex;align-items:center;gap:14px;padding:8px 16px;border-top:1px solid var(--line);background:var(--panel);position:sticky;bottom:0;z-index:20;flex-wrap:wrap}
+.t-btns{display:flex;gap:6px}
+.tb{width:40px;height:40px;border-radius:10px;border:1px solid var(--line-2);background:var(--panel-2);color:var(--ink);display:grid;place-items:center;cursor:pointer;font-size:1.05rem}
+.tb.primary{background:var(--piv);color:#13111c;border-color:var(--piv);width:48px}
+.tb[aria-pressed=true]{background:rgba(235,111,146,.18);border-color:var(--swp);color:var(--swp)}
+.tb:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.t-scrub{flex:1;display:flex;align-items:center;gap:10px;min-width:180px}
+.t-scrub input{flex:1;min-width:0}
+.t-scrub span{font-family:var(--mono);font-size:.74rem;color:var(--muted);white-space:nowrap;min-width:9ch;text-align:right}
+.t-slider{display:flex;align-items:center;gap:7px;font-size:.76rem;color:var(--muted);font-weight:700;white-space:nowrap}
+.t-slider input{width:110px}
+.t-slider span{font-family:var(--mono);color:var(--ink);min-width:4ch}
+body[data-cat=learn] .transport,body[data-cat=learn] .codepane{display:none}
+body[data-cat=learn] .work{grid-template-columns:minmax(0,1fr)}
+body:not([data-cat=sorting]) #tRace,body:not([data-cat=sorting]):not([data-cat=path]) #tSizeWrap{display:none}
+
+/* ---------- Modal / toasts ---------- */
+.modal{position:fixed;inset:0;background:rgba(5,4,10,.6);display:grid;place-items:center;z-index:50;animation:fadeIn .2s;padding:16px}
+.modal[hidden]{display:none}
+.modal .box{background:var(--panel);border:1px solid var(--line-2);border-radius:16px;max-width:780px;width:100%;max-height:88vh;overflow:auto;padding:20px 22px;animation:pop .25s var(--ease);box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+.modal h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
+.todo{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;background:var(--panel-2)}
+.todo h4{font-size:.9rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.todo .tag{font-family:var(--mono);font-size:.64rem;padding:2px 6px;border-radius:5px;background:rgba(196,167,231,.15);color:var(--piv)}
+.todo p{margin:4px 0 0;font-size:.82rem;color:var(--muted)}
+#toasts{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;pointer-events:none}
+.toast{background:var(--panel-3);color:var(--ink);border:1px solid var(--line-2);padding:10px 16px;border-radius:10px;font-weight:600;font-size:.86rem;box-shadow:0 10px 30px -10px rgba(0,0,0,.7);animation:toastIn .3s var(--ease),toastOut .3s var(--ease) 2.8s forwards;display:flex;align-items:center;gap:8px}
+.toast.ok{border-color:var(--srt);color:var(--srt)} .toast.bad{border-color:var(--swp);color:var(--swp)}
+
+/* ---------- Responsive ---------- */
+@media (min-width:901px){
+  .app{height:100vh}
+  .work{overflow:hidden}
+  .stage{overflow:auto}
+  .codepane{overflow:hidden}
+  .cp-body{overflow:hidden}
+}
+@media (max-width:1100px){.kbd-hint{display:none}.work{grid-template-columns:minmax(0,1fr) 310px}}
+@media (max-width:900px){
+  .work{display:block}
+  .topbar{gap:8px;padding:0 10px;height:auto;flex-wrap:wrap;padding-bottom:0}
+  .brand{padding:8px 0} .brand small{display:none}
+  .topbar .iconbtn{width:36px;height:36px}
+  .tabs{order:5;flex-basis:100%;margin-left:0;height:44px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs a{padding:0 10px;font-size:.8rem}
+  .stage{padding:12px}
+  .cv{min-height:300px;height:300px;flex:none}
+  .race{grid-template-rows:none;grid-template-columns:1fr;flex:none}
+  .race .cv{height:190px;min-height:190px}
+  .two{grid-template-columns:1fr}
+  .codepane{border-left:0;border-top:1px solid var(--line)}
+  .cp-toggle{display:flex;width:100%;align-items:center;gap:8px;padding:12px 14px;background:none;border:0;color:var(--ink);font-weight:800;cursor:pointer;text-align:left}
+  .cp-toggle .ic:last-child{margin-left:auto;transition:transform .3s}
+  .codepane.open .cp-toggle .ic:last-child{transform:rotate(180deg)}
+  .codepane:not(.open) .cp-body{display:none}
+  .code{max-height:260px}
+  .transport{gap:8px 12px;padding:8px 10px}
+  .t-scrub{order:3;flex-basis:100%}
+  .t-slider input{width:80px}
+  .ds-view{min-height:260px}
+}
+@media print{.topbar,.transport,.codepane,#toasts{display:none}.stage{padding:0}}
+</style>
+</head>
+<body data-cat="sorting">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-sort" viewBox="0 0 24 24"><path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></symbol>
+<symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+<symbol id="i-skip" viewBox="0 0 24 24"><path d="m5 4 10 8-10 8ZM19 5v14"/></symbol>
+<symbol id="i-skip-back" viewBox="0 0 24 24"><path d="m19 4-10 8 10 8ZM5 5v14"/></symbol>
+<symbol id="i-rotate" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></symbol>
+<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.8-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></symbol>
+<symbol id="i-swords" viewBox="0 0 24 24"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5 18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
+<symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16M10 14.7V17c0 .5-.5 1-1 1.3-1 .6-1 2.7-1 2.7h8s0-2.1-1-2.7c-.5-.3-1-.8-1-1.3v-2.3"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-move" viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+<symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+<symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+<symbol id="i-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6"/></symbol>
+<symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></symbol>
+<symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
+<symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 13h6M8 17h8"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></symbol>
+<symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3a1 1 0 0 1 0-1.4L13.5 4.5a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L11 21H7Z"/><path d="M22 21H7M5 11l9 9"/></symbol>
+<symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+</svg>
+
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="#sorting"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m7 7-4 5 4 5M17 7l4 5-4 5"/><path d="M10 17v-5M14 17V7"/></svg></span><span><h1>Algorithm Visualizer</h1><small>OFFLINE VISUAL LAB</small></span></a>
+    <nav class="tabs" id="tabs" aria-label="Categories"></nav>
+    <div class="spacer"></div>
+    <span class="kbd-hint"><kbd>Space</kbd> play · <kbd>←</kbd><kbd>→</kbd> step · <kbd>R</kbd> reset</span>
+    <button class="iconbtn" id="shareBtn" aria-label="Copy share link"><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg></button>
+    <button class="iconbtn" id="aboutBtn" aria-label="About, shortcuts and student extensions"><svg class="ic" aria-hidden="true"><use href="#i-help"/></svg></button>
+  </header>
+  <div class="work">
+    <main class="stage" id="stage"></main>
+    <aside class="codepane" id="codepane" aria-label="Pseudo-code">
+      <button class="cp-toggle" id="cpToggle" aria-expanded="false"><svg class="ic" aria-hidden="true"><use href="#i-code"/></svg><span>Pseudo-code &amp; explanation</span><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+      <div class="cp-body">
+        <div class="cp-head"><h2 id="cpTitle"></h2><div class="sub" id="cpSub"></div><div class="badges" id="cpBadges"></div></div>
+        <ol class="code" id="cpCode"></ol>
+        <div class="cp-note" id="cpNote"></div>
+        <div class="cp-stats" id="cpStats"></div>
+      </div>
+    </aside>
+  </div>
+  <footer class="transport" id="transport" aria-label="Playback controls">
+    <div class="t-btns">
+      <button class="tb" id="tReset" aria-label="Reset to the first step" title="Reset (R)"><svg class="ic" aria-hidden="true"><use href="#i-rotate"/></svg></button>
+      <button class="tb" id="tBack" aria-label="Step back" title="Step back (←)"><svg class="ic" aria-hidden="true"><use href="#i-skip-back"/></svg></button>
+      <button class="tb primary" id="tPlay" aria-label="Play" title="Play / pause (Space)"><svg class="ic" aria-hidden="true"><use href="#i-play"/></svg></button>
+      <button class="tb" id="tFwd" aria-label="Step forward" title="Step forward (→)"><svg class="ic" aria-hidden="true"><use href="#i-skip"/></svg></button>
+      <button class="tb" id="tShuffle" aria-label="Shuffle input" title="New random input"><svg class="ic" aria-hidden="true"><use href="#i-shuffle"/></svg></button>
+      <button class="tb" id="tRace" aria-label="Toggle race mode" aria-pressed="false" title="Race two algorithms"><svg class="ic" aria-hidden="true"><use href="#i-swords"/></svg></button>
+    </div>
+    <div class="t-scrub"><input type="range" id="tScrub" min="0" max="0" value="0" aria-label="Scrub through steps"><span id="tStep">0 / 0</span></div>
+    <label class="t-slider"><svg class="ic" aria-hidden="true"><use href="#i-zap"/></svg>Speed<input type="range" id="tSpeed" min="1" max="10" value="5" aria-label="Playback speed"><span id="tSpeedV"></span></label>
+    <label class="t-slider" id="tSizeWrap"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg>Size<input type="range" id="tSize" min="10" max="200" value="40" aria-label="Input size"><span id="tSizeV"></span></label>
+  </footer>
+</div>
+<div class="modal" id="about" hidden role="dialog" aria-modal="true" aria-labelledby="aboutTitle"><div class="box" id="aboutBox"></div></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Algorithm Visualizer — single-file app
+   Sections: utils · player (generator recorder) · code pane · transport
+             sorting · pathfinding · graphs · data structures · learn · router
+   Extension pattern: an algorithm is a generator that yields step objects
+   { type, i, j, line, note, … }. The player records the steps into an array,
+   applies / undoes them on a model, and the renderer draws the model.
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+
+// ---------- utils ----------
+const NS = 'algoviz:';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const nf = n => Number(n).toLocaleString('en-US');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const toast = (msg, type = '') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = ic(type === 'bad' ? 'alert' : type === 'ok' ? 'check-circle' : 'info') + esc(msg); $('#toasts').append(t); setTimeout(() => t.remove(), 3200); };
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const newSeed = () => Math.floor(Math.random() * 9e5) + 1000;
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i))); };
+const countUp = (el, to, { dur = 700, fmt = v => nf(Math.round(v)) } = {}) => { const t0 = performance.now(); const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const drawPath = p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; };
+const COL = { bar: '#5b5775', cmp: '#f6c177', swp: '#eb6f92', srt: '#9ccfd8', piv: '#c4a7e7', vis: '#31748f', pth: '#f6c177', fro: '#9ccfd8', wall: '#3d3856', mud: '#5c4a3a', ink: '#e0def4', muted: '#908caa', panel: '#1b1826', panel2: '#221e30', line: '#2a2640' };
+const fitCanvas = cv => { const r = cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1); const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d)); if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } const ctx = cv.getContext('2d'); ctx.setTransform(d, 0, 0, d, 0, 0); return { ctx, W: r.width, H: r.height }; };
+class PQ { constructor() { this.h = []; } get size() { return this.h.length; } push(p, v) { const h = this.h; h.push([p, v]); let i = h.length - 1; while (i > 0) { const q = (i - 1) >> 1; if (h[q][0] <= h[i][0]) break; [h[q], h[i]] = [h[i], h[q]]; i = q; } } pop() { const h = this.h, top = h[0], last = h.pop(); if (h.length) { h[0] = last; let i = 0; for (;;) { let l = 2 * i + 1, r = l + 1, m = i; if (l < h.length && h[l][0] < h[m][0]) m = l; if (r < h.length && h[r][0] < h[m][0]) m = r; if (m === i) break; [h[m], h[i]] = [h[i], h[m]]; i = m; } } return top; } }
+
+// ---------- app state ----------
+const DEFAULTS = {
+  cat: 'sorting', speed: 5,
+  sort: { algo: 'quick', algoB: 'merge', size: 40, dist: 'random', seed: 4242, custom: '12, 5, 31, 8, 20, 3, 27, 15', race: false, focus: 0 },
+  pf: { algo: 'astar', h: 'manhattan', diag: false, tool: 'wall', size: 1, seed: 77, maze: 'division' },
+  gr: { algo: 'dijkstra', preset: 'weighted', mode: 'edge', src: 0, w: 4 },
+  ds: { tab: 'stack' }, learn: { tab: 'table' }
+};
+const SAVED = store.get('settings', {});
+const S = Object.fromEntries(Object.entries(DEFAULTS).map(([k, v]) => [k, typeof v === 'object' ? { ...v, ...(SAVED[k] || {}) } : (SAVED[k] ?? v)]));
+const saveS = () => store.set('settings', { speed: S.speed, sort: S.sort, pf: { ...S.pf }, gr: { algo: S.gr.algo, preset: S.gr.preset, mode: S.gr.mode, src: S.gr.src, w: S.gr.w }, ds: S.ds, learn: S.learn });
+
+// ---------- generic player: records generator steps, applies/undoes them on a model ----------
+const SPS = [1, 2, 4, 8, 15, 30, 60, 120, 250, 500];
+const sps = () => SPS[clamp(S.speed, 1, 10) - 1];
+function record(gen, cap = 150000) {
+  const steps = [];
+  for (const s of gen) { steps.push(s); if (steps.length >= cap) { steps.push({ type: 'done', line: -1, note: 'Step limit reached — recording truncated' }); break; } }
+  return steps;
+}
+const P = {
+  tracks: [], idx: 0, playing: false, raf: 0, acc: 0, last: 0, onDone: null, onRender: null,
+  load(tracks, onRender, onDone) { this.pause(); this.tracks = tracks; this.onRender = onRender; this.onDone = onDone; this.idx = 0; tracks.forEach(t => t.pos = 0); this.render(); },
+  total() { return this.tracks.length ? Math.max(...this.tracks.map(t => t.steps.length)) : 0; },
+  seek(i) {
+    i = clamp(i, 0, this.total());
+    for (const t of this.tracks) { const target = Math.min(i, t.steps.length); while (t.pos < target) t.apply(t.model, t.steps[t.pos++]); while (t.pos > target) t.undo(t.model, t.steps[--t.pos]); }
+    this.idx = i; this.render();
+  },
+  cur(t) { return t.steps[t.pos - 1] || null; },
+  render() { this.onRender && this.onRender(); updateTransport(); },
+  play() { if (this.playing || !this.tracks.length) return; if (this.idx >= this.total()) this.seek(0); this.playing = true; this.last = performance.now(); this.acc = 0; this.raf = requestAnimationFrame(ts => this.loop(ts)); updateTransport(); },
+  pause() { this.playing = false; cancelAnimationFrame(this.raf); updateTransport(); },
+  toggle() { this.playing ? this.pause() : this.play(); },
+  step(d) { this.pause(); this.seek(this.idx + d); },
+  loop(ts) {
+    if (!this.playing) return;
+    const dt = Math.min(.1, (ts - this.last) / 1000); this.last = ts; this.acc += dt * sps();
+    const n = Math.floor(this.acc); if (n > 0) { this.acc -= n; this.seek(this.idx + n); }
+    if (this.idx >= this.total()) { this.pause(); this.onDone && this.onDone(); } else this.raf = requestAnimationFrame(t => this.loop(t));
+  }
+};
+
+// ---------- code pane ----------
+const KW = /\b(for|while|if|else|return|in|and|or|not|break|continue|skip|output|mark|swap|push|pop|shift|add|popMin|reconstruct|copy|sort|union|find|dfs|BFS|queue|stack|pq|open)\b/g;
+function hlLine(s) {
+  let out = esc(s);
+  const ci = out.indexOf('//'); let cm = ''; if (ci >= 0) { cm = `<span class="cm">${out.slice(ci)}</span>`; out = out.slice(0, ci); }
+  out = out.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="num">$1</span>').replace(KW, '<span class="kw">$1</span>').replace(/\b([a-zA-Z_]\w*)(?=\()/g, '<span class="fn">$1</span>');
+  return out + cm;
+}
+let cpLinesKey = '';
+function showCode({ title = '', sub = '', badges = [], code = [], line = -1, note = '', noteKind = '', stats = [] }) {
+  $('#cpTitle').innerHTML = ic('code') + esc(title); $('#cpSub').textContent = sub;
+  $('#cpBadges').innerHTML = badges.map(b => `<span class="badge ${b.cls || ''}">${b.k ? esc(b.k) + ' <b>' + esc(b.v) + '</b>' : esc(b.v)}</span>`).join('');
+  const key = title + '|' + code.join('\n');
+  if (key !== cpLinesKey) { cpLinesKey = key; $('#cpCode').innerHTML = code.map(l => `<li><span class="src">${hlLine(l)}</span></li>`).join(''); }
+  $$('#cpCode li').forEach((li, i) => li.classList.toggle('on', i === line));
+  const on = $('#cpCode li.on'); if (on && typeof on.scrollIntoView === 'function') on.scrollIntoView({ block: 'nearest' });
+  const nt = $('#cpNote'); nt.textContent = note || 'Press play or step forward to begin.'; nt.className = 'cp-note ' + noteKind;
+  $('#cpStats').innerHTML = stats.map(s => `<div class="stat ${s.cls || ''}"><div class="k">${esc(s.k)}</div><div class="v">${esc(s.v)}</div></div>`).join('');
+}
+const kindOf = t => ({ compare: '', swap: 'swap', set: 'swap', sorted: 'sorted', pivot: 'pivot', visit: 'visit', frontier: 'visit', path: 'path', done: 'sorted', edge: 'pivot', dist: 'visit', uf: 'pivot', order: 'sorted', comp: 'sorted', range: 'pivot' }[t] || '');
+
+// ---------- transport ----------
+function updateTransport() {
+  const tot = P.total(), playing = S.cat === 'ds' ? mini.playing : P.playing; const sc = $('#tScrub'); sc.max = tot; sc.value = P.idx; $('#tStep').textContent = `${nf(P.idx)} / ${nf(tot)}`;
+  $('#tPlay').innerHTML = ic(playing ? 'pause' : 'play'); $('#tPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  $('#tSpeedV').textContent = sps() + '/s'; $('#tSpeed').value = S.speed;
+  $('#tRace').setAttribute('aria-pressed', String(!!S.sort.race));
+  const hasTracks = P.tracks.length > 0 && S.cat !== 'ds';
+  ['#tBack', '#tFwd', '#tScrub'].forEach(s => $(s).disabled = !hasTracks && S.cat !== 'ds');
+  $('#tBack').disabled = !hasTracks;
+  $('#tShuffle').disabled = S.cat === 'graph';
+  if (S.cat === 'sorting') { const sz = $('#tSize'); sz.min = 10; sz.max = 200; sz.value = S.sort.size; $('#tSizeV').textContent = S.sort.size; }
+  if (S.cat === 'path') { const sz = $('#tSize'); sz.min = 0; sz.max = 3; sz.value = S.pf.size; const g = gridDims(S.pf.size); $('#tSizeV').textContent = `${g.rows}×${g.cols}`; }
+}
+$('#tPlay').onclick = () => S.cat === 'ds' ? mini.toggle() : P.toggle();
+$('#tBack').onclick = () => P.step(-1);
+$('#tFwd').onclick = () => S.cat === 'ds' ? mini.stepOnce() : P.step(1);
+$('#tReset').onclick = () => resetCurrent();
+$('#tShuffle').onclick = () => shuffleCurrent();
+$('#tRace').onclick = () => { S.sort.race = !S.sort.race; saveS(); renderSorting(); };
+$('#tScrub').addEventListener('input', e => { P.pause(); P.seek(+e.target.value); });
+$('#tSpeed').addEventListener('input', e => { S.speed = +e.target.value; saveS(); updateTransport(); });
+$('#tSize').addEventListener('change', e => { if (S.cat === 'sorting') { S.sort.size = +e.target.value; S.sort.dist = S.sort.dist === 'custom' ? 'random' : S.sort.dist; saveS(); renderSorting(); } else if (S.cat === 'path') { S.pf.size = +e.target.value; saveS(); buildGrid(true); renderPath(); } });
+$('#tSize').addEventListener('input', e => { if (S.cat === 'sorting') $('#tSizeV').textContent = e.target.value; else if (S.cat === 'path') { const g = gridDims(+e.target.value); $('#tSizeV').textContent = `${g.rows}×${g.cols}`; } });
+function resetCurrent() { if (S.cat === 'ds') { mini.stop(); dsReset(); } else { P.pause(); P.seek(0); } }
+function shuffleCurrent() {
+  if (S.cat === 'sorting') { S.sort.seed = newSeed(); if (S.sort.dist === 'custom') S.sort.dist = 'random'; saveS(); renderSorting(); toast('New input generated'); }
+  else if (S.cat === 'path') { S.pf.seed = newSeed(); saveS(); buildGrid(true); renderPath(); toast('New maze generated'); }
+  else if (S.cat === 'ds') { dsReset(true); }
+}
+
+/* =====================================================================
+   SORTING — every algorithm is a generator over a working copy `a`.
+   Step types: compare(i,j) · swap(i,j) · set(i,v) · visit(i) · pivot(i) · range(lo,hi) · sorted(i | lo,hi)
+   ===================================================================== */
+const SORTS = {
+  bubble: { name: 'Bubble sort', cx: ['n', 'n²', 'n²', '1', true],
+    code: ['for i in 0 .. n-1:', '  swapped = false', '  for j in 0 .. n-i-2:', '    if a[j] > a[j+1]:', '      swap(a[j], a[j+1])', '      swapped = true', '  if not swapped: break   // already sorted'],
+    *run(a) { const n = a.length; for (let i = 0; i < n; i++) { let sw = false; for (let j = 0; j < n - i - 1; j++) { yield { type: 'compare', i: j, j: j + 1, line: 3, note: `Compare ${a[j]} and ${a[j + 1]}` }; if (a[j] > a[j + 1]) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; sw = true; yield { type: 'swap', i: j, j: j + 1, line: 4, note: `${a[j + 1]} > ${a[j]} → swap them` }; } } yield { type: 'sorted', i: n - 1 - i, line: 6, note: `${a[n - 1 - i]} bubbled to its final place` }; if (!sw) { yield { type: 'sorted', lo: 0, hi: n - 1 - i, line: 6, note: 'No swaps in this pass — the rest is already sorted' }; break; } } } },
+  insertion: { name: 'Insertion sort', cx: ['n', 'n²', 'n²', '1', true],
+    code: ['for i in 1 .. n-1:', '  key = a[i]; j = i - 1', '  while j ≥ 0 and a[j] > key:', '    a[j+1] = a[j]; j = j - 1   // shift right', '  a[j+1] = key'],
+    *run(a) { const n = a.length; yield { type: 'sorted', i: 0, line: 0, note: 'A single element is trivially sorted' }; for (let i = 1; i < n; i++) { const key = a[i]; let j = i - 1; yield { type: 'pivot', i, line: 1, note: `Take key ${key} out of position ${i}` }; while (j >= 0) { yield { type: 'compare', i: j, j: j + 1, line: 2, note: `Is ${a[j]} > key ${key}?` }; if (a[j] <= key) break; a[j + 1] = a[j]; yield { type: 'set', i: j + 1, v: a[j], line: 3, note: `Shift ${a[j]} one place right` }; j--; } a[j + 1] = key; yield { type: 'set', i: j + 1, v: key, line: 4, note: `Drop key ${key} into position ${j + 1}` }; yield { type: 'sorted', lo: 0, hi: i, line: 4, note: `Prefix 0..${i} is sorted` }; } } },
+  selection: { name: 'Selection sort', cx: ['n²', 'n²', 'n²', '1', false],
+    code: ['for i in 0 .. n-2:', '  min = i', '  for j in i+1 .. n-1:', '    if a[j] < a[min]: min = j', '  swap(a[i], a[min])'],
+    *run(a) { const n = a.length; for (let i = 0; i < n - 1; i++) { let m = i; yield { type: 'pivot', i: m, line: 1, note: `Assume ${a[m]} is the minimum of the rest` }; for (let j = i + 1; j < n; j++) { yield { type: 'compare', i: j, j: m, line: 3, note: `Compare ${a[j]} with current min ${a[m]}` }; if (a[j] < a[m]) { m = j; yield { type: 'pivot', i: m, line: 3, note: `New minimum ${a[m]}` }; } } if (m !== i) { [a[i], a[m]] = [a[m], a[i]]; yield { type: 'swap', i, j: m, line: 4, note: `Swap min ${a[i]} into position ${i}` }; } yield { type: 'sorted', i, line: 4, note: `${a[i]} is final` }; } yield { type: 'sorted', i: n - 1, line: 4, note: 'Last element is in place' }; } },
+  merge: { name: 'Merge sort', cx: ['n log n', 'n log n', 'n log n', 'n', true],
+    code: ['mergeSort(lo, hi):', '  if lo ≥ hi: return', '  mid = (lo + hi) / 2', '  mergeSort(lo, mid); mergeSort(mid+1, hi)', '  aux = copy of a[lo..hi]; i = lo; j = mid+1', '  for k in lo .. hi:', '    if aux[i] ≤ aux[j]: a[k] = aux[i]; i++', '    else: a[k] = aux[j]; j++'],
+    *run(a) { function* ms(lo, hi) { if (lo >= hi) { yield { type: 'range', lo, hi, line: 1, note: `Single element ${a[lo]} — nothing to do` }; return; } const mid = (lo + hi) >> 1; yield { type: 'range', lo, hi, line: 2, note: `Split ${lo}..${hi} at ${mid}` }; yield* ms(lo, mid); yield* ms(mid + 1, hi); yield { type: 'range', lo, hi, line: 4, note: `Merge ${lo}..${mid} with ${mid + 1}..${hi}` }; const aux = a.slice(lo, hi + 1); const L = mid - lo, R = hi - lo; let i = 0, j = L + 1; for (let k = lo; k <= hi; k++) { if (i <= L && j <= R) yield { type: 'compare', i: lo + i, j: lo + j, line: 6, note: `Compare ${aux[i]} and ${aux[j]}` }; if (j > R || (i <= L && aux[i] <= aux[j])) { a[k] = aux[i++]; yield { type: 'set', i: k, v: a[k], line: 6, note: `Write ${a[k]} from the left run` }; } else { a[k] = aux[j++]; yield { type: 'set', i: k, v: a[k], line: 7, note: `Write ${a[k]} from the right run` }; } } } yield* ms(0, a.length - 1); yield { type: 'sorted', lo: 0, hi: a.length - 1, line: 0, note: 'Final merge complete' }; } },
+  quick: { name: 'Quick sort (Lomuto)', cx: ['n log n', 'n log n', 'n²', 'log n', false],
+    code: ['quickSort(lo, hi):', '  if lo ≥ hi: return   // 0 or 1 element', '  pivot = a[hi]; i = lo', '  for j in lo .. hi-1:', '    if a[j] < pivot:', '      swap(a[i], a[j]); i = i + 1', '  swap(a[i], a[hi])   // pivot lands at i', '  quickSort(lo, i-1); quickSort(i+1, hi)'],
+    *run(a) { function* qs(lo, hi) { if (lo > hi) return; if (lo === hi) { yield { type: 'sorted', i: lo, line: 1, note: `${a[lo]} alone — already in place` }; return; } const p = a[hi]; yield { type: 'range', lo, hi, line: 2, note: `Partition ${lo}..${hi}` }; yield { type: 'pivot', i: hi, line: 2, note: `Pivot = ${p} (last element)` }; let i = lo; for (let j = lo; j < hi; j++) { yield { type: 'compare', i: j, j: hi, line: 4, note: `Is ${a[j]} < pivot ${p}?` }; if (a[j] < p) { if (i !== j) { [a[i], a[j]] = [a[j], a[i]]; yield { type: 'swap', i, j, line: 5, note: `${a[i]} < ${p} → move it to the left part` }; } i++; } } if (i !== hi) { [a[i], a[hi]] = [a[hi], a[i]]; yield { type: 'swap', i, j: hi, line: 6, note: `Place pivot ${p} at index ${i}` }; } yield { type: 'sorted', i, line: 6, note: `Pivot ${p} is final at ${i}` }; yield* qs(lo, i - 1); yield* qs(i + 1, hi); } yield* qs(0, a.length - 1); } },
+  heap: { name: 'Heap sort', cx: ['n log n', 'n log n', 'n log n', '1', false],
+    code: ['for i in n/2-1 .. 0: siftDown(i, n)   // build max-heap', 'for end in n-1 .. 1:', '  swap(a[0], a[end])   // largest to the back', '  siftDown(0, end)', 'siftDown(i, size):', '  while 2i+1 < size:', '    c = larger of the two children', '    if a[i] ≥ a[c]: return', '    swap(a[i], a[c]); i = c'],
+    *run(a) { const n = a.length; function* sift(i, size) { while (2 * i + 1 < size) { let c = 2 * i + 1; if (c + 1 < size) { yield { type: 'compare', i: c, j: c + 1, line: 6, note: `Larger child: ${a[c]} or ${a[c + 1]}?` }; if (a[c + 1] > a[c]) c++; } yield { type: 'compare', i, j: c, line: 7, note: `Parent ${a[i]} vs child ${a[c]}` }; if (a[i] >= a[c]) return; [a[i], a[c]] = [a[c], a[i]]; yield { type: 'swap', i, j: c, line: 8, note: `Sift ${a[c]} down` }; i = c; } } for (let i = (n >> 1) - 1; i >= 0; i--) { yield { type: 'range', lo: 0, hi: n - 1, line: 0, note: `Heapify subtree rooted at ${i}` }; yield* sift(i, n); } for (let end = n - 1; end > 0; end--) { [a[0], a[end]] = [a[end], a[0]]; yield { type: 'swap', i: 0, j: end, line: 2, note: `Move max ${a[end]} to position ${end}` }; yield { type: 'sorted', i: end, line: 2, note: `${a[end]} is final` }; yield { type: 'range', lo: 0, hi: end - 1, line: 3, note: `Restore the heap on 0..${end - 1}` }; yield* sift(0, end); } yield { type: 'sorted', i: 0, line: 3, note: 'Heap exhausted — sorted' }; } },
+  counting: { name: 'Counting sort', cx: ['n + k', 'n + k', 'n + k', 'n + k', true],
+    code: ['k = max(a)', 'count[v] += 1 for every v in a', 'count[v] += count[v-1]   // prefix sums', 'for i in n-1 .. 0:', '  out[count[a[i]] - 1] = a[i]; count[a[i]] -= 1', 'copy out back into a'],
+    *run(a) { const n = a.length, k = Math.max(...a); const cnt = new Array(k + 1).fill(0); for (let i = 0; i < n; i++) { cnt[a[i]]++; yield { type: 'visit', i, line: 1, note: `count[${a[i]}] = ${cnt[a[i]]}` }; } for (let v = 1; v <= k; v++) cnt[v] += cnt[v - 1]; yield { type: 'range', lo: 0, hi: n - 1, line: 2, note: `Prefix sums over ${k + 1} buckets` }; const out = new Array(n); for (let i = n - 1; i >= 0; i--) { out[--cnt[a[i]]] = a[i]; yield { type: 'visit', i, line: 4, note: `${a[i]} goes to output slot ${cnt[a[i]]}` }; } for (let i = 0; i < n; i++) { a[i] = out[i]; yield { type: 'set', i, v: out[i], line: 5, note: `a[${i}] = ${out[i]}` }; } yield { type: 'sorted', lo: 0, hi: n - 1, line: 5, note: 'Copied back — zero comparisons used' }; } },
+  radix: { name: 'Radix sort (LSD, base 10)', cx: ['n·d', 'n·d', 'n·d', 'n + 10', true],
+    code: ['for exp in 1, 10, 100 … while max / exp ≥ 1:', '  digit(v) = (v / exp) mod 10', '  count[digit(a[i])] += 1 for every i', '  prefix sums over the 10 buckets', '  for i in n-1 .. 0: out[--count[digit(a[i])]] = a[i]', '  copy out back into a   // stable per digit'],
+    *run(a) { const n = a.length, mx = Math.max(...a); for (let exp = 1; Math.floor(mx / exp) > 0; exp *= 10) { const d = v => Math.floor(v / exp) % 10; const cnt = new Array(10).fill(0); yield { type: 'range', lo: 0, hi: n - 1, line: 0, note: `Pass on the ${exp === 1 ? 'ones' : exp === 10 ? 'tens' : 'hundreds'} digit` }; for (let i = 0; i < n; i++) { cnt[d(a[i])]++; yield { type: 'visit', i, line: 2, note: `digit of ${a[i]} is ${d(a[i])}` }; } for (let v = 1; v < 10; v++) cnt[v] += cnt[v - 1]; const out = new Array(n); for (let i = n - 1; i >= 0; i--) out[--cnt[d(a[i])]] = a[i]; for (let i = 0; i < n; i++) { a[i] = out[i]; yield { type: 'set', i, v: out[i], line: 5, note: `a[${i}] = ${out[i]} (bucket ${d(out[i])})` }; } } yield { type: 'sorted', lo: 0, hi: n - 1, line: 5, note: 'All digit passes done' }; } }
+};
+// TODO(student): add your own sorting algorithm here (shell, tim, cocktail…). Write it as a generator that yields the
+// same step objects, add a `code` array, and it appears in every dropdown and in race mode automatically.
+const DISTS = { random: 'Random', nearly: 'Nearly sorted', reversed: 'Reversed', few: 'Few unique', custom: 'Custom list' };
+function makeInput() {
+  const { size, dist, seed, custom } = S.sort, r = rng(seed);
+  if (dist === 'custom') { const a = custom.split(/[,\s]+/).map(Number).filter(v => Number.isFinite(v) && v > 0).map(v => Math.round(v)).slice(0, 200); return a.length >= 2 ? a : [5, 3, 8, 1]; }
+  if (dist === 'reversed') return Array.from({ length: size }, (_, i) => Math.round(100 - i * 98 / Math.max(1, size - 1)));
+  if (dist === 'few') { const vals = [15, 35, 55, 75, 95]; return Array.from({ length: size }, () => vals[Math.floor(r() * 5)]); }
+  const a = Array.from({ length: size }, (_, i) => dist === 'nearly' ? Math.round(2 + i * 98 / Math.max(1, size - 1)) : 2 + Math.floor(r() * 99));
+  if (dist === 'nearly') for (let k = 0; k < Math.max(1, size / 8); k++) { const i = Math.floor(r() * size), j = Math.min(size - 1, i + 1 + Math.floor(r() * 3)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const sortModel = input => ({ arr: input.slice(), disp: input.slice(), sorted: new Set(), pivot: -1, range: null, cmp: 0, swp: 0, wr: 0 });
+function sortApply(m, s) {
+  switch (s.type) {
+    case 'compare': m.cmp++; break;
+    case 'swap': [m.arr[s.i], m.arr[s.j]] = [m.arr[s.j], m.arr[s.i]]; m.swp++; break;
+    case 'set': s.prev = m.arr[s.i]; m.arr[s.i] = s.v; m.wr++; break;
+    case 'pivot': s.prev = m.pivot; m.pivot = s.i; break;
+    case 'range': s.prev = m.range; m.range = [s.lo, s.hi]; break;
+    case 'sorted': { s.added = []; const lo = s.lo ?? s.i, hi = s.hi ?? s.i; for (let k = lo; k <= hi; k++) if (!m.sorted.has(k)) { m.sorted.add(k); s.added.push(k); } s.prevPivot = m.pivot; m.pivot = -1; break; }
+  }
+}
+function sortUndo(m, s) {
+  switch (s.type) {
+    case 'compare': m.cmp--; break;
+    case 'swap': [m.arr[s.i], m.arr[s.j]] = [m.arr[s.j], m.arr[s.i]]; m.swp--; break;
+    case 'set': m.arr[s.i] = s.prev; m.wr--; break;
+    case 'pivot': m.pivot = s.prev; break;
+    case 'range': m.range = s.prev; break;
+    case 'sorted': s.added.forEach(k => m.sorted.delete(k)); m.pivot = s.prevPivot; break;
+  }
+}
+let barAnim = 0;
+function drawBars(t) {
+  const cv = t.canvas; if (!cv || !cv.isConnected) return; const { ctx, W, H } = fitCanvas(cv); const m = t.model, n = m.arr.length, cur = P.cur(t);
+  const fast = sps() > 60 || n > 120; let moving = false;
+  for (let i = 0; i < n; i++) { const d = m.arr[i] - m.disp[i]; if (fast || Math.abs(d) < .4) m.disp[i] = m.arr[i]; else { m.disp[i] += d * .38; moving = true; } }
+  ctx.clearRect(0, 0, W, H); const max = Math.max(...m.arr, 1), pad = 14, labels = n <= 32, top = labels ? 34 : 18;
+  const bw = (W - pad * 2) / n, gap = n <= 40 ? Math.min(6, bw * .25) : n <= 100 ? 1.5 : .6;
+  if (m.range) { ctx.fillStyle = 'rgba(196,167,231,.07)'; ctx.fillRect(pad + m.range[0] * bw, 6, (m.range[1] - m.range[0] + 1) * bw, H - 28); }
+  ctx.font = `600 ${n <= 16 ? 12 : 10}px "Fira Code", monospace`; ctx.textAlign = 'center';
+  for (let i = 0; i < n; i++) {
+    let col = COL.bar, glow = null;
+    if (m.sorted.has(i)) col = COL.srt;
+    if (i === m.pivot) col = COL.piv;
+    if (cur) { if ((cur.type === 'compare' || cur.type === 'visit') && (cur.i === i || cur.j === i)) { col = COL.cmp; glow = COL.cmp; } if ((cur.type === 'swap' && (cur.i === i || cur.j === i)) || (cur.type === 'set' && cur.i === i)) { col = COL.swp; glow = COL.swp; } }
+    const h = Math.max(2, (H - top - 26) * m.disp[i] / max), x = pad + i * bw + gap / 2, y = H - 26 - h, w = Math.max(1, bw - gap);
+    ctx.shadowBlur = glow ? 18 : 0; ctx.shadowColor = glow || 'transparent'; ctx.fillStyle = col;
+    if (w > 3) { ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(4, w / 2)); ctx.fill(); } else ctx.fillRect(x, y, w, h);
+    ctx.shadowBlur = 0;
+    if (labels) { ctx.fillStyle = glow ? col : COL.muted; ctx.fillText(m.arr[i], x + w / 2, y - 8); }
+  }
+  if (moving) { cancelAnimationFrame(barAnim); barAnim = requestAnimationFrame(() => P.tracks.forEach(drawBars)); }
+}
+function sortTrack(algoKey, input, canvasId) {
+  const A = SORTS[algoKey]; return { key: algoKey, algo: A, canvasId, steps: record(A.run(input.slice())), model: sortModel(input), apply: sortApply, undo: sortUndo };
+}
+function renderSorting() {
+  P.pause(); const st = $('#stage'); const input = makeInput(); const n = input.length;
+  const opts = (sel, extra = '') => Object.entries(SORTS).map(([k, v]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${esc(v.name)}</option>`).join('') + extra;
+  st.innerHTML = `
+    <div class="ctrl">
+      <label>Algorithm <select id="sAlgo">${opts(S.sort.algo)}</select></label>
+      ${S.sort.race ? `<label>vs <select id="sAlgoB">${opts(S.sort.algoB)}</select></label>` : ''}
+      <label>Input <select id="sDist">${Object.entries(DISTS).map(([k, v]) => `<option value="${k}" ${k === S.sort.dist ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+      ${S.sort.dist === 'custom' ? `<label class="hidden" for="sCustom">Custom values</label><input type="text" id="sCustom" value="${esc(S.sort.custom)}" placeholder="e.g. 12, 5, 31, 8" style="min-width:220px" aria-label="Custom comma-separated values"><button class="btn sm" id="sCustomGo">${ic('check')} Use</button>` : ''}
+      <span class="muted" style="font-size:.78rem">n = <b class="mono">${n}</b> · seed <span class="mono">${S.sort.seed}</span></span>
+      <span class="spacer"></span>
+      <div class="legend"><span><i style="background:${COL.cmp}"></i>compare</span><span><i style="background:${COL.swp}"></i>swap / write</span><span><i style="background:${COL.piv}"></i>pivot / key</span><span><i style="background:${COL.srt}"></i>sorted</span></div>
+    </div>
+    ${S.sort.race ? `<div class="race" id="raceWrap">${[S.sort.algo, S.sort.algoB].map((k, i) => `<div class="racer"><div class="rh"><b>${i ? 'B' : 'A'} · ${esc(SORTS[k].name)}</b><span class="c">cmp <span id="rc${i}">0</span></span><span class="c">swaps <span id="rs${i}">0</span></span><span class="c">writes <span id="rw${i}">0</span></span><span class="c">steps <span id="rt${i}">0</span></span><button class="btn sm ghost" data-focus="${i}" aria-pressed="${S.sort.focus === i}">${ic('code')} code</button></div><div class="cv"><canvas id="cv${i}" aria-label="${esc(SORTS[k].name)} bars"></canvas><div id="banner${i}"></div></div></div>`).join('')}</div>`
+      : `<div class="cv"><canvas id="cv0" aria-label="Bar chart of the array"></canvas><div id="banner0"></div><div class="hint">Drag the scrubber in the transport bar to rewind any step</div></div>
+    <div class="tiles" id="sTiles"></div>`}`;
+  animateIn(st);
+  $('#sAlgo').onchange = e => { S.sort.algo = e.target.value; saveS(); renderSorting(); };
+  const b = $('#sAlgoB'); if (b) b.onchange = e => { S.sort.algoB = e.target.value; saveS(); renderSorting(); };
+  $('#sDist').onchange = e => { S.sort.dist = e.target.value; saveS(); renderSorting(); };
+  const cg = $('#sCustomGo'); if (cg) cg.onclick = () => { S.sort.custom = $('#sCustom').value; saveS(); renderSorting(); };
+  const ci = $('#sCustom'); if (ci) ci.onkeydown = e => { if (e.key === 'Enter') cg.click(); };
+  $$('[data-focus]').forEach(bt => bt.onclick = () => { S.sort.focus = +bt.dataset.focus; saveS(); renderSorting(); });
+  const keys = S.sort.race ? [S.sort.algo, S.sort.algoB] : [S.sort.algo];
+  const tracks = keys.map((k, i) => { const t = sortTrack(k, input, 'cv' + i); t.canvas = $('#cv' + i); return t; });
+  P.load(tracks, () => {
+    tracks.forEach(drawBars);
+    const f = tracks[Math.min(S.sort.focus, tracks.length - 1)], m = f.model, cur = P.cur(f);
+    const [best, avg, worst, space, stable] = f.algo.cx;
+    showCode({ title: f.algo.name, sub: S.sort.race ? `Racing on the same ${n} values` : `${DISTS[S.sort.dist]} input · ${n} values`, code: f.algo.code, line: cur ? cur.line : -1, note: cur ? cur.note : '', noteKind: cur ? kindOf(cur.type) : '',
+      badges: [{ k: 'best', v: 'O(' + best + ')' }, { k: 'avg', v: 'O(' + avg + ')' }, { k: 'worst', v: 'O(' + worst + ')' }, { k: 'space', v: 'O(' + space + ')' }, { v: stable ? 'stable' : 'not stable', cls: stable ? 'good' : 'bad' }],
+      stats: [{ k: 'comparisons', v: nf(m.cmp), cls: 'cmp' }, { k: 'swaps', v: nf(m.swp), cls: 'swp' }, { k: 'array writes', v: nf(m.wr), cls: 'swp' }, { k: 'steps', v: `${nf(f.pos)} / ${nf(f.steps.length)}`, cls: 'piv' }] });
+    if (S.sort.race) {
+      tracks.forEach((t, i) => { $('#rc' + i).textContent = nf(t.model.cmp); $('#rs' + i).textContent = nf(t.model.swp); $('#rw' + i).textContent = nf(t.model.wr); $('#rt' + i).textContent = `${nf(t.pos)}/${nf(t.steps.length)}`; });
+      const [a0, a1] = tracks, win = a0.steps.length <= a1.steps.length ? 0 : 1, lose = 1 - win, done = P.idx >= tracks[win].steps.length;
+      $('#banner' + win).innerHTML = done ? `<div class="banner win">${ic('trophy')} ${esc(tracks[win].algo.name)} finishes first — ${nf(tracks[win].steps.length)} steps vs ${nf(tracks[lose].steps.length)}</div>` : '';
+      $('#banner' + lose).innerHTML = '';
+    } else {
+      $('#sTiles').innerHTML = [['comparisons', m.cmp, 'cmp'], ['swaps', m.swp, 'swp'], ['array writes', m.wr, 'swp'], ['elapsed steps', f.pos, 'piv'], ['total steps', f.steps.length, '']].map(([k, v, c]) => `<div class="tile ${c}"><div class="k">${k}</div><div class="v">${nf(v)}</div></div>`).join('');
+      $('#banner0').innerHTML = P.idx >= f.steps.length && f.steps.length ? `<div class="banner">${ic('check-circle')} Sorted in ${nf(f.steps.length)} steps · ${nf(m.cmp)} comparisons</div>` : '';
+    }
+  }, () => { if (!S.sort.race) toast('Sorted!', 'ok'); });
+  syncHash();
+}
+
+/* =====================================================================
+   PATHFINDING — grid model G, generators yield frontier / visit / path cells
+   ===================================================================== */
+const GRID_SIZES = [[15, 25], [20, 34], [25, 42], [30, 50]];
+const gridDims = i => ({ rows: GRID_SIZES[clamp(i, 0, 3)][0], cols: GRID_SIZES[clamp(i, 0, 3)][1] });
+let G = null;
+const gkey = p => p.r * G.cols + p.c;
+const rc = k => `${(k / G.cols) | 0},${k % G.cols}`;
+const fmt1 = v => Number.isInteger(v) ? String(v) : v.toFixed(1);
+function buildGrid(regen) {
+  const { rows, cols } = gridDims(S.pf.size);
+  if (G && !regen && G.rows === rows && G.cols === cols) return;
+  G = { rows, cols, cells: new Uint8Array(rows * cols), start: { r: rows >> 1, c: 2 }, end: { r: rows >> 1, c: cols - 3 } };
+  applyMaze(S.pf.maze);
+}
+function applyMaze(kind) {
+  const r = rng(S.pf.seed), { rows, cols, cells } = G; cells.fill(0);
+  if (kind === 'random') for (let i = 0; i < cells.length; i++) { const x = r(); cells[i] = x < .27 ? 1 : x < .36 ? 2 : 0; }
+  if (kind === 'division') {
+    const divide = (r0, c0, r1, c1) => {
+      const h = r1 - r0 + 1, w = c1 - c0 + 1; if (h < 3 || w < 3) return;
+      const horiz = h > w ? true : w > h ? false : r() < .5;
+      if (horiz) { const cand = []; for (let rr = r0 + 1; rr < r1; rr++) if (rr % 2 === 1) cand.push(rr); if (!cand.length) return; const wr = cand[Math.floor(r() * cand.length)]; const gaps = []; for (let cc = c0; cc <= c1; cc++) if (cc % 2 === 0) gaps.push(cc); const gc = gaps[Math.floor(r() * gaps.length)]; for (let cc = c0; cc <= c1; cc++) if (cc !== gc) cells[wr * cols + cc] = 1; divide(r0, c0, wr - 1, c1); divide(wr + 1, c0, r1, c1); }
+      else { const cand = []; for (let cc = c0 + 1; cc < c1; cc++) if (cc % 2 === 1) cand.push(cc); if (!cand.length) return; const wc = cand[Math.floor(r() * cand.length)]; const gaps = []; for (let rr = r0; rr <= r1; rr++) if (rr % 2 === 0) gaps.push(rr); const gr = gaps[Math.floor(r() * gaps.length)]; for (let rr = r0; rr <= r1; rr++) if (rr !== gr) cells[rr * cols + wc] = 1; divide(r0, c0, r1, wc - 1); divide(r0, wc + 1, r1, c1); }
+    };
+    divide(0, 0, rows - 1, cols - 1);
+    for (let k = 0; k < rows * cols * .05; k++) { const i = Math.floor(r() * cells.length); if (cells[i] === 0) cells[i] = 2; }
+  }
+  // TODO(student): add more maze generators (recursive backtracker, Prim's maze, cellular automata caves) in this switch.
+  for (const p of [G.start, G.end]) for (const [dr, dc] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const rr = p.r + dr, cc = p.c + dc; if (rr >= 0 && cc >= 0 && rr < rows && cc < cols) cells[rr * cols + cc] = 0; }
+}
+const DIRS4 = [[-1, 0], [1, 0], [0, -1], [0, 1]], DIRS8 = DIRS4.concat([[-1, -1], [-1, 1], [1, -1], [1, 1]]);
+function nbrs(k) {
+  const r = (k / G.cols) | 0, c = k % G.cols, out = [];
+  for (const [dr, dc] of (S.pf.diag ? DIRS8 : DIRS4)) {
+    const nr = r + dr, nc = c + dc; if (nr < 0 || nc < 0 || nr >= G.rows || nc >= G.cols) continue;
+    const nk = nr * G.cols + nc; if (G.cells[nk] === 1) continue;
+    if (dr && dc && (G.cells[r * G.cols + nc] === 1 || G.cells[nr * G.cols + c] === 1)) continue; // no corner cutting
+    out.push({ k: nk, w: (G.cells[nk] === 2 ? 5 : 1) * (dr && dc ? Math.SQRT2 : 1) });
+  }
+  return out;
+}
+const heur = (k, t) => { const dr = Math.abs(((k / G.cols) | 0) - ((t / G.cols) | 0)), dc = Math.abs(k % G.cols - t % G.cols); return S.pf.h === 'euclid' ? Math.hypot(dr, dc) : dr + dc; };
+const cell = (type, k, line, note) => ({ type, r: (k / G.cols) | 0, c: k % G.cols, k, line, note });
+const chainOf = (parent, t) => { const ch = []; for (let k = t; k != null && k !== -1; k = parent.get(k)) ch.push(k); return ch.reverse(); };
+function* emitPath(chain, line) {
+  let cost = 0;
+  for (let i = 0; i < chain.length; i++) {
+    if (i) { const a = chain[i - 1], b = chain[i], diag = ((a / G.cols) | 0) !== ((b / G.cols) | 0) && a % G.cols !== b % G.cols; cost += (G.cells[b] === 2 ? 5 : 1) * (diag ? Math.SQRT2 : 1); }
+    yield cell('path', chain[i], line, `Path cell ${i + 1} of ${chain.length}`);
+  }
+  yield { type: 'done', found: true, len: chain.length - 1, cost: +cost.toFixed(1), line, note: `Path found: ${chain.length - 1} moves, cost ${fmt1(+cost.toFixed(1))}` };
+}
+const PF_ALGOS = {
+  bfs: { name: 'Breadth-first search', tags: [['unweighted', 'good'], ['shortest in moves', 'good'], ['complete', '']],
+    code: ['queue = [start]; parent[start] = none', 'while queue not empty:', '  cur = queue.shift()', '  if cur == end: reconstruct path', '  for each neighbour nb of cur:', '    if nb not seen and not a wall:', '      parent[nb] = cur; queue.push(nb)', 'no path'],
+    *run(s, t) { const parent = new Map([[s, -1]]), q = [s]; yield cell('frontier', s, 0, 'Start goes into the queue'); while (q.length) { const u = q.shift(); yield cell('visit', u, 2, `Dequeue (${rc(u)})`); if (u === t) { yield* emitPath(chainOf(parent, t), 3); return; } for (const { k } of nbrs(u)) if (!parent.has(k)) { parent.set(k, u); q.push(k); yield cell('frontier', k, 6, `Discover (${rc(k)})`); } } yield { type: 'done', found: false, line: 7, note: 'Queue empty — no path exists' }; } },
+  dfs: { name: 'Depth-first search', tags: [['not optimal', 'bad'], ['complete on grids', '']],
+    code: ['stack = [start]', 'while stack not empty:', '  cur = stack.pop()', '  if cur visited: continue; mark visited', '  if cur == end: reconstruct path', '  for each neighbour nb not visited:', '    parent[nb] = cur; stack.push(nb)', 'no path'],
+    *run(s, t) { const parent = new Map([[s, -1]]), seen = new Set(), st = [s]; yield cell('frontier', s, 0, 'Start on the stack'); while (st.length) { const u = st.pop(); if (seen.has(u)) continue; seen.add(u); yield cell('visit', u, 3, `Pop (${rc(u)})`); if (u === t) { yield* emitPath(chainOf(parent, t), 4); return; } for (const { k } of nbrs(u)) if (!seen.has(k)) { parent.set(k, u); st.push(k); yield cell('frontier', k, 6, `Push (${rc(k)})`); } } yield { type: 'done', found: false, line: 7, note: 'Stack empty — no path' }; } },
+  dijkstra: { name: 'Dijkstra', tags: [['weighted', 'good'], ['optimal', 'good']],
+    code: ['dist[start] = 0; pq = {(0, start)}', 'while pq not empty:', '  (d, cur) = pq.popMin(); skip if already settled', '  if cur == end: reconstruct path', '  for each neighbour nb with weight w:', '    if d + w < dist[nb]:', '      dist[nb] = d + w; parent[nb] = cur; pq.push(nb)', 'no path'],
+    *run(s, t) { const dist = new Map([[s, 0]]), parent = new Map([[s, -1]]), done = new Set(), pq = new PQ(); pq.push(0, s); yield cell('frontier', s, 0, 'dist[start] = 0'); while (pq.size) { const [d, u] = pq.pop(); if (done.has(u)) continue; done.add(u); yield cell('visit', u, 2, `Settle (${rc(u)}) at distance ${fmt1(+d.toFixed(1))}`); if (u === t) { yield* emitPath(chainOf(parent, t), 3); return; } for (const { k, w } of nbrs(u)) { const nd = d + w; if (nd < (dist.get(k) ?? Infinity)) { dist.set(k, nd); parent.set(k, u); pq.push(nd, k); yield cell('frontier', k, 6, `Relax (${rc(k)}) → ${fmt1(+nd.toFixed(1))}`); } } } yield { type: 'done', found: false, line: 7, note: 'No path' }; } },
+  astar: { name: 'A* search', tags: [['weighted', 'good'], ['optimal with admissible h', 'good'], ['f = g + h', '']],
+    code: ['g[start] = 0; open = {(h(start), start)}', 'while open not empty:', '  cur = open.popMin by f = g + h', '  if cur == end: reconstruct path', '  for each neighbour nb with weight w:', '    if g[cur] + w < g[nb]:', '      g[nb] = g[cur] + w; parent[nb] = cur', '      open.push(nb, f = g[nb] + h(nb))', 'no path'],
+    *run(s, t) { const g = new Map([[s, 0]]), parent = new Map([[s, -1]]), closed = new Set(), open = new PQ(); open.push(heur(s, t), s); yield cell('frontier', s, 0, `g = 0, h = ${fmt1(+heur(s, t).toFixed(1))}`); while (open.size) { const [f, u] = open.pop(); if (closed.has(u)) continue; closed.add(u); yield cell('visit', u, 2, `Expand (${rc(u)}) with f = ${fmt1(+f.toFixed(1))}`); if (u === t) { yield* emitPath(chainOf(parent, t), 3); return; } for (const { k, w } of nbrs(u)) { const ng = g.get(u) + w; if (ng < (g.get(k) ?? Infinity)) { g.set(k, ng); parent.set(k, u); const h = heur(k, t); open.push(ng + h, k); yield cell('frontier', k, 7, `(${rc(k)}): g ${fmt1(+ng.toFixed(1))} + h ${fmt1(+h.toFixed(1))}`); } } } yield { type: 'done', found: false, line: 8, note: 'Open set empty — no path' }; } },
+  greedy: { name: 'Greedy best-first', tags: [['very fast', 'good'], ['not optimal', 'bad'], ['f = h only', '']],
+    code: ['open = {(h(start), start)}; seen = {start}', 'while open not empty:', '  cur = open.popMin by h only', '  if cur == end: reconstruct path', '  for each unseen neighbour nb:', '    parent[nb] = cur; seen.add(nb); open.push(nb, h(nb))', 'no path'],
+    *run(s, t) { const parent = new Map([[s, -1]]), seen = new Set([s]), open = new PQ(); open.push(heur(s, t), s); yield cell('frontier', s, 0, 'Start in the open set'); while (open.size) { const [h, u] = open.pop(); yield cell('visit', u, 2, `Expand (${rc(u)}) h = ${fmt1(+h.toFixed(1))}`); if (u === t) { yield* emitPath(chainOf(parent, t), 3); return; } for (const { k } of nbrs(u)) if (!seen.has(k)) { seen.add(k); parent.set(k, u); open.push(heur(k, t), k); yield cell('frontier', k, 5, `(${rc(k)}) h = ${fmt1(+heur(k, t).toFixed(1))}`); } } yield { type: 'done', found: false, line: 6, note: 'No path' }; } },
+  bibfs: { name: 'Bidirectional BFS', tags: [['unweighted', 'good'], ['shortest in moves', 'good'], ['two frontiers', '']],
+    code: ['qA = [start]; qB = [end]; a parent map per side', 'while both queues are non-empty:', '  expand the smaller frontier by one layer', '  for each neighbour nb of cur:', '    if the other side has seen nb: join the two paths', '    if nb unseen on this side: parent[nb] = cur; next.push(nb)', 'no path'],
+    *run(s, t) { const pa = new Map([[s, -1]]), pb = new Map([[t, -1]]); let qa = [s], qb = [t]; yield cell('frontier', s, 0, 'Both ends start a BFS'); yield cell('frontier', t, 0, 'Both ends start a BFS'); while (qa.length && qb.length) { const fromA = qa.length <= qb.length, q = fromA ? qa : qb, mine = fromA ? pa : pb, other = fromA ? pb : pa, next = []; for (const u of q) { yield cell('visit', u, 2, `Expand (${rc(u)}) from the ${fromA ? 'start' : 'end'} side`); for (const { k } of nbrs(u)) { if (other.has(k)) { if (!mine.has(k)) mine.set(k, u); const A = chainOf(pa, k), B = chainOf(pb, k); yield* emitPath(A.concat(B.reverse().slice(1)), 4); return; } if (!mine.has(k)) { mine.set(k, u); next.push(k); yield cell('frontier', k, 5, `Discover (${rc(k)})`); } } } if (fromA) qa = next; else qb = next; } yield { type: 'done', found: false, line: 6, note: 'One side ran out — no path' }; } }
+};
+// TODO(student): Jump Point Search, Theta* (any-angle) or D* Lite would slot in here as more generators.
+const pfModel = () => ({ state: new Uint8Array(G.rows * G.cols), visited: 0, frontier: 0, path: [], done: null });
+function pfApply(m, s) {
+  switch (s.type) {
+    case 'frontier': s.prev = m.state[s.k]; if (s.prev === 0) { m.state[s.k] = 1; m.frontier++; } break;
+    case 'visit': s.prev = m.state[s.k]; if (s.prev === 1) m.frontier--; m.state[s.k] = 2; m.visited++; break;
+    case 'path': s.prev = m.state[s.k]; m.state[s.k] = 3; m.path.push(s.k); break;
+    case 'done': s.prev = m.done; m.done = s; break;
+  }
+}
+function pfUndo(m, s) {
+  switch (s.type) {
+    case 'frontier': if (s.prev === 0) { m.state[s.k] = 0; m.frontier--; } break;
+    case 'visit': m.state[s.k] = s.prev; if (s.prev === 1) m.frontier++; m.visited--; break;
+    case 'path': m.state[s.k] = s.prev; m.path.pop(); break;
+    case 'done': m.done = s.prev; break;
+  }
+}
+let pfGeom = null;
+function drawGrid(t) {
+  const cv = t.canvas; if (!cv || !cv.isConnected) return; const { ctx, W, H } = fitCanvas(cv); const m = t.model, cur = P.cur(t);
+  const cs = Math.min((W - 10) / G.cols, (H - 30) / G.rows), ox = (W - cs * G.cols) / 2, oy = 5 + (H - 30 - cs * G.rows) / 2; pfGeom = { cs, ox, oy };
+  ctx.clearRect(0, 0, W, H); const g = cs > 9 ? 1 : .5;
+  for (let r = 0; r < G.rows; r++) for (let c = 0; c < G.cols; c++) {
+    const k = r * G.cols + c, v = G.cells[k], st = m.state[k]; let col = '#1f1b2d';
+    if (v === 1) col = '#443e60'; else if (v === 2) col = '#4d3d30';
+    if (st === 1) col = 'rgba(156,207,216,.45)'; else if (st === 2) col = v === 2 ? '#2d5a66' : COL.vis; else if (st === 3) col = COL.pth;
+    ctx.fillStyle = col; ctx.fillRect(ox + c * cs + g / 2, oy + r * cs + g / 2, cs - g, cs - g);
+    if (v === 2 && st !== 3) { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.arc(ox + c * cs + cs / 2, oy + r * cs + cs / 2, cs * .14, 0, 7); ctx.fill(); }
+  }
+  if (m.path.length > 1) { ctx.strokeStyle = COL.pth; ctx.lineWidth = Math.max(2, cs * .28); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.shadowColor = COL.pth; ctx.shadowBlur = 10; ctx.beginPath(); m.path.forEach((k, i) => { const x = ox + (k % G.cols) * cs + cs / 2, y = oy + ((k / G.cols) | 0) * cs + cs / 2; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.shadowBlur = 0; }
+  if (cur && cur.k != null && cur.type !== 'path') { ctx.strokeStyle = cur.type === 'visit' ? COL.cmp : COL.fro; ctx.lineWidth = 2; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 12; ctx.strokeRect(ox + cur.c * cs + 1, oy + cur.r * cs + 1, cs - 2, cs - 2); ctx.shadowBlur = 0; }
+  const dot = (p, col, ch) => { const x = ox + p.c * cs + cs / 2, y = oy + p.r * cs + cs / 2; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, cs * .42, 0, 7); ctx.fill(); ctx.fillStyle = '#13111c'; ctx.font = `700 ${Math.max(8, cs * .55)}px Manrope, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ch, x, y + 1); };
+  dot(G.start, COL.srt, 'S'); dot(G.end, COL.swp, 'E');
+}
+function cellAt(e, cv) { if (!pfGeom) return -1; const b = cv.getBoundingClientRect(), c = Math.floor((e.clientX - b.left - pfGeom.ox) / pfGeom.cs), r = Math.floor((e.clientY - b.top - pfGeom.oy) / pfGeom.cs); return r < 0 || c < 0 || r >= G.rows || c >= G.cols ? -1 : r * G.cols + c; }
+function pfRebuild(keepEnd) {
+  const A = PF_ALGOS[S.pf.algo], s = gkey(G.start), t = gkey(G.end), cv = $('#pfCv');
+  const track = { algo: A, canvas: cv, steps: record(A.run(s, t)), model: pfModel(), apply: pfApply, undo: pfUndo };
+  P.load([track], () => {
+    drawGrid(track); const m = track.model, cur = P.cur(track), d = m.done;
+    showCode({ title: A.name, sub: `${G.rows}×${G.cols} grid · ${S.pf.diag ? '8' : '4'}-connected${['astar', 'greedy'].includes(S.pf.algo) ? ' · ' + (S.pf.h === 'euclid' ? 'Euclidean' : 'Manhattan') + ' heuristic' : ''}`, code: A.code, line: cur ? cur.line : -1, note: cur ? cur.note : '', noteKind: cur ? kindOf(cur.type) : '',
+      badges: A.tags.map(([v, cls]) => ({ v, cls })), stats: [{ k: 'visited', v: nf(m.visited), cls: '' }, { k: 'frontier', v: nf(m.frontier), cls: 'srt' }, { k: 'path length', v: d && d.found ? d.len : '—', cls: 'cmp' }, { k: 'path cost', v: d && d.found ? fmt1(d.cost) : '—', cls: 'cmp' }] });
+    $('#pfTiles').innerHTML = [['visited cells', nf(m.visited), 'vis'], ['frontier', nf(m.frontier), 'srt'], ['path length', d && d.found ? d.len : '—', 'cmp'], ['path cost', d && d.found ? fmt1(d.cost) : '—', 'cmp'], ['steps', `${nf(track.pos)} / ${nf(track.steps.length)}`, 'piv']].map(([k, v, c]) => `<div class="tile ${c}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+    $('#pfBanner').innerHTML = d ? `<div class="banner ${d.found ? 'win' : ''}">${ic(d.found ? 'flag' : 'alert')} ${esc(d.note)} · ${nf(m.visited)} cells visited</div>` : '';
+  }, () => { const d = track.model.done; if (d && !d.found) toast('No path between S and E', 'bad'); });
+  if (keepEnd) P.seek(P.total());
+}
+function renderPath() {
+  P.pause(); buildGrid(false); const st = $('#stage');
+  st.innerHTML = `
+    <div class="ctrl">
+      <label>Algorithm <select id="pAlgo">${Object.entries(PF_ALGOS).map(([k, v]) => `<option value="${k}" ${k === S.pf.algo ? 'selected' : ''}>${v.name}</option>`).join('')}</select></label>
+      <label ${['astar', 'greedy'].includes(S.pf.algo) ? '' : 'class="hidden"'}>Heuristic <select id="pH"><option value="manhattan" ${S.pf.h === 'manhattan' ? 'selected' : ''}>Manhattan</option><option value="euclid" ${S.pf.h === 'euclid' ? 'selected' : ''}>Euclidean</option></select></label>
+      <label class="sw"><input type="checkbox" id="pDiag" ${S.pf.diag ? 'checked' : ''}> Diagonals</label>
+      <span class="f">Draw</span><div class="seg" id="pTool" role="group" aria-label="Drawing tool">${[['wall', 'square', 'Wall'], ['mud', 'droplet', 'Mud ×5'], ['erase', 'eraser', 'Erase']].map(([k, i, l]) => `<button data-tool="${k}" class="${S.pf.tool === k ? 'on' : ''}" aria-pressed="${S.pf.tool === k}">${ic(i)} ${l}</button>`).join('')}</div>
+      <span class="f">Maze</span><button class="btn sm" id="pDiv">${ic('grid')} Division</button><button class="btn sm" id="pRnd">${ic('dice')} Random</button><button class="btn sm ghost" id="pClr">${ic('trash')} Clear</button>
+      <span class="spacer"></span>
+      <div class="legend"><span><i style="background:#443e60"></i>wall</span><span><i style="background:#4d3d30"></i>mud (cost 5)</span><span><i style="background:${COL.fro};opacity:.6"></i>frontier</span><span><i style="background:${COL.vis}"></i>visited</span><span><i style="background:${COL.pth}"></i>path</span></div>
+    </div>
+    <div class="cv"><canvas id="pfCv" aria-label="Pathfinding grid — drag to draw walls, drag S and E to move them"></canvas><div id="pfBanner"></div><div class="hint">Drag on the grid to draw · drag S / E to move them</div></div>
+    <div class="tiles" id="pfTiles"></div>`;
+  animateIn(st);
+  $('#pAlgo').onchange = e => { S.pf.algo = e.target.value; saveS(); renderPath(); };
+  $('#pH').onchange = e => { S.pf.h = e.target.value; saveS(); pfRebuild(); syncHash(); };
+  $('#pDiag').onchange = e => { S.pf.diag = e.target.checked; saveS(); pfRebuild(); syncHash(); };
+  $$('#pTool button').forEach(b => b.onclick = () => { S.pf.tool = b.dataset.tool; saveS(); $$('#pTool button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); });
+  const maze = kind => { S.pf.maze = kind; S.pf.seed = newSeed(); saveS(); applyMaze(kind); pfRebuild(); syncHash(); };
+  $('#pDiv').onclick = () => maze('division'); $('#pRnd').onclick = () => maze('random'); $('#pClr').onclick = () => maze('none');
+  const cv = $('#pfCv'); let drag = null, wasDone = false;
+  const paint = k => { if (k === gkey(G.start) || k === gkey(G.end)) return; G.cells[k] = drag.val; };
+  cv.onpointerdown = e => { const k = cellAt(e, cv); if (k < 0) return; cv.setPointerCapture(e.pointerId); wasDone = P.idx >= P.total() && P.total() > 0; P.pause(); if (k === gkey(G.start)) drag = { kind: 'start' }; else if (k === gkey(G.end)) drag = { kind: 'end' }; else { const val = S.pf.tool === 'wall' ? 1 : S.pf.tool === 'mud' ? 2 : 0; drag = { kind: 'paint', val: G.cells[k] === val ? 0 : val }; paint(k); P.seek(0); } };
+  cv.onpointermove = e => { if (!drag) return; const k = cellAt(e, cv); if (k < 0) return; if (drag.kind === 'paint') { paint(k); P.seek(0); } else { const p = { r: (k / G.cols) | 0, c: k % G.cols }; const other = drag.kind === 'start' ? G.end : G.start; if (G.cells[k] === 1 || (p.r === other.r && p.c === other.c)) return; if (drag.kind === 'start') G.start = p; else G.end = p; pfRebuild(wasDone); } };
+  cv.onpointerup = cv.onpointercancel = () => { if (!drag) return; const wd = wasDone && drag.kind !== 'paint'; drag = null; pfRebuild(wd); };
+  pfRebuild(); syncHash();
+}
+
+/* =====================================================================
+   GRAPHS — node-link editor + generators over an adjacency list
+   ===================================================================== */
+const L = i => String.fromCharCode(65 + (i % 26)) + (i >= 26 ? Math.floor(i / 26) : '');
+function presetGraph(kind) {
+  if (kind === 'dag') return { directed: true, nodes: [[90, 90], [90, 260], [270, 60], [270, 180], [270, 300], [450, 110], [450, 260], [630, 180]].map(([x, y]) => ({ x, y })), edges: [[0, 2, 3], [0, 3, 2], [1, 3, 4], [1, 4, 1], [2, 5, 6], [3, 5, 2], [3, 6, 5], [4, 6, 3], [5, 7, 4], [6, 7, 2]].map(([u, v, w]) => ({ u, v, w })) };
+  if (kind === 'tree') return { directed: false, nodes: [[360, 50], [200, 150], [520, 150], [120, 260], [280, 260], [440, 260], [600, 260], [60, 360], [180, 360]].map(([x, y]) => ({ x, y })), edges: [[0, 1, 3], [0, 2, 5], [1, 3, 2], [1, 4, 7], [2, 5, 1], [2, 6, 4], [3, 7, 6], [3, 8, 2]].map(([u, v, w]) => ({ u, v, w })) };
+  return { directed: false, nodes: [[90, 120], [250, 60], [430, 60], [600, 130], [560, 300], [380, 340], [160, 320], [330, 190], [500, 200]].map(([x, y]) => ({ x, y })), edges: [[0, 1, 4], [0, 6, 8], [1, 2, 8], [1, 7, 11], [2, 3, 7], [2, 8, 2], [2, 5, 4], [3, 4, 9], [3, 5, 14], [4, 5, 10], [5, 6, 2], [6, 7, 1], [7, 8, 6], [8, 5, 7]].map(([u, v, w]) => ({ u, v, w })) };
+}
+let GR = store.get('graph', null) || presetGraph('weighted');
+const GV = { ox: 0, oy: 0, scale: 1, panned: false, selN: -1, selE: -1, rubber: null };
+const saveGraph = () => store.set('graph', GR);
+const adjOf = u => { const out = []; GR.edges.forEach((E, e) => { if (E.u === u) out.push({ v: E.v, w: E.w, e }); else if (!GR.directed && E.v === u) out.push({ v: E.u, w: E.w, e }); }); return out; };
+const adjAll = u => { const out = []; GR.edges.forEach((E, e) => { if (E.u === u) out.push({ v: E.v, w: E.w, e }); else if (E.v === u) out.push({ v: E.u, w: E.w, e }); }); return out; };
+const ES = { ACTIVE: 1, TREE: 2, REJECT: 3 };
+const ge = (e, s, line, note) => ({ type: 'edge', e, s, line, note });
+const GR_ALGOS = {
+  bfs: { name: 'Breadth-first search', table: 'order', code: ['queue = [s]; visited = {s}', 'while queue not empty:', '  u = queue.shift(); output u', '  for each neighbour v of u:', '    if v not visited: visited.add(v); queue.push(v)'],
+    *run(s) { const N = GR.nodes.length; if (!N) return; const seen = new Set([s]), q = [s], tree = new Set(); yield { type: 'frontier', n: s, line: 0, note: `Start at ${L(s)}` }; while (q.length) { const u = q.shift(); yield { type: 'visit', n: u, line: 2, note: `Visit ${L(u)}` }; yield { type: 'order', n: u, line: 2, note: `Output ${L(u)}` }; for (const { v, e } of adjOf(u)) { yield ge(e, ES.ACTIVE, 3, `Look along ${L(u)}–${L(v)}`); if (!seen.has(v)) { seen.add(v); q.push(v); tree.add(e); yield ge(e, ES.TREE, 4, `${L(v)} discovered via ${L(u)}`); yield { type: 'frontier', n: v, line: 4, note: `Enqueue ${L(v)}` }; } else yield ge(e, tree.has(e) ? ES.TREE : ES.REJECT, 4, `${L(v)} already seen`); } } yield { type: 'done', line: 4, note: `BFS visited ${seen.size} of ${N} vertices` }; } },
+  dfs: { name: 'Depth-first search', table: 'order', code: ['dfs(u):', '  mark u visited; output u', '  for each neighbour v of u:', '    if v not visited: dfs(v)'],
+    *run(s) { const N = GR.nodes.length; if (!N) return; const seen = new Set(), tree = new Set(); function* dfs(u) { seen.add(u); yield { type: 'visit', n: u, line: 1, note: `Visit ${L(u)}` }; yield { type: 'order', n: u, line: 1, note: `Output ${L(u)}` }; for (const { v, e } of adjOf(u)) { yield ge(e, ES.ACTIVE, 2, `Try ${L(u)}–${L(v)}`); if (!seen.has(v)) { tree.add(e); yield ge(e, ES.TREE, 3, `Recurse into ${L(v)}`); yield* dfs(v); } else yield ge(e, tree.has(e) ? ES.TREE : ES.REJECT, 3, `${L(v)} already visited`); } } yield* dfs(s); yield { type: 'done', line: 3, note: `DFS reached ${seen.size} of ${N} vertices` }; } },
+  dijkstra: { name: 'Dijkstra', table: 'dist', code: ['dist[s] = 0; all others ∞; pq = {(0, s)}', 'while pq not empty:', '  u = pq.popMin(); skip if settled', '  for each edge (u, v, w):', '    if dist[u] + w < dist[v]:', '      dist[v] = dist[u] + w; parent[v] = u; pq.push(v)'],
+    *run(s) { const N = GR.nodes.length; if (!N) return; const dist = Array(N).fill(Infinity); dist[s] = 0; yield { type: 'dist', n: s, v: 0, line: 0, note: `dist[${L(s)}] = 0` }; const pq = new PQ(); pq.push(0, s); const done = new Set(), tree = new Map(); while (pq.size) { const [d, u] = pq.pop(); if (done.has(u)) continue; done.add(u); yield { type: 'visit', n: u, line: 2, note: `Settle ${L(u)} at distance ${d}` }; for (const { v, w, e } of adjOf(u)) { if (done.has(v)) continue; yield ge(e, ES.ACTIVE, 3, `Relax ${L(u)}→${L(v)} (w = ${w}): ${d} + ${w} vs ${dist[v] === Infinity ? '∞' : dist[v]}`); if (d + w < dist[v]) { const old = tree.get(v); if (old != null) yield ge(old, ES.REJECT, 5, `Old route to ${L(v)} dropped`); dist[v] = d + w; tree.set(v, e); pq.push(dist[v], v); yield { type: 'dist', n: v, v: dist[v], line: 5, note: `dist[${L(v)}] = ${dist[v]}` }; yield ge(e, ES.TREE, 5, `parent[${L(v)}] = ${L(u)}`); yield { type: 'frontier', n: v, line: 5, note: `Push ${L(v)}` }; } else yield ge(e, ES.REJECT, 4, 'No improvement'); } } yield { type: 'done', line: 5, note: `Shortest distances from ${L(s)} settled for ${done.size} vertices` }; } },
+  prim: { name: "Prim's MST", table: 'mst', code: ['inTree = {s}; pq = edges leaving s', 'while pq not empty and tree incomplete:', '  (w, u, v) = pq.popMin()', '  if v already in tree: skip   // would form a cycle', '  add edge (u, v) to the MST; inTree.add(v)', '  push every edge leaving v'],
+    *run(s) { const N = GR.nodes.length; if (!N) return; const inT = new Set([s]), pq = new PQ(); let total = 0; yield { type: 'visit', n: s, line: 0, note: `Grow the tree from ${L(s)}` }; const push = u => { for (const { v, w, e } of adjAll(u)) if (!inT.has(v)) pq.push(w, e); }; push(s); for (const { v } of adjAll(s)) yield { type: 'frontier', n: v, line: 0, note: `${L(v)} is reachable` }; while (pq.size && inT.size < N) { const [w, e] = pq.pop(), E = GR.edges[e]; yield ge(e, ES.ACTIVE, 2, `Cheapest crossing edge ${L(E.u)}–${L(E.v)} (w = ${w})`); if (inT.has(E.u) && inT.has(E.v)) { yield ge(e, ES.REJECT, 3, 'Both ends already in the tree — skip'); continue; } const v = inT.has(E.u) ? E.v : E.u; inT.add(v); total += w; yield ge(e, ES.TREE, 4, `Add ${L(E.u)}–${L(E.v)} · MST weight ${total}`); yield { type: 'visit', n: v, line: 4, note: `${L(v)} joins the tree` }; push(v); for (const { v: x } of adjAll(v)) if (!inT.has(x)) yield { type: 'frontier', n: x, line: 5, note: `${L(x)} now reachable` }; } yield { type: 'done', line: 5, note: `MST weight ${total}` + (inT.size < N ? ' — graph is disconnected (spanning forest)' : '') }; } },
+  kruskal: { name: "Kruskal's MST", table: 'uf', code: ['sort edges by weight ascending', 'parent[v] = v for every vertex   // union-find', 'for each edge (u, v, w) in order:', '  if find(u) ≠ find(v):', '    union(u, v); add the edge to the MST', '  else: reject   // u and v already connected'],
+    *run() { const N = GR.nodes.length; if (!N) return; const par = Array.from({ length: N }, (_, i) => i), find = x => { while (par[x] !== x) x = par[x]; return x; }; const order = GR.edges.map((_, e) => e).sort((a, b) => GR.edges[a].w - GR.edges[b].w); yield { type: 'line', line: 0, note: `Edges by weight: ${order.map(e => GR.edges[e].w).join(', ')}` }; yield { type: 'line', line: 1, note: 'Every vertex is its own set' }; let total = 0, cnt = 0; for (const e of order) { const E = GR.edges[e]; yield ge(e, ES.ACTIVE, 2, `Edge ${L(E.u)}–${L(E.v)} (w = ${E.w})`); const ru = find(E.u), rv = find(E.v); if (ru !== rv) { par[ru] = rv; total += E.w; cnt++; yield { type: 'uf', n: ru, p: rv, line: 4, note: `union: parent[${L(ru)}] = ${L(rv)}` }; yield ge(e, ES.TREE, 4, `Accept · MST weight ${total}`); yield { type: 'visit', n: E.u, line: 4, note: `${L(E.u)} in the forest` }; yield { type: 'visit', n: E.v, line: 4, note: `${L(E.v)} in the forest` }; } else yield ge(e, ES.REJECT, 5, `find(${L(E.u)}) = find(${L(E.v)}) = ${L(ru)} → cycle, reject`); } yield { type: 'done', line: 5, note: `MST weight ${total} with ${cnt} edges` }; } },
+  kahn: { name: "Topological sort (Kahn)", table: 'indeg', code: ['indeg[v] = number of incoming edges', 'queue = every v with indeg 0', 'while queue not empty:', '  u = queue.shift(); output u', '  for each edge u → v: indeg[v] -= 1', '    if indeg[v] == 0: queue.push(v)', 'if fewer than |V| vertices were output: the graph has a cycle'],
+    *run() { const N = GR.nodes.length; if (!N) return; if (!GR.directed) { yield { type: 'line', line: 0, note: 'Topological order needs a directed graph — switch on "Directed" or load the DAG preset' }; return; } const indeg = Array(N).fill(0); GR.edges.forEach(E => indeg[E.v]++); for (let i = 0; i < N; i++) yield { type: 'dist', n: i, v: indeg[i], line: 0, note: `indeg[${L(i)}] = ${indeg[i]}` }; const q = []; for (let i = 0; i < N; i++) if (!indeg[i]) { q.push(i); yield { type: 'frontier', n: i, line: 1, note: `${L(i)} has no incoming edges` }; } let count = 0; while (q.length) { const u = q.shift(); count++; yield { type: 'visit', n: u, line: 3, note: `Output ${L(u)}` }; yield { type: 'order', n: u, line: 3, note: `Order so far: ${count} vertices` }; for (const { v, e } of adjOf(u)) { indeg[v]--; yield ge(e, ES.TREE, 4, `Remove ${L(u)} → ${L(v)}`); yield { type: 'dist', n: v, v: indeg[v], line: 4, note: `indeg[${L(v)}] = ${indeg[v]}` }; if (!indeg[v]) { q.push(v); yield { type: 'frontier', n: v, line: 5, note: `${L(v)} is now free` }; } } } yield { type: 'done', line: 6, note: count < N ? `Cycle detected — only ${count} of ${N} vertices could be ordered` : 'Topological order complete' }; } },
+  comp: { name: 'Connected components', table: 'comp', code: ['k = 0', 'for each vertex v:', '  if v has no label: k += 1', '    BFS from v, labelling every reached vertex with k'],
+    *run() { const N = GR.nodes.length; if (!N) return; const comp = Array(N).fill(0); let k = 0; for (let s = 0; s < N; s++) { if (comp[s]) continue; k++; comp[s] = k; yield { type: 'comp', n: s, k, line: 2, note: `New component ${k} starting at ${L(s)}` }; const q = [s]; while (q.length) { const u = q.shift(); yield { type: 'visit', n: u, line: 3, note: `Visit ${L(u)}` }; for (const { v, e } of adjAll(u)) if (!comp[v]) { comp[v] = k; q.push(v); yield ge(e, ES.TREE, 3, `${L(v)} joins component ${k}`); yield { type: 'comp', n: v, k, line: 3, note: `label[${L(v)}] = ${k}` }; } } } yield { type: 'done', line: 3, note: `${k} component${k === 1 ? '' : 's'}` }; } }
+};
+// TODO(student): Bellman-Ford (negative weights), Floyd–Warshall matrix, Tarjan SCC, max-flow — same generator contract.
+const grModel = () => { const N = GR.nodes.length; return { ns: new Uint8Array(N), es: new Uint8Array(GR.edges.length), dist: Array(N).fill(null), par: Array.from({ length: N }, (_, i) => i), order: [], comp: Array(N).fill(0), done: null }; };
+function grApply(m, s) {
+  switch (s.type) {
+    case 'visit': s.prev = m.ns[s.n]; m.ns[s.n] = 2; break;
+    case 'frontier': s.prev = m.ns[s.n]; if (!s.prev) m.ns[s.n] = 1; break;
+    case 'edge': s.prev = m.es[s.e]; m.es[s.e] = s.s; break;
+    case 'dist': s.prev = m.dist[s.n]; m.dist[s.n] = s.v; break;
+    case 'uf': s.prev = m.par[s.n]; m.par[s.n] = s.p; break;
+    case 'order': m.order.push(s.n); break;
+    case 'comp': s.prev = m.comp[s.n]; m.comp[s.n] = s.k; break;
+    case 'done': s.prev = m.done; m.done = s; break;
+  }
+}
+function grUndo(m, s) {
+  switch (s.type) {
+    case 'visit': case 'frontier': m.ns[s.n] = s.prev; break;
+    case 'edge': m.es[s.e] = s.prev; break;
+    case 'dist': m.dist[s.n] = s.prev; break;
+    case 'uf': m.par[s.n] = s.prev; break;
+    case 'order': m.order.pop(); break;
+    case 'comp': m.comp[s.n] = s.prev; break;
+    case 'done': m.done = s.prev; break;
+  }
+}
+const COMP_COLS = [COL.piv, COL.srt, COL.cmp, COL.swp, '#7fb069', '#f0a0c0', '#5ab0cc'];
+const NR = 17;
+function drawGraph(t) {
+  const cv = $('#grCv'); if (!cv) return; const { ctx, W, H } = fitCanvas(cv); const m = t ? t.model : grModel(), cur = t ? P.cur(t) : null;
+  if (!GV.panned && GR.nodes.length) { const xs = GR.nodes.map(n => n.x), ys = GR.nodes.map(n => n.y), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys); GV.scale = Math.min(1, (W - 60) / Math.max(1, x1 - x0), (H - 70) / Math.max(1, y1 - y0)); GV.ox = (W - (x0 + x1) * GV.scale) / 2; GV.oy = (H - 26 - (y0 + y1) * GV.scale) / 2; }
+  ctx.clearRect(0, 0, W, H); ctx.save(); ctx.translate(GV.ox, GV.oy); ctx.scale(GV.scale, GV.scale);
+  ctx.font = '600 11px "Fira Code", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  GR.edges.forEach((E, e) => {
+    const a = GR.nodes[E.u], b = GR.nodes[E.v], st = m.es[e]; const col = st === ES.TREE ? COL.srt : st === ES.ACTIVE ? COL.cmp : st === ES.REJECT ? 'rgba(235,111,146,.45)' : (e === GV.selE ? COL.piv : '#4a4566');
+    ctx.strokeStyle = col; ctx.lineWidth = st === ES.TREE ? 3.5 : st === ES.ACTIVE ? 3 : 2; if (st === ES.ACTIVE) { ctx.shadowColor = col; ctx.shadowBlur = 10; }
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, ex = b.x - ux * (GR.directed ? NR + 2 : 0), ey = b.y - uy * (GR.directed ? NR + 2 : 0);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(ex, ey); ctx.stroke(); ctx.shadowBlur = 0;
+    if (GR.directed) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - ux * 10 - uy * 5, ey - uy * 10 + ux * 5); ctx.lineTo(ex - ux * 10 + uy * 5, ey - uy * 10 - ux * 5); ctx.fill(); }
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; ctx.fillStyle = e === GV.selE ? COL.piv : COL.panel2; ctx.beginPath(); ctx.roundRect(mx - 11, my - 8, 22, 16, 5); ctx.fill(); ctx.fillStyle = e === GV.selE ? '#13111c' : COL.ink; ctx.fillText(E.w, mx, my + .5);
+  });
+  if (GV.rubber) { ctx.strokeStyle = COL.piv; ctx.setLineDash([5, 5]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(GR.nodes[GV.rubber.u].x, GR.nodes[GV.rubber.u].y); ctx.lineTo(GV.rubber.x, GV.rubber.y); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.font = '700 13px Manrope, sans-serif';
+  GR.nodes.forEach((n, i) => {
+    const st = m.ns[i], k = m.comp[i]; let fill = COL.panel2, stroke = '#5a5577', text = COL.ink;
+    if (st === 1) { stroke = COL.cmp; } if (st === 2) { fill = COL.vis; stroke = COL.vis; } if (k) { fill = COMP_COLS[(k - 1) % COMP_COLS.length]; stroke = fill; text = '#13111c'; }
+    if (i === S.gr.src) stroke = COL.srt; if (i === GV.selN) stroke = COL.piv;
+    const isCur = cur && cur.n === i && cur.type !== 'order';
+    if (isCur) { ctx.shadowColor = COL.cmp; ctx.shadowBlur = 16; }
+    ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = i === S.gr.src || i === GV.selN ? 3 : 2; ctx.beginPath(); ctx.arc(n.x, n.y, NR, 0, 7); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = text; ctx.fillText(L(i), n.x, n.y + 1);
+    if (m.dist[i] != null) { ctx.font = '600 10px "Fira Code", monospace'; ctx.fillStyle = COL.cmp; ctx.fillText(m.dist[i] === Infinity ? '∞' : m.dist[i], n.x, n.y - NR - 8); ctx.font = '700 13px Manrope, sans-serif'; }
+  });
+  ctx.restore();
+}
+function grTable(m, A) {
+  const N = GR.nodes.length, rows = (hdr, body) => `<div class="twrap"><table class="t"><thead><tr>${hdr.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+  if (!N) return '<p class="muted" style="margin:0;font-size:.82rem">Click the canvas to add nodes.</p>';
+  if (A.table === 'dist') return rows(['Node', 'Distance', 'State'], GR.nodes.map((_, i) => `<tr class="${m.ns[i] === 2 ? 'hl' : ''}"><td>${L(i)}</td><td class="n">${m.dist[i] == null ? '∞' : m.dist[i]}</td><td>${['unseen', 'in queue', 'settled'][m.ns[i]]}</td></tr>`).join(''));
+  if (A.table === 'indeg') return rows(['Node', 'In-degree', 'State'], GR.nodes.map((_, i) => `<tr class="${m.ns[i] === 2 ? 'hl' : ''}"><td>${L(i)}</td><td class="n">${m.dist[i] == null ? '—' : m.dist[i]}</td><td>${['waiting', 'ready', 'output'][m.ns[i]]}</td></tr>`).join('')) + (m.order.length ? `<p class="mono" style="margin:8px 0 0;font-size:.8rem;color:var(--srt)">${m.order.map(L).join(' → ')}</p>` : '');
+  if (A.table === 'uf') return rows(['Node', 'parent[]', 'root'], GR.nodes.map((_, i) => { let x = i; while (m.par[x] !== x) x = m.par[x]; return `<tr><td>${L(i)}</td><td class="n">${L(m.par[i])}</td><td class="n" style="color:${COMP_COLS[x % COMP_COLS.length]}">${L(x)}</td></tr>`; }).join(''));
+  if (A.table === 'comp') return rows(['Node', 'Component'], GR.nodes.map((_, i) => `<tr><td>${L(i)}</td><td class="n" style="color:${m.comp[i] ? COMP_COLS[(m.comp[i] - 1) % COMP_COLS.length] : 'inherit'}">${m.comp[i] || '—'}</td></tr>`).join(''));
+  if (A.table === 'mst') { const tree = GR.edges.map((E, e) => ({ E, e })).filter(x => m.es[x.e] === ES.TREE); return rows(['Edge', 'Weight'], tree.map(({ E }) => `<tr><td>${L(E.u)}–${L(E.v)}</td><td class="n">${E.w}</td></tr>`).join('') + `<tr><td><b>Total</b></td><td class="n"><b>${tree.reduce((s, x) => s + x.E.w, 0)}</b></td></tr>`); }
+  return `<p class="mono" style="margin:0;font-size:.84rem;line-height:1.8;color:var(--srt)">${m.order.length ? m.order.map(L).join(' → ') : '<span class="muted">visiting order appears here</span>'}</p>`;
+}
+function grRebuild() {
+  const A = GR_ALGOS[S.gr.algo]; S.gr.src = clamp(S.gr.src, 0, Math.max(0, GR.nodes.length - 1));
+  const track = { algo: A, steps: record(A.run(S.gr.src)), model: grModel(), apply: grApply, undo: grUndo };
+  P.load([track], () => {
+    drawGraph(track); const m = track.model, cur = P.cur(track);
+    showCode({ title: A.name, sub: `${GR.nodes.length} nodes · ${GR.edges.length} edges · ${GR.directed ? 'directed' : 'undirected'}${['bfs', 'dfs', 'dijkstra', 'prim'].includes(S.gr.algo) ? ' · source ' + L(S.gr.src) : ''}`, code: A.code, line: cur ? cur.line : -1, note: cur ? cur.note : '', noteKind: cur ? kindOf(cur.type) : '',
+      badges: ({ bfs: ['O(V + E)', 'queue'], dfs: ['O(V + E)', 'recursion'], dijkstra: ['O((V + E) log V)', 'no negative weights'], prim: ['O(E log V)', 'undirected'], kruskal: ['O(E log E)', 'union-find'], kahn: ['O(V + E)', 'DAG only'], comp: ['O(V + E)', 'undirected'] }[S.gr.algo] || []).map(v => ({ v })),
+      stats: [{ k: 'visited', v: nf([...m.ns].filter(x => x === 2).length), cls: '' }, { k: 'tree edges', v: nf([...m.es].filter(x => x === ES.TREE).length), cls: 'srt' }, { k: 'steps', v: `${nf(track.pos)} / ${nf(track.steps.length)}`, cls: 'piv' }] });
+    $('#grTable').innerHTML = grTable(m, A);
+    $('#grAdj').innerHTML = GR.nodes.length ? GR.nodes.map((_, u) => `<b>${L(u)}</b> → ${adjOf(u).map(({ v, w }) => `${L(v)}<span class="muted">(${w})</span>`).join(' ') || '<span class="muted">∅</span>'}`).join('\n') : '<span class="muted">empty graph</span>';
+    $('#grBanner').innerHTML = m.done ? `<div class="banner win">${ic('check-circle')} ${esc(m.done.note)}</div>` : '';
+  });
+}
+function renderGraph() {
+  P.pause(); const st = $('#stage'); GV.selN = -1; GV.selE = -1; GV.rubber = null; GV.panned = false;
+  st.innerHTML = `
+    <div class="ctrl" id="grCtrl"></div>
+    <div class="cv"><canvas id="grCv" aria-label="Graph canvas — click to add a node, drag between nodes to add an edge, drag empty space to pan"></canvas><div id="grBanner"></div><div class="hint">Click empty space: add node · drag node → node: add edge · drag empty space: pan · click node: set source</div></div>
+    <div class="two"><div class="panel"><h3>${ic('list')} Adjacency list</h3><div class="adj" id="grAdj"></div></div><div class="panel"><h3>${ic('table')} Live table</h3><div id="grTable"></div></div></div>`;
+  animateIn(st); renderGraphCtrl();
+  const cv = $('#grCv'); let gdrag = null;
+  const toG = e => { const b = cv.getBoundingClientRect(); return { x: (e.clientX - b.left - GV.ox) / GV.scale, y: (e.clientY - b.top - GV.oy) / GV.scale }; };
+  const nodeAt = p => GR.nodes.findIndex(n => Math.hypot(n.x - p.x, n.y - p.y) <= NR + 4);
+  const edgeAt = p => GR.edges.findIndex(E => { const a = GR.nodes[E.u], b = GR.nodes[E.v]; return Math.hypot((a.x + b.x) / 2 - p.x, (a.y + b.y) / 2 - p.y) <= 14; });
+  cv.onpointerdown = e => {
+    const p = toG(e), n = nodeAt(p); cv.setPointerCapture(e.pointerId); P.pause();
+    if (n >= 0) gdrag = S.gr.mode === 'move' ? { kind: 'move', n, moved: false } : { kind: 'edge', u: n, moved: false };
+    else { const ed = edgeAt(p); if (ed >= 0) { GV.selE = ed; GV.selN = -1; renderGraphCtrl(); drawGraph(P.tracks[0]); return; } gdrag = { kind: 'pan', x0: e.clientX, y0: e.clientY, ox0: GV.ox, oy0: GV.oy, moved: false }; }
+    gdrag.sx = e.clientX; gdrag.sy = e.clientY;
+  };
+  cv.onpointermove = e => {
+    if (!gdrag) return; if (Math.hypot(e.clientX - gdrag.sx, e.clientY - gdrag.sy) > 4) gdrag.moved = true; const p = toG(e);
+    if (gdrag.kind === 'pan') { GV.panned = true; GV.ox = gdrag.ox0 + e.clientX - gdrag.x0; GV.oy = gdrag.oy0 + e.clientY - gdrag.y0; }
+    else if (gdrag.kind === 'edge') GV.rubber = { u: gdrag.u, x: p.x, y: p.y };
+    else if (gdrag.kind === 'move') { GR.nodes[gdrag.n].x = p.x; GR.nodes[gdrag.n].y = p.y; }
+    drawGraph(P.tracks[0]);
+  };
+  cv.onpointerup = cv.onpointercancel = e => {
+    if (!gdrag) return; const p = toG(e); const d = gdrag; gdrag = null; GV.rubber = null; let changed = false;
+    if (d.kind === 'edge') { const v = nodeAt(p); if (!d.moved) { S.gr.src = d.u; GV.selN = d.u; GV.selE = -1; saveS(); changed = true; } else if (v >= 0 && v !== d.u && !GR.edges.some(E => (E.u === d.u && E.v === v) || (!GR.directed && E.u === v && E.v === d.u))) { GR.edges.push({ u: d.u, v, w: clamp(S.gr.w, 1, 99) }); saveGraph(); changed = true; toast(`Edge ${L(d.u)}–${L(v)} added`); } }
+    else if (d.kind === 'move') { if (!d.moved) { S.gr.src = d.n; GV.selN = d.n; GV.selE = -1; saveS(); } else saveGraph(); changed = true; }
+    else if (d.kind === 'pan' && !d.moved) { GR.nodes.push({ x: Math.round(p.x), y: Math.round(p.y) }); GV.selN = GR.nodes.length - 1; GV.selE = -1; saveGraph(); changed = true; }
+    if (changed) { renderGraphCtrl(); grRebuild(); } else drawGraph(P.tracks[0]);
+  };
+  grRebuild(); syncHash();
+}
+function renderGraphCtrl() {
+  const selE = GV.selE >= 0 ? GR.edges[GV.selE] : null, N = GR.nodes.length;
+  $('#grCtrl').innerHTML = `
+    <label>Algorithm <select id="gAlgo">${Object.entries(GR_ALGOS).map(([k, v]) => `<option value="${k}" ${k === S.gr.algo ? 'selected' : ''}>${v.name}</option>`).join('')}</select></label>
+    <label>Source <select id="gSrc" ${N ? '' : 'disabled'}>${GR.nodes.map((_, i) => `<option value="${i}" ${i === S.gr.src ? 'selected' : ''}>${L(i)}</option>`).join('')}</select></label>
+    <label class="sw"><input type="checkbox" id="gDir" ${GR.directed ? 'checked' : ''}> Directed</label>
+    <div class="seg" role="group" aria-label="Drag behaviour"><button data-mode="edge" class="${S.gr.mode === 'edge' ? 'on' : ''}">${ic('link')} Drag = edge</button><button data-mode="move" class="${S.gr.mode === 'move' ? 'on' : ''}">${ic('move')} Drag = move</button></div>
+    <label>New weight <input type="number" id="gW" min="1" max="99" value="${S.gr.w}" style="width:70px"></label>
+    ${selE ? `<label style="color:var(--piv)">Edge ${L(selE.u)}–${L(selE.v)} <input type="number" id="gEW" min="1" max="99" value="${selE.w}" style="width:70px"></label><button class="btn sm danger" id="gDelE">${ic('trash')} Edge</button>` : ''}
+    ${GV.selN >= 0 ? `<button class="btn sm danger" id="gDelN">${ic('trash')} Node ${L(GV.selN)}</button>` : ''}
+    <span class="spacer"></span>
+    <span class="f">Preset</span>${[['weighted', 'Weighted'], ['dag', 'DAG'], ['tree', 'Tree']].map(([k, l]) => `<button class="btn sm" data-preset="${k}">${l}</button>`).join('')}<button class="btn sm ghost" id="gClear">${ic('trash')} Clear</button>`;
+  $('#gAlgo').onchange = e => { S.gr.algo = e.target.value; saveS(); grRebuild(); syncHash(); };
+  $('#gSrc').onchange = e => { S.gr.src = +e.target.value; saveS(); grRebuild(); };
+  $('#gDir').onchange = e => { GR.directed = e.target.checked; saveGraph(); grRebuild(); };
+  $$('#grCtrl [data-mode]').forEach(b => b.onclick = () => { S.gr.mode = b.dataset.mode; saveS(); renderGraphCtrl(); });
+  $('#gW').onchange = e => { S.gr.w = clamp(+e.target.value || 1, 1, 99); saveS(); };
+  const ew = $('#gEW'); if (ew) ew.onchange = e => { selE.w = clamp(+e.target.value || 1, 1, 99); saveGraph(); grRebuild(); };
+  const de = $('#gDelE'); if (de) de.onclick = () => { GR.edges.splice(GV.selE, 1); GV.selE = -1; saveGraph(); renderGraphCtrl(); grRebuild(); };
+  const dn = $('#gDelN'); if (dn) dn.onclick = () => { const n = GV.selN; GR.nodes.splice(n, 1); GR.edges = GR.edges.filter(E => E.u !== n && E.v !== n).map(E => ({ u: E.u > n ? E.u - 1 : E.u, v: E.v > n ? E.v - 1 : E.v, w: E.w })); GV.selN = -1; S.gr.src = clamp(S.gr.src, 0, Math.max(0, GR.nodes.length - 1)); saveGraph(); renderGraphCtrl(); grRebuild(); };
+  $$('#grCtrl [data-preset]').forEach(b => b.onclick = () => { GR = presetGraph(b.dataset.preset); S.gr.preset = b.dataset.preset; S.gr.src = 0; GV.selN = GV.selE = -1; GV.panned = false; saveGraph(); saveS(); renderGraphCtrl(); grRebuild(); syncHash(); });
+  $('#gClear').onclick = () => { GR = { directed: GR.directed, nodes: [], edges: [] }; GV.selN = GV.selE = -1; saveGraph(); renderGraphCtrl(); grRebuild(); toast('Graph cleared — click the canvas to add nodes'); };
+}
+
+/* =====================================================================
+   DATA STRUCTURES — operations are generators too; `mini` auto-plays them
+   (one-directional: structure mutations happen inside step.act()).
+   ===================================================================== */
+const mini = {
+  gen: null, timer: 0, playing: false, onStep: null, onEnd: null,
+  run(gen, onStep, onEnd) { this.stop(); this.gen = gen; this.onStep = onStep; this.onEnd = onEnd; this.playing = true; updateTransport(); this.tick(); },
+  delay() { return clamp(1000 - S.speed * 90, 80, 1000); },
+  tick() { if (!this.gen) return; const { value, done } = this.gen.next(); if (done) { this.gen = null; this.playing = false; this.onEnd && this.onEnd(); updateTransport(); return; } this.onStep(value); if (this.playing) this.timer = setTimeout(() => this.tick(), this.delay()); },
+  toggle() { if (!this.gen) return; this.playing = !this.playing; clearTimeout(this.timer); if (this.playing) this.tick(); updateTransport(); },
+  stepOnce() { if (!this.gen) return; this.playing = false; clearTimeout(this.timer); this.tick(); updateTransport(); },
+  stop() { clearTimeout(this.timer); this.gen = null; this.playing = false; }
+};
+const DS_TABS = [['stack', 'layers', 'Stack'], ['queue', 'arrow-right', 'Queue'], ['bst', 'git-branch', 'Binary search tree'], ['bsearch', 'search', 'Binary search'], ['heap', 'trending-up', 'Min-heap']];
+let DS = null, dsSeed = 11;
+function bstInsertSync(k) { if (!DS.bst.root) { DS.bst.root = { k }; return; } let c = DS.bst.root; for (;;) { if (k === c.k) return; const s = k < c.k ? 'l' : 'r'; if (!c[s]) { c[s] = { k }; return; } c = c[s]; } }
+const heapSwap = (i, j) => { const h = DS.heap; [h.a[i], h.a[j]] = [h.a[j], h.a[i]]; [h.ids[i], h.ids[j]] = [h.ids[j], h.ids[i]]; };
+function heapInsertSync(x) { const h = DS.heap; h.a.push(x); h.ids.push(h.next++); let i = h.a.length - 1; while (i > 0 && h.a[(i - 1) >> 1] > h.a[i]) { heapSwap(i, (i - 1) >> 1); i = (i - 1) >> 1; } }
+function dsReset(reseed) {
+  if (reseed) dsSeed = newSeed(); const r = rng(dsSeed);
+  const uniq = (n, lo, hi) => { const s = new Set(); while (s.size < n) s.add(lo + Math.floor(r() * (hi - lo))); return [...s]; };
+  DS = { stack: uniq(4, 1, 99), queue: uniq(5, 1, 99), bst: { root: null }, heap: { a: [], ids: [], next: 1 }, bs: { a: uniq(15, 1, 99).sort((x, y) => x - y), t: 0 }, hl: null, order: null };
+  uniq(9, 1, 99).forEach(bstInsertSync); uniq(7, 1, 99).forEach(heapInsertSync); DS.bs.t = DS.bs.a[Math.floor(r() * 15)];
+  if (S.cat === 'ds' && $('#dsView')) dsTab();
+}
+function dsRun(gen, info, draw) {
+  mini.run(gen, s => {
+    if (s.leave != null) { const el = $(`[data-i="${s.leave}"]`, $('#dsView')); if (el) el.classList.add('leave'); setTimeout(() => { s.act && s.act(); draw(); }, 280); }
+    else { s.act && s.act(); draw(s.hl); }
+    showCode({ ...info(), line: s.line, note: s.note, noteKind: s.bad ? 'swap' : 'visit' });
+  });
+}
+function renderDS() {
+  P.load([]); if (!DS) dsReset(false); const st = $('#stage');
+  st.innerHTML = `<div class="ctrl"><div class="seg" id="dsTabs" role="tablist">${DS_TABS.map(([k, i, l]) => `<button role="tab" data-tab="${k}" class="${S.ds.tab === k ? 'on' : ''}" aria-selected="${S.ds.tab === k}">${ic(i)} ${l}</button>`).join('')}</div></div><div class="ctrl ds-ctrl" id="dsCtrl"></div><div class="ds-view" id="dsView"></div>`;
+  animateIn(st);
+  $$('#dsTabs button').forEach(b => b.onclick = () => { S.ds.tab = b.dataset.tab; saveS(); mini.stop(); DS.hl = null; DS.order = null; renderDS(); });
+  dsTab(); syncHash();
+}
+function dsTab() { mini.stop(); ({ stack: dsStack, queue: dsQueue, bst: dsBST, bsearch: dsBSearch, heap: dsHeap }[S.ds.tab] || dsStack)(); }
+const randVal = () => 1 + Math.floor(Math.random() * 99);
+function dsStack() {
+  const CAP = 8, info = () => ({ title: 'Stack', sub: 'array-backed · LIFO', code: ['push(x):', '  if top == capacity - 1: overflow', '  top = top + 1; a[top] = x', 'pop():', '  if top < 0: underflow', '  x = a[top]; top = top - 1; return x'], badges: [{ v: 'push O(1)' }, { v: 'pop O(1)' }, { v: 'LIFO' }], stats: [{ k: 'size', v: `${DS.stack.length} / ${CAP}` }, { k: 'top', v: DS.stack.length ? DS.stack[DS.stack.length - 1] : '—', cls: 'cmp' }] });
+  $('#dsCtrl').innerHTML = `<label>Value <input type="number" id="dsVal" min="0" max="999" value="${randVal()}"></label><button class="btn primary" id="dsPush">${ic('arrow-down')} Push</button><button class="btn" id="dsPop">${ic('arrow-up')} Pop</button><span class="muted" style="font-size:.78rem">Last in, first out · capacity ${CAP}</span>`;
+  const draw = hl => { $('#dsView').innerHTML = `<div style="display:flex;gap:32px;align-items:flex-end;flex-wrap:wrap"><div><div class="ptr" style="margin-bottom:6px">top = ${DS.stack.length - 1}</div><div class="stack-col">${DS.stack.map((v, i) => `<div class="cell ${hl && hl.i === i ? hl.cls : ''}" data-i="${i}">${v}${i === DS.stack.length - 1 ? '<span class="tag" style="top:auto;bottom:-16px">top</span>' : ''}</div>`).join('')}</div></div><div class="muted" style="font-size:.84rem;max-width:380px"><p style="margin:0 0 8px">A stack grows and shrinks at one end only. Function calls, undo history and depth-first search all use one.</p><p style="margin:0">Push and pop are O(1): nothing shifts, only the <span class="mono">top</span> index moves.</p></div></div>`; };
+  draw(); showCode({ ...info(), note: 'Push a value or pop the top element.' });
+  $('#dsPush').onclick = () => { const x = +$('#dsVal').value; $('#dsVal').value = randVal(); dsRun((function* () { yield { line: 1, note: `top = ${DS.stack.length - 1}, capacity ${CAP}` }; if (DS.stack.length >= CAP) { yield { line: 1, note: 'Overflow — the stack is full', bad: true }; return; } const n = DS.stack.length; yield { line: 2, note: `top becomes ${n}; a[${n}] = ${x}`, act: () => DS.stack.push(x), hl: { i: n, cls: 'found enter' } }; })(), info, draw); };
+  $('#dsPop').onclick = () => dsRun((function* () { yield { line: 4, note: `top = ${DS.stack.length - 1}` }; if (!DS.stack.length) { yield { line: 4, note: 'Underflow — nothing to pop', bad: true }; return; } const i = DS.stack.length - 1, v = DS.stack[i]; yield { line: 5, note: `x = a[${i}] = ${v}`, hl: { i, cls: 'hi' } }; yield { line: 5, note: `Returned ${v}; top = ${i - 1}`, leave: i, act: () => DS.stack.pop() }; })(), info, draw);
+}
+function dsQueue() {
+  const CAP = 8, info = () => ({ title: 'Queue', sub: 'circular array · FIFO', code: ['enqueue(x):', '  if size == capacity: overflow', '  rear = (rear + 1) mod capacity; a[rear] = x; size++', 'dequeue():', '  if size == 0: underflow', '  x = a[front]; front = (front + 1) mod capacity; size--; return x'], badges: [{ v: 'enqueue O(1)' }, { v: 'dequeue O(1)' }, { v: 'FIFO' }], stats: [{ k: 'size', v: `${DS.queue.length} / ${CAP}` }, { k: 'front', v: DS.queue.length ? DS.queue[0] : '—', cls: 'cmp' }] });
+  $('#dsCtrl').innerHTML = `<label>Value <input type="number" id="dsVal" min="0" max="999" value="${randVal()}"></label><button class="btn primary" id="dsEnq">${ic('arrow-right')} Enqueue</button><button class="btn" id="dsDeq">${ic('arrow-right')} Dequeue</button><span class="muted" style="font-size:.78rem">First in, first out · capacity ${CAP}</span>`;
+  const draw = hl => { $('#dsView').innerHTML = `<div class="ptr" style="margin:14px 0 22px">front → rear</div><div class="queue-row">${DS.queue.map((v, i) => `<div class="cell ${hl && hl.i === i ? hl.cls : ''}" data-i="${i}">${v}${i === 0 ? '<span class="tag">front</span>' : ''}${i === DS.queue.length - 1 ? '<span class="tag" style="top:auto;bottom:-16px">rear</span>' : ''}</div>`).join('') || '<span class="muted">empty</span>'}</div><p class="muted" style="font-size:.84rem;max-width:520px;margin-top:26px">Breadth-first search, print spoolers and task schedulers are queues. A circular array avoids shifting everything on each dequeue.</p>`; };
+  draw(); showCode({ ...info(), note: 'Enqueue at the rear, dequeue from the front.' });
+  $('#dsEnq').onclick = () => { const x = +$('#dsVal').value; $('#dsVal').value = randVal(); dsRun((function* () { yield { line: 1, note: `size = ${DS.queue.length}` }; if (DS.queue.length >= CAP) { yield { line: 1, note: 'Overflow — the queue is full', bad: true }; return; } const n = DS.queue.length; yield { line: 2, note: `a[rear] = ${x}; size = ${n + 1}`, act: () => DS.queue.push(x), hl: { i: n, cls: 'found enter' } }; })(), info, draw); };
+  $('#dsDeq').onclick = () => dsRun((function* () { yield { line: 4, note: `size = ${DS.queue.length}` }; if (!DS.queue.length) { yield { line: 4, note: 'Underflow — queue is empty', bad: true }; return; } const v = DS.queue[0]; yield { line: 5, note: `x = a[front] = ${v}`, hl: { i: 0, cls: 'hi' } }; yield { line: 5, note: `Returned ${v}; front moves on`, leave: 0, act: () => DS.queue.shift() }; })(), info, draw);
+}
+const BST_CODE = {
+  insert: ['insert(node, k):', '  if node is null: return new Node(k)', '  if k < node.key: node.left = insert(node.left, k)', '  else if k > node.key: node.right = insert(node.right, k)', '  else: duplicate — ignore', '  return node'],
+  search: ['search(node, k):', '  if k < node.key: search(node.left, k)', '  else if k > node.key: search(node.right, k)', '  else: found', 'reached null → not found'],
+  delete: ['delete(node, k):', '  if node is null: not found', '  if k < key: go left; else if k > key: go right', '  else (found):', '    no child → remove; one child → replace with it', '    two children → copy in-order successor, delete it'],
+  in: ['inorder(n): if n: inorder(n.left); visit(n); inorder(n.right)   // sorted order'], pre: ['preorder(n): if n: visit(n); preorder(n.left); preorder(n.right)   // copies a tree'], post: ['postorder(n): if n: postorder(n.left); postorder(n.right); visit(n)   // frees a tree']
+};
+function bstCount(n) { return n ? 1 + bstCount(n.l) + bstCount(n.r) : 0; }
+function bstHeight(n) { return n ? 1 + Math.max(bstHeight(n.l), bstHeight(n.r)) : 0; }
+function drawBST() {
+  const pos = new Map(); let i = 0, maxD = 0; const lay = (n, d) => { if (!n) return; lay(n.l, d + 1); pos.set(n.k, { x: i++, d }); maxD = Math.max(maxD, d); lay(n.r, d + 1); }; lay(DS.bst.root, 0);
+  const gx = 54, gy = 64, W = Math.max(320, (i + 1) * gx), H = (maxD + 1) * gy + 30, xy = k => { const p = pos.get(k); return [(p.x + 1) * gx, 30 + p.d * gy]; }; let lines = '', nodes = '';
+  const walk = n => { if (!n) return; const [x, y] = xy(n.k); for (const c of [n.l, n.r]) if (c) { const [cx, cy] = xy(c.k); lines += `<line x1="${x}" y1="${y}" x2="${cx}" y2="${cy}"/>`; } const hl = DS.hl && DS.hl.k === n.k ? DS.hl.cls : '', oi = DS.order ? DS.order.indexOf(n.k) : -1; nodes += `<g class="node ${hl} ${oi >= 0 ? 'order' : ''}" style="transform:translate(${x}px,${y}px)"><circle r="18"/><text>${n.k}</text>${oi >= 0 ? `<text class="ord" y="-27">${oi + 1}</text>` : ''}</g>`; walk(n.l); walk(n.r); };
+  walk(DS.bst.root);
+  $('#dsView').innerHTML = i ? `<svg class="tree" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMin meet" aria-label="Binary search tree">${lines}${nodes}</svg>` : '<p class="muted">Tree is empty — insert a value.</p>';
+}
+function dsBST() {
+  let op = 'insert';
+  const info = () => ({ title: 'Binary search tree', sub: `${bstCount(DS.bst.root)} keys · height ${bstHeight(DS.bst.root)}`, code: BST_CODE[op], badges: [{ v: 'avg O(log n)', cls: 'good' }, { v: 'worst O(n) when skewed', cls: 'bad' }], stats: [{ k: 'keys', v: bstCount(DS.bst.root) }, { k: 'height', v: bstHeight(DS.bst.root), cls: 'piv' }] });
+  $('#dsCtrl').innerHTML = `<label>Key <input type="number" id="dsVal" min="0" max="999" value="${randVal()}"></label><button class="btn primary" id="bIns">${ic('plus')} Insert</button><button class="btn" id="bSrc">${ic('search')} Search</button><button class="btn" id="bDel">${ic('minus')} Delete</button><span class="f">Traverse</span><div class="seg sm"><button data-tr="in">in-order</button><button data-tr="pre">pre-order</button><button data-tr="post">post-order</button></div><button class="btn sm ghost" id="bRand">${ic('dice')} Random tree</button>`;
+  const draw = hl => { if (hl !== undefined) DS.hl = hl; drawBST(); };
+  DS.hl = null; DS.order = null; draw(); showCode({ ...info(), note: 'Insert, search or delete a key, or run a traversal.' });
+  const go = (kind, gen) => { op = kind; DS.order = null; DS.hl = null; dsRun(gen, info, draw); };
+  $('#bIns').onclick = () => { const k = +$('#dsVal').value; $('#dsVal').value = randVal(); go('insert', (function* () { if (!DS.bst.root) { yield { line: 1, note: `Tree empty — ${k} becomes the root`, act: () => DS.bst.root = { k }, hl: { k, cls: 'new' } }; return; } let cur = DS.bst.root; for (;;) { if (k === cur.k) { yield { line: 4, note: `${k} already exists — ignored`, hl: { k, cls: 'del' }, bad: true }; return; } yield { line: k < cur.k ? 2 : 3, note: `${k} ${k < cur.k ? '<' : '>'} ${cur.k} → go ${k < cur.k ? 'left' : 'right'}`, hl: { k: cur.k, cls: 'visit' } }; const side = k < cur.k ? 'l' : 'r'; if (!cur[side]) { const c = cur; yield { line: 1, note: `Attach ${k} as the ${side === 'l' ? 'left' : 'right'} child of ${c.k}`, act: () => c[side] = { k }, hl: { k, cls: 'new' } }; return; } cur = cur[side]; } })()); };
+  $('#bSrc').onclick = () => { const k = +$('#dsVal').value; go('search', (function* () { let cur = DS.bst.root, d = 0; while (cur) { d++; if (k === cur.k) { yield { line: 3, note: `Found ${k} after ${d} comparison${d > 1 ? 's' : ''}`, hl: { k, cls: 'found' } }; return; } yield { line: k < cur.k ? 1 : 2, note: `${k} ${k < cur.k ? '<' : '>'} ${cur.k} → ${k < cur.k ? 'left' : 'right'}`, hl: { k: cur.k, cls: 'visit' } }; cur = k < cur.k ? cur.l : cur.r; } yield { line: 4, note: `${k} is not in the tree (${d} comparisons)`, bad: true }; })()); };
+  $('#bDel').onclick = () => { const k = +$('#dsVal').value; go('delete', (function* () { let cur = DS.bst.root, par = null; while (cur && cur.k !== k) { yield { line: 2, note: `${k} ${k < cur.k ? '<' : '>'} ${cur.k} → ${k < cur.k ? 'left' : 'right'}`, hl: { k: cur.k, cls: 'visit' } }; par = cur; cur = k < cur.k ? cur.l : cur.r; } if (!cur) { yield { line: 1, note: `${k} not found`, bad: true }; return; } yield { line: 3, note: `Found ${k}`, hl: { k, cls: 'del' } }; const replace = node => { if (!par) DS.bst.root = node; else if (par.l === cur) par.l = node; else par.r = node; }; if (!cur.l || !cur.r) { const child = cur.l || cur.r; yield { line: 4, note: child ? `One child (${child.k}) takes its place` : 'Leaf — simply unlink it', act: () => replace(child), hl: child ? { k: child.k, cls: 'new' } : null }; return; } let sp = cur, s = cur.r; yield { line: 5, note: 'Two children — find the in-order successor (leftmost of the right subtree)', hl: { k: s.k, cls: 'visit' } }; while (s.l) { sp = s; s = s.l; yield { line: 5, note: `Go left to ${s.k}`, hl: { k: s.k, cls: 'visit' } }; } const sk = s.k; yield { line: 5, note: `Successor is ${sk}: copy it over ${k} and unlink the successor node`, act: () => { cur.k = sk; if (sp === cur) sp.r = s.r; else sp.l = s.r; }, hl: { k: sk, cls: 'found' } }; })()); };
+  $$('[data-tr]').forEach(b => b.onclick = () => go(b.dataset.tr, (function* (kind) { const out = []; function* walk(n) { if (!n) return; if (kind === 'pre') { out.push(n.k); yield { line: 0, note: `Visit ${n.k} (#${out.length})`, act: () => DS.order = [...out], hl: { k: n.k, cls: 'visit' } }; } yield* walk(n.l); if (kind === 'in') { out.push(n.k); yield { line: 0, note: `Visit ${n.k} (#${out.length})`, act: () => DS.order = [...out], hl: { k: n.k, cls: 'visit' } }; } yield* walk(n.r); if (kind === 'post') { out.push(n.k); yield { line: 0, note: `Visit ${n.k} (#${out.length})`, act: () => DS.order = [...out], hl: { k: n.k, cls: 'visit' } }; } } yield* walk(DS.bst.root); yield { line: 0, note: `${kind}-order: ${out.join(', ') || 'empty'}`, hl: null }; })(b.dataset.tr)));
+  $('#bRand').onclick = () => { mini.stop(); DS.bst = { root: null }; const r = rng(newSeed()); const s = new Set(); while (s.size < 9) s.add(1 + Math.floor(r() * 99)); [...s].forEach(bstInsertSync); DS.order = null; draw(null); showCode({ ...info(), note: 'New random tree' }); };
+}
+function dsBSearch() {
+  const info = () => ({ title: 'Binary search', sub: `sorted array of ${DS.bs.a.length} · target ${DS.bs.t}`, code: ['lo = 0; hi = n - 1', 'while lo ≤ hi:', '  mid = (lo + hi) / 2', '  if a[mid] == target: return mid', '  else if a[mid] < target: lo = mid + 1', '  else: hi = mid - 1', 'return not found'], badges: [{ v: 'O(log n)', cls: 'good' }, { v: 'needs sorted input' }], stats: [{ k: 'n', v: DS.bs.a.length }, { k: 'max probes', v: Math.ceil(Math.log2(DS.bs.a.length + 1)), cls: 'cmp' }] });
+  $('#dsCtrl').innerHTML = `<label>Target <input type="number" id="dsVal" min="0" max="999" value="${DS.bs.t}"></label><button class="btn primary" id="bsGo">${ic('search')} Search</button><button class="btn sm ghost" id="bsRand">${ic('dice')} New array</button><span class="muted" style="font-size:.78rem">Compare with a linear scan: up to ${DS.bs.a.length} reads vs ${Math.ceil(Math.log2(DS.bs.a.length + 1))}</span>`;
+  const draw = hl => { const a = DS.bs.a; $('#dsView').innerHTML = `<div class="cells" style="margin-top:26px">${a.map((v, i) => { const c = []; if (hl) { if (i < hl.lo || i > hl.hi) c.push('dead'); if (hl.found === i) c.push('found'); else if (hl.mid === i) c.push('mid'); else if (hl.lo === i) c.push('lo'); else if (hl.hi === i) c.push('hi'); } const tags = hl ? [hl.lo === i ? 'lo' : '', hl.mid === i ? 'mid' : '', hl.hi === i ? 'hi' : ''].filter(Boolean).join(' ') : ''; return `<div class="cell ${c.join(' ')}">${v}${tags ? `<span class="tag">${tags}</span>` : ''}<span class="tag" style="top:auto;bottom:-16px;color:var(--dim)">${i}</span></div>`; }).join('')}</div><p class="muted" style="font-size:.84rem;max-width:560px;margin-top:34px">Each probe halves the search range, so a billion sorted items need at most 30 probes. The trade-off: the array must already be sorted.</p>`; };
+  draw(); showCode({ ...info(), note: 'Enter a target and press Search.' });
+  $('#bsGo').onclick = () => { const t = +$('#dsVal').value; DS.bs.t = t; dsRun((function* () { const a = DS.bs.a; let lo = 0, hi = a.length - 1, n = 0; yield { line: 0, note: `Search for ${t} in ${a.length} sorted values`, hl: { lo, hi } }; while (lo <= hi) { const mid = (lo + hi) >> 1; n++; yield { line: 2, note: `mid = ${mid}, a[mid] = ${a[mid]}`, hl: { lo, hi, mid } }; if (a[mid] === t) { yield { line: 3, note: `Found ${t} at index ${mid} after ${n} probe${n > 1 ? 's' : ''}`, hl: { lo, hi, mid, found: mid } }; return; } if (a[mid] < t) { lo = mid + 1; yield { line: 4, note: `${a[mid]} < ${t} → discard the left half`, hl: { lo, hi } }; } else { hi = mid - 1; yield { line: 5, note: `${a[mid]} > ${t} → discard the right half`, hl: { lo, hi } }; } } yield { line: 6, note: `${t} is not in the array (${n} probes)`, bad: true, hl: { lo: -1, hi: -1 } }; })(), info, draw); };
+  $('#bsRand').onclick = () => { mini.stop(); const r = rng(newSeed()); const s = new Set(); while (s.size < 15) s.add(1 + Math.floor(r() * 99)); DS.bs.a = [...s].sort((x, y) => x - y); DS.bs.t = DS.bs.a[Math.floor(r() * 15)]; dsBSearch(); };
+}
+function drawHeap(hl) {
+  const a = DS.heap.a, n = a.length, levels = n ? Math.floor(Math.log2(n)) + 1 : 1, W = 640, gy = 66, H = levels * gy + 30;
+  const xy = i => { const d = Math.floor(Math.log2(i + 1)), j = i - (2 ** d - 1); return [(j + .5) / 2 ** d * W, 30 + d * gy]; };
+  let svg = $('#heapSvg');
+  if (!svg) { $('#dsView').innerHTML = `<svg class="tree" id="heapSvg" preserveAspectRatio="xMidYMin meet" aria-label="Min-heap as a tree"><g id="hLines"></g><g id="hNodes"></g></svg><div class="ptr" style="margin:10px 0 6px">array view (index below)</div><div class="cells" id="heapRow"></div>`; svg = $('#heapSvg'); }
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.style.minHeight = H + 'px';
+  $('#hLines').innerHTML = a.map((_, i) => { if (!i) return ''; const [x, y] = xy(i), [px, py] = xy((i - 1) >> 1); return `<line x1="${px}" y1="${py}" x2="${x}" y2="${y}"/>`; }).join('');
+  const nodesG = $('#hNodes'), seen = new Set();
+  a.forEach((v, i) => { const id = DS.heap.ids[i]; seen.add(id); let g = nodesG.querySelector(`[data-id="${id}"]`); const [x, y] = xy(i); if (!g) { g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('data-id', id); g.innerHTML = '<circle r="18"/><text></text>'; nodesG.append(g); } const cls = hl ? (hl.swap && hl.swap.includes(i) ? 'found' : hl.cmp && hl.cmp.includes(i) ? 'visit' : hl.hl && hl.hl.includes(i) ? 'new' : '') : ''; g.setAttribute('class', 'node ' + cls); g.style.transform = `translate(${x}px,${y}px)`; g.querySelector('text').textContent = v; });
+  [...nodesG.children].forEach(g => { if (!seen.has(+g.dataset.id)) g.remove(); });
+  $('#heapRow').innerHTML = a.map((v, i) => `<div class="cell ${hl ? (hl.swap && hl.swap.includes(i) ? 'found' : hl.cmp && hl.cmp.includes(i) ? 'mid' : hl.hl && hl.hl.includes(i) ? 'lo' : '') : ''}" style="width:40px;height:40px;margin-top:4px">${v}<span class="tag" style="top:auto;bottom:-16px;color:var(--dim)">${i}</span></div>`).join('') || '<span class="muted">empty</span>';
+}
+function dsHeap() {
+  const info = () => ({ title: 'Min-heap', sub: 'complete binary tree stored in an array', code: ['insert(x):', '  a.push(x); i = last index', '  while i > 0 and a[parent(i)] > a[i]:', '    swap(a[i], a[parent(i)]); i = parent(i)', 'extractMin():', '  min = a[0]; move the last element to the root', '  i = 0', '  while a[i] has a child smaller than it:', '    c = smaller child; swap(a[i], a[c]); i = c', '  return min'], badges: [{ v: 'insert O(log n)' }, { v: 'extract O(log n)' }, { v: 'peek O(1)', cls: 'good' }], stats: [{ k: 'size', v: DS.heap.a.length }, { k: 'min', v: DS.heap.a.length ? DS.heap.a[0] : '—', cls: 'cmp' }] });
+  $('#dsCtrl').innerHTML = `<label>Value <input type="number" id="dsVal" min="0" max="999" value="${randVal()}"></label><button class="btn primary" id="hIns">${ic('plus')} Insert</button><button class="btn" id="hExt">${ic('arrow-up')} Extract min</button><span class="muted" style="font-size:.78rem">parent(i) = (i−1)/2 · children 2i+1, 2i+2 · the engine behind Dijkstra's priority queue</span>`;
+  $('#dsView').innerHTML = ''; drawHeap(); showCode({ ...info(), note: 'Insert a value (sifts up) or extract the minimum (sifts down).' });
+  $('#hIns').onclick = () => { const x = +$('#dsVal').value; $('#dsVal').value = randVal(); dsRun((function* () { const a = DS.heap.a, n = a.length; if (n >= 15) { yield { line: 1, note: 'Demo heap is full (15) — extract first', bad: true }; return; } yield { line: 1, note: `Append ${x} at index ${n}`, act: () => { a.push(x); DS.heap.ids.push(DS.heap.next++); }, hl: { hl: [n] } }; let i = n; while (i > 0) { const p = (i - 1) >> 1; yield { line: 2, note: `Compare ${a[i]} with parent ${a[p]}`, hl: { cmp: [i, p] } }; if (a[p] <= a[i]) { yield { line: 2, note: `${a[p]} ≤ ${a[i]} — heap property holds`, hl: { hl: [i] } }; return; } yield { line: 3, note: `${a[i]} < ${a[p]} → swap up`, act: () => heapSwap(i, p), hl: { swap: [i, p] } }; i = p; } yield { line: 3, note: `${x} is the new minimum at the root`, hl: { hl: [0] } }; })(), info, drawHeap); };
+  $('#hExt').onclick = () => dsRun((function* () { const a = DS.heap.a; if (!a.length) { yield { line: 4, note: 'Heap is empty', bad: true }; return; } const min = a[0]; yield { line: 5, note: `Min is ${min} at the root`, hl: { hl: [0] } }; const last = a.length - 1; if (last === 0) { yield { line: 9, note: `Return ${min} — heap is now empty`, act: () => { a.pop(); DS.heap.ids.pop(); } }; return; } yield { line: 5, note: `Move last element ${a[last]} to the root, drop ${min}`, act: () => { heapSwap(0, last); a.pop(); DS.heap.ids.pop(); }, hl: { swap: [0, last] } }; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; if (l >= a.length) { yield { line: 9, note: `No children — return ${min}`, hl: { hl: [i] } }; return; } let c = l; if (r < a.length) { yield { line: 7, note: `Smaller child of ${a[i]}: ${a[l]} or ${a[r]}?`, hl: { cmp: [l, r] } }; if (a[r] < a[l]) c = r; } yield { line: 7, note: `Compare ${a[i]} with child ${a[c]}`, hl: { cmp: [i, c] } }; if (a[i] <= a[c]) { yield { line: 9, note: `${a[i]} ≤ ${a[c]} — heap restored, return ${min}`, hl: { hl: [i] } }; return; } yield { line: 8, note: `Swap ${a[i]} ↓ with ${a[c]}`, act: () => heapSwap(i, c), hl: { swap: [i, c] } }; i = c; } })(), info, drawHeap);
+}
+// TODO(student): run the user's own JavaScript here. Wrap the array in a Proxy that counts reads/writes and yields
+// {type:'compare'|'swap'|'set'} steps automatically, then feed the generator to P.load() like any built-in sort.
+function runUserCode(/* source */) { throw new Error('Not implemented — see README "Left for students"'); }
+// TODO(student): narrate each step in Urdu. Translate step.note (a dictionary keyed by template) and use speechSynthesis with an ur-PK voice.
+function narrate(/* step */) {}
+// TODO(student): GIF / video export. Replay P.tracks[0].steps off-screen and record frames with canvas.captureStream() + MediaRecorder.
+function exportRun() {}
+
+/* =====================================================================
+   LEARN — reference table · quiz · growth-rate chart
+   ===================================================================== */
+const QUIZ = [
+  { q: 'You must sort 5 million integers with almost no extra memory; stability does not matter.', o: ['Heap sort', 'Merge sort', 'Bubble sort', 'Counting sort'], a: 0, why: 'Heap sort is O(n log n) in the worst case with O(1) extra space. Merge sort needs O(n) memory and counting sort needs a count array over the whole value range.' },
+  { q: 'Shortest path in moves through an unweighted maze.', o: ['Depth-first search', 'Breadth-first search', 'Greedy best-first', "Prim's algorithm"], a: 1, why: 'BFS explores in layers, so the first time it reaches the goal is via the fewest moves.' },
+  { q: 'Road network with positive travel times; you need the fastest route from one city to every other city.', o: ['BFS', 'Dijkstra', 'Kruskal', 'Topological sort'], a: 1, why: 'Dijkstra handles non-negative weights and gives single-source shortest paths.' },
+  { q: 'Order university courses so every prerequisite comes before the course that needs it.', o: ['Dijkstra', 'Connected components', 'Topological sort (Kahn)', 'Heap sort'], a: 2, why: 'Prerequisites form a DAG; Kahn repeatedly outputs vertices with in-degree 0.' },
+  { q: 'Cheapest set of cables that connects every office in a campus.', o: ['Minimum spanning tree (Prim / Kruskal)', 'Shortest path (Dijkstra)', 'BFS', 'Quick sort'], a: 0, why: 'A minimum spanning tree connects all vertices with the smallest total edge weight.' },
+  { q: 'A list of 50 records that is already nearly sorted; you want a tiny, stable, adaptive sort.', o: ['Insertion sort', 'Selection sort', 'Heap sort', 'Radix sort'], a: 0, why: 'Insertion sort is O(n) on nearly sorted input and is stable with no extra memory.' },
+  { q: 'Sort 10 million exam scores that are all integers between 0 and 100.', o: ['Counting sort', 'Quick sort', 'Merge sort', 'Insertion sort'], a: 0, why: 'With a tiny value range, counting sort is O(n + k) and beats every comparison sort.' },
+  { q: 'Find a value in a sorted array of one billion items with the fewest reads.', o: ['Linear scan', 'Binary search', 'BFS', 'Hash every element first'], a: 1, why: 'Binary search needs at most ⌈log₂ n⌉ ≈ 30 probes.' },
+  { q: 'Game unit on a weighted map: you know where the goal is and want fewer expansions than Dijkstra while keeping an optimal path.', o: ['A* with an admissible heuristic', 'Greedy best-first', 'Depth-first search', 'Random walk'], a: 0, why: 'A* uses g + h; with an admissible heuristic it is optimal and explores far less than Dijkstra.' },
+  { q: 'Which of these has an O(n²) worst case?', o: ['Merge sort', 'Heap sort', 'Quick sort', 'Radix sort'], a: 2, why: 'Quick sort degrades to O(n²) with bad pivots (e.g. sorted input with last-element pivot); the others are O(n log n) or O(n·d).' }
+];
+// TODO(student): auto-graded exercises — "predict the next swap" / "which line runs next?" drills scored against the recorded step list.
+let QZ = null;
+function renderLearn() {
+  P.load([]); const st = $('#stage');
+  st.innerHTML = `<div class="learn"><div class="ctrl"><div class="seg" id="lTabs" role="tablist">${[['table', 'table', 'Complexity reference'], ['quiz', 'lightbulb', 'Which algorithm? quiz'], ['growth', 'trending-up', 'Growth rates']].map(([k, i, l]) => `<button role="tab" data-tab="${k}" class="${S.learn.tab === k ? 'on' : ''}" aria-selected="${S.learn.tab === k}">${ic(i)} ${l}</button>`).join('')}</div></div><div id="lBody"></div></div>`;
+  animateIn(st);
+  $$('#lTabs button').forEach(b => b.onclick = () => { S.learn.tab = b.dataset.tab; saveS(); renderLearn(); });
+  ({ table: learnTable, quiz: learnQuiz, growth: learnGrowth }[S.learn.tab] || learnTable)(); syncHash();
+}
+function learnTable() {
+  const srt = Object.values(SORTS).map(a => `<tr><td>${esc(a.name)}</td><td class="n">O(${a.cx[0]})</td><td class="n">O(${a.cx[1]})</td><td class="n" style="color:${a.cx[2].includes('²') ? 'var(--swp)' : 'inherit'}">O(${a.cx[2]})</td><td class="n">O(${a.cx[3]})</td><td>${a.cx[4] ? '<span style="color:var(--srt)">yes</span>' : '<span style="color:var(--swp)">no</span>'}</td></tr>`).join('');
+  const gp = [['BFS (grid / graph)', 'O(V + E)', 'O(V)', 'shortest in moves (unweighted)'], ['DFS', 'O(V + E)', 'O(V)', 'any path; not shortest'], ['Dijkstra', 'O((V + E) log V)', 'O(V)', 'optimal, non-negative weights'], ['A*', 'O(E) typical ≪ Dijkstra', 'O(V)', 'optimal if h is admissible'], ['Greedy best-first', 'O(E log V)', 'O(V)', 'fast, not optimal'], ['Bidirectional BFS', 'O(b^(d/2))', 'O(b^(d/2))', 'shortest in moves, far fewer visits'], ["Prim's MST", 'O(E log V)', 'O(V)', 'minimum spanning tree'], ["Kruskal's MST", 'O(E log E)', 'O(V)', 'MST via union-find'], ['Kahn topological sort', 'O(V + E)', 'O(V)', 'DAG ordering, detects cycles']].map(r => `<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td><td class="muted">${r[3]}</td></tr>`).join('');
+  const ds = [['Stack push / pop', 'O(1)'], ['Queue enqueue / dequeue', 'O(1)'], ['Binary search (sorted array)', 'O(log n)'], ['BST insert / search / delete', 'O(log n) avg · O(n) worst'], ['Min-heap insert / extract', 'O(log n)'], ['Min-heap peek', 'O(1)'], ['Array index', 'O(1)'], ['Array insert at front', 'O(n)']].map(r => `<tr><td>${r[0]}</td><td class="n">${r[1]}</td></tr>`).join('');
+  $('#lBody').innerHTML = `<div class="stagger" style="display:grid;gap:12px"><div class="panel"><h3>${ic('sort')} Sorting algorithms</h3><div class="twrap tall"><table class="t"><thead><tr><th>Algorithm</th><th>Best</th><th>Average</th><th>Worst</th><th>Space</th><th>Stable</th></tr></thead><tbody>${srt}</tbody></table></div></div>
+    <div class="two"><div class="panel"><h3>${ic('git-branch')} Graph &amp; pathfinding</h3><div class="twrap tall"><table class="t"><thead><tr><th>Algorithm</th><th>Time</th><th>Space</th><th>Guarantee</th></tr></thead><tbody>${gp}</tbody></table></div></div>
+    <div class="panel"><h3>${ic('layers')} Data structure operations</h3><div class="twrap tall"><table class="t"><thead><tr><th>Operation</th><th>Time</th></tr></thead><tbody>${ds}</tbody></table></div><p class="muted" style="font-size:.8rem;margin:10px 0 0">V = vertices, E = edges, b = branching factor, d = depth, k = value range, d (radix) = digit count.</p></div></div></div>`;
+  animateIn($('#lBody'));
+}
+function learnQuiz() {
+  const saved = store.get('quiz', { best: 0, attempts: [] });
+  if (!QZ) QZ = { i: 0, score: 0, picked: null, done: false };
+  const body = $('#lBody');
+  if (QZ.done) {
+    body.innerHTML = `<div class="panel quiz enter" style="max-width:640px"><h3>${ic('trophy')} Result</h3><div class="score" id="qScore">0</div><p class="muted" style="margin:4px 0 14px">out of ${QUIZ.length} · best so far <b class="mono" style="color:var(--ink)">${Math.max(saved.best, QZ.score)}</b> · ${saved.attempts.length} attempt${saved.attempts.length === 1 ? '' : 's'} saved</p><div class="bar"><i id="qBar"></i></div><div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap"><button class="btn primary" id="qAgain">${ic('rotate')} Try again</button><a class="btn" href="#learn/table">${ic('table')} Review the table</a></div>${saved.attempts.length ? `<h3 style="margin-top:18px">${ic('list')} Recent attempts</h3><table class="t"><tbody>${saved.attempts.slice(-5).reverse().map(a => `<tr><td>${esc(a.date)}</td><td class="n">${a.score} / ${QUIZ.length}</td></tr>`).join('')}</tbody></table>` : ''}</div>`;
+    countUp($('#qScore'), QZ.score, { dur: 900 }); requestAnimationFrame(() => $('#qBar').style.width = (QZ.score / QUIZ.length * 100) + '%');
+    $('#qAgain').onclick = () => { QZ = null; learnQuiz(); }; return;
+  }
+  const q = QUIZ[QZ.i];
+  body.innerHTML = `<div class="panel quiz enter" style="max-width:720px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 style="margin:0">${ic('lightbulb')} Question ${QZ.i + 1} of ${QUIZ.length}</h3><span class="mono muted" style="font-size:.8rem">score ${QZ.score} · best ${saved.best}</span></div><div class="bar" style="margin:10px 0 14px"><i style="width:${QZ.i / QUIZ.length * 100}%"></i></div><p style="font-size:1.02rem;font-weight:600;margin:0 0 6px">${esc(q.q)}</p><div id="qOpts">${q.o.map((o, i) => `<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}</div><div id="qWhy" class="cp-note hidden" style="margin:12px 0 0"></div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn primary hidden" id="qNext">${QZ.i === QUIZ.length - 1 ? 'See result' : 'Next'} ${ic('arrow-right')}</button></div></div>`;
+  $$('#qOpts .opt').forEach(b => b.onclick = () => {
+    if (QZ.picked != null) return; QZ.picked = +b.dataset.i; const ok = QZ.picked === q.a; if (ok) QZ.score++;
+    $$('#qOpts .opt').forEach(x => { const i = +x.dataset.i; x.classList.toggle('right', i === q.a); x.classList.toggle('wrong', i === QZ.picked && !ok); x.disabled = true; });
+    const w = $('#qWhy'); w.classList.remove('hidden'); w.className = 'cp-note ' + (ok ? 'sorted' : 'swap'); w.innerHTML = `<b>${ok ? 'Correct.' : 'Not quite.'}</b> ${esc(q.why)}`; $('#qNext').classList.remove('hidden');
+  });
+  $('#qNext').onclick = () => {
+    QZ.i++; QZ.picked = null;
+    if (QZ.i >= QUIZ.length) { QZ.done = true; const s = store.get('quiz', { best: 0, attempts: [] }); s.best = Math.max(s.best, QZ.score); s.attempts.push({ date: new Date().toISOString().slice(0, 10), score: QZ.score }); s.attempts = s.attempts.slice(-20); store.set('quiz', s); toast(`Quiz finished: ${QZ.score} / ${QUIZ.length}`, 'ok'); }
+    learnQuiz();
+  };
+}
+function learnGrowth() {
+  const FN = [['n', n => n, COL.srt], ['log₂ n', n => Math.max(1, Math.log2(n)), COL.piv], ['n log₂ n', n => Math.max(1, n * Math.log2(n)), COL.cmp], ['n²', n => n * n, COL.swp], ['2ⁿ', n => 2 ** n, '#f0a0c0']];
+  const W = Math.max(300, ($('#lBody').clientWidth || 720) - 34), H = W < 520 ? 300 : 380, pl = 50, pr = 16, pt = 16, pb = 36, N = 32, ymax = Math.log10(2 ** N);
+  const X = n => pl + (n - 1) / (N - 1) * (W - pl - pr), Y = v => pt + (H - pt - pb) * (1 - Math.log10(Math.max(1, v)) / ymax);
+  const grid = Array.from({ length: 10 }, (_, i) => i).map(i => `<line x1="${pl}" x2="${W - pr}" y1="${Y(10 ** i)}" y2="${Y(10 ** i)}" stroke="${COL.line}" stroke-dasharray="3 4"/><text x="${pl - 8}" y="${Y(10 ** i) + 4}" fill="${COL.muted}" font-size="11" text-anchor="end" font-family="Fira Code,monospace">10${'⁰¹²³⁴⁵⁶⁷⁸⁹'[i]}</text>`).join('');
+  const xt = [1, 4, 8, 12, 16, 20, 24, 28, 32].map(n => `<text x="${X(n)}" y="${H - pb + 18}" fill="${COL.muted}" font-size="11" text-anchor="middle" font-family="Fira Code,monospace">${n}</text>`).join('');
+  const paths = FN.map(([lab, f, c], i) => `<path data-f="${i}" d="${Array.from({ length: N }, (_, k) => `${k ? 'L' : 'M'}${X(k + 1).toFixed(1)},${Y(f(k + 1)).toFixed(1)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`).join('');
+  const legend = FN.map(([lab, , c]) => `<span><i style="background:${c}"></i>${lab}</span>`).join('');
+  $('#lBody').innerHTML = `<div class="panel growth enter" style="position:relative"><h3>${ic('trending-up')} Growth of common complexities (log scale)</h3><div class="legend" style="margin-bottom:8px">${legend}</div><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Growth rate chart">${grid}${xt}<text x="${(pl + W - pr) / 2}" y="${H - 4}" fill="${COL.muted}" font-size="11" text-anchor="middle" font-family="Manrope">n (input size)</text>${paths}<line id="gCursor" x1="0" x2="0" y1="${pt}" y2="${H - pb}" stroke="${COL.ink}" stroke-opacity=".5" visibility="hidden"/><g id="gDots"></g></svg><div class="tip hidden" id="gTip"></div><p class="muted" style="font-size:.84rem;margin:10px 0 0">Hover or touch the chart. The y-axis is logarithmic: every grid line is 10× the one below. At n = 32, 2ⁿ is already over four billion while n log n is 160 — this is why exponential brute force fails and O(n log n) sorting feels instant.</p></div>`;
+  const svg = $('.growth svg.chart'); $$('path[data-f]', svg).forEach(drawPath);
+  const dots = $('#gDots'); dots.innerHTML = FN.map(([, , c]) => `<circle r="4" fill="${c}" stroke="#13111c" stroke-width="2" visibility="hidden"/>`).join('');
+  const show = e => {
+    const b = svg.getBoundingClientRect(), cx = e.touches ? e.touches[0].clientX : e.clientX, mx = (cx - b.left) * W / b.width, n = clamp(Math.round(1 + (mx - pl) / (W - pl - pr) * (N - 1)), 1, N);
+    $('#gCursor').setAttribute('x1', X(n)); $('#gCursor').setAttribute('x2', X(n)); $('#gCursor').setAttribute('visibility', 'visible');
+    [...dots.children].forEach((d, i) => { d.setAttribute('cx', X(n)); d.setAttribute('cy', Y(FN[i][1](n))); d.setAttribute('visibility', 'visible'); });
+    const tip = $('#gTip'); tip.classList.remove('hidden'); tip.innerHTML = `<b>n = ${n}</b><br>` + FN.map(([lab, f, c]) => `<span style="color:${c}">${lab}</span> = ${f(n) >= 1e6 ? f(n).toExponential(2) : nf(Math.round(f(n) * 10) / 10)}`).join('<br>');
+    const px = (cx - b.left), box = svg.parentElement.getBoundingClientRect(); tip.style.left = Math.min(box.width - 190, Math.max(0, px + (b.left - box.left) + 14)) + 'px'; tip.style.top = (b.top - box.top + 20) + 'px';
+  };
+  svg.addEventListener('mousemove', show); svg.addEventListener('touchstart', show, { passive: true }); svg.addEventListener('touchmove', show, { passive: true });
+  svg.addEventListener('mouseleave', () => { $('#gTip').classList.add('hidden'); $('#gCursor').setAttribute('visibility', 'hidden'); [...dots.children].forEach(d => d.setAttribute('visibility', 'hidden')); });
+}
+
+/* =====================================================================
+   ABOUT · ROUTER · SHORTCUTS · BOOT
+   ===================================================================== */
+const TODOS = [
+  ['Dynamic-programming tables', 'DP', 'LCS and 0/1 knapsack as a filled grid: yield {type:"set", r, c, v} per cell and render a table instead of bars.'],
+  ['String matching', 'KMP · Rabin-Karp', 'Show text, pattern window, failure function and rolling hash as step objects in a new category tab.'],
+  ['Run the user\'s own JavaScript', 'instrumentation', 'runUserCode(): execute a student sort in a Web Worker over a Proxy array that counts reads/writes and emits steps automatically.'],
+  ['Urdu step explanations & narration', 'i18n · speech', 'narrate(): translate each step note (template dictionary) and read it with speechSynthesis using an ur-PK voice.'],
+  ['Auto-graded exercises', 'assessment', '"Predict the next swap" and "which line runs next?" drills scored against the recorded step list.'],
+  ['GIF / video export of a run', 'export', 'exportRun(): replay the step list off-screen and capture with canvas.captureStream() + MediaRecorder.'],
+  ['More algorithms', 'generators', 'Shell / Tim sort, Bellman-Ford, Floyd–Warshall, Jump Point Search — one generator each, nothing else to wire.']
+];
+function openAbout() {
+  $('#aboutBox').innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><h2 id="aboutTitle">${ic('info')} Algorithm Visualizer</h2><button class="iconbtn" id="aboutClose" aria-label="Close">${ic('x')}</button></div>
+    <p class="muted" style="margin:8px 0 0">An offline, single-file visual lab. Students memorise Big-O tables without ever seeing an algorithm move; here every algorithm is a JavaScript <b>generator</b> that yields step objects, a generic player records them, and the canvas is drawn from the current step — so you can scrub, step back and race two algorithms on identical input.</p>
+    <h3 style="margin:16px 0 6px;font-size:.95rem">${ic('code')} Extension pattern</h3>
+    <pre class="mono" style="background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:.74rem;line-height:1.6;overflow:auto;margin:0">${esc(`SORTS.shell = { name: 'Shell sort', cx: ['n log n', 'n^1.3', 'n²', '1', false],
+  code: ['for gap in n/2 .. 1:', '  insertion sort every gap-th element'],
+  *run(a) { /* mutate a, and for each action: */
+    yield { type: 'compare', i, j, line: 1, note: 'why' };
+    yield { type: 'swap', i, j, line: 1, note: '…' };   // or {type:'set', i, v}
+  } };   // → appears in dropdowns, race mode and the Learn table`)}</pre>
+    <h3 style="margin:16px 0 6px;font-size:.95rem">${ic('keyboard')} Shortcuts</h3>
+    <p class="muted" style="margin:0;font-size:.88rem"><kbd class="mono">Space</kbd> play / pause · <kbd class="mono">←</kbd> <kbd class="mono">→</kbd> step · <kbd class="mono">R</kbd> reset · the URL hash carries category, algorithm, size and seed, so the Share button reproduces the exact run.</p>
+    <h3 style="margin:16px 0 4px;font-size:.95rem">${ic('lightbulb')} Left for students</h3>
+    <div class="stagger">${TODOS.map(([h, tag, hint]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${esc(tag)}</span></h4><p>${esc(hint)}</p></div>`).join('')}</div>
+    <p class="muted" style="font-size:.8rem;margin:14px 0 0">Search the source for <span class="mono">TODO(student)</span>. Settings, your graph and quiz results live in localStorage under <span class="mono">algoviz:</span>. <button class="btn sm ghost" id="wipe" style="margin-left:6px">${ic('trash')} Reset saved data</button></p>`;
+  const m = $('#about'); m.hidden = false; animateIn($('#aboutBox')); $('#aboutClose').focus();
+  $('#aboutClose').onclick = closeAbout; m.onclick = e => { if (e.target === m) closeAbout(); };
+  $('#wipe').onclick = () => { Object.keys(localStorage).filter(k => k.startsWith(NS)).forEach(k => localStorage.removeItem(k)); location.hash = ''; location.reload(); };
+}
+function closeAbout() { $('#about').hidden = true; $('#aboutBtn').focus(); }
+$('#aboutBtn').onclick = openAbout;
+$('#shareBtn').onclick = async () => { syncHash(); try { await navigator.clipboard.writeText(location.href); toast('Link copied — it reproduces this exact run', 'ok'); } catch { prompt('Copy this link', location.href); } };
+$('#cpToggle').onclick = () => { const cp = $('#codepane'); cp.classList.toggle('open'); $('#cpToggle').setAttribute('aria-expanded', cp.classList.contains('open')); };
+
+const CATS = [['sorting', 'sort', 'Sorting'], ['path', 'map', 'Pathfinding'], ['graph', 'git-branch', 'Graphs'], ['ds', 'layers', 'Data structures'], ['learn', 'book', 'Learn']];
+function renderTabs() {
+  $('#tabs').innerHTML = CATS.map(([k, i, l]) => `<a href="#${k}" data-cat="${k}" class="${S.cat === k ? 'active' : ''}" ${S.cat === k ? 'aria-current="page"' : ''}>${ic(i)}<span>${l}</span></a>`).join('') + '<span class="inkbar"></span>';
+  positionInk();
+}
+function positionInk() { const a = $('#tabs a.active'), ink = $('#tabs .inkbar'); if (a && ink) { ink.style.left = a.offsetLeft + 'px'; ink.style.width = a.offsetWidth + 'px'; } }
+function parseHash() { const h = location.hash.slice(1); if (!h) return null; const [p, qs = ''] = h.split('?'); const [cat, algo] = p.split('/'); return { cat, algo, q: Object.fromEntries(new URLSearchParams(qs)) }; }
+function applyHash() {
+  const p = parseHash(); if (!p) return; const { cat, algo, q } = p;
+  if (!CATS.some(c => c[0] === cat)) return; S.cat = cat;
+  if (cat === 'sorting') { if (SORTS[algo]) S.sort.algo = algo; if (q.size) S.sort.size = clamp(+q.size || 40, 10, 200); if (q.seed) S.sort.seed = +q.seed || S.sort.seed; if (DISTS[q.dist]) S.sort.dist = q.dist; if (q.race && SORTS[q.race]) { S.sort.race = true; S.sort.algoB = q.race; } else if ('race' in q || algo) S.sort.race = !!(q.race && SORTS[q.race]); }
+  if (cat === 'path') { if (PF_ALGOS[algo]) S.pf.algo = algo; if (q.size != null) S.pf.size = clamp(+q.size || 0, 0, 3); if (q.seed) S.pf.seed = +q.seed || S.pf.seed; if (['division', 'random', 'none'].includes(q.maze)) S.pf.maze = q.maze; if (['manhattan', 'euclid'].includes(q.h)) S.pf.h = q.h; if (q.diag != null) S.pf.diag = q.diag === '1'; if (q.seed || q.maze || q.size != null) G = null; }
+  if (cat === 'graph') { if (GR_ALGOS[algo]) S.gr.algo = algo; if (q.preset && q.preset !== S.gr.preset && ['weighted', 'dag', 'tree'].includes(q.preset)) { GR = presetGraph(q.preset); S.gr.preset = q.preset; saveGraph(); } if (q.src) S.gr.src = +q.src || 0; }
+  if (cat === 'ds' && DS_TABS.some(t => t[0] === algo)) S.ds.tab = algo;
+  if (cat === 'learn' && ['table', 'quiz', 'growth'].includes(algo)) S.learn.tab = algo;
+}
+function syncHash() {
+  let h = '#' + S.cat;
+  if (S.cat === 'sorting') h += `/${S.sort.algo}?size=${S.sort.size}&seed=${S.sort.seed}&dist=${S.sort.dist}` + (S.sort.race ? `&race=${S.sort.algoB}` : '');
+  else if (S.cat === 'path') h += `/${S.pf.algo}?size=${S.pf.size}&seed=${S.pf.seed}&maze=${S.pf.maze}&h=${S.pf.h}&diag=${S.pf.diag ? 1 : 0}`;
+  else if (S.cat === 'graph') h += `/${S.gr.algo}?preset=${S.gr.preset}&src=${S.gr.src}`;
+  else if (S.cat === 'ds') h += `/${S.ds.tab}`; else h += `/${S.learn.tab}`;
+  if (location.hash !== h) history.replaceState(null, '', h);
+}
+function route() {
+  applyHash(); mini.stop(); P.pause(); document.body.dataset.cat = S.cat; renderTabs();
+  ({ sorting: renderSorting, path: renderPath, graph: renderGraph, ds: renderDS, learn: renderLearn }[S.cat] || renderSorting)();
+  saveS(); updateTransport(); $('#stage').scrollTop = 0;
+}
+window.addEventListener('hashchange', route);
+let rsT = 0; window.addEventListener('resize', () => { positionInk(); if (P.tracks.length) P.render(); clearTimeout(rsT); rsT = setTimeout(() => { if (S.cat === 'learn' && S.learn.tab === 'growth') learnGrowth(); }, 150); });
+document.addEventListener('keydown', e => {
+  if (!$('#about').hidden) { if (e.key === 'Escape') closeAbout(); return; }
+  const t = e.target, form = t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON');
+  if (form && !(t.type === 'range' && e.key === ' ')) return;
+  if (S.cat === 'learn') return;
+  if (e.key === ' ') { e.preventDefault(); $('#tPlay').click(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); $('#tFwd').click(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); if (!$('#tBack').disabled) $('#tBack').click(); }
+  else if (e.key === 'r' || e.key === 'R') { e.preventDefault(); resetCurrent(); }
+});
+$('#tSpeed').value = S.speed;
+route();
+</script>
+</body>
+</html>

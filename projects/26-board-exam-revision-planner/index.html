@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board Exam Revision Planner</title>
+<meta name="description" content="Week-by-week revision planner for Matric and FSc board exams: weightage heatmaps, an interleaving planner, Pomodoro timer, spaced-repetition reviews, past-paper tracking and a readiness score. Single-file FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: indigo / violet on warm off-white ---------- */
+:root{
+  --bg:#faf9ff; --surface:#ffffff; --surface-2:#f3f2fb; --ink:#1e1b3a; --muted:#6b6a85; --line:#e6e4f2;
+  --p:#4f46e5; --p2:#7c3aed; --p-soft:#eef2ff; --p-deep:#3730a3; --grad:linear-gradient(135deg,#4f46e5,#7c3aed);
+  --ok:#0f9d6e; --ok-soft:#e3f6ee; --warn:#d97706; --warn-soft:#fdf1dc; --bad:#dc2626; --bad-soft:#fde8e8;
+  --radius:16px; --radius-sm:10px; --shadow:0 12px 32px -20px rgba(30,27,58,.35);
+  --font:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --font-ur:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
+  --ease:cubic-bezier(.2,.8,.2,1); --dur:.35s;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.01em}
+a{color:var(--p)}
+.muted{color:var(--muted)} .hidden{display:none!important} .sm{font-size:.85rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ur,[lang=ur]{font-family:var(--font-ur);line-height:1.9}
+html[lang=ur] .i18n{font-family:var(--font-ur);line-height:1.9;font-size:1.05em}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+:focus-visible{outline:3px solid #a5b4fc;outline-offset:2px;border-radius:6px}
+
+/* ---------- Motion kit ---------- */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
+.enter{animation:fadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
+.btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.card,.tile,.sess{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.fill,.bar>i{transition:width .6s var(--ease)}
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+
+/* ---------- App bar ---------- */
+.appbar{position:sticky;top:0;z-index:30;background:rgba(250,249,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.appbar .row1{display:flex;align-items:center;gap:14px;padding:10px 20px;max-width:1440px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:0}
+.brand .mark{width:38px;height:38px;border-radius:12px;background:var(--grad);display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 8px 18px -8px rgba(79,70,229,.7)}
+.brand .mark svg{width:22px;height:22px}
+.brand h1{font-size:1.05rem;font-weight:800;white-space:nowrap}
+.brand .sub{font-size:.72rem;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.countdown{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#fff;border-radius:999px;padding:7px 14px;font-weight:700;font-size:.9rem;box-shadow:0 10px 24px -12px rgba(79,70,229,.8);white-space:nowrap}
+.countdown b{font-size:1.1rem;font-variant-numeric:tabular-nums}
+.appbar .spacer{flex:1}
+.iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;color:var(--ink);position:relative}
+.iconbtn:hover{border-color:#c7d2fe;background:var(--p-soft)}
+.iconbtn .badge,.seg .badge{position:absolute;top:-6px;right:-6px;background:var(--bad);color:#fff;font-size:.68rem;font-weight:800;min-width:18px;height:18px;border-radius:999px;display:grid;place-items:center;padding:0 5px;border:2px solid var(--bg)}
+.langbtn{height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:700}
+.langbtn .ur{font-size:1rem;line-height:1}
+.row2{max-width:1440px;margin:0 auto;padding:0 20px 10px;display:flex;align-items:center;gap:12px}
+.segwrap{overflow-x:auto;scrollbar-width:none;flex:1}
+.segwrap::-webkit-scrollbar{display:none}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:14px;padding:4px;gap:2px;border:1px solid var(--line)}
+.seg a{position:relative;display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:10px;text-decoration:none;color:var(--muted);font-weight:700;font-size:.9rem;white-space:nowrap;min-height:40px;transition:background .2s,color .2s,box-shadow .2s}
+.seg a:hover{color:var(--ink)}
+.seg a.on{background:var(--surface);color:var(--p-deep);box-shadow:0 4px 12px -6px rgba(30,27,58,.3)}
+.seg .badge{top:2px;right:2px}
+
+/* ---------- Layout ---------- */
+main{max-width:1440px;margin:0 auto;padding:18px 20px 60px}
+.plan-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 1px 2px rgba(30,27,58,.04)}
+.panel h2{font-size:1.05rem;display:flex;align-items:center;gap:8px}
+.panel h2 .ic{color:var(--p)}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;gap:12px;align-items:center}
+.kpi .ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--p-soft);color:var(--p);flex:none}
+.kpi .ico .ic{width:1.3em;height:1.3em}
+.kpi .v{font-size:1.45rem;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:.78rem;color:var(--muted);font-weight:600}
+.kpi.ok .ico{background:var(--ok-soft);color:var(--ok)} .kpi.warn .ico{background:var(--warn-soft);color:var(--warn)} .kpi.vio .ico{background:#f3e8ff;color:var(--p2)}
+
+/* ---------- Buttons & forms ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:700;font-size:.9rem;color:var(--ink)}
+.btn:hover{border-color:#c7d2fe;background:var(--p-soft)}
+.btn.primary{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 10px 22px -12px rgba(79,70,229,.9)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ok{background:var(--ok);color:#fff;border-color:transparent} .btn.danger{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)} .btn.ghost:hover{background:var(--surface-2);color:var(--ink)}
+.btn.sm{min-height:34px;padding:0 10px;font-size:.82rem;border-radius:10px}
+.btn.icon{width:40px;padding:0} .btn.icon.sm{width:34px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:.78rem;font-weight:700;color:var(--muted)}
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{width:100%;min-height:40px;border:1px solid var(--line);border-radius:10px;padding:8px 11px;background:var(--surface);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+input[type=range]{width:100%;accent-color:var(--p);min-height:40px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px} .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.8rem;font-weight:600;cursor:pointer;min-height:32px;transition:background .15s,border-color .15s}
+.chip.on{background:var(--p-soft);border-color:#c7d2fe;color:var(--p-deep)}
+.chip.static{cursor:default;background:var(--surface-2)}
+.dayoffs{display:flex;gap:6px;flex-wrap:wrap}
+.dayoffs .chip{min-width:44px;justify-content:center}
+
+/* ---------- Week grid ---------- */
+.weekbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.weekbar .title{font-weight:800;font-size:1.05rem;margin:0 6px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{background:var(--surface-2);border:1px dashed var(--line);border-radius:14px;min-height:260px;padding:8px;display:flex;flex-direction:column;gap:7px;transition:background .15s,border-color .15s;min-width:0}
+.day.today{background:var(--p-soft);border-color:#c7d2fe}
+.day.off{background:repeating-linear-gradient(135deg,var(--surface-2) 0 8px,#eceaf6 8px 16px)}
+.day.past{opacity:.78}
+.day.over{background:#e0e7ff;border-color:var(--p);border-style:solid}
+.day .dh{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:2px 4px 6px}
+.day .dh b{font-size:.9rem} .day.today .dh b{color:var(--p-deep)}
+.day .dh .d{font-size:.75rem;color:var(--muted);font-weight:600}
+.day .mins{font-size:.72rem;color:var(--muted);font-weight:700;text-align:center;padding-top:4px;margin-top:auto}
+.sess{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--sc,var(--p));border-radius:10px;padding:8px 9px;cursor:grab;position:relative;user-select:none;font-size:.82rem;line-height:1.3}
+.sess:hover{transform:translateY(-2px);box-shadow:0 10px 20px -14px rgba(30,27,58,.5);border-color:#c7d2fe;border-left-color:var(--sc,var(--p))}
+.sess:active{cursor:grabbing}
+.sess.dragging{opacity:.45}
+.sess .s{font-size:.7rem;font-weight:800;color:var(--sc,var(--p));text-transform:uppercase;letter-spacing:.03em;display:flex;justify-content:space-between;gap:4px}
+.sess .c{font-weight:600;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin:2px 0}
+.sess .m{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:4px;justify-content:space-between}
+.sess.done{background:var(--ok-soft);border-color:#c6ebd9} .sess.done .c{text-decoration:line-through;color:var(--muted)}
+.sess.skipped{opacity:.5} .sess.partial{background:var(--warn-soft)}
+.sess.revision{border-left-style:double;border-left-width:6px}
+.sess .tp{font-size:.62rem;font-weight:800;padding:1px 6px;border-radius:999px;background:var(--surface-2);color:var(--muted);text-transform:uppercase}
+.sess .tp.extra{background:#fdf1dc;color:var(--warn)} .sess .tp.revision{background:#f3e8ff;color:var(--p2)}
+.empty{text-align:center;color:var(--muted);padding:28px 10px;font-size:.9rem}
+.empty .ic{width:2em;height:2em;color:#c7d2fe;display:block;margin:0 auto 8px}
+
+/* ---------- Today panel & timer ---------- */
+.today .tdate{font-size:.8rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.timer{display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 0 6px}
+.ring{position:relative;width:180px;height:180px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:10;stroke-linecap:round}
+.ring .bg{stroke:var(--surface-2)}
+.ring .fg{stroke:url(#gradRing);transition:stroke-dashoffset .9s linear}
+.ring .fg.brk{stroke:var(--ok)}
+.ring .lbl{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .lbl b{font-size:2.1rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;display:block;line-height:1}
+.ring .lbl span{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.tctl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tsess{font-size:.85rem;text-align:center;color:var(--muted);min-height:1.3em}
+.tlist{display:flex;flex-direction:column;gap:8px}
+.trow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.trow .dot{width:10px;height:10px;border-radius:50%;background:var(--sc,var(--p));flex:none}
+.trow .t{flex:1;min-width:0} .trow .t b{display:block;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .t span{font-size:.75rem;color:var(--muted)}
+.trow.done{opacity:.6}
+.miniring{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:var(--surface-2);margin-top:12px}
+.miniring svg{width:54px;height:54px;transform:rotate(-90deg);flex:none}
+.miniring circle{fill:none;stroke-width:6} .miniring .bg{stroke:#e2e0f0} .miniring .fg{stroke:var(--p);transition:stroke-dashoffset .9s var(--ease)}
+
+/* ---------- Subjects, heatmap, rings ---------- */
+.rings{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-bottom:16px}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 8px;text-align:center}
+.rcard svg{width:92px;height:92px;transform:rotate(-90deg)}
+.rcard circle{fill:none;stroke-width:9} .rcard .bg{stroke:var(--surface-2)} .rcard .fg{transition:stroke-dashoffset 1s var(--ease)}
+.rcard .wrap{position:relative;display:inline-block}
+.rcard .num{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.rcard .nm{font-size:.8rem;font-weight:700;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcard.all{background:var(--grad);color:#fff;border-color:transparent} .rcard.all .bg{stroke:rgba(255,255,255,.25)} .rcard.all .fg{stroke:#fff}
+.subj{margin-bottom:14px}
+.subj .sh{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.subj .sh .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;background:var(--sc)}
+.subj .sh h3{font-size:1rem;flex:1;min-width:120px}
+.bar{height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;width:100%}
+.bar>i{display:block;height:100%;background:var(--sc,var(--p));border-radius:999px;width:0}
+.heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.tile{border-radius:10px;padding:8px 9px;cursor:pointer;border:1px solid transparent;min-height:64px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;color:var(--ink);text-align:left;background:var(--surface-2);font:inherit}
+.tile:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.tile.dark{color:#fff} .tile.dark .muted{color:rgba(255,255,255,.75)}
+.tile .n{font-size:.78rem;font-weight:600;line-height:1.25}
+.tile .f{display:flex;justify-content:space-between;align-items:center;font-size:.7rem;font-weight:700}
+.tile .ms{display:flex;gap:2px} .tile .ms i{width:7px;height:7px;border-radius:2px;background:currentColor;opacity:.25} .tile .ms i.on{opacity:1}
+.legend{display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);font-weight:600}
+.legend .sw{width:60px;height:8px;border-radius:4px;background:linear-gradient(90deg,#eef2ff,#4f46e5)}
+.whatif{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+.whatif .big{font-size:1.6rem;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* ---------- Lists, charts, tables ---------- */
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.row .t{flex:1;min-width:0} .row .t b{display:block} .row .t span{font-size:.8rem;color:var(--muted)}
+.row.overdue{border-color:#fecaca;background:#fff7f7}
+.rate{display:flex;gap:4px}
+.rate button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:800;cursor:pointer;transition:background .15s,transform .15s}
+.rate button:hover{background:var(--p-soft);border-color:#c7d2fe;transform:translateY(-1px)}
+.rate button.on{background:var(--grad);color:#fff;border-color:transparent}
+.chart{position:relative;width:100%}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart .tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:.75rem;padding:6px 9px;border-radius:8px;transform:translate(-50%,-115%);white-space:nowrap;display:none}
+.hbar{display:grid;grid-template-columns:minmax(90px,160px) 1fr auto;gap:8px;align-items:center;font-size:.82rem;padding:3px 0}
+.hbar .bar{height:10px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)} th{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tag{display:inline-block;font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--p-soft);color:var(--p-deep);text-transform:uppercase;letter-spacing:.03em;vertical-align:middle}
+.todo{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.todo h4{font-size:.92rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.two{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start}
+.streak{display:flex;gap:4px;flex-wrap:wrap} .streak i{width:14px;height:14px;border-radius:4px;background:var(--surface-2)} .streak i.on{background:var(--p)} .streak i.hi{background:var(--p2)}
+
+/* ---------- Modal, toasts ---------- */
+.scrim{position:fixed;inset:0;background:rgba(30,27,58,.45);z-index:60;display:none;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s}
+.scrim.open{display:flex}
+.modal{background:var(--surface);border-radius:20px;width:min(560px,100%);max-height:92vh;overflow:auto;padding:20px;box-shadow:0 40px 80px -30px rgba(30,27,58,.6);animation:pop .25s var(--ease)}
+.modal .mh{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.modal h2{font-size:1.15rem}
+.modal .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+#toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:80;width:max-content;max-width:calc(100vw - 32px)}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);animation:fadeUp .3s var(--ease),toastOut .4s ease 2.9s both;display:flex;align-items:center;gap:8px}
+.toast.ok{background:var(--ok)} .toast.bad{background:var(--bad)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px){.plan-layout{grid-template-columns:minmax(0,1fr) 300px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}
+@media (max-width:860px){
+  .appbar .row1{padding:10px 16px;gap:10px} .row2{padding:0 16px 10px} main{padding:14px 16px 70px}
+  .brand h1{font-size:.95rem} .brand .sub{display:none} .countdown{padding:6px 11px;font-size:.8rem} .countdown b{font-size:1rem}
+  .plan-layout{grid-template-columns:1fr} .today{order:-1}
+  .week{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;padding-bottom:8px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:thin}
+  .day{flex:0 0 82vw;scroll-snap-align:start;min-height:200px}
+  .grid3{grid-template-columns:1fr 1fr} .whatif{grid-template-columns:1fr}
+  .heat{grid-template-columns:repeat(2,minmax(0,1fr))} .rings{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hbar{grid-template-columns:minmax(70px,110px) 1fr auto}
+}
+@media (max-width:480px){.grid2,.grid3{grid-template-columns:1fr} .kpis{gap:8px} .kpi{padding:10px 12px} .kpi .v{font-size:1.2rem} .rings{grid-template-columns:repeat(2,minmax(0,1fr))} .countdown span.i18n{display:none}}
+@media print{
+  .appbar,.today,.kpis,.weekbar .btn,#toasts,.scrim,.noprint{display:none!important}
+  body{background:#fff} main{padding:0;max-width:none} .plan-layout{display:block}
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px} .day{min-height:0;break-inside:avoid;border:1px solid #bbb;background:#fff!important}
+  .sess{box-shadow:none;border:1px solid #ccc;border-left:4px solid var(--sc,#444);font-size:.72rem}
+  .panel{border:none;box-shadow:none;padding:0}
+}
+</style>
+</head>
+<body>
+<!-- Icon sprite (Lucide-style, 24x24, stroke 2). Only the symbols used in this app. -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+<symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24"><path d="M10 2h4M12 14l3-3"/><circle cx="12" cy="14" r="8"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+<symbol id="i-skip" viewBox="0 0 24 24"><path d="m5 4 10 8-10 8ZM19 5v14"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
+<symbol id="i-rotate" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/></symbol>
+<symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.5 13 17 22l-5-3-5 3 1.5-9"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.2-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.2-2.4 1-3.5.5 1.5 1.5 3 2.5 3z"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></symbol>
+<symbol id="i-graduation" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+<symbol id="i-brain" viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.04z"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-3"/></symbol>
+<symbol id="i-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6"/></symbol>
+<symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+<symbol id="i-languages" viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></symbol>
+<symbol id="i-move" viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+<symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
+<symbol id="i-atom" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2-2 0-7.4-4.5-11.9S6.1 1.8 4.1 3.8s0 7.4 4.5 11.9 9.6 6.5 11.6 4.5Z"/><path d="M15.7 15.7c4.5-4.5 6.5-9.9 4.5-11.9s-7.4 0-11.9 4.5-6.5 9.9-4.5 11.9 7.4 0 11.9-4.5Z"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.3L4.6 18.4A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.7-2.6L14 9.3V3"/><path d="M7 15h10"/></symbol>
+<symbol id="i-beaker" viewBox="0 0 24 24"><path d="M4.5 3h15M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></symbol>
+<symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.5 5-6.5"/></symbol>
+<symbol id="i-calculator" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+<symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.1 10.4a6 6 0 1 1-7.7 7.7"/><path d="M7 6h1v4"/></symbol>
+<symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.8-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></symbol>
+<symbol id="i-sticky-note" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9l7-7V5a2 2 0 0 0-2-2z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></symbol>
+<symbol id="i-hash" viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 1 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></symbol>
+<symbol id="i-logo" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5Z"/><path d="M12 3h5.5A2.5 2.5 0 0 1 20 5.5V13"/><path d="M12 21h3"/><path d="m16 19 2 2 4-4"/></symbol>
+</svg>
+
+<header class="appbar">
+  <div class="row1">
+    <a class="brand" href="#plan" aria-label="Board Exam Revision Planner home">
+      <span class="mark"><svg class="ic" aria-hidden="true"><use href="#i-logo"/></svg></span>
+      <span><h1 class="i18n" data-t="app">Revision Planner</h1><div class="sub">Board exam · BISE</div></span>
+    </a>
+    <div class="spacer"></div>
+    <div class="countdown" id="countdown" title="Days until the exam starts"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><b id="cdNum">—</b><span class="i18n" data-t="days_left">days to exam</span></div>
+    <a class="iconbtn" href="#revise" id="reviseBell" aria-label="Reviews due"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span class="badge hidden" id="dueBadge">0</span></a>
+    <button class="langbtn" id="langBtn" aria-label="Toggle Urdu / English"><svg class="ic" aria-hidden="true"><use href="#i-languages"/></svg><span id="langLbl" class="ur">اردو</span></button>
+  </div>
+  <div class="row2">
+    <nav class="segwrap" aria-label="Sections"><div class="seg" id="nav"></div></nav>
+  </div>
+</header>
+
+<main id="view" aria-live="polite"></main>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal" id="modal"></div></div>
+<div id="toasts" aria-live="polite"></div>
+<script>
+'use strict';
+/* =====================================================================
+   Board Exam Revision Planner — single-file app
+   Sections: utils · i18n · syllabus seed · state & seed · planner algorithm ·
+             spaced repetition · readiness · timer · views · exports · router
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+
+// ---------- utils ----------
+const NS = 'berp:';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(NS + k); } catch {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const r1 = v => Math.round(v * 10) / 10;
+const pad2 = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const fromIso = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = fromIso(s); d.setDate(d.getDate() + n); return iso(d); };
+const todayIso = () => iso(new Date());
+const daysBetween = (a, b) => Math.round((fromIso(b) - fromIso(a)) / 864e5);
+const dow = s => fromIso(s).getDay();                      // 0 = Sunday
+const mondayOf = s => addDays(s, -((dow(s) + 6) % 7));
+const DAYN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const fmtD = (s, o = { day: 'numeric', month: 'short' }) => fromIso(s).toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', o);
+const fmtMin = m => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ' ' + (m % 60) + 'm' : ''}` : `${m}m`;
+const toast = (msg, type = '', icon = type === 'ok' ? 'check-circle' : type === 'bad' ? 'alert-circle' : 'info') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = ic(icon) + '<span></span>'; $('span', t).textContent = msg; $('#toasts').append(t); setTimeout(() => t.remove(), 3400); };
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i))); };
+const countUp = (el, to, { dur = 700, fmt = v => Math.round(v).toLocaleString('en-PK') } = {}) => { if (!el) return; const t0 = performance.now(); const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const drawPath = p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; };
+const ringSet = (el, frac) => { if (!el) return; const C = 2 * Math.PI * +el.getAttribute('r'); el.style.strokeDasharray = C; el.getBoundingClientRect(); el.style.strokeDashoffset = C * (1 - clamp(frac, 0, 1)); };
+const download = (name, text, type = 'text/plain') => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+
+// ---------- i18n (nav + key labels only; chapter names stay in English) ----------
+const L = {
+  en: { app: 'Revision Planner', days_left: 'days to exam', nav_plan: 'Plan', nav_subjects: 'Subjects', nav_revise: 'Revise', nav_papers: 'Papers', nav_settings: 'Settings', nav_about: 'About',
+    today: 'Today', week: 'Week', this_week: 'This week', regenerate: 'Regenerate plan', print: 'Print week', ics: 'Calendar (.ics)', planned: 'planned', sessions: 'sessions', no_sessions: 'Nothing planned — enjoy the day off or regenerate the plan.',
+    start: 'Start', pause: 'Pause', resume: 'Resume', reset: 'Reset', work: 'Focus', brk: 'Break', done: 'Done', partial: 'Partial', skip: 'Skip', confidence: 'How confident do you feel about this chapter now?',
+    readiness: 'Readiness', streak: 'Day streak', focused: 'Focused minutes', due_today: 'Due today', overdue: 'Overdue', upcoming: 'Upcoming reviews', rate: 'Rate your recall', nothing_due: 'No reviews due. Complete sessions to schedule reviews.',
+    weightage: 'Weightage', difficulty: 'Difficulty', mastery: 'Mastery', heat_hint: 'Darker tile = bigger share of past-paper marks. Tap a tile to edit.', what_if: 'What if I study',
+    hours_day: 'hours/day', projected: 'Projected readiness by exam day', coverage: 'Syllabus coverage', log_paper: 'Log a past paper', score_trend: 'Score trend', weak_freq: 'Weak chapters (frequency)', add_extra: 'Add extra sessions for weak chapters',
+    save: 'Save', cancel: 'Cancel', delete: 'Delete', saved: 'Saved', board: 'Board', cls: 'Class', stream: 'Stream', exam_date: 'Exam start date', hrs_wd: 'Hours per weekday', hrs_we: 'Hours per weekend day', days_off: 'Days off', pomo: 'Pomodoro (min)', brk_len: 'Break (min)',
+    export_json: 'Export data', import_json: 'Import data', reset_all: 'Reset to demo data', left_for_students: 'Left for students', per_subject: 'Sessions per subject', revision_week: 'Revision week', extra: 'extra', revision: 'revision', study: 'study', moved: 'Session moved', drag_hint: 'Drag a session to another day to move it.' },
+  ur: { app: 'ریویژن پلانر', days_left: 'دن باقی', nav_plan: 'منصوبہ', nav_subjects: 'مضامین', nav_revise: 'دہرائی', nav_papers: 'پرچے', nav_settings: 'ترتیبات', nav_about: 'تعارف',
+    today: 'آج', week: 'ہفتہ', this_week: 'اس ہفتے', regenerate: 'منصوبہ دوبارہ بنائیں', print: 'ہفتہ پرنٹ کریں', ics: 'کیلنڈر (.ics)', planned: 'طے شدہ', sessions: 'سیشن', no_sessions: 'آج کچھ طے نہیں — چھٹی منائیں یا منصوبہ دوبارہ بنائیں۔',
+    start: 'شروع', pause: 'روکیں', resume: 'جاری رکھیں', reset: 'ری سیٹ', work: 'توجہ', brk: 'وقفہ', done: 'مکمل', partial: 'جزوی', skip: 'چھوڑیں', confidence: 'اب آپ اس باب پر کتنے پُراعتماد ہیں؟',
+    readiness: 'تیاری', streak: 'مسلسل دن', focused: 'توجہ کے منٹ', due_today: 'آج دہرائی', overdue: 'تاخیر شدہ', upcoming: 'آنے والی دہرائیاں', rate: 'یادداشت کی درجہ بندی کریں', nothing_due: 'آج کوئی دہرائی نہیں۔ سیشن مکمل کریں تو دہرائی طے ہوگی۔',
+    weightage: 'نمبروں کا حصہ', difficulty: 'مشکل', mastery: 'مہارت', heat_hint: 'گہرا رنگ = پرچوں میں زیادہ نمبر۔ ترمیم کے لیے ٹائل دبائیں۔', what_if: 'اگر میں روزانہ پڑھوں',
+    hours_day: 'گھنٹے/دن', projected: 'امتحان تک متوقع تیاری', coverage: 'نصاب کی کوریج', log_paper: 'پرچہ درج کریں', score_trend: 'نمبروں کا رجحان', weak_freq: 'کمزور ابواب (تعداد)', add_extra: 'کمزور ابواب کے اضافی سیشن',
+    save: 'محفوظ', cancel: 'منسوخ', delete: 'حذف', saved: 'محفوظ ہو گیا', board: 'بورڈ', cls: 'جماعت', stream: 'گروپ', exam_date: 'امتحان کی تاریخ', hrs_wd: 'ہفتے کے دن گھنٹے', hrs_we: 'چھٹی کے دن گھنٹے', days_off: 'چھٹی کے دن', pomo: 'پومودورو (منٹ)', brk_len: 'وقفہ (منٹ)',
+    export_json: 'ڈیٹا برآمد', import_json: 'ڈیٹا درآمد', reset_all: 'ڈیمو ڈیٹا بحال کریں', left_for_students: 'طلبہ کے لیے باقی', per_subject: 'فی مضمون سیشن', revision_week: 'دہرائی کا ہفتہ', extra: 'اضافی', revision: 'دہرائی', study: 'مطالعہ', moved: 'سیشن منتقل ہو گیا', drag_hint: 'سیشن کو دوسرے دن پر گھسیٹ کر منتقل کریں۔' }
+};
+let lang = store.get('lang', 'en');
+const t = k => (L[lang][k] ?? L.en[k] ?? k);
+const T = k => `<span class="i18n">${t(k)}</span>`;
+
+// ---------- syllabus seed: [chapter, weightage %, difficulty 1–5] ----------
+// Chapter lists follow Punjab Textbook Board editions. Weightages are ILLUSTRATIVE shares of past-paper marks and are editable per chapter.
+const S = (id, name, ur, icon, color, ch) => ({ id, name, ur, icon, color, ch: ch.map((c, i) => ({ id: id + ':' + i, name: c[0], w: c[1], d: c[2] })) });
+const SUBJ = {
+  phy11: S('phy11', 'Physics', 'فزکس', 'atom', '#4f46e5', [['Measurements', 6, 2], ['Vectors and Equilibrium', 9, 3], ['Motion and Force', 11, 4], ['Work and Energy', 8, 3], ['Circular Motion', 9, 4], ['Fluid Dynamics', 7, 3], ['Oscillations', 9, 3], ['Waves', 10, 4], ['Physical Optics', 10, 4], ['Optical Instruments', 8, 3], ['Heat and Thermodynamics', 13, 4]]),
+  phy12: S('phy12', 'Physics', 'فزکس', 'atom', '#4f46e5', [['Electrostatics', 11, 4], ['Current Electricity', 10, 3], ['Electromagnetism', 10, 4], ['Electromagnetic Induction', 11, 4], ['Alternating Current', 10, 4], ['Physics of Solids', 7, 3], ['Electronics', 8, 3], ['Dawn of Modern Physics', 11, 4], ['Atomic Spectra', 9, 4], ['Nuclear Physics', 13, 4]]),
+  chem11: S('chem11', 'Chemistry', 'کیمسٹری', 'flask', '#0d9488', [['Basic Concepts', 8, 3], ['Experimental Techniques', 5, 2], ['Gases', 10, 4], ['Liquids and Solids', 10, 3], ['Atomic Structure', 11, 4], ['Chemical Bonding', 12, 4], ['Thermochemistry', 8, 3], ['Chemical Equilibrium', 11, 4], ['Solutions', 9, 3], ['Electrochemistry', 8, 3], ['Reaction Kinetics', 8, 3]]),
+  chem12: S('chem12', 'Chemistry', 'کیمسٹری', 'flask', '#0d9488', [['Periodic Classification of Elements', 6, 2], ['s-Block Elements', 6, 2], ['Group IIIA and IVA Elements', 6, 2], ['Group VA and VIA Elements', 6, 3], ['Halogens and Noble Gases', 6, 3], ['Transition Elements', 8, 4], ['Fundamental Principles of Organic Chemistry', 8, 3], ['Aliphatic Hydrocarbons', 9, 4], ['Aromatic Hydrocarbons', 7, 3], ['Alkyl Halides', 7, 3], ['Alcohols, Phenols and Ethers', 8, 3], ['Aldehydes and Ketones', 7, 3], ['Carboxylic Acids', 6, 3], ['Macromolecules', 5, 2], ['Common Chemical Industries in Pakistan', 3, 1], ['Environmental Chemistry', 2, 1]]),
+  bio11: S('bio11', 'Biology', 'بیالوجی', 'leaf', '#16a34a', [['Introduction', 4, 1], ['Biological Molecules', 10, 3], ['Enzymes', 6, 3], ['The Cell', 9, 3], ['Variety of Life', 6, 2], ['Kingdom Prokaryotae', 5, 2], ['Kingdom Protista', 4, 2], ['Fungi', 4, 2], ['Kingdom Plantae', 7, 3], ['Kingdom Animalia', 7, 3], ['Bioenergetics', 10, 4], ['Nutrition', 7, 3], ['Gaseous Exchange', 7, 3], ['Transport', 14, 4]]),
+  bio12: S('bio12', 'Biology', 'بیالوجی', 'leaf', '#16a34a', [['Homeostasis', 9, 4], ['Support and Movement', 8, 3], ['Coordination and Control', 12, 4], ['Reproduction', 8, 3], ['Growth and Development', 6, 3], ['Chromosomes and DNA', 10, 4], ['Cell Cycle', 7, 3], ['Variation and Genetics', 12, 5], ['Biotechnology', 7, 3], ['Evolution', 6, 2], ['Ecosystem', 6, 2], ['Some Major Ecosystems', 4, 1], ['Man and His Environment', 5, 2]]),
+  math11: S('math11', 'Mathematics', 'ریاضی', 'calculator', '#dc2626', [['Number Systems', 6, 2], ['Sets, Functions and Groups', 7, 3], ['Matrices and Determinants', 9, 3], ['Quadratic Equations', 8, 3], ['Partial Fractions', 5, 2], ['Sequences and Series', 8, 3], ['Permutation, Combination and Probability', 7, 3], ['Mathematical Induction and Binomial Theorem', 7, 3], ['Fundamentals of Trigonometry', 7, 3], ['Trigonometric Identities', 9, 4], ['Trigonometric Functions and their Graphs', 4, 2], ['Application of Trigonometry', 8, 4], ['Inverse Trigonometric Functions', 6, 3], ['Solutions of Trigonometric Equations', 9, 4]]),
+  math12: S('math12', 'Mathematics', 'ریاضی', 'calculator', '#dc2626', [['Functions and Limits', 10, 3], ['Differentiation', 18, 4], ['Integration', 20, 5], ['Introduction to Analytic Geometry', 14, 4], ['Linear Inequalities and Linear Programming', 8, 2], ['Conic Sections', 18, 5], ['Vectors', 12, 3]]),
+  eng11: S('eng11', 'English', 'انگریزی', 'book', '#d97706', [['Short Stories (Book I)', 20, 2], ['Plays (Book III)', 12, 2], ['Poems (Book III)', 12, 2], ['Letter and Application Writing', 10, 2], ['Story Writing', 8, 2], ['Comprehension and Explanation', 8, 2], ['Translation (Urdu to English)', 15, 3], ['Grammar: Pairs of Words, Punctuation, Idioms', 15, 3]]),
+  eng12: S('eng12', 'English', 'انگریزی', 'book', '#d97706', [['Modern Prose and Heroes (Book II)', 25, 3], ['Goodbye Mr Chips (Novel)', 20, 3], ['Essay Writing', 15, 3], ['Idioms and Phrasal Verbs', 10, 3], ['Direct and Indirect Speech', 10, 2], ['Translation (Urdu to English)', 10, 3], ['Punctuation and Sentence Correction', 10, 2]]),
+  urdu11: S('urdu11', 'Urdu', 'اردو', 'type', '#7c3aed', [['Prose (Nasr)', 20, 3], ['Poetry (Nazm)', 15, 3], ['Ghazal', 15, 3], ['Explanation (Tashreeh)', 15, 3], ['Essay Writing (Mazmoon)', 15, 4], ['Letter and Application', 10, 2], ['Grammar (Qawaid)', 10, 3]]),
+  urdu12: S('urdu12', 'Urdu', 'اردو', 'type', '#7c3aed', [['Prose (Nasr)', 20, 3], ['Poetry (Nazm)', 15, 3], ['Ghazal', 15, 3], ['Explanation (Tashreeh)', 15, 3], ['Essay Writing (Mazmoon)', 15, 4], ['Letter and Dialogue', 10, 2], ['Grammar and Idioms', 10, 3]]),
+  isl11: S('isl11', 'Islamiat', 'اسلامیات', 'globe', '#0891b2', [['Quran and Hadith Studies', 25, 3], ['Beliefs (Aqaid)', 15, 2], ['Worship (Ibadat)', 15, 2], ['Seerat-un-Nabi', 20, 3], ['Islamic Ethics', 15, 2], ['Islamic Civilization', 10, 2]]),
+  pak12: S('pak12', 'Pakistan Studies', 'مطالعہ پاکستان', 'flag', '#0891b2', [['Ideology of Pakistan', 12, 2], ['Making of Pakistan', 14, 3], ['Land and Environment', 10, 2], ['Initial Problems of Pakistan', 10, 3], ['Constitutional Development', 14, 4], ['Pakistan and the Muslim World', 8, 2], ['Economic Development', 10, 3], ['Culture and Education', 10, 2], ['Foreign Policy', 12, 3]]),
+  cs11: S('cs11', 'Computer Science', 'کمپیوٹر سائنس', 'code', '#db2777', [['Basics of Information Technology', 8, 2], ['Information Networks', 10, 3], ['Data Communications', 10, 3], ['Applications and Uses of Computers', 8, 2], ['Computer Architecture', 12, 4], ['Security, Copyright and the Law', 8, 2], ['Windows Operating System', 10, 2], ['Word Processing', 12, 2], ['Spreadsheet', 12, 3], ['Fundamentals of the Internet', 10, 3]]),
+  cs12: S('cs12', 'Computer Science', 'کمپیوٹر سائنس', 'code', '#db2777', [['Data Basics', 8, 2], ['Basic Concepts and Terminology', 8, 2], ['Database Design Process', 10, 3], ['Data Integrity and Normalization', 12, 4], ['Introduction to Microsoft Access', 6, 2], ['Table and Query', 8, 3], ['Forms and Reports', 6, 2], ['Getting Started with C', 10, 3], ['Elements of C', 10, 3], ['Input / Output', 6, 2], ['Decision Constructs', 6, 3], ['Loop Constructs', 6, 3], ['Functions in C', 4, 3]]),
+  acc11: S('acc11', 'Principles of Accounting', 'اصول حساب داری', 'coins', '#4f46e5', [['Introduction to Accounting', 8, 2], ['Accounting Equation', 10, 3], ['Journal', 14, 3], ['Ledger', 12, 3], ['Cash Book', 12, 3], ['Bank Reconciliation', 10, 4], ['Trial Balance and Errors', 10, 4], ['Final Accounts', 24, 5]]),
+  acc12: S('acc12', 'Principles of Accounting', 'اصول حساب داری', 'coins', '#4f46e5', [['Depreciation', 12, 4], ['Capital and Revenue', 8, 3], ['Partnership: Formation', 14, 4], ['Partnership: Admission and Retirement', 16, 5], ['Non-Profit Organisations', 12, 3], ['Single Entry', 10, 4], ['Company Accounts', 16, 5], ['Analysis of Financial Statements', 12, 4]]),
+  eco11: S('eco11', 'Principles of Economics', 'اصول معاشیات', 'trending-up', '#0d9488', [['Introduction to Economics', 10, 2], ['Demand and Supply', 16, 3], ['Consumer Behaviour', 12, 3], ['Production and Costs', 14, 4], ['Market Forms', 14, 4], ['Factors of Production', 12, 3], ['National Income', 12, 3], ['Money and Banking', 10, 3]]),
+  com11: S('com11', 'Principles of Commerce', 'اصول تجارت', 'briefcase', '#d97706', [['Introduction to Commerce', 10, 2], ['Business Organisations', 16, 3], ['Partnership and Companies', 16, 4], ['Trade: Home and Foreign', 16, 3], ['Transport and Warehousing', 12, 2], ['Insurance', 10, 3], ['Advertising and Salesmanship', 10, 2], ['Channels of Distribution', 10, 2]]),
+  bmath11: S('bmath11', 'Business Mathematics', 'کاروباری ریاضی', 'calculator', '#dc2626', [['Fractions and Percentages', 10, 2], ['Ratio and Proportion', 10, 3], ['Simple and Compound Interest', 16, 3], ['Annuities', 14, 4], ['Matrices', 14, 3], ['Linear Equations', 12, 3], ['Progressions', 12, 3], ['Elementary Statistics', 12, 3]]),
+  geo12: S('geo12', 'Commercial Geography', 'تجارتی جغرافیہ', 'globe', '#16a34a', [['Introduction and Natural Resources', 12, 2], ['Agriculture of Pakistan', 18, 3], ['Minerals and Power Resources', 14, 3], ['Industries of Pakistan', 18, 3], ['Transport and Communication', 14, 2], ['Trade of Pakistan', 14, 3], ['Population and Settlements', 10, 2]]),
+  bank12: S('bank12', 'Banking', 'بینکاری', 'coins', '#0891b2', [['Evolution of Banking', 8, 2], ['Types of Banks', 12, 2], ['Central Bank and Monetary Policy', 16, 4], ['Commercial Banking Operations', 16, 3], ['Credit Instruments', 14, 3], ['Letters of Credit and Foreign Exchange', 14, 4], ['Islamic Banking', 10, 3], ['Banking in Pakistan', 10, 2]]),
+  stat12: S('stat12', 'Statistics', 'شماریات', 'bar-chart', '#db2777', [['Introduction and Data Presentation', 10, 2], ['Measures of Central Tendency', 16, 3], ['Measures of Dispersion', 16, 4], ['Index Numbers', 14, 3], ['Probability', 16, 4], ['Correlation and Regression', 16, 4], ['Time Series', 12, 3]]),
+  phy9: S('phy9', 'Physics', 'فزکس', 'atom', '#4f46e5', [['Physical Quantities and Measurement', 8, 2], ['Kinematics', 12, 3], ['Dynamics', 12, 4], ['Turning Effect of Forces', 10, 3], ['Gravitation', 10, 3], ['Work and Energy', 12, 3], ['Properties of Matter', 12, 3], ['Thermal Properties of Matter', 12, 3], ['Transfer of Heat', 12, 2]]),
+  phy10: S('phy10', 'Physics', 'فزکس', 'atom', '#4f46e5', [['Simple Harmonic Motion and Waves', 10, 3], ['Sound', 10, 2], ['Geometrical Optics', 14, 4], ['Electrostatics', 10, 3], ['Current Electricity', 14, 4], ['Electromagnetism', 12, 4], ['Basic Electronics', 10, 3], ['Information and Communication Technology', 10, 2], ['Atomic and Nuclear Physics', 10, 3]]),
+  chem9: S('chem9', 'Chemistry', 'کیمسٹری', 'flask', '#0d9488', [['Fundamentals of Chemistry', 14, 3], ['Structure of Atoms', 12, 3], ['Periodic Table and Periodicity', 12, 3], ['Structure of Molecules', 14, 4], ['Physical States of Matter', 12, 3], ['Solutions', 12, 3], ['Electrochemistry', 12, 4], ['Chemical Reactivity', 12, 3]]),
+  chem10: S('chem10', 'Chemistry', 'کیمسٹری', 'flask', '#0d9488', [['Chemical Equilibrium', 12, 4], ['Acids, Bases and Salts', 14, 3], ['Organic Chemistry', 14, 4], ['Hydrocarbons', 12, 4], ['Biochemistry', 12, 3], ['The Atmosphere', 12, 2], ['Water', 12, 2], ['Chemical Industries', 12, 2]]),
+  bio9: S('bio9', 'Biology', 'بیالوجی', 'leaf', '#16a34a', [['Introduction to Biology', 8, 1], ['Solving a Biological Problem', 8, 2], ['Biodiversity', 10, 2], ['Cells and Tissues', 14, 3], ['Cell Cycle', 10, 3], ['Enzymes', 10, 3], ['Bioenergetics', 14, 4], ['Nutrition', 14, 3], ['Transport', 12, 4]]),
+  bio10: S('bio10', 'Biology', 'بیالوجی', 'leaf', '#16a34a', [['Gaseous Exchange', 10, 2], ['Homeostasis', 12, 3], ['Coordination and Control', 16, 4], ['Support and Movement', 10, 3], ['Reproduction', 14, 3], ['Inheritance', 14, 4], ['Man and His Environment', 12, 2], ['Biotechnology', 6, 3], ['Pharmacology', 6, 2]]),
+  math9: S('math9', 'Mathematics', 'ریاضی', 'calculator', '#dc2626', [['Matrices and Determinants', 8, 3], ['Real and Complex Numbers', 6, 3], ['Logarithms', 6, 3], ['Algebraic Expressions and Formulas', 8, 3], ['Factorization', 8, 3], ['Algebraic Manipulation', 6, 3], ['Linear Equations and Inequalities', 6, 2], ['Linear Graphs', 6, 2], ['Introduction to Coordinate Geometry', 6, 2], ['Congruent Triangles', 6, 3], ['Parallelograms and Triangles', 5, 3], ['Line and Angle Bisectors', 5, 3], ['Sides and Angles of a Triangle', 4, 3], ['Ratio and Proportion', 4, 3], ["Pythagoras' Theorem", 4, 3], ['Theorems Related with Area', 4, 3], ['Practical Geometry: Triangles', 8, 2]]),
+  math10: S('math10', 'Mathematics', 'ریاضی', 'calculator', '#dc2626', [['Quadratic Equations', 10, 3], ['Theory of Quadratic Equations', 10, 4], ['Variations', 8, 3], ['Partial Fractions', 6, 3], ['Sets and Functions', 8, 2], ['Basic Statistics', 8, 2], ['Introduction to Trigonometry', 10, 4], ['Projection of a Side of a Triangle', 5, 3], ['Chords of a Circle', 6, 3], ['Tangent to a Circle', 6, 3], ['Chords and Arcs', 5, 3], ['Angle in a Segment of a Circle', 6, 3], ['Practical Geometry: Circles', 12, 2]]),
+  gmath9: S('gmath9', 'General Mathematics', 'جنرل ریاضی', 'calculator', '#dc2626', [['Percentage, Ratio and Proportion', 12, 2], ['Zakat, Ushr and Inheritance', 12, 2], ['Business Mathematics', 14, 3], ['Financial Mathematics', 12, 3], ['Consumer Mathematics', 12, 2], ['Exponents and Logarithms', 12, 3], ['Arithmetic and Geometric Sequences', 12, 3], ['Sets and Functions', 14, 3]]),
+  gmath10: S('gmath10', 'General Mathematics', 'جنرل ریاضی', 'calculator', '#dc2626', [['Algebraic Formulas and Applications', 14, 3], ['Factorization', 12, 3], ['Algebraic Manipulation', 12, 3], ['Linear Equations and Inequalities', 12, 3], ['Quadratic Equations', 14, 4], ['Matrices and Determinants', 12, 3], ['Fundamentals of Geometry', 12, 2], ['Practical Geometry', 12, 2]]),
+  gsci9: S('gsci9', 'General Science', 'جنرل سائنس', 'beaker', '#0d9488', [['Introduction to Science', 8, 1], ['Our Life and Chemistry', 14, 2], ['Biochemistry and Biotechnology', 14, 3], ['Human Health', 14, 2], ['Diseases: Causes and Prevention', 14, 2], ['Environment and Natural Resources', 12, 2], ['Energy', 12, 3], ['Current Electricity', 12, 3]]),
+  gsci10: S('gsci10', 'General Science', 'جنرل سائنس', 'beaker', '#0d9488', [['Space and Time', 12, 2], ['Earth and Atmosphere', 14, 2], ['Light and Sound', 14, 3], ['Chemistry in Daily Life', 14, 2], ['Plants and Food', 12, 2], ['Human Body Systems', 14, 3], ['Information Technology', 10, 2], ['Pakistan and Science', 10, 1]]),
+  civ9: S('civ9', 'Civics', 'شہریت', 'users', '#db2777', [['Civics and Citizenship', 14, 2], ['State and Government', 16, 3], ['Constitution', 16, 3], ['Rights and Duties', 14, 2], ['Local Government', 14, 2], ['Political Parties and Elections', 14, 3], ['International Organisations', 12, 2]]),
+  civ10: S('civ10', 'Civics', 'شہریت', 'users', '#db2777', [['Islamic Concept of State', 14, 2], ['Constitution of Pakistan 1973', 18, 4], ['Federal and Provincial Governments', 16, 3], ['Judiciary', 14, 3], ['Public Administration', 12, 2], ['Pakistan and the World', 14, 2], ['Social Problems of Pakistan', 12, 2]]),
+  eng9: S('eng9', 'English', 'انگریزی', 'book', '#d97706', [['Textbook Units 1–12 (Comprehension)', 22, 2], ['Translation (Urdu to English)', 12, 3], ['Summary of Poems', 8, 2], ['Letter, Dialogue and Story', 18, 3], ['Paragraph Writing', 8, 2], ['Grammar: Tenses and Parts of Speech', 12, 3], ['Pairs of Words and Sentences', 10, 2], ['Voice and Narration', 10, 3]]),
+  eng10: S('eng10', 'English', 'انگریزی', 'book', '#d97706', [['Textbook Units 1–13 (Comprehension)', 22, 2], ['Translation (Urdu to English)', 12, 3], ['Summary of Poems', 8, 2], ['Letter, Dialogue and Story', 18, 3], ['Paragraph and Essay', 10, 2], ['Grammar: Tenses, Voice, Narration', 18, 3], ['Pairs of Words and Idioms', 12, 2]]),
+  urdu9: S('urdu9', 'Urdu', 'اردو', 'type', '#7c3aed', [['Prose (Nasr)', 20, 3], ['Poetry (Nazm)', 15, 3], ['Ghazal', 15, 3], ['Explanation (Tashreeh)', 15, 3], ['Essay Writing (Mazmoon)', 15, 3], ['Letter and Application', 10, 2], ['Grammar (Qawaid)', 10, 3]]),
+  urdu10: S('urdu10', 'Urdu', 'اردو', 'type', '#7c3aed', [['Prose (Nasr)', 20, 3], ['Poetry (Nazm)', 15, 3], ['Ghazal', 15, 3], ['Explanation (Tashreeh)', 15, 3], ['Essay Writing (Mazmoon)', 15, 3], ['Letter and Dialogue', 10, 2], ['Grammar and Idioms', 10, 3]]),
+  isl9: S('isl9', 'Islamiat', 'اسلامیات', 'globe', '#0891b2', [['Quran: Surah Anfal (selected verses)', 20, 3], ['Hadith Studies', 15, 2], ['Beliefs and Worship', 20, 2], ['Seerat-un-Nabi', 20, 3], ['Islamic Ethics and Society', 15, 2], ['Islamic Personalities', 10, 2]]),
+  pak10: S('pak10', 'Pakistan Studies', 'مطالعہ پاکستان', 'flag', '#0891b2', [['Ideology of Pakistan', 14, 2], ['Making of Pakistan', 16, 3], ['Land of Pakistan', 12, 2], ['History of Pakistan I (1947–71)', 14, 3], ['History of Pakistan II (1971–present)', 14, 3], ['Pakistan in World Affairs', 10, 2], ['Economic Development', 10, 3], ['Population, Society and Culture', 10, 2]])
+};
+const STREAMS = {
+  9: [['science', 'Science'], ['arts', 'Arts']], 10: [['science', 'Science'], ['arts', 'Arts']],
+  11: [['premed', 'Pre-Medical'], ['preeng', 'Pre-Engineering'], ['ics', 'ICS'], ['commerce', 'Commerce']], 12: [['premed', 'Pre-Medical'], ['preeng', 'Pre-Engineering'], ['ics', 'ICS'], ['commerce', 'Commerce']]
+};
+const COMBOS = {
+  '9-science': ['phy9', 'chem9', 'bio9', 'math9', 'eng9', 'urdu9', 'isl9'], '9-arts': ['gsci9', 'gmath9', 'civ9', 'eng9', 'urdu9', 'isl9'],
+  '10-science': ['phy10', 'chem10', 'bio10', 'math10', 'eng10', 'urdu10', 'pak10'], '10-arts': ['gsci10', 'gmath10', 'civ10', 'eng10', 'urdu10', 'pak10'],
+  '11-premed': ['phy11', 'chem11', 'bio11', 'eng11', 'urdu11', 'isl11'], '11-preeng': ['phy11', 'chem11', 'math11', 'eng11', 'urdu11', 'isl11'], '11-ics': ['phy11', 'math11', 'cs11', 'eng11', 'urdu11', 'isl11'], '11-commerce': ['acc11', 'eco11', 'com11', 'bmath11', 'eng11', 'urdu11', 'isl11'],
+  '12-premed': ['phy12', 'chem12', 'bio12', 'eng12', 'urdu12', 'pak12'], '12-preeng': ['phy12', 'chem12', 'math12', 'eng12', 'urdu12', 'pak12'], '12-ics': ['phy12', 'math12', 'cs12', 'eng12', 'urdu12', 'pak12'], '12-commerce': ['acc12', 'geo12', 'bank12', 'stat12', 'eng12', 'urdu12', 'pak12']
+};
+const BOARDS = ['Lahore', 'Rawalpindi', 'Faisalabad', 'Multan', 'Gujranwala', 'Sargodha', 'Karachi', 'Hyderabad', 'Peshawar', 'Quetta', 'Federal'];
+
+// ---------- state ----------
+const DEF = { board: 'Lahore', cls: 12, stream: 'premed', examDate: '2027-03-15', hrsWd: 3, hrsWe: 5, daysOff: [5], pomo: 25, brk: 5, startWd: '16:00', startWe: '10:00' };
+let settings = store.get('settings', null), mastery = store.get('mastery', {}), overrides = store.get('overrides', {}),
+    papers = store.get('papers', []), reviews = store.get('reviews', []), log = store.get('log', []), plan = store.get('plan', { generated: 0, sessions: [] });
+const saveAll = () => { store.set('settings', settings); store.set('mastery', mastery); store.set('overrides', overrides); store.set('papers', papers); store.set('reviews', reviews); store.set('log', log); store.set('plan', plan); };
+
+const subjects = () => (COMBOS[`${settings.cls}-${settings.stream}`] || COMBOS['12-premed']).map(id => SUBJ[id]);
+const subjById = id => SUBJ[id] || subjects()[0];
+const chapters = () => subjects().flatMap(s => s.ch.map(c => ({ ...c, subj: s.id, sname: s.name, color: s.color })));
+const chById = id => { const sid = id.split(':')[0], s = SUBJ[sid]; if (!s) return null; const c = s.ch.find(x => x.id === id); return c ? { ...c, subj: sid, sname: s.name, color: s.color } : null; };
+const W = c => overrides[c.id]?.w ?? c.w;                 // weightage % (editable)
+const D = c => overrides[c.id]?.d ?? c.d;                 // difficulty 1–5 (editable)
+const M = c => mastery[c.id] ?? 0;                        // mastery 0–5
+const setMastery = (id, v) => { mastery[id] = clamp(r1(v), 0, 5); };
+const weakCount = id => papers.reduce((n, p) => n + (p.weak.includes(id) ? 1 : 0), 0);
+const sessLen = () => settings.pomo * 2;                  // one planner session = 2 pomodoros
+const isWeekend = d => [0, 6].includes(dow(d));
+const capacity = d => settings.daysOff.includes(dow(d)) ? 0 : (isWeekend(d) ? settings.hrsWe : settings.hrsWd) * 60;
+
+// ---------- planner algorithm ----------
+// priority = weightage × difficulty × (1 − mastery/5) × weak-chapter boost from logged papers
+const priority = c => W(c) * D(c) * (1 - M(c) / 5) * (1 + .25 * weakCount(c.id));
+function generatePlan() {
+  const today = todayIso(), exam = settings.examDate, total = daysBetween(today, exam), len = sessLen();
+  const history = plan.sessions.filter(s => s.status !== 'todo' || s.date < today);   // keep what already happened
+  const out = [];
+  if (total > 0) {
+    const days = Array.from({ length: total }, (_, i) => { const d = addDays(today, i); return { date: d, slots: Math.floor(capacity(d) / len), revision: total - i <= 7 }; });
+    const chs = chapters(), studyDays = days.filter(d => !d.revision), slots = studyDays.reduce((a, d) => a + d.slots, 0);
+    const pr = chs.map(c => ({ c, p: priority(c) })), sumP = pr.reduce((a, x) => a + x.p, 0) || 1;
+    pr.forEach(x => x.n = x.p > 0 ? Math.max(1, Math.round(slots * x.p / sumP)) : 0);
+    // per-subject queues; chapters interleaved round-robin so heavy chapters recur instead of being crammed together
+    const queues = Object.fromEntries(subjects().map(s => [s.id, []])), maxN = Math.max(0, ...pr.map(x => x.n));
+    pr.sort((a, b) => b.p - a.p);
+    for (let r = 0; r < maxN; r++) pr.forEach(x => { if (x.n > r) queues[x.c.subj].push(x.c); });
+    const weakSeen = new Set();
+    const mk = (date, c, type) => ({ id: uid(), date, subj: c.subj, ch: c.id, mins: len, type, status: 'todo', conf: null });
+    studyDays.forEach(d => {
+      const used = {};
+      for (let k = 0; k < d.slots; k++) {
+        const cands = Object.keys(queues).filter(id => queues[id].length && (used[id] || 0) < 2);   // ≤ 2 sessions of one subject per day
+        if (!cands.length) break;
+        cands.sort((a, b) => queues[b].length - queues[a].length);                               // most remaining demand first → interleaving
+        const c = queues[cands[0]].shift(); used[c.subj] = (used[c.subj] || 0) + 1;
+        let type = 'study'; if (weakCount(c.id) && !weakSeen.has(c.id)) { type = 'extra'; weakSeen.add(c.id); }   // first session of a paper-flagged weak chapter
+        out.push(mk(d.date, c, type));
+      }
+    });
+    // last 7 days: revision only, highest weightage first, still interleaved across subjects
+    const rev = [...chs].sort((a, b) => W(b) * (1 - M(b) / 6) - W(a) * (1 - M(a) / 6)); let ri = 0;
+    days.filter(d => d.revision).forEach(d => {
+      const used = {};
+      for (let k = 0; k < d.slots && rev.length; k++) {
+        let tries = 0, c; do { c = rev[ri % rev.length]; ri++; tries++; } while ((used[c.subj] || 0) >= 2 && tries < rev.length);
+        used[c.subj] = (used[c.subj] || 0) + 1; out.push(mk(d.date, c, 'revision'));
+      }
+    });
+  }
+  plan = { generated: Date.now(), sessions: [...history, ...out] };
+  saveAll();
+  return out.length;
+}
+const moveSession = (id, date) => { const s = plan.sessions.find(x => x.id === id); if (!s || s.date === date) return false; s.date = date; s.moved = true; saveAll(); return true; };
+function completeSession(id, status, conf) {
+  const s = plan.sessions.find(x => x.id === id); if (!s) return;
+  s.status = status; s.conf = conf ?? null; s.doneAt = todayIso();
+  if (status !== 'skipped') {
+    log.push({ date: todayIso(), mins: status === 'partial' ? Math.round(s.mins / 2) : s.mins, subj: s.subj, ch: s.ch });
+    if (conf) setMastery(s.ch, M(chById(s.ch)) + (conf - M(chById(s.ch))) * .5);
+    scheduleReview(s.ch, conf);
+  }
+  saveAll();
+}
+
+// ---------- spaced repetition (SM-2-lite) ----------
+// Ladder +1, +3, +7, +14, +30 days. A rating ≤ 2 resets to +1; 3 shortens the next step (×0.8), 4 keeps it (×1.1), 5 lengthens (×1.3).
+const LADDER = [1, 3, 7, 14, 30];
+function scheduleReview(chId, q) {
+  const r = reviews.find(x => x.ch === chId), today = todayIso();
+  if (!r) reviews.push({ id: uid(), ch: chId, reps: 0, interval: 1, due: addDays(today, 1), last: today, hist: [] });
+  else if (r.due < today && q) rateReview(r.id, q, true);       // an overdue review is cleared by studying the chapter again
+}
+function rateReview(id, q, silent) {
+  const r = reviews.find(x => x.id === id); if (!r) return; const today = todayIso();
+  if (q <= 2) { r.reps = 0; r.interval = 1; }
+  else { r.reps = Math.min(r.reps + 1, LADDER.length - 1); r.interval = Math.max(1, Math.round(LADDER[r.reps] * (q === 5 ? 1.3 : q === 4 ? 1.1 : .8))); }
+  r.due = addDays(today, r.interval); r.last = today; r.hist = [...(r.hist || []), q].slice(-10);
+  const c = chById(r.ch); if (c) setMastery(r.ch, M(c) + (q - M(c)) * .3);
+  if (!silent) { log.push({ date: today, mins: 5, subj: r.ch.split(':')[0], ch: r.ch, review: true }); saveAll(); }
+}
+const dueReviews = () => reviews.filter(r => r.due <= todayIso()).sort((a, b) => a.due.localeCompare(b.due));
+const overdueCount = () => reviews.filter(r => r.due < todayIso()).length;
+
+// ---------- readiness & stats ----------
+const subjReadiness = s => { const tw = s.ch.reduce((a, c) => a + W(c), 0) || 1; return s.ch.reduce((a, c) => a + W(c) * M(c) / 5, 0) / tw * 100; };
+const overallReadiness = () => { const ss = subjects(); return ss.reduce((a, s) => a + subjReadiness(s), 0) / ss.length; };
+const MIN_PER_UNIT = 25;   // minutes needed per (difficulty × missing mastery point) — the what-if model's single tunable
+function projection(hrsPerDay) {
+  const today = todayIso(), total = Math.max(0, daysBetween(today, settings.examDate));
+  let avail = 0; for (let i = 0; i < total; i++) if (!settings.daysOff.includes(dow(addDays(today, i)))) avail += hrsPerDay * 60;
+  const need = chapters().reduce((a, c) => a + (5 - M(c)) * D(c) * MIN_PER_UNIT, 0) || 1;
+  const cov = clamp(avail / need, 0, 1), cur = overallReadiness();
+  return { coverage: cov * 100, projected: cur + (100 - cur) * cov * .9, need: Math.round(need / 60), avail: Math.round(avail / 60) };
+}
+function streak() {
+  const days = new Set(log.map(l => l.date)); let n = 0, d = todayIso();
+  if (!days.has(d)) d = addDays(d, -1);
+  while (days.has(d)) { n++; d = addDays(d, -1); }
+  return n;
+}
+const focusedTotal = () => log.reduce((a, l) => a + l.mins, 0);
+const sessionsPerSubject = () => { const m = {}; plan.sessions.filter(s => s.status === 'done' || s.status === 'partial').forEach(s => m[s.subj] = (m[s.subj] || 0) + 1); return m; };
+
+// ---------- demo seed (first open or "Reset to demo data") ----------
+function seedDemo() {
+  const T = todayIso(), len = 50, past = (d, ch, status, conf, type = 'study') => ({ id: uid(), date: addDays(T, d), subj: ch.split(':')[0], ch, mins: len, type, status, conf, doneAt: addDays(T, d) });
+  settings = { ...DEF };
+  mastery = { 'phy12:0': 4, 'phy12:1': 3.5, 'phy12:2': 2, 'chem12:0': 4, 'chem12:1': 3, 'chem12:2': 3, 'chem12:5': 1.5, 'bio12:0': 3, 'bio12:1': 2.5, 'bio12:2': 1, 'eng12:0': 3, 'eng12:1': 2, 'urdu12:0': 2.5, 'pak12:0': 4, 'pak12:1': 2 };
+  overrides = {};
+  papers = [
+    { id: uid(), subj: 'phy12', year: 2025, board: 'Lahore', score: 61, weak: ['phy12:2', 'phy12:4'], date: addDays(T, -9) },
+    { id: uid(), subj: 'phy12', year: 2024, board: 'Lahore', score: 54, weak: ['phy12:2', 'phy12:8'], date: addDays(T, -16) },
+    { id: uid(), subj: 'chem12', year: 2024, board: 'Lahore', score: 68, weak: ['chem12:5', 'chem12:7'], date: addDays(T, -4) }
+  ];
+  reviews = [
+    { id: uid(), ch: 'phy12:0', reps: 1, interval: 3, due: addDays(T, -1), last: addDays(T, -4), hist: [4] },
+    { id: uid(), ch: 'chem12:0', reps: 0, interval: 1, due: T, last: addDays(T, -1), hist: [] },
+    { id: uid(), ch: 'pak12:0', reps: 1, interval: 3, due: T, last: addDays(T, -3), hist: [5] },
+    { id: uid(), ch: 'bio12:0', reps: 2, interval: 7, due: addDays(T, 5), last: addDays(T, -2), hist: [3, 4] },
+    { id: uid(), ch: 'eng12:0', reps: 0, interval: 1, due: addDays(T, 1), last: T, hist: [] }
+  ];
+  const sessions = [past(-4, 'phy12:0', 'done', 4), past(-4, 'phy12:1', 'done', 3), past(-3, 'chem12:0', 'done', 4), past(-3, 'pak12:0', 'done', 5), past(-3, 'chem12:1', 'done', 3),
+    past(-2, 'bio12:0', 'done', 3), past(-2, 'bio12:1', 'partial', 2), past(-1, 'chem12:2', 'done', 3), past(-1, 'eng12:0', 'done', 3), past(-1, 'urdu12:0', 'skipped', null)];
+  log = sessions.filter(s => s.status !== 'skipped').map(s => ({ date: s.date, mins: s.status === 'partial' ? 25 : 50, subj: s.subj, ch: s.ch }));
+  plan = { generated: 0, sessions };
+  generatePlan();
+}
+if (!settings) seedDemo();
+
+// ---------- modal ----------
+const modal = $('#modal'), scrim = $('#scrim');
+function openModal(html) { modal.innerHTML = `<div class="mh"><h2 id="modalTitle">${html.title}</h2><button class="btn icon ghost" id="mClose" aria-label="Close">${ic('x')}</button></div>${html.body}`; scrim.classList.add('open'); document.body.style.overflow = 'hidden'; $('#mClose').onclick = closeModal; (modal.querySelector('input,select,button:not(#mClose)') || $('#mClose')).focus(); }
+function closeModal() { scrim.classList.remove('open'); document.body.style.overflow = ''; }
+scrim.addEventListener('click', e => { if (e.target === scrim) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && scrim.classList.contains('open')) closeModal(); });
+
+// ---------- Pomodoro timer (global so it keeps running across routes) ----------
+const timer = { sid: null, mode: 'work', block: 0, blocks: 2, total: 0, remaining: 0, endAt: 0, running: false, iv: null };
+const fmtT = s => `${pad2(Math.floor(s / 60))}:${pad2(s % 60)}`;
+function beep() { try { const ac = new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = 880; g.gain.setValueAtTime(.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(.2, ac.currentTime + .02); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + .6); o.start(); o.stop(ac.currentTime + .65); } catch {} }
+function askNotify() { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {}); }
+function notify(title, body) { try { if ('Notification' in window && Notification.permission === 'granted') new Notification(title, { body }); } catch {} }
+// TODO(student): push notifications that fire when the tab is closed need a service worker + a push backend (Web Push / FCM). Hook the reminder schedule here.
+function timerStart(sid) { const s = plan.sessions.find(x => x.id === sid); if (!s) return; Object.assign(timer, { sid, mode: 'work', block: 0, blocks: Math.max(1, Math.round(s.mins / settings.pomo)), total: settings.pomo * 60 }); timer.remaining = timer.total; askNotify(); timerResume(); }
+function timerResume() { timer.running = true; timer.endAt = Date.now() + timer.remaining * 1000; clearInterval(timer.iv); timer.iv = setInterval(tick, 500); renderTimer(); }
+function timerPause() { timer.running = false; timer.remaining = Math.max(0, Math.round((timer.endAt - Date.now()) / 1000)); clearInterval(timer.iv); renderTimer(); }
+function timerReset() { clearInterval(timer.iv); Object.assign(timer, { sid: null, mode: 'work', block: 0, total: 0, remaining: 0, running: false }); renderTimer(); }
+function tick() { timer.remaining = Math.max(0, Math.round((timer.endAt - Date.now()) / 1000)); renderTimer(); if (timer.remaining <= 0) timerEnd(); }
+function timerEnd() {
+  clearInterval(timer.iv); timer.running = false; beep();
+  const s = plan.sessions.find(x => x.id === timer.sid), c = s && chById(s.ch);
+  if (timer.mode === 'work') {
+    timer.block++;
+    if (timer.block >= timer.blocks) { notify('Session complete', c ? `${c.sname} · ${c.name}` : 'Rate your confidence'); toast('Focus block complete — rate the session', 'ok', 'award'); const sid = timer.sid; timerReset(); openRating(sid, 'done'); return; }
+    notify('Break time', `${settings.brk} minutes — stretch, drink water`); toast(`Break: ${settings.brk} min`, 'ok', 'coffee');
+    Object.assign(timer, { mode: 'break', total: settings.brk * 60 }); timer.remaining = timer.total; timerResume();
+  } else { notify('Back to focus', c ? c.name : ''); toast('Break over — next focus block', '', 'zap'); Object.assign(timer, { mode: 'work', total: settings.pomo * 60 }); timer.remaining = timer.total; timerResume(); }
+}
+function renderTimer() {
+  const el = $('#tTime'); if (!el) return;
+  const s = timer.sid && plan.sessions.find(x => x.id === timer.sid), c = s && chById(s.ch), active = !!timer.sid;
+  el.textContent = active ? fmtT(timer.remaining) : fmtT(settings.pomo * 60);
+  $('#tMode').textContent = active ? (timer.mode === 'work' ? `${t('work')} ${timer.block + 1}/${timer.blocks}` : t('brk')) : t('work');
+  const fg = $('#tRingFg'); fg.classList.toggle('brk', timer.mode === 'break'); ringSet(fg, active ? timer.remaining / timer.total : 1);
+  $('#tSess').textContent = c ? `${c.sname} · ${c.name}` : 'Pick a session below to start';
+  $('#tPlay').innerHTML = (timer.running ? ic('pause') : ic('play')) + `<span>${timer.running ? t('pause') : active ? t('resume') : t('start')}</span>`;
+  $('#tPlay').disabled = !active; $('#tSkipBrk').classList.toggle('hidden', !(active && timer.mode === 'break')); $('#tFinish').classList.toggle('hidden', !active);
+}
+
+// ---------- session & rating modals ----------
+const STATUS_IC = { done: 'check-circle', partial: 'activity', skipped: 'skip' };
+function openSession(id) {
+  const s = plan.sessions.find(x => x.id === id), c = chById(s.ch), sb = subjById(s.subj), today = todayIso();
+  openModal({ title: esc(c.name), body: `
+    <div class="chips" style="margin-bottom:12px"><span class="chip static" style="color:${sb.color}">${ic(sb.icon)} ${esc(sb.name)}</span><span class="chip static">${ic('calendar')} ${fmtD(s.date, { weekday: 'short', day: 'numeric', month: 'short' })}</span><span class="chip static">${ic('clock')} ${s.mins} min</span><span class="chip static">${ic('layers')} ${T(s.type)}</span>${s.status !== 'todo' ? `<span class="chip static">${ic(STATUS_IC[s.status])} ${s.status}${s.conf ? ' · ' + s.conf + '/5' : ''}</span>` : ''}</div>
+    <div class="grid3" style="margin-bottom:12px">
+      <div class="kpi"><div><div class="v">${W(c)}%</div><div class="l">${T('weightage')}</div></div></div>
+      <div class="kpi"><div><div class="v">${D(c)}/5</div><div class="l">${T('difficulty')}</div></div></div>
+      <div class="kpi"><div><div class="v">${M(c)}/5</div><div class="l">${T('mastery')}</div></div></div>
+    </div>
+    ${s.status === 'todo' ? `<div class="actions">
+      <button class="btn primary" id="sStart">${ic('play')} ${T('start')} Pomodoro</button>
+      <button class="btn ok" id="sDone">${ic('check')} ${T('done')}</button>
+      <button class="btn" id="sPart">${ic('activity')} ${T('partial')}</button>
+      <button class="btn ghost" id="sSkip">${ic('skip')} ${T('skip')}</button></div>
+    <div class="grid2" style="margin-top:14px;align-items:end"><div class="field"><label for="sMove">Move to date</label><input type="date" id="sMove" value="${s.date}" min="${today}"></div><button class="btn" id="sMoveBtn">${ic('move')} Move</button></div>` : `<div class="actions"><button class="btn" id="sReopen">${ic('rotate')} Reopen</button></div>`}
+    <div class="actions"><button class="btn danger sm" id="sDel">${ic('trash')} ${T('delete')}</button></div>` });
+  const refresh = () => { closeModal(); route(); };
+  $('#sStart')?.addEventListener('click', () => { closeModal(); timerStart(id); if (!location.hash.startsWith('#plan')) location.hash = 'plan'; else renderTimer(); $('#tTime')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+  $('#sDone')?.addEventListener('click', () => openRating(id, 'done'));
+  $('#sPart')?.addEventListener('click', () => openRating(id, 'partial'));
+  $('#sSkip')?.addEventListener('click', () => { completeSession(id, 'skipped'); toast('Session skipped'); refresh(); });
+  $('#sMoveBtn')?.addEventListener('click', () => { if (moveSession(id, $('#sMove').value)) { toast(t('moved'), 'ok', 'move'); weekStart = mondayOf($('#sMove').value); } refresh(); });
+  $('#sReopen')?.addEventListener('click', () => { s.status = 'todo'; s.conf = null; saveAll(); refresh(); });
+  $('#sDel').onclick = () => { plan.sessions = plan.sessions.filter(x => x.id !== id); saveAll(); toast('Session removed'); refresh(); };
+}
+const CONF = ['Lost', 'Shaky', 'Okay', 'Good', 'Solid'];
+function openRating(id, status) {
+  const s = plan.sessions.find(x => x.id === id); if (!s) return; const c = chById(s.ch);
+  openModal({ title: `${status === 'partial' ? 'Partially done' : 'Session done'} · ${esc(c.name)}`, body: `<p class="muted i18n" style="margin:0 0 12px">${t('confidence')}</p>
+    <div class="rate" id="confRate" style="justify-content:center;gap:8px">${[1, 2, 3, 4, 5].map(q => `<button data-q="${q}" aria-label="${CONF[q - 1]}" style="width:56px;height:56px;display:grid;place-items:center;line-height:1"><span>${q}</span><small style="font-size:.6rem;font-weight:600;color:var(--muted)">${CONF[q - 1]}</small></button>`).join('')}</div>
+    <p class="muted sm" style="text-align:center;margin:12px 0 0">Updates chapter mastery and schedules a review (+1 day first, then +3, +7, +14, +30).</p>` });
+  $$('#confRate button').forEach(b => b.onclick = () => { completeSession(id, status, +b.dataset.q); closeModal(); toast(`${t('saved')} · ${t('mastery')} ${M(chById(s.ch))}/5`, 'ok', 'award'); route(); });
+}
+
+// ---------- Plan view: KPIs · week grid · Today panel ----------
+const view = $('#view');
+let weekStart = mondayOf(todayIso());
+function renderPlan() {
+  const today = todayIso(), left = Math.max(0, daysBetween(today, settings.examDate)), ready = overallReadiness();
+  view.innerHTML = `
+  <div class="kpis stagger">
+    <div class="kpi"><div class="ico">${ic('calendar')}</div><div><div class="v" id="kDays">0</div><div class="l">${T('days_left')} · ${esc(fmtD(settings.examDate, { day: 'numeric', month: 'short', year: 'numeric' }))}</div></div></div>
+    <div class="kpi warn"><div class="ico">${ic('flame')}</div><div><div class="v" id="kStreak">0</div><div class="l">${T('streak')}</div></div></div>
+    <div class="kpi ok"><div class="ico">${ic('clock')}</div><div><div class="v" id="kMins">0</div><div class="l">${T('focused')}</div></div></div>
+    <div class="kpi vio"><div class="ico">${ic('target')}</div><div><div class="v" id="kReady">0%</div><div class="l">${T('readiness')} · ${esc(subjects().map(s => s.name).length)} subjects</div></div></div>
+  </div>
+  <div class="plan-layout">
+    <section class="panel" aria-labelledby="weekTitle">
+      <div class="weekbar">
+        <button class="btn icon" id="wPrev" aria-label="Previous week">${ic('chevron-left')}</button>
+        <button class="btn icon" id="wNext" aria-label="Next week">${ic('chevron-right')}</button>
+        <button class="btn sm" id="wToday">${T('this_week')}</button>
+        <h2 class="title" id="weekTitle"></h2>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn sm" id="wPrint">${ic('printer')} ${T('print')}</button>
+        <button class="btn sm" id="wIcs">${ic('download')} ${T('ics')}</button>
+        <button class="btn sm primary" id="wRegen">${ic('refresh')} ${T('regenerate')}</button>
+      </div>
+      <div class="week stagger" id="week"></div>
+      <p class="muted sm noprint" style="margin:10px 0 0;display:flex;align-items:center;gap:6px">${ic('move')} ${T('drag_hint')} <span class="tag revision" style="background:#f3e8ff;color:var(--p2)">${T('revision_week')}</span> = last 7 days before the exam.</p>
+    </section>
+    <aside class="panel today" aria-labelledby="todayTitle">
+      <div class="tdate">${esc(fmtD(today, { weekday: 'long', day: 'numeric', month: 'long' }))}</div>
+      <h2 id="todayTitle">${ic('zap')} ${T('today')}</h2>
+      <div class="timer">
+        <div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="gradRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="tRingFg" cx="60" cy="60" r="52"/></svg><div class="lbl"><div><b id="tTime">25:00</b><span id="tMode">Focus</span></div></div></div>
+        <div class="tsess" id="tSess"></div>
+        <div class="tctl">
+          <button class="btn primary" id="tPlay">${ic('play')}<span>${t('start')}</span></button>
+          <button class="btn icon" id="tReset" aria-label="Reset timer">${ic('rotate')}</button>
+          <button class="btn sm hidden" id="tSkipBrk">${ic('skip')} Skip break</button>
+          <button class="btn sm ok hidden" id="tFinish">${ic('check')} Finish</button>
+        </div>
+      </div>
+      <div class="tlist" id="tList"></div>
+      <div class="miniring"><svg viewBox="0 0 60 60" aria-hidden="true"><circle class="bg" cx="30" cy="30" r="25"/><circle class="fg" id="mRing" cx="30" cy="30" r="25"/></svg><div><b id="mReady" style="font-size:1.2rem">0%</b> <span class="muted sm">${T('readiness')}</span><div class="streak" id="streakDots" aria-label="Last 14 study days"></div></div></div>
+    </aside>
+  </div>`;
+  countUp($('#kDays'), left); countUp($('#kStreak'), streak()); countUp($('#kMins'), focusedTotal()); countUp($('#kReady'), ready, { fmt: v => Math.round(v) + '%' }); countUp($('#mReady'), ready, { fmt: v => Math.round(v) + '%' });
+  requestAnimationFrame(() => ringSet($('#mRing'), ready / 100));
+  const days = new Set(log.map(l => l.date)); $('#streakDots').innerHTML = Array.from({ length: 14 }, (_, i) => { const d = addDays(today, i - 13); return `<i class="${days.has(d) ? (d === today ? 'hi' : 'on') : ''}" title="${d}"></i>`; }).join('');
+  $('#wPrev').onclick = () => { weekStart = addDays(weekStart, -7); renderWeek(); }; $('#wNext').onclick = () => { weekStart = addDays(weekStart, 7); renderWeek(); }; $('#wToday').onclick = () => { weekStart = mondayOf(today); renderWeek(); };
+  $('#wPrint').onclick = () => window.print(); $('#wIcs').onclick = exportIcs;
+  $('#wRegen').onclick = () => { const n = generatePlan(); toast(`${n} ${t('sessions')} ${t('planned')}`, 'ok', 'sparkles'); renderPlan(); };
+  $('#tPlay').onclick = () => timer.running ? timerPause() : timerResume(); $('#tReset').onclick = timerReset;
+  $('#tSkipBrk').onclick = () => { timer.remaining = 0; timerEnd(); }; $('#tFinish').onclick = () => { const sid = timer.sid; timerReset(); openRating(sid, 'done'); };
+  renderWeek(); renderTodayList(); renderTimer(); animateIn(view);
+}
+function sessHtml(s) {
+  const c = chById(s.ch), sb = subjById(s.subj); if (!c) return '';
+  return `<div class="sess ${s.status} ${s.type}" draggable="${s.status === 'todo'}" data-id="${s.id}" style="--sc:${sb.color}" role="button" tabindex="0" aria-label="${esc(c.name)}, ${esc(sb.name)}, ${s.mins} minutes">
+    <div class="s"><span>${ic(sb.icon)} ${esc(lang === 'ur' ? sb.ur : sb.name)}</span>${s.type !== 'study' ? `<span class="tp ${s.type}">${t(s.type)}</span>` : ''}</div>
+    <div class="c">${esc(c.name)}</div>
+    <div class="m"><span>${ic('clock')} ${s.mins}m</span>${s.status !== 'todo' ? ic(STATUS_IC[s.status]) : s.moved ? ic('move') : ''}</div></div>`;
+}
+function renderWeek() {
+  const today = todayIso(), end = addDays(weekStart, 6);
+  $('#weekTitle').textContent = `${fmtD(weekStart)} – ${fmtD(end, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  const revStart = addDays(settings.examDate, -7);
+  $('#week').innerHTML = Array.from({ length: 7 }, (_, i) => {
+    const d = addDays(weekStart, i), list = plan.sessions.filter(s => s.date === d), mins = list.filter(s => s.status !== 'skipped').reduce((a, s) => a + s.mins, 0), off = capacity(d) === 0;
+    const label = d === settings.examDate ? `<div class="empty">${ic('graduation')}Exam day</div>` : d > settings.examDate ? '' : d >= revStart ? `<div class="sm" style="text-align:center;color:var(--p2);font-weight:700;padding:2px 0">${T('revision_week')}</div>` : '';
+    return `<div class="day ${d === today ? 'today' : ''} ${off ? 'off' : ''} ${d < today ? 'past' : ''}" data-date="${d}">
+      <div class="dh"><b>${DAYN[dow(d)]}</b><span class="d">${esc(fmtD(d))}</span></div>${label}
+      ${list.map(sessHtml).join('') || (off && d < settings.examDate ? `<div class="empty sm">${ic('coffee')}Day off</div>` : d < settings.examDate && d >= today ? `<div class="empty sm">${ic('sticky-note')}Free</div>` : '')}
+      <div class="mins">${mins ? `${fmtMin(mins)} · ${list.length} ${t('sessions')}` : ''}</div></div>`;
+  }).join('');
+  $$('.sess', $('#week')).forEach(el => {
+    el.onclick = () => openSession(el.dataset.id); el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSession(el.dataset.id); } };
+    el.ondragstart = e => { e.dataTransfer.setData('text/plain', el.dataset.id); e.dataTransfer.effectAllowed = 'move'; el.classList.add('dragging'); }; el.ondragend = () => el.classList.remove('dragging');
+  });
+  $$('.day', $('#week')).forEach(col => {
+    col.ondragover = e => { if (col.dataset.date >= today) { e.preventDefault(); col.classList.add('over'); } }; col.ondragleave = () => col.classList.remove('over');
+    col.ondrop = e => { e.preventDefault(); col.classList.remove('over'); if (moveSession(e.dataTransfer.getData('text/plain'), col.dataset.date)) { toast(t('moved'), 'ok', 'move'); renderWeek(); renderTodayList(); } };
+  });
+  [...$('#week').children].forEach((el, i) => el.style.setProperty('--i', i));
+  const tcol = $('.day.today', $('#week')); if (tcol && window.innerWidth <= 860) tcol.scrollIntoView({ inline: 'start', block: 'nearest' });
+}
+function renderTodayList() {
+  const today = todayIso(), list = plan.sessions.filter(s => s.date === today);
+  $('#tList').innerHTML = list.length ? list.map(s => { const c = chById(s.ch), sb = subjById(s.subj); return `<div class="trow ${s.status}" style="--sc:${sb.color}"><span class="dot"></span><div class="t"><b>${esc(c.name)}</b><span>${esc(sb.name)} · ${s.mins} min${s.type !== 'study' ? ' · ' + t(s.type) : ''}</span></div>
+    ${s.status === 'todo' ? `<button class="btn icon sm primary" data-start="${s.id}" aria-label="Start ${esc(c.name)}">${ic('play')}</button><button class="btn icon sm" data-open="${s.id}" aria-label="Open ${esc(c.name)}">${ic('edit')}</button>` : `<span style="color:${s.status === 'done' ? 'var(--ok)' : 'var(--muted)'}">${ic(STATUS_IC[s.status])}</span>`}</div>`; }).join('')
+    : `<div class="empty">${ic('coffee')}${T('no_sessions')}</div>`;
+  $$('[data-start]').forEach(b => b.onclick = () => { timerStart(b.dataset.start); $('#tTime').scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+  $$('[data-open]').forEach(b => b.onclick = () => openSession(b.dataset.open));
+}
+
+// ---------- Subjects view: readiness rings · what-if · weightage heatmaps ----------
+const lerp = (a, b, f) => Math.round(a + (b - a) * f);
+const heatColor = f => `rgb(${lerp(238, 79, f)},${lerp(242, 70, f)},${lerp(255, 229, f)})`;
+function ringCard(label, pct, color, cls = '') { return `<div class="rcard ${cls}"><div class="wrap"><svg viewBox="0 0 60 60" aria-hidden="true"><circle class="bg" cx="30" cy="30" r="25"/><circle class="fg" cx="30" cy="30" r="25" data-frac="${pct / 100}" style="stroke:${color}"/></svg><div class="num" data-count="${pct}">0%</div></div><div class="nm" title="${esc(label)}">${esc(label)}</div></div>`; }
+function renderSubjects() {
+  const ss = subjects(), per = sessionsPerSubject(), maxPer = Math.max(1, ...Object.values(per));
+  view.innerHTML = `
+  <div class="rings stagger">${ringCard(t('readiness'), overallReadiness(), '#fff', 'all')}${ss.map(s => ringCard(lang === 'ur' ? s.ur : s.name, subjReadiness(s), s.color)).join('')}</div>
+  <div class="two" style="margin-bottom:16px">
+    <section class="panel"><h2>${ic('sliders')} ${T('what_if')} <span id="wiH" style="color:var(--p)">${settings.hrsWd}</span> ${T('hours_day')}?</h2>
+      <input type="range" id="wiRange" min="0.5" max="10" step="0.5" value="${settings.hrsWd}" aria-label="Hours per day" style="margin:10px 0">
+      <div class="whatif"><div><div class="muted sm">${T('projected')}</div><div class="big" id="wiProj">0%</div><div class="bar" style="margin-top:6px"><i id="wiBar" style="background:var(--grad)"></i></div></div>
+      <div><div class="muted sm">${T('coverage')}</div><div class="big" id="wiCov">0%</div><div class="muted sm" id="wiNote"></div></div></div>
+      <p class="muted sm" style="margin:10px 0 0">Model: every chapter needs (5 − mastery) × difficulty × ${MIN_PER_UNIT} min. Coverage = available ÷ needed; projected readiness fills 90% of the remaining gap at full coverage.</p>
+    </section>
+    <section class="panel"><h2>${ic('bar-chart')} ${T('per_subject')}</h2><div style="margin-top:10px">${ss.map(s => `<div class="hbar"><span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}</span><div class="bar"><i style="--sc:${s.color};width:0" data-w="${(per[s.id] || 0) / maxPer * 100}"></i></div><b>${per[s.id] || 0}</b></div>`).join('')}</div>
+      <p class="muted sm" style="margin:10px 0 0">${T('focused')}: <b>${focusedTotal().toLocaleString('en-PK')}</b> · ${T('streak')}: <b>${streak()}</b></p></section>
+  </div>
+  <div class="legend" style="margin-bottom:10px">${ic('info')} ${T('heat_hint')} <span class="sw"></span> ${T('weightage')} →</div>
+  <div class="stagger">${ss.map(s => { const maxW = Math.max(...s.ch.map(W)); return `<section class="panel subj" style="--sc:${s.color}">
+    <div class="sh"><span class="ico">${ic(s.icon)}</span><h3>${esc(s.name)} <span class="muted sm">· ${s.ch.length} chapters · <span class="i18n">${t('mastery')}</span> ${Math.round(subjReadiness(s))}%</span></h3><div class="bar" style="max-width:220px"><i data-w="${subjReadiness(s)}"></i></div></div>
+    <div class="heat">${s.ch.map(c => { const f = W(c) / maxW, m = M(c); return `<button class="tile ${f > .55 ? 'dark' : ''}" style="background:${heatColor(f)}" data-ch="${c.id}" aria-label="${esc(c.name)}, weightage ${W(c)}%, difficulty ${D(c)}, mastery ${m}">
+      <span class="n">${esc(c.name)}</span><span class="f"><span>${W(c)}% <span class="muted">· D${D(c)}</span></span><span class="ms" title="Mastery ${m}/5">${[1, 2, 3, 4, 5].map(i => `<i class="${m >= i - .25 ? 'on' : ''}"></i>`).join('')}</span></span></button>`; }).join('')}</div></section>`; }).join('')}</div>`;
+  requestAnimationFrame(() => { $$('.rcard .fg').forEach(el => ringSet(el, +el.dataset.frac)); $$('[data-w]').forEach(el => el.style.width = el.dataset.w + '%'); });
+  $$('.rcard .num').forEach(el => countUp(el, +el.dataset.count, { fmt: v => Math.round(v) + '%' }));
+  const wi = () => { const h = +$('#wiRange').value, p = projection(h); $('#wiH').textContent = h; $('#wiProj').textContent = Math.round(p.projected) + '%'; $('#wiCov').textContent = Math.round(p.coverage) + '%'; $('#wiBar').style.width = p.projected + '%'; $('#wiNote').textContent = `${p.avail} h available · ${p.need} h needed`; };
+  $('#wiRange').oninput = wi; wi();
+  $$('.tile').forEach(b => b.onclick = () => openChapter(b.dataset.ch));
+  animateIn(view);
+}
+function openChapter(id) {
+  const c = chById(id), sb = subjById(c.subj), r = reviews.find(x => x.ch === id);
+  openModal({ title: esc(c.name), body: `<p class="muted sm" style="margin:0 0 12px">${ic(sb.icon)} ${esc(sb.name)} · ${weakCount(id) ? `flagged weak in ${weakCount(id)} paper(s)` : 'not flagged in papers'}${r ? ` · next review ${esc(fmtD(r.due))}` : ''}</p>
+    <div class="grid3"><div class="field"><label for="cW">${T('weightage')} %</label><input type="number" id="cW" min="0" max="100" step="1" value="${W(c)}"></div>
+    <div class="field"><label for="cD">${T('difficulty')}</label><select id="cD">${[1, 2, 3, 4, 5].map(d => `<option value="${d}" ${d === D(c) ? 'selected' : ''}>${d} — ${['Easy', 'Light', 'Medium', 'Hard', 'Very hard'][d - 1]}</option>`).join('')}</select></div>
+    <div class="field"><label for="cM">${T('mastery')} <b id="cMv">${M(c)}</b>/5</label><input type="range" id="cM" min="0" max="5" step="0.5" value="${M(c)}"></div></div>
+    <div class="actions"><button class="btn primary" id="cSave">${ic('check')} ${T('save')}</button><button class="btn" id="cReset">${ic('rotate')} Default weightage</button><button class="btn ghost" id="cCancel">${T('cancel')}</button></div>` });
+  $('#cM').oninput = e => $('#cMv').textContent = e.target.value;
+  $('#cSave').onclick = () => { overrides[id] = { w: clamp(+$('#cW').value || 0, 0, 100), d: +$('#cD').value }; setMastery(id, +$('#cM').value); saveAll(); closeModal(); toast(t('saved'), 'ok'); renderSubjects(); };
+  $('#cReset').onclick = () => { delete overrides[id]; saveAll(); closeModal(); renderSubjects(); };
+  $('#cCancel').onclick = closeModal;
+}
+
+// ---------- Revise view: spaced-repetition queue ----------
+function renderRevise() {
+  const today = todayIso(), due = dueReviews(), up = reviews.filter(r => r.due > today).sort((a, b) => a.due.localeCompare(b.due)).slice(0, 12);
+  const row = (r, rate) => { const c = chById(r.ch); if (!c) return ''; const sb = subjById(c.subj), od = r.due < today; return `<div class="row ${od ? 'overdue' : ''}" style="--sc:${sb.color}">
+    <span style="color:${sb.color}">${ic(sb.icon)}</span><div class="t"><b>${esc(c.name)}</b><span>${esc(sb.name)} · step ${r.reps + 1}/5 · ${od ? `<b style="color:var(--bad)">${t('overdue')} ${-daysBetween(today, r.due)}d</b>` : r.due === today ? t('due_today') : esc(fmtD(r.due, { weekday: 'short', day: 'numeric', month: 'short' }))}${r.hist?.length ? ' · last ' + r.hist.at(-1) + '/5' : ''}</span></div>
+    ${rate ? `<div class="rate" aria-label="${t('rate')}">${[1, 2, 3, 4, 5].map(q => `<button data-r="${r.id}" data-q="${q}" aria-label="Rate ${q}">${q}</button>`).join('')}</div>` : `<span class="tag">+${r.interval}d</span>`}</div>`; };
+  view.innerHTML = `<div class="two">
+    <section class="panel"><div class="phead"><h2>${ic('brain')} ${T('due_today')} <span class="tag" style="${due.length ? 'background:var(--bad-soft);color:var(--bad)' : ''}">${due.length}</span></h2><span class="muted sm i18n">${t('rate')}: 1 = ${CONF[0]} … 5 = ${CONF[4]}</span></div>
+      <div class="list stagger">${due.map(r => row(r, true)).join('') || `<div class="empty">${ic('check-circle')}${T('nothing_due')}</div>`}</div></section>
+    <div><section class="panel" style="margin-bottom:14px"><h2>${ic('calendar')} ${T('upcoming')}</h2><div class="list stagger" style="margin-top:10px">${up.map(r => row(r, false)).join('') || `<div class="empty sm">${ic('sticky-note')}No upcoming reviews yet.</div>`}</div></section>
+    <section class="panel"><h2>${ic('help')} How intervals work</h2><p class="muted sm" style="margin:8px 0 0">After a completed session the chapter is due the next day. Each rating moves it along the ladder <b>+1 → +3 → +7 → +14 → +30 days</b>. Rating 1–2 resets to +1, rating 3 shortens the step (×0.8), 4 keeps it (×1.1) and 5 lengthens it (×1.3). Ratings also nudge chapter mastery by 30% of the gap.</p>
+      <!-- TODO(student): flashcards per chapter — attach a deck of Q/A cards to each review and show them before the rating buttons. -->
+    </section></div></div>`;
+  $$('[data-r]').forEach(b => b.onclick = () => { rateReview(b.dataset.r, +b.dataset.q); toast(`${t('saved')} · next in ${reviews.find(x => x.id === b.dataset.r).interval}d`, 'ok', 'brain'); renderRevise(); updateNavBadges(); });
+  animateIn(view);
+}
+
+// ---------- Papers view: attempts · score trend · weak chapters ----------
+let paperSubj = null;
+function renderPapers() {
+  const ss = subjects(); if (!paperSubj || !ss.find(s => s.id === paperSubj)) paperSubj = (papers[0] && ss.find(s => s.id === papers[0].subj)) ? papers[0].subj : ss[0].id;
+  const sb = subjById(paperSubj), mine = papers.filter(p => p.subj === paperSubj).sort((a, b) => a.date.localeCompare(b.date));
+  const freq = {}; papers.forEach(p => p.weak.forEach(id => freq[id] = (freq[id] || 0) + 1)); const weak = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 10), maxF = Math.max(1, ...weak.map(w => w[1]));
+  view.innerHTML = `<div class="two">
+    <div><section class="panel" style="margin-bottom:14px"><div class="phead"><h2>${ic('trending-up')} ${T('score_trend')}</h2><select id="pSubj" aria-label="Subject" style="width:auto;min-width:160px">${ss.map(s => `<option value="${s.id}" ${s.id === paperSubj ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div>
+      <div class="chart" id="pChart"></div></section>
+    <section class="panel"><h2>${ic('file')} Logged attempts <span class="tag">${papers.length}</span></h2>
+      <div style="overflow-x:auto;margin-top:8px"><table><thead><tr><th>Subject</th><th>Paper</th><th>Score</th><th>Weak chapters</th><th></th></tr></thead><tbody>
+      ${[...papers].sort((a, b) => b.date.localeCompare(a.date)).map(p => { const s = subjById(p.subj); return `<tr><td style="white-space:nowrap"><span style="color:${s.color}">${ic(s.icon)}</span> ${esc(s.name)}</td><td style="white-space:nowrap">${p.year} · ${esc(p.board)}</td><td><b style="color:${p.score >= 70 ? 'var(--ok)' : p.score >= 50 ? 'var(--warn)' : 'var(--bad)'}">${p.score}%</b></td><td><div class="chips">${p.weak.map(id => `<span class="chip static sm">${esc(chById(id)?.name || id)}</span>`).join('') || '<span class="muted sm">—</span>'}</div></td><td><button class="btn icon sm ghost" data-del="${p.id}" aria-label="Delete attempt">${ic('trash')}</button></td></tr>`; }).join('') || `<tr><td colspan="5" class="empty">${ic('file')}No papers logged yet.</td></tr>`}</tbody></table></div></section></div>
+    <div><section class="panel" style="margin-bottom:14px"><h2>${ic('plus')} ${T('log_paper')}</h2>
+      <div class="grid2" style="margin-top:10px"><div class="field"><label for="fSubj">Subject</label><select id="fSubj">${ss.map(s => `<option value="${s.id}" ${s.id === paperSubj ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div>
+      <div class="field"><label for="fYear">Year</label><select id="fYear">${Array.from({ length: 11 }, (_, i) => 2026 - i).map(y => `<option ${y === 2025 ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+      <div class="field"><label for="fBoard">${T('board')}</label><select id="fBoard">${BOARDS.map(b => `<option ${b === settings.board ? 'selected' : ''}>${b}</option>`).join('')}</select></div>
+      <div class="field"><label for="fScore">Score %</label><input type="number" id="fScore" min="0" max="100" placeholder="e.g. 64"></div></div>
+      <div class="field" style="margin-top:10px"><label>Weak chapters (tap to toggle)</label><div class="chips" id="fWeak"></div></div>
+      <div class="actions"><button class="btn primary" id="fAdd">${ic('check')} Log attempt</button></div>
+      <!-- TODO(student): import a paper PDF, OCR it and auto-tag each question to a chapter so weak chapters are detected per question instead of self-reported. -->
+    </section>
+    <section class="panel"><h2>${ic('alert-circle')} ${T('weak_freq')}</h2><div style="margin-top:8px">${weak.map(([id, n]) => { const c = chById(id); return c ? `<div class="hbar"><span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.name)}">${esc(c.name)}</span><div class="bar"><i style="--sc:${c.color};width:0" data-w="${n / maxF * 100}"></i></div><b>${n}×</b></div>` : ''; }).join('') || `<div class="empty sm">${ic('check-circle')}No weak chapters flagged.</div>`}</div>
+      <p class="muted sm" style="margin:10px 0 6px">Weak chapters get a ×(1 + 0.25 × frequency) priority boost and their first planned session is tagged <span class="tag" style="background:#fdf1dc;color:var(--warn)">extra</span>.</p>
+      <button class="btn" id="pBoost" ${weak.length ? '' : 'disabled'}>${ic('zap')} ${T('add_extra')}</button></section></div></div>`;
+  const drawWeak = () => { const chs = subjById($('#fSubj').value).ch; $('#fWeak').innerHTML = chs.map(c => `<button class="chip" data-w="${c.id}" aria-pressed="false">${esc(c.name)}</button>`).join(''); $$('#fWeak .chip').forEach(b => b.onclick = () => { b.classList.toggle('on'); b.setAttribute('aria-pressed', b.classList.contains('on')); }); };
+  $('#fSubj').onchange = drawWeak; drawWeak();
+  $('#pSubj').onchange = e => { paperSubj = e.target.value; renderPapers(); };
+  $('#fAdd').onclick = () => { const score = +$('#fScore').value; if (!$('#fScore').value || score < 0 || score > 100) { toast('Enter a score between 0 and 100', 'bad'); $('#fScore').focus(); return; } papers.push({ id: uid(), subj: $('#fSubj').value, year: +$('#fYear').value, board: $('#fBoard').value, score, weak: $$('#fWeak .chip.on').map(b => b.dataset.w), date: todayIso() }); saveAll(); paperSubj = $('#fSubj').value; toast('Attempt logged', 'ok', 'file'); renderPapers(); };
+  $$('[data-del]').forEach(b => b.onclick = () => { papers = papers.filter(p => p.id !== b.dataset.del); saveAll(); renderPapers(); });
+  $('#pBoost').onclick = () => { const n = generatePlan(); toast(`Plan rebuilt · ${n} ${t('sessions')}`, 'ok', 'sparkles'); location.hash = 'plan'; };
+  scoreChart($('#pChart'), mine, sb.color);
+  requestAnimationFrame(() => $$('[data-w]', view).forEach(el => { if (el.tagName === 'I') el.style.width = el.dataset.w + '%'; }));
+  animateIn(view);
+}
+function scoreChart(el, pts, color) {
+  const Wd = 600, H = 220, P = { l: 40, r: 16, t: 14, b: 34 };
+  if (!pts.length) { el.innerHTML = `<div class="empty">${ic('trending-up')}Log two or more attempts to see a trend.</div>`; return; }
+  const x = i => pts.length === 1 ? Wd / 2 : P.l + i / (pts.length - 1) * (Wd - P.l - P.r), y = v => P.t + (1 - v / 100) * (H - P.t - P.b);
+  let svg = `<svg viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Score trend">`;
+  [0, 25, 50, 75, 100].forEach(g => svg += `<line x1="${P.l}" x2="${Wd - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="#e6e4f2"/><text x="${P.l - 8}" y="${y(g) + 4}" font-size="11" text-anchor="end" fill="#6b6a85">${g}%</text>`);
+  svg += `<line x1="${P.l}" x2="${Wd - P.r}" y1="${y(60)}" y2="${y(60)}" stroke="#0f9d6e" stroke-dasharray="4 4" opacity=".6"/><text x="${Wd - P.r}" y="${y(60) - 5}" font-size="10" text-anchor="end" fill="#0f9d6e">target 60%</text>`;
+  pts.forEach((p, i) => svg += `<text x="${x(i)}" y="${H - 10}" font-size="11" text-anchor="middle" fill="#6b6a85">${p.year} ${esc(p.board.slice(0, 3))}</text>`);
+  svg += `<path id="trend" d="${pts.map((p, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.score).toFixed(1)).join(' ')}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+  pts.forEach((p, i) => svg += `<circle cx="${x(i)}" cy="${y(p.score)}" r="5" fill="#fff" stroke="${color}" stroke-width="3" data-i="${i}" style="cursor:pointer"><title>${p.year} ${esc(p.board)}: ${p.score}%</title></circle>`);
+  el.innerHTML = svg + '</svg><div class="tip"></div>';
+  const tip = $('.tip', el), svgEl = $('svg', el);
+  $$('circle', el).forEach(c => { c.onmouseenter = () => { const p = pts[+c.dataset.i], r = svgEl.getBoundingClientRect(); tip.style.display = 'block'; tip.style.left = (+c.getAttribute('cx') / Wd * r.width) + 'px'; tip.style.top = (+c.getAttribute('cy') / H * r.height) + 'px'; tip.textContent = `${p.year} ${p.board} · ${p.score}% · ${p.weak.length} weak`; }; c.onmouseleave = () => tip.style.display = 'none'; });
+  requestAnimationFrame(() => drawPath($('#trend', el)));
+}
+
+// ---------- Settings view ----------
+function renderSettings() {
+  const s = settings, opt = (v, cur, label = v) => `<option value="${esc(v)}" ${String(v) === String(cur) ? 'selected' : ''}>${esc(label)}</option>`;
+  view.innerHTML = `<div class="two">
+    <section class="panel"><h2>${ic('settings')} ${T('nav_settings')}</h2>
+      <div class="grid3" style="margin-top:12px">
+        <div class="field"><label for="sBoard">${T('board')}</label><select id="sBoard">${BOARDS.map(b => opt(b, s.board, 'BISE ' + b)).join('')}</select></div>
+        <div class="field"><label for="sCls">${T('cls')}</label><select id="sCls">${[9, 10, 11, 12].map(c => opt(c, s.cls, c + 'th')).join('')}</select></div>
+        <div class="field"><label for="sStream">${T('stream')}</label><select id="sStream"></select></div>
+        <div class="field"><label for="sExam">${T('exam_date')}</label><input type="date" id="sExam" value="${s.examDate}"></div>
+        <div class="field"><label for="sWd">${T('hrs_wd')}</label><input type="number" id="sWd" min="0" max="12" step="0.5" value="${s.hrsWd}"></div>
+        <div class="field"><label for="sWe">${T('hrs_we')}</label><input type="number" id="sWe" min="0" max="14" step="0.5" value="${s.hrsWe}"></div>
+        <div class="field"><label for="sPomo">${T('pomo')}</label><select id="sPomo">${[15, 20, 25, 30, 40, 45, 50].map(v => opt(v, s.pomo)).join('')}</select></div>
+        <div class="field"><label for="sBrk">${T('brk_len')}</label><select id="sBrk">${[3, 5, 10, 15].map(v => opt(v, s.brk)).join('')}</select></div>
+        <div class="field"><label for="sStartWd">Study starts (weekday)</label><input type="time" id="sStartWd" value="${s.startWd}"></div>
+        <div class="field"><label for="sStartWe">Study starts (weekend)</label><input type="time" id="sStartWe" value="${s.startWe}"></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label>${T('days_off')}</label><div class="dayoffs" id="sOff">${[1, 2, 3, 4, 5, 6, 0].map(d => `<button class="chip ${s.daysOff.includes(d) ? 'on' : ''}" data-d="${d}" aria-pressed="${s.daysOff.includes(d)}">${DAYN[d]}</button>`).join('')}</div></div>
+      <p class="muted sm" style="margin:12px 0 0">One planner session = 2 Pomodoros (${s.pomo * 2} min). Saving regenerates upcoming sessions; completed ones are kept.</p>
+      <div class="actions"><button class="btn primary" id="sSave">${ic('check')} ${T('save')} &amp; ${T('regenerate')}</button></div></section>
+    <div><section class="panel" style="margin-bottom:14px"><h2>${ic('download')} Data</h2>
+      <p class="muted sm" style="margin:8px 0 12px">Everything is stored in this browser under <code>${NS}*</code> keys. Export a JSON backup before clearing site data or switching devices.</p>
+      <div class="actions" style="margin:0"><button class="btn" id="dExp">${ic('download')} ${T('export_json')}</button><label class="btn" for="dImp" style="cursor:pointer">${ic('upload')} ${T('import_json')}</label><input type="file" id="dImp" accept="application/json" class="sr"><button class="btn danger" id="dReset">${ic('trash')} ${T('reset_all')}</button></div>
+      <!-- TODO(student): cloud sync + study groups — replace this JSON backup with an account, a sync API (e.g. Supabase/Firebase) and shared group plans with a leaderboard. -->
+    </section>
+    <section class="panel"><h2>${ic('bell')} Notifications</h2><p class="muted sm" style="margin:8px 0 12px">The Pomodoro timer sends a browser notification when a block ends. Permission: <b id="nPerm">${'Notification' in window ? Notification.permission : 'unsupported'}</b>. Notifications need the page to be served over HTTP(S) or opened as a file in a browser that allows it.</p>
+      <button class="btn" id="nAsk" ${!('Notification' in window) || Notification.permission !== 'default' ? 'disabled' : ''}>${ic('bell')} Allow notifications</button>
+      <!-- TODO(student): teacher/parent dashboard — expose weekly minutes, readiness and overdue reviews to a guardian via a share code or a small backend. -->
+    </section></div></div>`;
+  const fillStreams = () => { const cls = +$('#sCls').value; $('#sStream').innerHTML = STREAMS[cls].map(([v, l]) => opt(v, STREAMS[cls].some(x => x[0] === s.stream) && cls === +s.cls ? s.stream : STREAMS[cls][0][0], l)).join(''); };
+  $('#sCls').onchange = fillStreams; fillStreams();
+  $$('#sOff .chip').forEach(b => b.onclick = () => { b.classList.toggle('on'); b.setAttribute('aria-pressed', b.classList.contains('on')); });
+  $('#sSave').onclick = () => {
+    const exam = $('#sExam').value; if (!exam || exam <= todayIso()) { toast('Exam date must be in the future', 'bad'); return; }
+    settings = { ...settings, board: $('#sBoard').value, cls: +$('#sCls').value, stream: $('#sStream').value, examDate: exam, hrsWd: clamp(+$('#sWd').value || 0, 0, 12), hrsWe: clamp(+$('#sWe').value || 0, 0, 14), pomo: +$('#sPomo').value, brk: +$('#sBrk').value, startWd: $('#sStartWd').value || '16:00', startWe: $('#sStartWe').value || '10:00', daysOff: $$('#sOff .chip.on').map(b => +b.dataset.d) };
+    const n = generatePlan(); toast(`${t('saved')} · ${n} ${t('sessions')} ${t('planned')}`, 'ok'); updateCountdown(); location.hash = 'plan';
+  };
+  $('#dExp').onclick = () => download(`revision-planner-${todayIso()}.json`, JSON.stringify({ app: 'berp', v: 1, settings, mastery, overrides, papers, reviews, log, plan }, null, 1), 'application/json');
+  $('#dImp').onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { const d = JSON.parse(rd.result); if (d.app !== 'berp') throw 0; settings = { ...DEF, ...d.settings }; mastery = d.mastery || {}; overrides = d.overrides || {}; papers = d.papers || []; reviews = d.reviews || []; log = d.log || []; plan = d.plan || { generated: 0, sessions: [] }; saveAll(); toast('Imported', 'ok'); route(); } catch { toast('Not a valid backup file', 'bad'); } }; rd.readAsText(f); };
+  $('#dReset').onclick = () => { if (confirm('Replace all data with the demo seed?')) { seedDemo(); timerReset(); toast('Demo data restored', 'ok'); route(); } };
+  $('#nAsk').onclick = () => Notification.requestPermission().then(p => { $('#nPerm').textContent = p; $('#nAsk').disabled = true; }).catch(() => {});
+  animateIn(view);
+}
+// TODO(student): ML-based difficulty/weightage estimation — learn per-chapter weightage and difficulty from a history of tagged papers (regression over question counts × marks) and write the result into `overrides`.
+function estimateWeightagesML() { return null; }
+// TODO(student): real past-paper database — fetch board papers (2015→) with per-question chapter tags from your backend and replace the illustrative weightages in SUBJ.
+function fetchPaperBank() { return Promise.resolve([]); }
+
+// ---------- exports: .ics calendar for the next 14 days ----------
+function exportIcs() {
+  const today = todayIso(), end = addDays(today, 14), stamp = s => s.replace(/[-:]/g, ''), now = new Date();
+  const ev = []; const byDay = {}; plan.sessions.filter(s => s.status === 'todo' && s.date >= today && s.date < end).forEach(s => (byDay[s.date] = byDay[s.date] || []).push(s));
+  Object.entries(byDay).forEach(([d, list]) => { let [h, m] = (isWeekend(d) ? settings.startWe : settings.startWd).split(':').map(Number); let cur = h * 60 + m;
+    list.forEach(s => { const c = chById(s.ch), sb = subjById(s.subj); const st = `${stamp(d)}T${pad2(Math.floor(cur / 60) % 24)}${pad2(cur % 60)}00`, en0 = cur + s.mins, en = `${stamp(d)}T${pad2(Math.floor(en0 / 60) % 24)}${pad2(en0 % 60)}00`;
+      ev.push(`BEGIN:VEVENT\r\nUID:${s.id}@berp\r\nDTSTAMP:${stamp(iso(now))}T${pad2(now.getHours())}${pad2(now.getMinutes())}00\r\nDTSTART:${st}\r\nDTEND:${en}\r\nSUMMARY:${esc(sb.name)}: ${(c?.name || '').replace(/[,;\\]/g, ' ')}\r\nDESCRIPTION:${s.type} session · ${s.mins} min · weightage ${c ? W(c) : ''}%\r\nEND:VEVENT`); cur = en0 + settings.brk; }); });
+  if (!ev.length) { toast('No upcoming sessions in the next 14 days', 'bad'); return; }
+  download('revision-plan.ics', `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Board Exam Revision Planner//EN\r\nCALSCALE:GREGORIAN\r\n${ev.join('\r\n')}\r\nEND:VCALENDAR\r\n`, 'text/calendar');
+  toast(`${ev.length} ${t('sessions')} exported`, 'ok', 'calendar');
+}
+
+// ---------- About view ----------
+const TODOS = [
+  ['Real past-paper database', 'Replace the illustrative weightages with a database of board papers tagged per question → chapter; compute weightage = marks share over the last 5–10 years per board.', 'data', 'fetchPaperBank()'],
+  ['OCR / import a paper PDF', 'Let the student upload a paper PDF, run OCR (Tesseract.js) and auto-tag questions to chapters so weak areas are detected per question.', 'ML', 'renderPapers()'],
+  ['Cloud sync + study groups', 'Accounts, a sync API and shared group plans with a weekly leaderboard; keep the JSON backup as the offline fallback.', 'backend', 'renderSettings()'],
+  ['Push notification backend', 'The timer notifies only while the tab is open. Add a service worker and Web Push so reminders arrive for scheduled sessions and due reviews.', 'platform', 'timerStart()'],
+  ['ML weightage & difficulty estimation', 'Learn chapter weightage/difficulty from paper history and the student’s own confidence ratings; write the estimates into overrides.', 'ML', 'estimateWeightagesML()'],
+  ['Flashcards per chapter', 'Attach Q/A decks to chapters and show cards before the review rating buttons; drive the SM-2 interval from card recall instead of a self-rating.', 'core', 'renderRevise()'],
+  ['Teacher / parent dashboard', 'A read-only view (share code or backend) of weekly minutes, readiness per subject and overdue reviews, for a tutor or guardian.', 'UX', 'renderSettings()']
+];
+function renderAbout() {
+  view.innerHTML = `<div class="two"><div>
+    <section class="panel" style="margin-bottom:14px"><h2>${ic('graduation')} Board Exam Revision Planner</h2>
+      <h3 style="margin:14px 0 6px;font-size:1rem">The problem</h3><p class="muted" style="margin:0">Matric and FSc students cram without a plan, do not know which chapters carry the most marks in board papers, and rarely revisit what they studied. Marks are lost on high-weightage chapters that were studied once, early, and forgotten.</p>
+      <h3 style="margin:14px 0 6px;font-size:1rem">How it works</h3><p class="muted" style="margin:0">Each chapter gets a priority of <b>weightage × difficulty × (1 − mastery/5)</b>, boosted when past papers flag it weak. Sessions are spread over the days until the exam, respecting daily hours and days off, interleaving subjects (≤ 2 sessions of one subject per day) and keeping the last 7 days for revision. Every completed session updates mastery from your confidence rating and schedules spaced reviews (+1, +3, +7, +14, +30 days). Readiness = Σ(weightage × mastery/5).</p>
+      <h3 style="margin:14px 0 6px;font-size:1rem">Stack</h3><p class="muted" style="margin:0">One HTML file, vanilla JS, hand-drawn SVG charts, localStorage (<code>${NS}</code>), HTML5 drag-and-drop, Web Notifications, printable timetable and client-side .ics export. Google Fonts: Plus Jakarta Sans + Noto Nastaliq Urdu.</p>
+      <h3 style="margin:14px 0 6px;font-size:1rem">Data notes</h3><p class="muted" style="margin:0">Chapter lists follow Punjab Textbook Board editions. Weightages and difficulties are <b>illustrative</b> — edit them per chapter from the Subjects heatmap or replace them with a real paper database (see extensions).</p></section>
+    <section class="panel"><h2>${ic('sparkles')} Credits</h2><p class="muted sm" style="margin:8px 0 0">FYP template · icons after Lucide (MIT) · SM-2 after Wozniak (1990) · built for Pakistani students, 2026.</p></section></div>
+    <div><h3 style="margin:0 0 10px;display:flex;align-items:center;gap:8px">${ic('lightbulb')} ${T('left_for_students')} <span class="tag">${TODOS.length}</span></h3><div class="list stagger">${TODOS.map(([h, b, tag, fn]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${esc(tag)}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div><div class="sm" style="margin-top:4px">Start here: <code>${esc(fn)}</code></div></div>`).join('')}</div><p class="muted sm" style="margin:10px 0 0">Search the source for <code>TODO(student)</code>.</p></div></div>`;
+  animateIn(view);
+}
+
+// ---------- nav, language, router ----------
+const NAV = [['plan', 'nav_plan', 'grid'], ['subjects', 'nav_subjects', 'layers'], ['revise', 'nav_revise', 'brain'], ['papers', 'nav_papers', 'file'], ['settings', 'nav_settings', 'settings'], ['about', 'nav_about', 'info']];
+const page = () => (location.hash.slice(1) || 'plan').split('?')[0];
+function renderNav() { const cur = page(); $('#nav').innerHTML = NAV.map(([id, k, i]) => `<a href="#${id}" class="${cur === id ? 'on' : ''}" ${cur === id ? 'aria-current="page"' : ''}>${ic(i)}<span class="i18n">${t(k)}</span>${id === 'revise' ? '<span class="badge hidden" id="navDue"></span>' : ''}</a>`).join(''); }
+function updateNavBadges() { const n = dueReviews().length, od = overdueCount(); [$('#dueBadge'), $('#navDue')].forEach(b => { if (!b) return; b.textContent = n; b.classList.toggle('hidden', !n); }); $('#reviseBell').title = `${n} reviews due · ${od} overdue`; }
+function updateCountdown() { $('#cdNum').textContent = Math.max(0, daysBetween(todayIso(), settings.examDate)); }
+function route() {
+  renderNav(); updateNavBadges(); updateCountdown();
+  ({ plan: renderPlan, subjects: renderSubjects, revise: renderRevise, papers: renderPapers, settings: renderSettings, about: renderAbout }[page()] || renderPlan)();
+}
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $('#langLbl').textContent = lang === 'en' ? 'اردو' : 'EN'; $('#langLbl').className = lang === 'en' ? 'ur' : '';
+  $$('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+  route();
+}
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+window.addEventListener('hashchange', () => { route(); window.scrollTo({ top: 0 }); });
+applyLang();
+</script>
+</body>
+</html>

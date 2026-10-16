@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="en" data-accent="cyan">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Vault — Privacy-First Password Manager</title>
+<meta name="description" content="Zero-knowledge, offline, single-file password manager: PBKDF2 + AES-GCM vault, TOTP codes, explainable strength analyzer, generator, health dashboard and k-anonymity breach check UI. FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: security console ---------- */
+:root{
+  --bg:#0b0f14; --panel:#121922; --panel-2:#182230; --field:#0e141b; --line:#1f2a38; --line-2:#2a3749;
+  --ink:#e6edf3; --muted:#8b98a8; --dim:#5b687a;
+  --accent:#22d3ee; --accent-ink:#06202a; --accent-soft:rgba(34,211,238,.12);
+  --ok:#34d399; --ok-soft:rgba(52,211,153,.14); --danger:#fb7185; --danger-soft:rgba(251,113,133,.14); --warn:#fbbf24; --warn-soft:rgba(251,191,36,.14);
+  --surface:var(--panel); --surface-2:var(--panel-2);
+  --radius:12px; --font:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Menlo,monospace;
+  --ease:cubic-bezier(.2,.8,.2,1); --dur:.35s;
+}
+:root[data-accent=green]{--accent:#34d399;--accent-ink:#052e1f;--accent-soft:rgba(52,211,153,.14)}
+:root[data-accent=violet]{--accent:#a78bfa;--accent-ink:#1e1340;--accent-soft:rgba(167,139,250,.16)}
+:root[data-accent=amber]{--accent:#fbbf24;--accent-ink:#2b1d02;--accent-soft:rgba(251,191,36,.16)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(6px)}}
+@keyframes lockOut{to{opacity:0;transform:translateY(-10px) scale(.97)}}
+.enter{animation:fadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
+.btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.card,.tile{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
+.card:hover{transform:translateY(-2px);border-color:var(--line-2)}
+.fill,.bar>i{transition:width .6s var(--ease)}
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:radial-gradient(1100px 520px at 85% -10%,var(--accent-soft),transparent 60%),var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.01em}
+p{margin:0 0 8px}
+code,.mono{font-family:var(--mono);font-size:.93em}
+.muted{color:var(--muted)} .dim{color:var(--dim)} .small{font-size:.82rem} .hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+.ic.big{width:44px;height:44px;stroke-width:1.5}
+.ok{color:var(--ok)} .bad{color:var(--danger)} .warnc{color:var(--warn)} .acc{color:var(--accent)}
+
+/* ---------- Buttons & inputs ---------- */
+.btn{border:1px solid transparent;border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer;background:var(--panel-2);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;white-space:nowrap}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border-color:var(--line-2)}
+.btn.danger{background:var(--danger-soft);color:var(--danger);border-color:rgba(251,113,133,.3)}
+.btn.sm{padding:6px 10px;font-size:.84rem;min-height:36px;border-radius:8px}
+.btn.full{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.iconbtn{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);display:inline-grid;place-items:center;cursor:pointer;flex:none;transition:color .15s,border-color .15s,background .15s,transform .15s}
+.iconbtn:hover{color:var(--ink);border-color:var(--line-2)} .iconbtn:active{transform:scale(.94)}
+.iconbtn.on{color:var(--warn);border-color:rgba(251,191,36,.45);background:var(--warn-soft)}
+.iconbtn.danger:hover{color:var(--danger);border-color:rgba(251,113,133,.45)}
+.iconbtn.copied{color:var(--ok);border-color:rgba(52,211,153,.5);background:var(--ok-soft)}
+.iconbtn.sm{width:32px;height:32px;border-radius:8px}
+input[type=text],input[type=password],input[type=search],input[type=number],input[type=url],input[type=email],select,textarea{width:100%;background:var(--field);border:1px solid var(--line-2);border-radius:10px;padding:9px 12px;outline:0;color:var(--ink);min-height:42px}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input::placeholder,textarea::placeholder{color:var(--dim)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+textarea{min-height:88px;resize:vertical}
+label.f{display:block;font-size:.76rem;font-weight:700;color:var(--muted);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.07em}
+label.f:first-child{margin-top:0}
+.pwwrap{position:relative} .pwwrap input{padding-right:84px;font-family:var(--mono)} .pwwrap.one input{padding-right:48px}
+.pwwrap .tools{position:absolute;right:5px;top:50%;transform:translateY(-50%);display:flex;gap:4px}
+.chk{display:inline-flex;align-items:center;gap:8px;cursor:pointer;min-height:40px;font-weight:500}
+.chk input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.range{width:100%;accent-color:var(--accent);min-height:40px}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:var(--field)}
+.seg button{border:0;background:none;padding:8px 14px;cursor:pointer;font-weight:600;font-size:.88rem;color:var(--muted);min-height:40px}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.swatches{display:flex;gap:8px;flex-wrap:wrap} .sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;background:var(--c)} .sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--c)}
+.note{border-radius:10px;padding:10px 12px;font-size:.88rem;display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line-2);background:var(--panel-2)}
+.note.ok{border-color:rgba(52,211,153,.35);background:var(--ok-soft)} .note.warn{border-color:rgba(251,191,36,.35);background:var(--warn-soft)} .note.bad{border-color:rgba(251,113,133,.35);background:var(--danger-soft)}
+.note .ic{margin-top:3px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.86rem} .kv dt{color:var(--muted)} .kv dd{margin:0;overflow-wrap:anywhere}
+
+/* ---------- Cards / chips / meter ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;min-width:0}
+.card h3{font-size:1rem;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card p.lead{color:var(--muted);margin:-4px 0 12px;font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--panel-2);border-radius:999px;padding:4px 11px;font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;cursor:pointer;min-height:32px}
+.chip.on,.chip:hover{color:var(--accent);border-color:var(--accent)}
+.chip.bad{color:var(--danger);border-color:rgba(251,113,133,.4)} .chip.warn{color:var(--warn);border-color:rgba(251,191,36,.4)}
+.meter{display:flex;gap:4px;margin-top:8px} .meter i{flex:1;height:6px;border-radius:3px;background:var(--line-2);transition:background .35s var(--ease)}
+.meter[data-s="0"] i:nth-child(1),.meter[data-s="1"] i:nth-child(-n+2){background:var(--danger)}
+.meter[data-s="2"] i:nth-child(-n+3){background:var(--warn)}
+.meter[data-s="3"] i:nth-child(-n+4){background:var(--accent)}
+.meter[data-s="4"] i{background:var(--ok)}
+.verdict{font-weight:700} .v0,.v1{color:var(--danger)} .v2{color:var(--warn)} .v3{color:var(--accent)} .v4{color:var(--ok)}
+.sline{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;margin-top:6px;color:var(--muted);flex-wrap:wrap}
+.reasons{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:5px;font-size:.86rem}
+.reasons li{display:flex;gap:8px;align-items:flex-start} .reasons li .ic{margin-top:3px}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:2px 7px;font-size:.72rem;font-weight:700;background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.pill.bad{background:var(--danger-soft);color:var(--danger)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.acc{background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- Lock screen ---------- */
+#lock{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+#lock.out{animation:lockOut .3s var(--ease) both;pointer-events:none}
+.lockcard{width:min(480px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:20px;padding:28px;box-shadow:0 40px 90px -50px var(--accent)}
+.lock-brand{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.lock-brand h1{font-size:1.5rem;font-weight:800}
+.logo{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--accent),#0e7490);display:grid;place-items:center;color:#fff;flex:none}
+.logo svg{width:30px;height:30px}
+.lock-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+details.protect{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+details.protect summary{cursor:pointer;font-weight:600;color:var(--muted);display:flex;gap:8px;align-items:center;min-height:36px;list-style:none}
+details.protect summary::-webkit-details-marker{display:none}
+details.protect[open] summary{color:var(--ink)}
+.cryptoflow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;margin:12px 0;font-size:.78rem;text-align:center}
+.cryptoflow .step{background:var(--field);border:1px solid var(--line-2);border-radius:10px;padding:8px 6px}
+.cryptoflow .step b{display:block;font-size:.8rem;color:var(--accent)}
+.cryptoflow .ic{color:var(--dim)}
+.mobilebar{display:none}
+
+/* ---------- App shell ---------- */
+#app{display:none;height:100vh;grid-template-columns:240px 360px minmax(0,1fr)}
+#app.on{display:grid}
+.rail{background:#0d131a;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 12px;overflow:auto;min-height:0}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px 14px}
+.brand .logo{width:38px;height:38px;border-radius:11px} .brand .logo svg{width:22px;height:22px}
+.brand b{display:block;font-size:1.05rem} .brand small{display:block;font-size:.72rem;color:var(--muted)}
+.rail nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--muted);text-decoration:none;font-weight:600;min-height:40px}
+.rail nav a:hover{background:var(--panel-2);color:var(--ink)}
+.rail nav a.active{background:var(--accent-soft);color:var(--accent)}
+.rail nav a .n{margin-left:auto;font-size:.74rem;color:var(--dim);font-family:var(--mono)}
+.rail nav a .tdot{width:8px;height:8px;border-radius:50%;background:var(--c,var(--accent));flex:none;margin:0 3px}
+.rail h4{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin:14px 10px 6px}
+.rail-foot{margin-top:auto;padding-top:14px;display:grid;gap:8px}
+.autolock{font-size:.76rem;color:var(--dim);display:flex;gap:6px;align-items:center;padding:0 4px}
+.list-pane{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+.list-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 16px 8px}
+.list-head h2{font-size:1.1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-tools{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:8px;padding:0 16px 10px}
+.search{position:relative} .search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--dim)} .search input{padding-left:34px}
+.rows{overflow:auto;flex:1;padding:0 8px 16px}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:12px;padding:9px 10px;cursor:pointer;color:var(--ink);min-height:58px}
+.row:hover{background:var(--panel)} .row.active{background:var(--panel);border-color:var(--line-2)}
+.row .txt{min-width:0;flex:1} .row .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .row .s{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .badges{display:flex;gap:6px;align-items:center;color:var(--dim)}
+.avatar{width:38px;height:38px;border-radius:10px;background:var(--c,var(--accent));color:#06161c;display:grid;place-items:center;font-weight:800;flex:none}
+.avatar.lg{width:54px;height:54px;font-size:1.35rem;border-radius:15px}
+.sdot{width:9px;height:9px;border-radius:50%;background:var(--line-2)} .sdot.s0,.sdot.s1{background:var(--danger)} .sdot.s2{background:var(--warn)} .sdot.s3{background:var(--accent)} .sdot.s4{background:var(--ok)}
+.empty{height:100%;display:grid;place-items:center;text-align:center;color:var(--muted);padding:30px}
+.empty .ic.big{color:var(--dim);margin-bottom:10px}
+.detail-pane{overflow:auto;padding:24px 28px;min-width:0}
+.d-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.d-title{flex:1 1 220px;min-width:0} .d-title h2{font-size:1.4rem;overflow-wrap:break-word} .d-title a{text-decoration:none;font-size:.86rem}
+.d-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.back{display:none}
+.d-body{margin-top:18px;display:grid;gap:10px;max-width:780px}
+.fld{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.fld .main{flex:1;min-width:0}
+.fl{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:700;display:flex;gap:6px;align-items:center}
+.fv{margin-top:3px;overflow-wrap:anywhere;font-size:.98rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap} .fv.pre{white-space:pre-wrap;display:block}
+.secret{letter-spacing:.06em}
+.code{font-size:1.55rem;font-weight:700;letter-spacing:.14em;color:var(--accent)}
+.ring{width:34px;height:34px;transform:rotate(-90deg);flex:none} .ring circle{fill:none;stroke-width:3} .ring .bg{stroke:var(--line-2)} .ring .fg{stroke:var(--accent);stroke-dasharray:94.25;transition:stroke-dashoffset 1s linear} .ring.warn .fg{stroke:var(--warn)}
+.hist{display:grid;gap:6px} .hist .hrow{display:flex;align-items:center;gap:10px;font-size:.88rem;border-top:1px solid var(--line);padding-top:6px} .hist .hrow:first-child{border-top:0;padding-top:0}
+.content-pane{overflow:auto;padding:24px 28px;grid-column:2/4;min-width:0}
+body:not([data-page=vault]) .list-pane,body:not([data-page=vault]) .detail-pane{display:none!important} body[data-page=vault] .content-pane{display:none}
+.page{max-width:1060px;display:grid;gap:16px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap} .page-head h2{font-size:1.5rem} .page-head p{margin:4px 0 0;color:var(--muted)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;gap:12px;align-items:center}
+.kpi .kic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--panel-2);flex:none}
+.kpi .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700} .kpi .v{font-size:1.5rem;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.health-top{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:stretch}
+.scorecard{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px}
+.scorering{width:150px;height:150px;position:relative} .scorering svg{transform:rotate(-90deg);width:100%;height:100%} .scorering circle{fill:none;stroke-width:9} .scorering .bg{stroke:var(--panel-2)} .scorering .fg{transition:stroke-dashoffset 1s var(--ease)}
+.scorering .num{position:absolute;inset:0;display:grid;place-items:center;font-size:2.2rem;font-weight:800;font-variant-numeric:tabular-nums}
+.hbar{display:grid;grid-template-columns:92px 1fr 30px;align-items:center;gap:10px;font-size:.84rem;margin:7px 0}
+.hbar .bar{height:10px;background:var(--panel-2);border-radius:5px;overflow:hidden} .hbar .bar>i{display:block;height:100%;border-radius:5px;background:var(--c);width:0}
+.hbar .n{text-align:right;font-family:var(--mono);color:var(--muted)}
+.fixrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap} .fixrow:first-child{border-top:0}
+.fixrow .txt{flex:1;min-width:140px}
+.hashbox{font-family:var(--mono);font-size:.86rem;overflow-wrap:anywhere;background:var(--field);border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;line-height:1.7}
+.hashbox .pre{background:var(--accent);color:var(--accent-ink);border-radius:4px;padding:0 4px;font-weight:700}
+.genout{font-family:var(--mono);font-size:1.25rem;font-weight:500;background:var(--field);border:1px solid var(--line-2);border-radius:12px;padding:14px 16px;overflow-wrap:anywhere;min-height:56px;line-height:1.5}
+.genout .d{color:var(--accent)} .genout .s{color:var(--warn)}
+.gen-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 16px}
+.todo{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px} .todo h4{font-size:.95rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap} .todo .tag{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:2px 6px} .todo code{font-size:.78rem;color:var(--muted)}
+.list{display:grid;gap:10px}
+.cf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto auto;gap:6px;align-items:center;margin-bottom:6px}
+.ed-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px} .span2{grid-column:1/-1}
+.ed-grid label.f{margin-top:10px}
+
+/* ---------- Modal / toasts ---------- */
+.scrim{position:fixed;inset:0;background:rgba(3,6,10,.72);backdrop-filter:blur(3px);z-index:50;display:none;animation:fadeIn .2s}
+.scrim.open{display:block}
+.modal{position:fixed;inset:0;display:none;place-items:center;z-index:51;padding:16px;overflow:auto}
+.modal.open{display:grid}
+.modal .box{background:var(--panel);border:1px solid var(--line-2);border-radius:16px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:20px 22px;animation:pop .25s var(--ease);box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+.modal .box.wide{width:min(760px,100%)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px} .modal-head h2{font-size:1.2rem}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap}
+#toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:70;max-width:min(380px,calc(100vw - 24px))}
+.toast{background:#1b2634;border:1px solid var(--line-2);color:var(--ink);padding:10px 14px;border-radius:10px;font-weight:500;display:flex;gap:8px;align-items:center;box-shadow:0 10px 30px -10px rgba(0,0,0,.7);animation:toastIn .3s var(--ease);font-size:.9rem}
+.toast.out{animation:toastOut .3s var(--ease) both}
+.toast.ok{border-color:rgba(52,211,153,.45)} .toast.ok .ic{color:var(--ok)} .toast.bad{border-color:rgba(251,113,133,.5)} .toast.bad .ic{color:var(--danger)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px){#app{grid-template-columns:220px 320px minmax(0,1fr)} .health-top{grid-template-columns:1fr}}
+@media (max-width:900px){
+  .mobilebar{display:flex;position:sticky;top:0;z-index:40;align-items:center;gap:10px;padding:8px 12px;background:#0d131a;border-bottom:1px solid var(--line)}
+  .mobilebar .mt{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #app.on{display:block;height:auto;min-height:100vh}
+  .rail{position:fixed;top:0;bottom:0;left:0;width:min(300px,85vw);z-index:60;transform:translateX(-105%);transition:transform .3s var(--ease);box-shadow:0 0 60px rgba(0,0,0,.6)}
+  body.rail-open .rail{transform:none}
+  .list-pane{border-right:0}
+  .detail-pane{display:none;padding:16px}
+  body.detail-open .list-pane{display:none} body.detail-open .detail-pane{display:block}
+  .back{display:inline-grid}
+  .d-actions{flex-basis:100%;justify-content:flex-start}
+  .content-pane{padding:16px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ed-grid{grid-template-columns:1fr}
+  .cf{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-auto-rows:auto} .cf .chk{grid-column:1} .cf .iconbtn{grid-column:2;justify-self:end}
+  .list-tools{grid-template-columns:minmax(0,1fr) 120px}
+  #toasts{left:12px;right:12px;bottom:12px;max-width:none}
+  .cryptoflow{grid-template-columns:1fr} .cryptoflow .ic{transform:rotate(90deg);justify-self:center}
+}
+@media print{.rail,.mobilebar,#toasts,.list-pane,.scrim,.modal{display:none!important} body{background:#fff;color:#000} #app.on{display:block} .detail-pane,.content-pane{overflow:visible;padding:0}}
+</style>
+</head>
+<body data-page="vault">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-3"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></symbol>
+<symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c7 0 10 8 10 8a13 13 0 0 1-1.7 2.7M6.6 6.6A13.5 13.5 0 0 0 2 12s3 8 10 8a9.7 9.7 0 0 0 5.4-1.6M2 2l20 20"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+<symbol id="i-graduation" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+<symbol id="i-hash" viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
+<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><path d="M7 7h.01"/></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24"><path d="M10 2h4M12 14l3-3"/><circle cx="12" cy="14" r="8"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+</svg>
+
+<!-- ===== Lock screen (create / unlock) ===== -->
+<main id="lock" aria-live="polite"></main>
+
+<!-- ===== Vault shell: rail · list · detail (or a content page) ===== -->
+<header class="mobilebar" id="mobilebar">
+  <button class="iconbtn" id="menuBtn" aria-label="Open menu"><svg class="ic" aria-hidden="true"><use href="#i-menu"/></svg></button>
+  <div class="mt" id="mbTitle">All items</div>
+  <button class="iconbtn" id="mLockBtn" aria-label="Lock vault"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></button>
+</header>
+<div id="app">
+  <aside class="rail" id="rail" aria-label="Vault navigation">
+    <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><circle cx="12" cy="10" r="2"/><path d="M12 12v4"/></svg></div><div><b>Vault</b><small>zero-knowledge · offline</small></div></div>
+    <nav id="railNav"></nav>
+    <div class="rail-foot">
+      <button class="btn ghost full" id="lockBtn"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg> Lock vault</button>
+      <div class="autolock" id="autolockInfo"></div>
+    </div>
+  </aside>
+  <section class="list-pane" id="listPane" aria-label="Items">
+    <div class="list-head"><h2 id="listTitle">All items</h2><button class="btn primary sm" id="newBtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> New</button></div>
+    <div class="list-tools">
+      <label class="search"><span class="sr">Search</span><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search title, user, URL, tag" autocomplete="off"></label>
+      <select id="sortSel" aria-label="Sort items"><option value="title">Title A–Z</option><option value="updated">Recently updated</option><option value="created">Newest first</option><option value="weak">Weakest first</option></select>
+    </div>
+    <div class="rows" id="rows"></div>
+  </section>
+  <section class="detail-pane" id="detailPane" aria-label="Item detail"></section>
+  <section class="content-pane" id="contentPane"></section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="box"></div></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Vault — privacy-first password manager (single file)
+   Sections: utils · crypto · wordlists · strength analyzer · generator ·
+             vault state & persistence · demo data · lock screen · rail/list/detail ·
+             editor · health · generator page · settings · about · import/export · router
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+// ---------- utils ----------
+const NS = 'pfpm:';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(NS + k); } catch {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const DAY = 86400000;
+const now = () => Date.now();
+const fmtDate = ts => new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtTime = ts => new Date(ts).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const ago = ts => { const d = Math.round((now() - ts) / DAY); if (d < 1) return 'today'; if (d === 1) return 'yesterday'; if (d < 30) return d + ' days ago'; const m = Math.round(d / 30); if (m < 12) return m + ' months ago'; return (d / 365).toFixed(1) + ' years ago'; };
+const normUrl = u => /^[a-z]+:\/\//i.test(u) ? u : 'https://' + u;
+const host = u => { try { return new URL(normUrl(u)).host; } catch { return u; } };
+const initial = t => ((t || '?').trim()[0] || '?').toUpperCase();
+const toast = (msg, type = '', icon) => {
+  const t = document.createElement('div'); t.className = 'toast ' + type;
+  t.innerHTML = ic(icon || (type === 'ok' ? 'check-circle' : type === 'bad' ? 'alert-circle' : 'info'));
+  const s = document.createElement('span'); s.textContent = msg; t.append(s); $('#toasts').append(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 3400);
+};
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i))); };
+const countUp = (el, to, { dur = 700, fmt = v => Math.round(v).toLocaleString('en-PK') } = {}) => { const t0 = performance.now(); const step = n => { const p = Math.min(1, (n - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const download = (name, text, type = 'application/json') => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+const pickFile = (accept, cb) => { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => cb(String(r.result), f.name); r.readAsText(f); }; i.click(); };
+
+// ---------- crypto (WebCrypto only) ----------
+const enc = new TextEncoder(), dec = new TextDecoder();
+const rnd = n => crypto.getRandomValues(new Uint8Array(n));
+const b64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const hex = u8 => [...u8].map(b => b.toString(16).padStart(2, '0')).join('');
+const KDF_MIN = 600000;
+/** master password → AES-GCM-256 key. PBKDF2-SHA-256 with a random 16-byte salt. */
+async function deriveKey(password, salt, iterations) {
+  // TODO(student): Argon2id via WASM (e.g. argon2-browser / hash-wasm): memory-hard KDFs resist GPU cracking far better than PBKDF2.
+  // Keep the same signature, store kdf:'argon2id' + its parameters in the vault record, and migrate on next unlock.
+  const km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function encryptJSON(key, obj) { const iv = rnd(12); const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)))); return { iv: b64(iv), ct: b64(ct) }; }
+async function decryptJSON(key, box) { const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(box.iv) }, key, unb64(box.ct)); return JSON.parse(dec.decode(pt)); }
+async function sha1Hex(str) { return hex(new Uint8Array(await crypto.subtle.digest('SHA-1', enc.encode(str)))).toUpperCase(); }
+function base32Decode(s) {
+  const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; s = (s || '').toUpperCase().replace(/[^A-Z2-7]/g, '');
+  let bits = 0, val = 0; const out = [];
+  for (const c of s) { val = (val << 5) | A.indexOf(c); bits += 5; if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; } }
+  return new Uint8Array(out);
+}
+/** RFC 6238 TOTP: HMAC-SHA-1 over the 30-second counter, dynamic truncation, 6 digits. */
+async function totp(secret, t = now(), step = 30, digits = 6) {
+  const keyBytes = base32Decode(secret); if (!keyBytes.length) return null;
+  const counter = Math.floor(t / 1000 / step); const buf = new ArrayBuffer(8); const v = new DataView(buf);
+  v.setUint32(0, Math.floor(counter / 4294967296)); v.setUint32(4, counter >>> 0);
+  const k = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const h = new Uint8Array(await crypto.subtle.sign('HMAC', k, buf)); const off = h[19] & 15;
+  const code = (((h[off] & 127) << 24) | (h[off + 1] << 16) | (h[off + 2] << 8) | h[off + 3]) % 10 ** digits;
+  return String(code).padStart(digits, '0');
+}
+
+// ---------- wordlists ----------
+// Common passwords (rank order, incl. Pakistani context) — used for the whole-password and fragment checks.
+const COMMON = `123456 password 123456789 12345678 12345 qwerty 1234567 111111 123123 abc123 1234567890 1234 iloveyou 000000 password1 qwerty123 admin welcome monkey login dragon letmein 654321 superman football baseball master hello freedom whatever qazwsx trustno1 princess sunshine shadow michael ashley jesus ninja mustang access flower passw0rd starwars charlie donald batman zaq12wsx 1q2w3e4r 123qwe 696969 666666 7777777 121212 112233 123321 159753 987654321 1qaz2wsx qwertyuiop asdfgh zxcvbnm pokemon computer internet samsung google facebook soccer cheese pepper killer jordan thomas hunter andrew joshua daniel robert jennifer william george summer secret matrix cookie ginger buster tigger hannah bailey jessica harley ranger amanda nicole chelsea biteme lovely liverpool arsenal manchester hockey tennis pakistan pakistan123 lahore karachi islamabad peshawar quetta multan faisalabad rawalpindi cricket cricket123 allah allah786 786786 bismillah mashallah inshallah muhammad ahmed ali123 hassan hussain usman bilal imran khan imrankhan babar afridi shaheen zindabad punjab sindh balochistan karachi123 lahore123 abcd1234 abc12345 asdf1234 password123 password12 pass123 pass1234 test test123 admin123 root toor user guest changeme default welcome1 welcome123 letmein123 iloveu loveyou love123 mylove jaan jaanu janu pyar mohabbat dost yaar bhai mama papa ammi abbu family home123 mobile mobile123 jazz jazzcash easypaisa telenor zong ufone ptcl warid mobilink nadra hbl ubl meezan bank123 money cash money123 student student123 school college university campus nust lums giki comsats bahria asdfghjkl zxcvbn 1234qwer 1q2w3e 123abc a123456 123456a 11111111 00000000 55555 88888888 99999999 13579 24680 112358 147258 147258369 963852741 741852963 159357 nokia iphone android windows linux apple orange banana chocolate coffee pizza burger biryani lollipop sweetie angel heaven baby babygirl babyboy honey sweety cutie prince king queen boss hero legend netflix gmail github daraz`.split(' ');
+// Passphrase wordlist (~300 words, 3–9 letters). log2(300) ≈ 8.2 bits per word.
+const WORDS = `acorn amber anchor apple arrow aspen atlas autumn badge bagel bamboo banjo barley basil beacon beetle berry birch bison blanket blossom bolt bonsai border bottle breeze brick bridge bronze brook bucket butter cabin cactus camel candle canoe canvas canyon carbon carrot castle cedar cello chalk cherry chess cider cinder circle citrus clay cliff clock cloud clover cobalt cocoa comet copper coral cotton cougar crane crystal cumin cypress dagger daisy delta denim desert dolphin domino drift dune eagle ember engine falcon feather fennel fern fiddle finch fjord flame flint fossil frost galaxy garden garnet gecko glacier globe granite grape gravel grove hammer harbor harvest hazel heron hickory horizon hydra indigo iron island ivory jade jasmine jigsaw juniper kayak kernel kettle kiwi koala ladder lagoon lantern lemon lily linen lion lotus lunar magnet mango maple marble marsh meadow melon mercury meteor mint mirror mist monsoon moss mountain mulberry nebula nectar needle nickel noodle north nutmeg oasis ocean olive onyx orbit orchid otter oyster paddle panda paper parrot pebble pelican petal pickle pine planet plum poppy prairie prism pumpkin puzzle quartz quill quiver rabbit radar rain raven reef ribbon ridge river robin rocket rose ruby saffron sage sail salmon sandal sapphire satin scarf sesame shell silk silver sketch slate smoke snow sparrow spruce squid stone storm summit sunset swan tango tempest thistle thunder tiger timber topaz tortoise tulip tundra turtle umbrella valley velvet violet violin walnut walrus wander waffle whale willow window winter wolf yarn yellow yogurt zebra zenith zephyr zinc`.split(' ');
+const COMMON_RANK = new Map(COMMON.map((w, i) => [w, i]));
+const DICT = new Set([...COMMON, ...WORDS]);
+const KNOWN_2FA = ['google', 'gmail', 'github', 'facebook', 'instagram', 'microsoft', 'outlook', 'apple', 'amazon', 'netflix', 'dropbox', 'paypal', 'twitter', 'x.com', 'linkedin', 'discord', 'jazzcash', 'easypaisa', 'hbl', 'ubl', 'meezan', 'daraz', 'nadra', 'binance', 'telegram', 'whatsapp'];
+
+// ---------- strength analyzer (explainable) ----------
+const LEET = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '@': 'a', '$': 's', '!': 'i', '|': 'l', '+': 't' };
+const KB_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', '1234567890', '0987654321', 'poiuytrewq', 'lkjhgfdsa', 'mnbvcxz', '!@#$%^&*()'];
+const VERDICTS = ['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong'];
+const analyzeCache = new Map();
+function analyze(pw) { pw = pw || ''; if (analyzeCache.has(pw)) return analyzeCache.get(pw); const r = analyzeRaw(pw); if (analyzeCache.size > 600) analyzeCache.clear(); analyzeCache.set(pw, r); return r; }
+function analyzeRaw(pw) {
+  const len = pw.length;
+  if (!len) return { bits: 0, score: 0, verdict: 'Empty', crack: '—', reasons: [{ kind: 'info', text: 'Type a password to analyse it' }], pool: 0, len: 0 };
+  const cls = { lower: /[a-z]/.test(pw), upper: /[A-Z]/.test(pw), digit: /\d/.test(pw), symbol: /[^A-Za-z0-9]/.test(pw) };
+  const nCls = Object.values(cls).filter(Boolean).length;
+  const pool = (cls.lower ? 26 : 0) + (cls.upper ? 26 : 0) + (cls.digit ? 10 : 0) + (cls.symbol ? 33 : 0);
+  const perChar = Math.log2(pool);
+  const lower = pw.toLowerCase(); const unleet = [...lower].map(c => LEET[c] || c).join('');
+  const m = []; // pattern matches {i, j, bits, text}
+  const whole = COMMON_RANK.has(lower) ? lower : COMMON_RANK.has(unleet) ? unleet : null;
+  if (whole) m.push({ i: 0, j: len, bits: Math.log2(COMMON_RANK.get(whole) + 2) + (whole !== lower ? 1 : 0), text: `“${pw}” is #${COMMON_RANK.get(whole) + 1} in the common-password list` });
+  else {
+    for (let i = 0; i < len; i++) for (let j = Math.min(len, i + 20); j >= i + 4; j--) { // dictionary words (longest first)
+      const sub = unleet.slice(i, j);
+      if (DICT.has(sub)) { const rank = COMMON_RANK.get(sub); const leet = sub !== lower.slice(i, j), caps = /[A-Z]/.test(pw.slice(i, j)); m.push({ i, j, bits: (rank != null ? Math.log2(rank + 2) : Math.log2(WORDS.length)) + (leet ? 1 : 0) + (caps ? 1 : 0), text: `${rank != null ? 'Common password fragment' : 'Dictionary word'} “${pw.slice(i, j)}”${leet ? ' (l33t spelling)' : ''}` }); i = j - 1; break; }
+    }
+    for (let i = 0; i < len; i++) for (let j = Math.min(len, i + 12); j >= i + 4; j--) { // keyboard walks
+      const sub = lower.slice(i, j); if (KB_ROWS.some(r => r.includes(sub))) { m.push({ i, j, bits: 5 + Math.log2(j - i), text: `Keyboard walk “${pw.slice(i, j)}”` }); i = j - 1; break; }
+    }
+    for (let i = 0; i < len - 2; i++) { // sequences abc / 123 / cba
+      const d = pw.charCodeAt(i + 1) - pw.charCodeAt(i); if (Math.abs(d) !== 1 || !/[a-z0-9]/i.test(pw[i])) continue;
+      let j = i + 1; while (j < len && pw.charCodeAt(j) - pw.charCodeAt(j - 1) === d && /[a-z0-9]/i.test(pw[j])) j++;
+      if (j - i >= 3) { m.push({ i, j, bits: 4 + Math.log2(j - i), text: `Sequence “${pw.slice(i, j)}”` }); i = j - 1; }
+    }
+    for (const r of pw.matchAll(/(.+?)\1+/g)) if (r[0].length >= 3) m.push({ i: r.index, j: r.index + r[0].length, bits: r[1].length * perChar + Math.log2(r[0].length / r[1].length), text: `Repeated “${r[1]}” ×${r[0].length / r[1].length}` });
+    for (const r of pw.matchAll(/(19|20)\d{2}/g)) m.push({ i: r.index, j: r.index + 4, bits: 7, text: `Year ${r[0]}` });
+    for (const r of pw.matchAll(/\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}/g)) m.push({ i: r.index, j: r.index + r[0].length, bits: 15, text: `Date-like “${r[0]}”` });
+    for (const r of pw.matchAll(/\d{7,}/g)) m.push({ i: r.index, j: r.index + r[0].length, bits: 10 + Math.log2(r[0].length), text: `Long digit run “${r[0]}” (phone/date?)` });
+  }
+  m.sort((a, b) => a.i - b.i || (b.j - b.i) - (a.j - a.i));
+  const kept = []; let end = 0; for (const x of m) if (x.i >= end) { kept.push(x); end = x.j; }
+  const covered = kept.reduce((s, x) => s + (x.j - x.i), 0);
+  const bits = Math.max(0, kept.reduce((s, x) => s + x.bits, 0) + (len - covered) * perChar);
+  const reasons = [];
+  if (len < 8) reasons.push({ kind: 'bad', text: `Very short (${len} characters)` }); else if (len < 12) reasons.push({ kind: 'bad', text: `Short (${len} characters) — 14+ recommended` }); else reasons.push({ kind: 'ok', text: `Good length (${len} characters)` });
+  const missing = Object.entries(cls).filter(([, v]) => !v).map(([k]) => ({ lower: 'lowercase', upper: 'uppercase', digit: 'digits', symbol: 'symbols' }[k]));
+  if (nCls === 1) reasons.push({ kind: 'bad', text: 'Only one character class' }); else if (nCls < 3) reasons.push({ kind: 'bad', text: `Only ${nCls} character classes — add ${missing.join(' or ')}` }); else reasons.push({ kind: 'ok', text: `${nCls} of 4 character classes${missing.length ? ' (no ' + missing.join(', ') + ')' : ''}` });
+  kept.forEach(x => reasons.push({ kind: 'bad', text: x.text }));
+  if (!kept.length) reasons.push({ kind: 'ok', text: 'No dictionary words, walks or patterns found' });
+  reasons.push({ kind: 'info', text: `Guess space ≈ 2^${Math.round(bits)} · alphabet of ${pool} symbols` });
+  const score = bits < 30 ? 0 : bits < 45 ? 1 : bits < 60 ? 2 : bits < 80 ? 3 : 4;
+  return { bits, score, verdict: VERDICTS[score], crack: crackTime(bits), reasons, pool, len };
+}
+/** Average time to find the password at 10^10 guesses/s (half the keyspace). */
+function crackTime(bits) {
+  const s = Math.pow(2, bits - 1) / 1e10;
+  if (s < 1) return 'instantly'; if (s < 60) return Math.round(s) + ' seconds'; if (s < 3600) return Math.round(s / 60) + ' minutes'; if (s < 86400) return Math.round(s / 3600) + ' hours'; if (s < 31557600) return Math.round(s / 86400) + ' days';
+  const y = s / 31557600; if (y < 1000) return Math.round(y) + ' years'; if (y < 1e6) return Math.round(y / 1e3) + ' thousand years'; if (y < 1e9) return Math.round(y / 1e6) + ' million years'; if (y < 1e12) return Math.round(y / 1e9) + ' billion years'; return 'longer than the age of the universe';
+}
+const meterHTML = a => `<div class="meter" data-s="${a.len ? a.score : -1}" aria-label="Strength: ${a.verdict}"><i></i><i></i><i></i><i></i><i></i></div>`;
+const strengthLine = a => `<div class="sline"><span class="verdict v${a.score}">${a.verdict}</span><span>${a.bits.toFixed(0)} bits · ${esc(a.crack)} at 10¹⁰ guesses/s</span></div>`;
+const reasonsHTML = a => `<ul class="reasons">${a.reasons.map(r => `<li class="${r.kind === 'bad' ? 'bad' : r.kind === 'ok' ? 'ok' : 'muted'}">${ic(r.kind === 'bad' ? 'alert-circle' : r.kind === 'ok' ? 'check-circle' : 'info')}<span>${esc(r.text)}</span></li>`).join('')}</ul>`;
+
+// ---------- generator (crypto.getRandomValues, unbiased) ----------
+function randInt(n) { const max = Math.floor(4294967296 / n) * n; let x; do { x = crypto.getRandomValues(new Uint32Array(1))[0]; } while (x >= max); return x % n; }
+const pick = arr => arr[randInt(arr.length)];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const SETS = { lower: 'abcdefghijklmnopqrstuvwxyz', upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', digit: '0123456789', symbol: '!@#$%^&*()-_=+[]{};:,.<>?/~' };
+const AMBIG = 'Il1O0o|`\'"{}[]();:,.';
+const gen = { mode: 'random', length: 20, lower: true, upper: true, digit: true, symbol: true, noAmbig: false, requireEach: true, words: 5, sep: '-', caps: 'title', suffix: true, plen: 14, pcaps: true, pdigits: true };
+function genRandom(o) {
+  let sets = ['lower', 'upper', 'digit', 'symbol'].filter(k => o[k]).map(k => o.noAmbig ? [...SETS[k]].filter(c => !AMBIG.includes(c)).join('') : SETS[k]).filter(Boolean);
+  if (!sets.length) sets = [SETS.lower];
+  const all = sets.join(''); const out = [];
+  if (o.requireEach) sets.forEach(s => out.push(s[randInt(s.length)]));
+  while (out.length < o.length) out.push(all[randInt(all.length)]);
+  return { pw: shuffle(out).join(''), bits: o.length * Math.log2(all.length) };
+}
+function genPassphrase(o) {
+  const ws = Array.from({ length: o.words }, () => pick(WORDS));
+  let bits = o.words * Math.log2(WORDS.length);
+  const cased = ws.map(w => o.caps === 'title' ? w[0].toUpperCase() + w.slice(1) : o.caps === 'random' ? (randInt(2) ? w.toUpperCase() : w) : w);
+  if (o.caps === 'random') bits += o.words;
+  let pw = cased.join(o.sep); if (o.suffix) { pw += o.sep + randInt(100); bits += Math.log2(100); }
+  return { pw, bits };
+}
+function genPronounceable(o) {
+  const C = 'bcdfghjklmnprstvwz', V = 'aeiou'; let pw = '', bits = 0;
+  while (pw.length < o.plen) { pw += pick(C) + pick(V); bits += Math.log2(C.length) + Math.log2(V.length); if (randInt(2)) { pw += pick(C); bits += Math.log2(C.length); } bits += 1; }
+  pw = pw.slice(0, o.plen);
+  if (o.pcaps) { const i = randInt(pw.length); pw = pw.slice(0, i) + pw[i].toUpperCase() + pw.slice(i + 1); bits += Math.log2(pw.length); }
+  if (o.pdigits) { pw += String(randInt(100)).padStart(2, '0'); bits += Math.log2(100); }
+  return { pw, bits };
+}
+const generate = () => gen.mode === 'passphrase' ? genPassphrase(gen) : gen.mode === 'pronounce' ? genPronounceable(gen) : genRandom(gen);
+const colorizePw = pw => [...pw].map(c => /\d/.test(c) ? `<span class="d">${esc(c)}</span>` : /[^a-z0-9]/i.test(c) ? `<span class="s">${esc(c)}</span>` : esc(c)).join('');
+
+// ---------- vault state & persistence ----------
+const PREFS_DEFAULT = { autoLock: 5, lockOnHide: true, clipClear: 20, iterations: KDF_MIN, accent: 'cyan' };
+let prefs = { ...PREFS_DEFAULT, ...store.get('prefs', {}) };
+const savePrefs = () => store.set('prefs', prefs);
+const session = { key: null, data: null };           // in-memory only; zeroed on lock
+const state = { view: 'all', tag: null, selected: null, q: '', sort: 'title', revealed: new Set(), listKey: '' };
+const COLORS = ['#22d3ee', '#34d399', '#a78bfa', '#fbbf24', '#fb7185', '#60a5fa', '#f472b6', '#94a3b8'];
+let lockReason = '', demoHint = false, lastActivity = now(), clipTimer = null, totpTimer = null, currentTotp = '', modalClose = null;
+const VERIFIER = { v: 'pfpm-verifier-1' };
+const entries = () => session.data ? session.data.entries : [];
+const findEntry = id => entries().find(e => e.id === id);
+
+/** Build a fresh encrypted vault record for `data` under `password` and store it. */
+async function createVault(password, data, iterations = prefs.iterations) {
+  const salt = rnd(16); const key = await deriveKey(password, salt, iterations);
+  const rec = { format: 'pfpm-vault', version: 1, kdf: 'PBKDF2-SHA-256', iterations, salt: b64(salt), cipher: 'AES-GCM-256', verifier: await encryptJSON(key, VERIFIER), data: await encryptJSON(key, data), createdAt: now(), savedAt: now() };
+  store.set('vault', rec); return { key, rec };
+}
+async function unlockVault(password) {
+  const rec = store.get('vault'); if (!rec) throw new Error('No vault on this device');
+  const key = await deriveKey(password, unb64(rec.salt), rec.iterations);
+  try { const v = await decryptJSON(key, rec.verifier); if (v.v !== VERIFIER.v) throw 0; } catch { throw new Error('Wrong master password'); }
+  session.key = key; session.data = await decryptJSON(key, rec.data);
+  session.data.entries = session.data.entries || [];
+}
+/** Re-encrypt the whole vault JSON with a fresh random IV and persist. */
+async function saveVault() {
+  if (!session.key) return; const rec = store.get('vault'); if (!rec) return;
+  rec.data = await encryptJSON(session.key, session.data); rec.savedAt = now(); store.set('vault', rec);
+}
+async function changeMasterPassword(oldPw, newPw, iterations) {
+  const rec = store.get('vault'); const oldKey = await deriveKey(oldPw, unb64(rec.salt), rec.iterations);
+  try { await decryptJSON(oldKey, rec.verifier); } catch { throw new Error('Current master password is wrong'); }
+  const { key } = await createVault(newPw, session.data, iterations); session.key = key; prefs.iterations = iterations; savePrefs();
+}
+function lock(reason = '') {
+  stopTotp(); closeModal(); document.body.classList.remove('rail-open', 'detail-open');
+  session.key = null; session.data = null; state.selected = null; state.revealed.clear(); state.q = ''; analyzeCache.clear(); currentTotp = '';
+  ['#rows', '#detailPane', '#contentPane', '#railNav'].forEach(s => { $(s).innerHTML = ''; }); $('#q').value = '';
+  $('#app').classList.remove('on'); $('#mobilebar').classList.remove('on'); $('#mobilebar').style.display = '';
+  lockReason = reason; renderLock();
+}
+// auto-lock: idle timer + tab hide
+['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => window.addEventListener(ev, () => { lastActivity = now(); }, { passive: true }));
+setInterval(() => {
+  if (!session.key) return;
+  const info = $('#autolockInfo'); const ms = prefs.autoLock * 60000 - (now() - lastActivity);
+  if (prefs.autoLock > 0 && ms <= 0) { lock(`Auto-locked after ${prefs.autoLock} min of inactivity`); return; }
+  if (info) info.innerHTML = prefs.autoLock > 0 ? `${ic('timer')} Auto-lock in ${Math.floor(ms / 60000)}:${String(Math.floor(ms % 60000 / 1000)).padStart(2, '0')}` : `${ic('timer')} Auto-lock off`;
+}, 1000);
+document.addEventListener('visibilitychange', () => { if (document.hidden && session.key && prefs.lockOnHide) lock('Locked when the tab was hidden'); });
+// clipboard with timed clear
+async function copyText(text, label = 'Value', btn) {
+  try { await navigator.clipboard.writeText(text); } catch { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.append(ta); ta.select(); try { document.execCommand('copy'); } catch {} ta.remove(); }
+  toast(`${label} copied · clipboard clears in ${prefs.clipClear}s`, 'ok', 'copy');
+  if (btn) { btn.classList.add('copied'); btn.innerHTML = ic('check'); setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = ic('copy'); }, 1400); }
+  clearTimeout(clipTimer); clipTimer = setTimeout(() => navigator.clipboard.writeText('').catch(() => {}), prefs.clipClear * 1000);
+}
+
+// ---------- student stubs (unbuilt features, listed in About) ----------
+function unlockWithPasskey() { // TODO(student): WebAuthn/passkey unlock — navigator.credentials.get() with PRF/largeBlob extension to wrap the vault key.
+  toast('Passkey unlock is a student TODO — see unlockWithPasskey()', 'bad', 'key'); }
+function autofillBridge() { // TODO(student): browser-extension autofill — a WebExtension content script that requests credentials for the active tab's origin over a postMessage/native-messaging bridge.
+  toast('Autofill is a student TODO — see autofillBridge()', 'bad'); }
+function syncVault() { // TODO(student): end-to-end-encrypted sync — push the encrypted record (never plaintext) to a dumb storage backend; resolve conflicts with per-entry `updated` timestamps.
+  toast('E2EE sync is a student TODO — see syncVault()', 'bad', 'refresh'); }
+function shareEntry() { // TODO(student): secure sharing — generate an X25519/ECDH key pair per user, encrypt the entry JSON with a random AES key and wrap that key for the recipient's public key.
+  toast('Secure sharing is a student TODO — see shareEntry()', 'bad', 'share'); }
+function recoveryKit() { // TODO(student): emergency access / recovery kit — printable sheet with a random recovery key that wraps the vault key (Shamir secret sharing for trusted contacts).
+  toast('Recovery kit is a student TODO — see recoveryKit()', 'bad', 'printer'); }
+async function checkRangeAPI(prefix) { // TODO(student): live HIBP range check — fetch(`https://api.pwnedpasswords.com/range/${prefix}`), parse "SUFFIX:COUNT" lines, return a Map(suffix → count). Returns null offline (stub).
+  void prefix; return null; }
+
+// ---------- demo data ----------
+const D = days => now() - days * DAY;
+function demoEntries() {
+  const e = (id, title, username, password, url, o = {}) => ({ id, title, username, password, url, notes: '', tags: [], fav: false, color: COLORS[0], fields: [], history: [], totp: '', created: D(400), updated: D(30), pwAt: D(30), ...o });
+  return [
+    e('d-hbl', 'HBL Internet Banking', '03001234567', 'Lahore@2019', 'hbl.com', { tags: ['banking', 'finance'], fav: true, color: COLORS[1], notes: 'Account ending 4471. Call 111-111-425 to block the card.', created: D(900), updated: D(120), pwAt: D(120), fields: [{ label: 'Account no.', value: '0123-7900-4471-03', secret: false }, { label: 'ATM PIN', value: '4471', secret: true }] }),
+    e('d-jazzcash', 'JazzCash', '03001234567', '123456', 'jazzcash.com.pk', { tags: ['wallet', 'finance'], color: COLORS[4], notes: 'MPIN is the 6-digit code used in the app.', created: D(820), updated: D(600), pwAt: D(600) }),
+    e('d-easypaisa', 'Easypaisa', '03001234567', 'Lahore@2019', 'easypaisa.com.pk', { tags: ['wallet', 'finance'], color: COLORS[1], created: D(700), updated: D(90), pwAt: D(90) }),
+    e('d-gmail', 'Gmail', 'ali.raza.1998@gmail.com', 'v9#Kq2!mZp7$Lw3r', 'mail.google.com', { tags: ['email'], fav: true, color: COLORS[4], notes: 'Primary email — recovery phone 0300-1234567.', created: D(1500), updated: D(45), pwAt: D(45), history: [{ password: 'AliRaza1998!', at: D(800) }, { password: 'aliraza1998', at: D(1500) }] }),
+    e('d-uni', 'University Portal (LMS)', '2021-CS-123', 'qwerty123', 'lms.uet.edu.pk', { tags: ['university'], color: COLORS[5], notes: 'Semester registration opens every January and August.', created: D(1100), updated: D(1100), pwAt: D(1100) }),
+    e('d-netflix', 'Netflix', 'ali.raza.1998@gmail.com', 'Netflix2024!', 'netflix.com', { tags: ['entertainment', 'shared'], color: COLORS[4], notes: 'Family plan shared with Hamza and Sara (profile 2 & 3).', created: D(600), updated: D(300), pwAt: D(300) }),
+    e('d-github', 'GitHub', 'aliraza-dev', 'Tz8$wq!rM2#pLx6&Yb', 'github.com', { tags: ['dev'], fav: true, color: COLORS[2], totp: 'JBSWY3DPEHPK3PXP', notes: 'Personal projects + FYP repo. 2FA via this vault.', created: D(500), updated: D(20), pwAt: D(20), fields: [{ label: 'Recovery codes', value: '4f2a-9c1e · 7b3d-0e8f · 1a9c-5d2b', secret: true }, { label: 'SSH key name', value: 'laptop-2026', secret: false }] }),
+    e('d-wifi', 'Home Wi-Fi (PTCL)', 'Raza_Home_5G', 'pakistan123', '', { tags: ['home'], color: COLORS[3], notes: 'Router is on the shelf in the lounge. Guest network: Raza_Guest.', created: D(1300), updated: D(1300), pwAt: D(1300), fields: [{ label: 'Router admin', value: 'admin', secret: true }, { label: 'Router IP', value: '192.168.10.1', secret: false }] }),
+    e('d-facebook', 'Facebook', 'ali.raza.1998@gmail.com', 'Ali.Raza#98', 'facebook.com', { tags: ['social'], color: COLORS[5], created: D(2000), updated: D(200), pwAt: D(200) }),
+    e('d-instagram', 'Instagram', 'ali.raza.98', 'Ali.Raza#98', 'instagram.com', { tags: ['social'], color: COLORS[6], created: D(900), updated: D(200), pwAt: D(200) }),
+    e('d-nadra', 'NADRA Pak-Identity', '35202-1234567-1', 'copper-violin-maple-granite-42', 'id.nadra.gov.pk', { tags: ['government'], color: COLORS[1], notes: 'CNIC renewal due 2029.', created: D(300), updated: D(10), pwAt: D(10), history: [{ password: 'Nadra@1998', at: D(300) }] }),
+    e('d-daraz', 'Daraz', '03001234567', 'Daraz@123', 'daraz.pk', { tags: ['shopping'], color: COLORS[3], created: D(400), updated: D(60), pwAt: D(60) }),
+  ];
+}
+
+// ---------- modal system ----------
+function openModal(html, { wide = false, onClose = null } = {}) {
+  const box = $('#modal .box'); box.innerHTML = html; box.classList.toggle('wide', wide);
+  $('#modal').classList.add('open'); $('#scrim').classList.add('open'); modalClose = onClose;
+  const f = box.querySelector('input:not([type=hidden]),select,textarea,button'); if (f) setTimeout(() => f.focus(), 30);
+}
+function closeModal() { if (!$('#modal').classList.contains('open')) return; $('#modal').classList.remove('open'); $('#scrim').classList.remove('open'); $('#modal .box').innerHTML = ''; const cb = modalClose; modalClose = null; if (cb) cb(); }
+const modalHead = (title, icon = '') => `<div class="modal-head"><h2>${icon ? ic(icon) + ' ' : ''}${title}</h2><button type="button" class="iconbtn" data-close aria-label="Close">${ic('x')}</button></div>`;
+/** Promise<boolean> confirm dialog; `typed` requires the user to type a word (e.g. DELETE). */
+function confirmModal({ title, body, ok = 'Confirm', danger = false, typed = null, icon = 'help' }) {
+  return new Promise(res => {
+    openModal(`${modalHead(esc(title), icon)}<div class="muted" style="margin:6px 0 10px">${body}</div>${typed ? `<label class="f" for="cfType">Type ${esc(typed)} to confirm</label><input id="cfType" class="mono" autocomplete="off" spellcheck="false">` : ''}
+      <div class="modal-foot"><button type="button" class="btn ghost" data-close>Cancel</button><button type="button" class="btn ${danger ? 'danger' : 'primary'}" id="cfOk" ${typed ? 'disabled' : ''}>${esc(ok)}</button></div>`, { onClose: () => res(false) });
+    if (typed) $('#cfType').addEventListener('input', e => { $('#cfOk').disabled = e.target.value.trim() !== typed; });
+    $('#cfOk').onclick = () => { modalClose = null; closeModal(); res(true); };
+  });
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-close]')) closeModal();
+  const t = e.target.closest('[data-toggle]'); // show/hide password inputs
+  if (t) { const inp = $('#' + t.dataset.toggle); if (inp) { const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; t.innerHTML = ic(show ? 'eye-off' : 'eye'); t.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); } }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('#modal').classList.contains('open')) closeModal(); else document.body.classList.remove('rail-open'); } });
+$('#scrim').onclick = () => { closeModal(); document.body.classList.remove('rail-open'); if (!$('#modal').classList.contains('open') && !document.body.classList.contains('rail-open')) $('#scrim').classList.remove('open'); };
+
+// ---------- "how your vault is protected" explainer ----------
+function protectHTML() {
+  const rec = store.get('vault');
+  const flow = `<div class="cryptoflow"><div class="step"><b>Master password</b>never stored</div>${ic('arrow-right')}<div class="step"><b>PBKDF2-SHA-256</b>${(rec ? rec.iterations : prefs.iterations).toLocaleString('en-PK')} iterations<br>16-byte random salt</div>${ic('arrow-right')}<div class="step"><b>AES-GCM-256</b>whole vault = one blob<br>new 12-byte IV per save</div></div>`;
+  const kv = rec ? `<dl class="kv"><dt>KDF</dt><dd>${esc(rec.kdf)} · ${rec.iterations.toLocaleString('en-PK')} iterations</dd><dt>Salt</dt><dd class="mono">${hex(unb64(rec.salt))}</dd><dt>Cipher</dt><dd>${esc(rec.cipher)} (authenticated — tampering is detected)</dd><dt>Current IV</dt><dd class="mono">${hex(unb64(rec.data.iv))}</dd><dt>Ciphertext</dt><dd>${unb64(rec.data.ct).length.toLocaleString('en-PK')} bytes in <code>localStorage["${NS}vault"]</code></dd><dt>Verifier</dt><dd>AES-GCM encryption of a constant — checkable only with the derived key; no password hash is stored</dd><dt>Last saved</dt><dd>${fmtTime(rec.savedAt)}</dd></dl>` : `<p class="small muted">No vault yet. Parameters above will be used when you create one.</p>`;
+  return flow + kv + `<p class="small muted" style="margin:10px 0 0">Zero-knowledge: nothing leaves this device, there is no server and no account. Forgetting the master password means the data is gone — by design.</p>`;
+}
+
+// ---------- lock screen ----------
+function renderLock(mode) {
+  const rec = store.get('vault'); mode = mode || (rec ? 'unlock' : 'create');
+  const noCrypto = !(window.crypto && crypto.subtle);
+  $('#lock').classList.remove('out'); $('#lock').style.display = '';
+  $('#lock').innerHTML = `<div class="lockcard enter">
+    <div class="lock-brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><circle cx="12" cy="10" r="2"/><path d="M12 12v4"/></svg></div><div><h1>Vault</h1><div class="muted small">Privacy-first password manager · zero-knowledge · offline</div></div></div>
+    ${noCrypto ? `<div class="note bad">${ic('alert')}<span>WebCrypto is unavailable. Open this file over <code>https://</code>, <code>localhost</code> or directly from disk in a modern browser.</span></div>` : ''}
+    ${lockReason ? `<div class="note warn" style="margin-bottom:12px">${ic('lock')}<span>${esc(lockReason)}</span></div>` : ''}
+    ${demoHint ? `<div class="note ok" style="margin-bottom:12px">${ic('sparkles')}<span>Demo vault ready. Master password: <code class="mono">demo-pass-1234</code></span></div>` : ''}
+    ${mode === 'create' ? `
+      <form id="createForm" autocomplete="off"><p class="muted small" style="margin-bottom:10px">No vault on this device yet. Choose a master password — it is the only key to your data and cannot be reset.</p>
+        <label class="f" for="newPw">Master password</label><div class="pwwrap one"><input id="newPw" type="password" autocomplete="off" spellcheck="false" required><div class="tools"><button type="button" class="iconbtn sm" data-toggle="newPw" aria-label="Show password">${ic('eye')}</button></div></div>
+        <div id="newMeter">${meterHTML(analyze(''))}</div><div id="newInfo" class="small muted" style="margin-top:6px">Requirement: 12+ characters and at least a <b>Fair</b> rating.</div>
+        <label class="f" for="newPw2">Confirm master password</label><input id="newPw2" type="password" autocomplete="off" spellcheck="false" required>
+        <button class="btn primary full" id="createBtn" style="margin-top:16px" disabled>${ic('shield-check')} Create vault</button></form>` : `
+      <form id="unlockForm" autocomplete="off"><label class="f" for="unlockPw">Master password</label>
+        <div class="pwwrap one"><input id="unlockPw" type="password" autocomplete="off" spellcheck="false" required autofocus><div class="tools"><button type="button" class="iconbtn sm" data-toggle="unlockPw" aria-label="Show password">${ic('eye')}</button></div></div>
+        <div id="unlockErr" class="small bad" style="margin-top:6px;min-height:1.2em"></div>
+        <button class="btn primary full" id="unlockBtn">${ic('unlock')} Unlock</button>
+        <p class="small muted" style="margin:10px 0 0">Vault created ${fmtDate(rec.createdAt)} · last saved ${ago(rec.savedAt)} · ${rec.iterations.toLocaleString('en-PK')} PBKDF2 iterations</p></form>`}
+    <div class="lock-foot">
+      <button class="btn ghost sm" id="demoBtn">${ic('sparkles')} Load demo vault</button>
+      ${mode === 'create' ? `<button class="btn ghost sm" id="restoreBtn">${ic('upload')} Restore encrypted export</button>` : `<button class="btn ghost sm" id="passkeyBtn">${ic('key')} Passkey</button>`}
+      <button class="btn ghost sm" id="aboutBtn">${ic('info')} About &amp; threat model</button>
+    </div>
+    <details class="protect"><summary>${ic('shield-check')} How your vault is protected</summary>${protectHTML()}</details>
+  </div>`;
+  const lockcard = $('#lock .lockcard'); animateIn(lockcard);
+  $('#demoBtn').onclick = loadDemo;
+  $('#aboutBtn').onclick = () => openModal(modalHead('About Vault', 'info') + aboutHTML(true), { wide: true });
+  if ($('#passkeyBtn')) $('#passkeyBtn').onclick = unlockWithPasskey;
+  if ($('#restoreBtn')) $('#restoreBtn').onclick = () => importEncrypted(true);
+  if (mode === 'create') {
+    const chk = () => { const a = analyze($('#newPw').value); $('#newMeter').innerHTML = meterHTML(a) + (a.len ? strengthLine(a) : ''); const ok = a.len >= 12 && a.score >= 2; const match = $('#newPw').value === $('#newPw2').value; $('#createBtn').disabled = !(ok && match); $('#newInfo').textContent = !a.len ? 'Requirement: 12+ characters and at least a Fair rating.' : !ok ? (a.len < 12 ? `Too short — ${12 - a.len} more character${12 - a.len === 1 ? '' : 's'} needed.` : 'Too weak — ' + (a.reasons.find(r => r.kind === 'bad') || { text: '' }).text) : !match ? 'Passwords do not match yet.' : 'Looks good. Remember it — there is no reset.'; };
+    $('#newPw').addEventListener('input', chk); $('#newPw2').addEventListener('input', chk);
+    $('#createForm').onsubmit = async ev => { ev.preventDefault(); const btn = $('#createBtn'); btn.disabled = true; btn.innerHTML = `${ic('refresh')} Deriving key…`; const pw = $('#newPw').value;
+      try { const { key } = await createVault(pw, { entries: [], createdAt: now() }); session.key = key; session.data = { entries: [], createdAt: now() }; enterApp('Vault created. Add your first item.'); } catch (e) { toast(e.message, 'bad'); btn.disabled = false; btn.innerHTML = `${ic('shield-check')} Create vault`; } };
+  } else {
+    $('#unlockForm').onsubmit = async ev => { ev.preventDefault(); const btn = $('#unlockBtn'); btn.disabled = true; btn.innerHTML = `${ic('refresh')} Deriving key…`; $('#unlockErr').textContent = '';
+      try { await unlockVault($('#unlockPw').value); demoHint = false; lockReason = ''; enterApp(); } catch (e) { $('#unlockErr').textContent = e.message; btn.disabled = false; btn.innerHTML = `${ic('unlock')} Unlock`; $('#unlockPw').select(); } };
+  }
+}
+async function loadDemo() {
+  if (store.get('vault') && !(await confirmModal({ title: 'Replace your vault with the demo?', body: 'Your current encrypted vault on this device will be overwritten. Export it first if you need it.', ok: 'Replace with demo', danger: true, icon: 'alert' }))) return;
+  const btn = $('#demoBtn'); if (btn) { btn.disabled = true; btn.innerHTML = `${ic('refresh')} Creating…`; }
+  await createVault('demo-pass-1234', { entries: demoEntries(), createdAt: D(900), demo: true });
+  demoHint = true; lockReason = ''; renderLock('unlock'); $('#unlockPw').focus();
+}
+function enterApp(msg) {
+  lastActivity = now(); $('#lock').classList.add('out');
+  setTimeout(() => { $('#lock').style.display = 'none'; $('#app').classList.add('on'); route(); animateIn($('#app')); if (msg) toast(msg, 'ok', 'shield-check'); }, 280);
+}
+
+// ---------- rail / list ----------
+const PAGES = { health: ['activity', 'Health'], generator: ['dice', 'Generator'], settings: ['settings', 'Settings'], about: ['info', 'About'] };
+const viewBase = () => state.view === 'tag' ? 'tag/' + encodeURIComponent(state.tag) : state.view;
+const viewTitle = () => state.view === 'fav' ? 'Favourites' : state.view === 'tag' ? '#' + state.tag : PAGES[state.view] ? PAGES[state.view][1] : 'All items';
+function allTags() { const m = new Map(); entries().forEach(e => (e.tags || []).forEach(t => m.set(t, (m.get(t) || 0) + 1))); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])); }
+function renderRail() {
+  const es = entries(); const act = (v, t) => state.view === v && (v !== 'tag' || state.tag === t) ? 'active' : '';
+  $('#railNav').innerHTML = `<a href="#all" class="${act('all')}">${ic('layers')} All items <span class="n">${es.length}</span></a>
+    <a href="#fav" class="${act('fav')}">${ic('star')} Favourites <span class="n">${es.filter(e => e.fav).length}</span></a>
+    <h4>Tags</h4>${allTags().map(([t, n]) => `<a href="#tag/${encodeURIComponent(t)}" class="${act('tag', t)}">${ic('tag')} ${esc(t)} <span class="n">${n}</span></a>`).join('') || '<div class="small dim" style="padding:0 10px">No tags yet</div>'}
+    <h4>Tools</h4>${Object.entries(PAGES).map(([k, [i, l]]) => `<a href="#${k}" class="${act(k)}">${ic(i)} ${l}${k === 'health' ? `<span class="n">${healthReport().score}</span>` : ''}</a>`).join('')}`;
+  $('#mbTitle').textContent = viewTitle();
+}
+function visibleEntries() {
+  let list = entries().slice();
+  if (state.view === 'fav') list = list.filter(e => e.fav);
+  if (state.view === 'tag') list = list.filter(e => (e.tags || []).includes(state.tag));
+  const q = state.q.trim().toLowerCase();
+  if (q) list = list.filter(e => [e.title, e.username, e.url, ...(e.tags || [])].some(v => (v || '').toLowerCase().includes(q)));
+  const S = { title: (a, b) => a.title.localeCompare(b.title), updated: (a, b) => b.updated - a.updated, created: (a, b) => b.created - a.created, weak: (a, b) => analyze(a.password).bits - analyze(b.password).bits };
+  return list.sort(S[state.sort] || S.title);
+}
+function renderList() {
+  const list = visibleEntries(); $('#listTitle').textContent = viewTitle(); $('#sortSel').value = state.sort;
+  const rows = $('#rows'); const key = state.view + '|' + state.tag;
+  if (!list.length) { rows.innerHTML = `<div class="empty"><div>${ic('search', 'big')}<h3>${state.q ? 'No matches' : 'Nothing here yet'}</h3><p class="small">${state.q ? 'Try another search term.' : 'Click <b>New</b> to add an item.'}</p></div></div>`; return; }
+  rows.innerHTML = `<div class="${key !== state.listKey ? 'stagger' : ''}">${list.map(e => { const a = analyze(e.password); return `<button class="row ${e.id === state.selected ? 'active' : ''}" data-id="${e.id}" aria-label="${esc(e.title)}">
+    <div class="avatar" style="--c:${esc(e.color)}">${esc(initial(e.title))}</div>
+    <div class="txt"><div class="t">${esc(e.title)}</div><div class="s">${esc(e.username || host(e.url || '') || '—')}</div></div>
+    <div class="badges">${e.totp ? `<span title="Has one-time code">${ic('timer')}</span>` : ''}${e.fav ? `<span class="warnc" title="Favourite">${ic('star')}</span>` : ''}<span class="sdot s${a.score}" title="${esc(a.verdict)}"></span></div></button>`; }).join('')}</div>`;
+  if (key !== state.listKey) { animateIn(rows); state.listKey = key; }
+  $$('.row', rows).forEach(b => b.onclick = () => { location.hash = viewBase() + '/' + b.dataset.id; });
+}
+
+// ---------- detail ----------
+function stopTotp() { clearInterval(totpTimer); totpTimer = null; }
+function startTotp(secret) {
+  const codeEl = $('#totpCode'), ring = $('#totpRing'), left = $('#totpLeft'); if (!codeEl) return; let last = -1; const C = 94.25;
+  const tick = async () => {
+    const t = now(), counter = Math.floor(t / 30000), rem = 30 - (t / 1000) % 30;
+    if (counter !== last) { last = counter; try { const c = await totp(secret, t); currentTotp = c || ''; codeEl.textContent = c ? c.slice(0, 3) + ' ' + c.slice(3) : 'invalid secret'; } catch { codeEl.textContent = 'invalid secret'; } ring.style.transition = 'none'; ring.style.strokeDashoffset = C * (1 - rem / 30); void ring.getBoundingClientRect(); ring.style.transition = ''; }
+    else ring.style.strokeDashoffset = C * (1 - rem / 30);
+    ring.closest('.ring').classList.toggle('warn', rem < 6); left.textContent = Math.ceil(rem) + 's';
+  };
+  tick(); totpTimer = setInterval(tick, 1000);
+}
+const fld = (label, icon, valueHTML, actionsHTML = '') => `<div class="fld"><div class="main"><div class="fl">${ic(icon)} ${label}</div><div class="fv">${valueHTML}</div></div>${actionsHTML}</div>`;
+const copyBtn = (key, label) => `<button class="iconbtn" data-copy="${esc(key)}" aria-label="Copy ${esc(label)}" title="Copy">${ic('copy')}</button>`;
+const revealBtn = key => `<button class="iconbtn" data-reveal="${esc(key)}" aria-label="Show value" title="Show / hide">${ic(state.revealed.has(key) ? 'eye-off' : 'eye')}</button>`;
+const mask = (key, v) => `<span class="mono secret" data-secret="${esc(key)}">${state.revealed.has(key) ? esc(v) : '••••••••••••'}</span>`;
+function secretByKey(e, key) {
+  if (key === 'password') return e.password; if (key === 'username') return e.username; if (key === 'url') return e.url; if (key === 'totp') return currentTotp; if (key === 'notes') return e.notes;
+  if (key.startsWith('cf:')) return (e.fields[+key.slice(3)] || {}).value || ''; if (key.startsWith('hist:')) return (e.history[+key.slice(5)] || {}).password || ''; return '';
+}
+function renderDetail() {
+  stopTotp(); const pane = $('#detailPane'); const e = findEntry(state.selected);
+  if (!e) { pane.innerHTML = `<div class="empty"><div>${ic('shield', 'big')}<h3>${entries().length ? 'Select an item' : 'Your vault is empty'}</h3><p class="small">${entries().length ? 'Pick something from the list to see its details, codes and strength analysis.' : 'Add your first login with the New button, or import a CSV in Settings.'}</p></div></div>`; return; }
+  const a = analyze(e.password); const pwAge = now() - (e.pwAt || e.updated || e.created); const old = pwAge > 365 * DAY;
+  pane.innerHTML = `<div class="d-head">
+    <button class="iconbtn back" id="backBtn" aria-label="Back to list">${ic('arrow-left')}</button>
+    <div class="avatar lg" style="--c:${esc(e.color)}">${esc(initial(e.title))}</div>
+    <div class="d-title"><h2>${esc(e.title)}</h2><div class="small">${e.url ? `<a href="${esc(normUrl(e.url))}" target="_blank" rel="noopener noreferrer">${esc(host(e.url))} ${ic('external')}</a>` : '<span class="muted">No URL</span>'} <span class="dim">· updated ${ago(e.updated)}</span></div></div>
+    <div class="d-actions"><button class="iconbtn ${e.fav ? 'on' : ''}" data-act="fav" aria-label="Toggle favourite" title="Favourite">${ic('star')}</button><button class="iconbtn" data-act="edit" aria-label="Edit item" title="Edit">${ic('edit')}</button><button class="iconbtn" data-act="dup" aria-label="Duplicate item" title="Duplicate">${ic('layers')}</button><button class="iconbtn" data-act="share" aria-label="Share item" title="Share (student TODO)">${ic('share')}</button><button class="iconbtn danger" data-act="del" aria-label="Delete item" title="Delete">${ic('trash')}</button></div>
+  </div>
+  <div class="d-body stagger">
+    ${fld('Username / email', 'user', e.username ? esc(e.username) : '<span class="dim">—</span>', e.username ? copyBtn('username', 'username') : '')}
+    ${fld('Password', 'key', e.password ? mask('password', e.password) + `<span class="pill ${a.score <= 1 ? 'bad' : a.score === 2 ? 'warn' : 'ok'}">${esc(a.verdict)}</span>` : '<span class="dim">—</span>', e.password ? revealBtn('password') + copyBtn('password', 'password') : '')}
+    ${e.totp ? `<div class="fld"><div class="main"><div class="fl">${ic('timer')} One-time code (TOTP · 30 s · SHA-1)</div><div class="fv"><span class="code mono" id="totpCode">--- ---</span><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="15"/><circle class="fg" id="totpRing" cx="18" cy="18" r="15"/></svg><span class="small muted" id="totpLeft"></span></div></div>${copyBtn('totp', 'one-time code')}</div>` : ''}
+    ${e.url ? fld('URL', 'link', esc(e.url), copyBtn('url', 'URL')) : ''}
+    ${e.notes ? `<div class="fld"><div class="main"><div class="fl">${ic('file')} Notes</div><div class="fv pre">${esc(e.notes)}</div></div>${copyBtn('notes', 'notes')}</div>` : ''}
+    ${(e.fields || []).map((f, i) => fld(esc(f.label || 'Field'), f.secret ? 'lock' : 'hash', f.secret ? mask('cf:' + i, f.value) : esc(f.value), (f.secret ? revealBtn('cf:' + i) : '') + copyBtn('cf:' + i, f.label || 'field'))).join('')}
+    ${(e.tags || []).length ? fld('Tags', 'tag', `<span class="chips">${e.tags.map(t => `<a class="chip" href="#tag/${encodeURIComponent(t)}">${ic('tag')} ${esc(t)}</a>`).join('')}</span>`) : ''}
+    <div class="card"><h3>${ic('shield-check')} Strength analysis</h3>${meterHTML(a)}${strengthLine(a)}${reasonsHTML(a)}</div>
+    ${(e.history || []).length ? `<div class="card"><h3>${ic('clock')} Password history <span class="pill">${e.history.length}</span></h3><div class="hist">${e.history.map((h, i) => `<div class="hrow"><span class="muted small" style="min-width:92px">${fmtDate(h.at)}</span><span class="main">${mask('hist:' + i, h.password)}</span>${revealBtn('hist:' + i).replace('class="iconbtn"', 'class="iconbtn sm"')}${copyBtn('hist:' + i, 'old password').replace('class="iconbtn"', 'class="iconbtn sm"')}</div>`).join('')}</div></div>` : ''}
+    <dl class="kv" style="padding:0 4px"><dt>Created</dt><dd>${fmtDate(e.created)}</dd><dt>Updated</dt><dd>${fmtDate(e.updated)} (${ago(e.updated)})</dd><dt>Password changed</dt><dd>${fmtDate(e.pwAt || e.updated || e.created)} ${old ? `<span class="pill warn">${ic('alert')} older than a year</span>` : ''}</dd>${e.totp ? '' : `<dt>2FA</dt><dd class="muted">No TOTP secret saved${KNOWN_2FA.some(k => (e.url + ' ' + e.title).toLowerCase().includes(k)) ? ' — this service offers 2FA, consider enabling it' : ''}</dd>`}</dl>
+  </div>`;
+  animateIn(pane); if (e.totp) startTotp(e.totp);
+  $('#backBtn').onclick = () => { location.hash = viewBase(); };
+  pane.onclick = async ev => {
+    const c = ev.target.closest('[data-copy]'); if (c) { const key = c.dataset.copy; const v = secretByKey(e, key); if (v) copyText(v, c.getAttribute('aria-label').replace('Copy ', '').replace(/^\w/, s => s.toUpperCase()), c); return; }
+    const r = ev.target.closest('[data-reveal]'); if (r) { const key = r.dataset.reveal; state.revealed.has(key) ? state.revealed.delete(key) : state.revealed.add(key); const span = pane.querySelector(`[data-secret="${key.replace(/"/g, '\\"')}"]`); if (span) span.textContent = state.revealed.has(key) ? secretByKey(e, key) : '••••••••••••'; r.innerHTML = ic(state.revealed.has(key) ? 'eye-off' : 'eye'); return; }
+    const b = ev.target.closest('[data-act]'); if (!b) return; const act = b.dataset.act;
+    if (act === 'fav') { e.fav = !e.fav; e.updated = now(); await saveVault(); renderRail(); renderList(); renderDetail(); toast(e.fav ? 'Added to favourites' : 'Removed from favourites', 'ok', 'star'); }
+    if (act === 'edit') openEditor(e.id);
+    if (act === 'share') shareEntry(e);
+    if (act === 'dup') { const c = JSON.parse(JSON.stringify(e)); c.id = uid(); c.title = e.title + ' (copy)'; c.created = c.updated = c.pwAt = now(); c.history = []; c.fav = false; entries().push(c); await saveVault(); toast('Item duplicated', 'ok'); location.hash = viewBase() + '/' + c.id; }
+    if (act === 'del' && await confirmModal({ title: `Delete “${e.title}”?`, body: 'The item and its password history are removed from the vault. This cannot be undone.', ok: 'Delete', danger: true, icon: 'trash' })) { session.data.entries = entries().filter(x => x.id !== e.id); await saveVault(); toast('Item deleted', 'ok', 'trash'); location.hash = viewBase(); }
+  };
+}
+
+// ---------- editor ----------
+function openEditor(id, prefill = {}) {
+  const e = id ? findEntry(id) : null;
+  const v = { title: '', username: '', password: '', url: '', notes: '', tags: [], fav: false, color: COLORS[randInt(COLORS.length)], totp: '', fields: [], ...(e ? JSON.parse(JSON.stringify(e)) : {}), ...prefill };
+  const tags = allTags().map(([t]) => t);
+  openModal(`${modalHead(e ? 'Edit item' : 'New item', e ? 'edit' : 'plus')}<form id="edForm" autocomplete="off"><div class="ed-grid">
+    <div><label class="f" for="edTitle">Title *</label><input id="edTitle" required maxlength="80" value="${esc(v.title)}" autocomplete="off" placeholder="e.g. Meezan Bank"></div>
+    <div><label class="f" for="edUser">Username / email</label><input id="edUser" value="${esc(v.username)}" autocomplete="off"></div>
+    <div class="span2"><label class="f" for="edPw">Password</label><div class="pwwrap"><input id="edPw" type="password" value="${esc(v.password)}" autocomplete="off" spellcheck="false"><div class="tools"><button type="button" class="iconbtn sm" data-toggle="edPw" aria-label="Show password">${ic('eye')}</button><button type="button" class="iconbtn sm" id="edGen" aria-label="Generate password" title="Generate (uses Generator settings)">${ic('dice')}</button></div></div><div id="edMeter"></div></div>
+    <div><label class="f" for="edUrl">URL</label><input id="edUrl" value="${esc(v.url)}" autocomplete="off" placeholder="example.com"></div>
+    <div><label class="f" for="edTotp">TOTP secret (Base32)</label><input id="edTotp" class="mono" value="${esc(v.totp)}" autocomplete="off" spellcheck="false" placeholder="JBSW Y3DP EHPK 3PXP"><div class="small muted" id="edTotpPrev" style="margin-top:4px;min-height:1.2em"></div></div>
+    <div class="span2"><label class="f" for="edNotes">Notes</label><textarea id="edNotes">${esc(v.notes)}</textarea></div>
+    <div class="span2"><label class="f" for="edTags">Tags (comma separated)</label><input id="edTags" value="${esc((v.tags || []).join(', '))}" autocomplete="off" placeholder="banking, email">${tags.length ? `<div class="chips" style="margin-top:6px">${tags.map(t => `<button type="button" class="chip" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>
+    <div><label class="f">Colour</label><div class="swatches" id="edColors">${COLORS.map(c => `<button type="button" class="sw ${c === v.color ? 'on' : ''}" style="--c:${c}" data-c="${c}" aria-label="Colour ${c}"></button>`).join('')}</div></div>
+    <div><label class="f">Options</label><label class="chk"><input type="checkbox" id="edFav" ${v.fav ? 'checked' : ''}> Favourite</label></div>
+    <div class="span2"><label class="f">Custom fields</label><div id="cfList"></div><button type="button" class="btn ghost sm" id="cfAdd">${ic('plus')} Add field</button></div>
+  </div><div class="modal-foot"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn primary">${ic('save')} Save item</button></div></form>`, { wide: true });
+  let color = v.color;
+  const cfRow = f => { const d = document.createElement('div'); d.className = 'cf'; d.innerHTML = `<input placeholder="Label" value="${esc(f.label || '')}" autocomplete="off" aria-label="Field label"><input placeholder="Value" value="${esc(f.value || '')}" autocomplete="off" aria-label="Field value" class="mono"><label class="chk small"><input type="checkbox" ${f.secret ? 'checked' : ''}> Secret</label><button type="button" class="iconbtn danger" aria-label="Remove field">${ic('x')}</button>`; d.querySelector('.iconbtn').onclick = () => d.remove(); $('#cfList').append(d); };
+  (v.fields || []).forEach(cfRow); $('#cfAdd').onclick = () => cfRow({});
+  const meter = () => { const a = analyze($('#edPw').value); $('#edMeter').innerHTML = meterHTML(a) + (a.len ? strengthLine(a) + reasonsHTML(a) : ''); }; meter();
+  $('#edPw').addEventListener('input', meter);
+  $('#edGen').onclick = () => { $('#edPw').value = generate().pw; $('#edPw').type = 'text'; $('[data-toggle=edPw]').innerHTML = ic('eye-off'); meter(); };
+  let totpT; const prev = async () => { const s = $('#edTotp').value.trim(); if (!s) { $('#edTotpPrev').textContent = ''; return; } const c = await totp(s).catch(() => null); $('#edTotpPrev').innerHTML = c ? `${ic('check-circle')} Current code: <b class="mono">${c}</b>` : `${ic('alert-circle')} Not a valid Base32 secret`; };
+  $('#edTotp').addEventListener('input', () => { clearTimeout(totpT); totpT = setTimeout(prev, 250); }); prev();
+  $$('#edColors .sw').forEach(b => b.onclick = () => { color = b.dataset.c; $$('#edColors .sw').forEach(x => x.classList.toggle('on', x === b)); });
+  $$('[data-tag]').forEach(b => b.onclick = () => { const cur = $('#edTags').value.split(',').map(s => s.trim()).filter(Boolean); if (!cur.includes(b.dataset.tag)) cur.push(b.dataset.tag); $('#edTags').value = cur.join(', '); });
+  $('#edForm').onsubmit = async ev => {
+    ev.preventDefault(); const t = now(); const pw = $('#edPw').value;
+    const out = { ...(e || { id: uid(), created: t, history: [], pwAt: t }), title: $('#edTitle').value.trim(), username: $('#edUser').value.trim(), password: pw, url: $('#edUrl').value.trim(), notes: $('#edNotes').value.trim(), tags: [...new Set($('#edTags').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean))], fav: $('#edFav').checked, color, totp: $('#edTotp').value.replace(/\s+/g, '').toUpperCase(), updated: t, fields: $$('#cfList .cf').map(r => { const [l, val] = $$('input[type=text],input:not([type])', r).map(i => i.value.trim()); return { label: l, value: val, secret: r.querySelector('input[type=checkbox]').checked }; }).filter(f => f.label || f.value) };
+    if (!out.title) return;
+    if (e && e.password !== pw) { out.history = [{ password: e.password, at: e.pwAt || e.updated }, ...(e.history || [])].filter(h => h.password).slice(0, 10); out.pwAt = t; }
+    if (e) Object.assign(e, out); else entries().push(out);
+    await saveVault(); modalClose = null; closeModal(); toast(e ? 'Item updated' : 'Item added', 'ok', 'save');
+    state.listKey = ''; if (!['all', 'fav', 'tag'].includes(state.view)) { location.hash = 'all/' + out.id; } else { location.hash = viewBase() + '/' + out.id; renderRail(); renderList(); renderDetail(); }
+  };
+}
+
+// ---------- health ----------
+function healthReport() {
+  const es = entries(); const byPw = new Map();
+  es.forEach(e => { if (!e.password) return; if (!byPw.has(e.password)) byPw.set(e.password, []); byPw.get(e.password).push(e); });
+  const groups = [...byPw.values()].filter(g => g.length > 1); const reusedIds = new Set(groups.flat().map(e => e.id));
+  const weak = es.filter(e => analyze(e.password).score <= 1);
+  const old = es.filter(e => now() - (e.pwAt || e.updated || e.created) > 365 * DAY);
+  const no2fa = es.filter(e => !e.totp && KNOWN_2FA.some(k => ((e.url || '') + ' ' + e.title).toLowerCase().includes(k)));
+  const n = es.length || 1;
+  const score = es.length ? Math.round(100 * (1 - (0.45 * weak.length / n + 0.3 * reusedIds.size / n + 0.15 * old.length / n + 0.1 * no2fa.length / n))) : 100;
+  const dist = [0, 0, 0, 0, 0]; es.forEach(e => dist[analyze(e.password).score]++);
+  const fixes = es.map(e => ({ e, why: [weak.includes(e) && 'weak', reusedIds.has(e.id) && 'reused', old.includes(e) && 'old', no2fa.includes(e) && 'no 2FA'].filter(Boolean) })).filter(f => f.why.length).sort((a, b) => b.why.length - a.why.length || analyze(a.e.password).bits - analyze(b.e.password).bits);
+  return { score, weak, groups, reusedIds, old, no2fa, dist, fixes, n: es.length };
+}
+function renderHealth(root) {
+  const h = healthReport(); const C = 2 * Math.PI * 52; const col = h.score >= 80 ? 'var(--ok)' : h.score >= 55 ? 'var(--warn)' : 'var(--danger)';
+  const kpi = (icon, k, v, cls) => `<div class="kpi tile"><div class="kic ${cls}">${ic(icon)}</div><div><div class="k">${k}</div><div class="v" data-count="${v}">0</div></div></div>`;
+  const DIST_C = ['var(--danger)', 'var(--danger)', 'var(--warn)', 'var(--accent)', 'var(--ok)'];
+  root.innerHTML = `<div class="page">
+    <div class="page-head"><div><h2>Vault health</h2><p>Weighted score: weak 45% · reused 30% · older than a year 15% · missing 2FA 10%. Every finding links to the item to fix.</p></div></div>
+    <div class="health-top">
+      <div class="card scorecard"><div class="scorering"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="scoreFg" cx="60" cy="60" r="52" style="stroke:${col};stroke-dasharray:${C};stroke-dashoffset:${C}"/></svg><div class="num" id="scoreNum">0</div></div><div><b>Health score</b> · ${h.n} item${h.n === 1 ? '' : 's'}</div><div class="small muted">${h.score >= 80 ? 'Good hygiene — keep rotating old passwords.' : h.score >= 55 ? 'Some work to do. Start with reused passwords.' : 'At risk: weak and reused passwords found.'}</div></div>
+      <div class="kpis">${kpi('alert', 'Weak', h.weak.length, 'bad')}${kpi('layers', 'Reused', h.reusedIds.size, 'warnc')}${kpi('clock', 'Older than 1 year', h.old.length, 'warnc')}${kpi('timer', 'Missing 2FA', h.no2fa.length, 'acc')}</div>
+    </div>
+    <div class="two">
+      <div class="card"><h3>${ic('bar-chart')} Strength distribution</h3><p class="lead">Entropy after pattern penalties. Hover a bar for the count.</p>${VERDICTS.map((v, i) => `<div class="hbar" title="${h.dist[i]} ${esc(v).toLowerCase()}"><span>${esc(v)}</span><div class="bar"><i style="--c:${DIST_C[i]}" data-w="${h.n ? h.dist[i] / h.n * 100 : 0}"></i></div><span class="n">${h.dist[i]}</span></div>`).join('')}</div>
+      <div class="card"><h3>${ic('layers')} Reused passwords</h3><p class="lead">${h.groups.length ? 'One leak unlocks every account in a group.' : 'No two items share a password.'}</p>${h.groups.map(g => `<div class="fixrow"><span class="pill warn">${g.length}× same</span><div class="txt chips">${g.map(e => `<a class="chip" href="#all/${e.id}">${esc(e.title)}</a>`).join('')}</div></div>`).join('') || `<div class="note ok">${ic('check-circle')}<span>Nothing reused.</span></div>`}</div>
+    </div>
+    <div class="card"><h3>${ic('activity')} Items to fix <span class="pill">${h.fixes.length}</span></h3>${h.fixes.length ? `<div class="stagger">${h.fixes.map(({ e, why }) => `<div class="fixrow"><div class="avatar" style="--c:${esc(e.color)};width:32px;height:32px;font-size:.9rem">${esc(initial(e.title))}</div><div class="txt"><b>${esc(e.title)}</b><div class="small muted">${esc(e.username || host(e.url || ''))} · ${analyze(e.password).bits.toFixed(0)} bits · ${esc(analyze(e.password).crack)}</div></div><div class="chips">${why.map(w => `<span class="chip ${w === 'weak' ? 'bad' : 'warn'}">${esc(w)}</span>`).join('')}</div><a class="btn ghost sm" href="#all/${e.id}">Fix ${ic('arrow-right')}</a></div>`).join('')}</div>` : `<div class="note ok">${ic('check-circle')}<span>No findings. Nice.</span></div>`}</div>
+    <div class="card" id="breachCard"><h3>${ic('globe')} Breach check — k-anonymity</h3><p class="lead">Have I Been Pwned's range API never sees your password: only the <b>first 5 hex characters</b> of its SHA-1 are sent, the server returns every leaked hash with that prefix (~800 of them), and the match is done here on your device.</p>
+      <div class="gen-grid"><div><label class="f" for="brSel">Item to check</label><select id="brSel">${entries().map(e => `<option value="${e.id}">${esc(e.title)}</option>`).join('')}</select></div><div><label class="f" for="brCustom">…or type any password</label><input id="brCustom" type="password" autocomplete="off" placeholder="leave empty to use the item above"></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn primary" id="brHash">${ic('hash')} Compute SHA-1 locally</button><button class="btn ghost" id="brCheck" disabled>${ic('globe')} Query range API</button></div>
+      <div id="brOut" style="margin-top:12px"></div></div>
+  </div>`;
+  animateIn(root);
+  setTimeout(() => { $('#scoreFg').style.strokeDashoffset = C * (1 - h.score / 100); countUp($('#scoreNum'), h.score); $$('[data-count]', root).forEach(el => countUp(el, +el.dataset.count)); $$('.hbar i', root).forEach(i => i.style.width = i.dataset.w + '%'); }, 60);
+  let hashInfo = null;
+  $('#brHash').onclick = async () => { const custom = $('#brCustom').value; const e = findEntry($('#brSel').value); const pw = custom || (e ? e.password : ''); if (!pw) { toast('Nothing to hash', 'bad'); return; } const H = await sha1Hex(pw); hashInfo = { prefix: H.slice(0, 5), suffix: H.slice(5) };
+    $('#brOut').innerHTML = `<div class="hashbox">SHA-1 = <span class="pre">${hashInfo.prefix}</span>${hashInfo.suffix}</div><div class="small muted" style="margin-top:8px">Only <code class="mono">${hashInfo.prefix}</code> would leave this device → <code class="mono">GET https://api.pwnedpasswords.com/range/${hashInfo.prefix}</code>. The 35-character suffix stays here and is compared against the returned list. 16⁵ = 1,048,576 possible prefixes, so the server learns nearly nothing about your password.</div>`; $('#brCheck').disabled = false; };
+  $('#brCheck').onclick = async () => { if (!hashInfo) return; const res = await checkRangeAPI(hashInfo.prefix);
+    $('#brOut').insertAdjacentHTML('beforeend', res === null ? `<div class="note warn" style="margin-top:10px">${ic('alert')}<span><b>Offline stub — no request was sent.</b> <code>checkRangeAPI()</code> returns <code>null</code> until a student implements the fetch (see TODO in the source). When built, a match count &gt; 0 means this password appeared in public breaches and must be changed.</span></div>` : res.has(hashInfo.suffix) ? `<div class="note bad">${ic('alert')}<span>Seen ${res.get(hashInfo.suffix)} times in breaches — change it.</span></div>` : `<div class="note ok">${ic('check-circle')}<span>Not found in the returned range.</span></div>`); };
+}
+
+// ---------- generator page ----------
+function renderGenerator(root) {
+  const opt = (id, label, checked) => `<label class="chk"><input type="checkbox" id="${id}" ${checked ? 'checked' : ''}> ${label}</label>`;
+  root.innerHTML = `<div class="page">
+    <div class="page-head"><div><h2>Password generator</h2><p>Every character comes from <code>crypto.getRandomValues</code> with rejection sampling — no modulo bias, no <code>Math.random()</code>.</p></div>
+      <div class="seg" role="tablist">${[['random', 'Random'], ['passphrase', 'Passphrase'], ['pronounce', 'Pronounceable']].map(([k, l]) => `<button role="tab" class="${gen.mode === k ? 'on' : ''}" data-mode="${k}">${l}</button>`).join('')}</div></div>
+    <div class="card"><div class="genout" id="genOut" aria-live="polite"></div><div class="sline" id="genMeta"></div><div id="genMeter"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn primary" id="genAgain">${ic('refresh')} Regenerate</button><button class="btn" id="genCopy">${ic('copy')} Copy</button><button class="btn ghost" id="genUse">${ic('plus')} Use in new entry</button></div></div>
+    <div class="card" id="genOpts">${gen.mode === 'random' ? `<h3>${ic('sliders')} Random characters</h3>
+        <label class="f" for="gLen">Length: <span id="gLenV" class="mono">${gen.length}</span></label><input type="range" class="range" id="gLen" min="8" max="64" value="${gen.length}">
+        <div class="gen-grid">${opt('gUpper', 'Uppercase A–Z', gen.upper)}${opt('gLower', 'Lowercase a–z', gen.lower)}${opt('gDigit', 'Digits 0–9', gen.digit)}${opt('gSymbol', 'Symbols !@#$…', gen.symbol)}${opt('gAmbig', 'Exclude ambiguous (Il1O0o|)', gen.noAmbig)}${opt('gReq', 'Require every selected class', gen.requireEach)}</div>` :
+      gen.mode === 'passphrase' ? `<h3>${ic('book')} Passphrase from a ${WORDS.length}-word list</h3><p class="lead">log₂(${WORDS.length}) ≈ ${Math.log2(WORDS.length).toFixed(1)} bits per word. Longer lists (EFF diceware: 7,776 words) give 12.9 bits per word — swap <code>WORDS</code> to upgrade.</p>
+        <label class="f" for="gWords">Words: <span id="gWordsV" class="mono">${gen.words}</span></label><input type="range" class="range" id="gWords" min="3" max="8" value="${gen.words}">
+        <div class="gen-grid"><div><label class="f" for="gSep">Separator</label><select id="gSep">${[['-', 'hyphen -'], ['.', 'dot .'], ['_', 'underscore _'], [' ', 'space']].map(([v, l]) => `<option value="${v}" ${gen.sep === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div><div><label class="f" for="gCaps">Capitalisation</label><select id="gCaps">${[['lower', 'all lowercase'], ['title', 'Title Case'], ['random', 'RANDOM word caps (+1 bit/word)']].map(([v, l]) => `<option value="${v}" ${gen.caps === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div><div><label class="f">Suffix</label>${opt('gSuffix', 'Append a 2-digit number (+6.6 bits)', gen.suffix)}</div></div>` :
+      `<h3>${ic('volume')} Pronounceable syllables</h3><p class="lead">Consonant–vowel(–consonant) syllables are easy to say and type; entropy is counted per random choice, so it is honest about being weaker than random characters.</p>
+        <label class="f" for="gPlen">Length: <span id="gPlenV" class="mono">${gen.plen}</span></label><input type="range" class="range" id="gPlen" min="8" max="32" value="${gen.plen}">
+        <div class="gen-grid">${opt('gPcaps', 'One random capital letter', gen.pcaps)}${opt('gPdigits', 'Two-digit suffix', gen.pdigits)}</div>`}</div>
+    <div class="card"><h3>${ic('info')} Reading the entropy number</h3><p class="small muted" style="margin:0">Bits = log₂(number of equally likely outputs). Each extra bit doubles an attacker's work. At 10¹⁰ guesses per second (a GPU rig on a fast hash): 40 bits ≈ 1 minute, 60 bits ≈ 1.8 years, 80 bits ≈ 1.9 million years. The analyzer below the output re-checks the result for accidental dictionary words or sequences.</p></div>
+  </div>`;
+  animateIn(root);
+  let last = '';
+  const show = () => { const r = generate(); last = r.pw; const a = analyze(r.pw); $('#genOut').innerHTML = colorizePw(r.pw); $('#genMeta').innerHTML = `<span><b class="acc">${r.bits.toFixed(1)} bits</b> of generator entropy · ${r.pw.length} chars</span><span>analyzer: <span class="verdict v${a.score}">${a.verdict}</span> · ${esc(a.crack)}</span>`; $('#genMeter').innerHTML = meterHTML(a); };
+  show();
+  $('#genAgain').onclick = show; $('#genCopy').onclick = ev => copyText(last, 'Password', ev.currentTarget.querySelector('.iconbtn'));
+  $('#genUse').onclick = () => openEditor(null, { password: last });
+  $$('[data-mode]', root).forEach(b => b.onclick = () => { gen.mode = b.dataset.mode; renderGenerator(root); });
+  const bind = (id, key, parse = v => v, after = null) => { const el = $('#' + id); if (!el) return; el.addEventListener('input', () => { gen[key] = el.type === 'checkbox' ? el.checked : parse(el.value); if (after) after(); show(); }); };
+  bind('gLen', 'length', Number, () => { $('#gLenV').textContent = gen.length; }); ['gUpper', 'gLower', 'gDigit', 'gSymbol'].forEach((id, i) => bind(id, ['upper', 'lower', 'digit', 'symbol'][i])); bind('gAmbig', 'noAmbig'); bind('gReq', 'requireEach');
+  bind('gWords', 'words', Number, () => { $('#gWordsV').textContent = gen.words; }); bind('gSep', 'sep'); bind('gCaps', 'caps'); bind('gSuffix', 'suffix');
+  bind('gPlen', 'plen', Number, () => { $('#gPlenV').textContent = gen.plen; }); bind('gPcaps', 'pcaps'); bind('gPdigits', 'pdigits');
+}
+
+// ---------- settings ----------
+function renderSettings(root) {
+  root.innerHTML = `<div class="page">
+    <div class="page-head"><div><h2>Settings</h2><p>Preferences are stored in plain text (they are not secrets). Everything else is inside the encrypted blob.</p></div></div>
+    <div class="two">
+      <div class="card"><h3>${ic('lock')} Locking &amp; clipboard</h3>
+        <label class="f" for="sAuto">Auto-lock after idle</label><select id="sAuto">${[[1, '1 minute'], [2, '2 minutes'], [5, '5 minutes'], [10, '10 minutes'], [30, '30 minutes'], [0, 'Never (not recommended)']].map(([v, l]) => `<option value="${v}" ${prefs.autoLock === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="sHide" ${prefs.lockOnHide ? 'checked' : ''}> Lock when the tab is hidden or minimised</label>
+        <label class="f" for="sClip">Clear clipboard after (seconds)</label><input type="number" id="sClip" min="5" max="120" value="${prefs.clipClear}">
+        <label class="f">Accent colour</label><div class="swatches">${[['cyan', '#22d3ee'], ['green', '#34d399'], ['violet', '#a78bfa'], ['amber', '#fbbf24']].map(([k, c]) => `<button type="button" class="sw ${prefs.accent === k ? 'on' : ''}" style="--c:${c}" data-accent="${k}" aria-label="${k} accent"></button>`).join('')}</div></div>
+      <div class="card"><h3>${ic('key')} Master password &amp; KDF</h3>
+        <label class="f" for="sIter">PBKDF2 iterations (min ${KDF_MIN.toLocaleString('en-PK')})</label><input type="number" id="sIter" min="${KDF_MIN}" step="100000" value="${prefs.iterations}">
+        <p class="small muted" style="margin:6px 0 10px">Higher = slower unlock for you, much slower guessing for an attacker. A new iteration count is applied the next time you change the master password (the key must be re-derived).</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="sChangePw">${ic('key')} Change master password</button><button class="btn ghost" id="sRecovery">${ic('printer')} Recovery kit</button></div></div>
+      <div class="card"><h3>${ic('download')} Backup &amp; import</h3>
+        <div class="list"><button class="btn" id="sExpEnc">${ic('download')} Export encrypted vault (.json)</button><button class="btn" id="sImpEnc">${ic('upload')} Import encrypted export</button><button class="btn" id="sImpCsv">${ic('file')} Import CSV (browser export)</button><button class="btn danger" id="sExpCsv">${ic('alert')} Export plaintext CSV</button><button class="btn ghost" id="sSync">${ic('refresh')} Sync between devices</button></div>
+        <p class="small muted" style="margin:10px 0 0">CSV columns accepted: <code>name,url,username,password,note</code> (Chrome/Edge/Firefox/Bitwarden shapes). The encrypted export is the exact vault record: salt, iterations, IV, ciphertext.</p></div>
+      <div class="card"><h3>${ic('shield-check')} How your vault is protected</h3>${protectHTML()}</div>
+      <div class="card" style="border-color:rgba(251,113,133,.35)"><h3 class="bad">${ic('trash')} Danger zone</h3><p class="small muted">Deletes the encrypted vault from this browser. Export first if you need the data.</p><button class="btn danger" id="sWipe">${ic('trash')} Wipe vault</button></div>
+    </div></div>`;
+  animateIn(root);
+  const save = () => { prefs.autoLock = +$('#sAuto').value; prefs.lockOnHide = $('#sHide').checked; prefs.clipClear = Math.min(120, Math.max(5, +$('#sClip').value || 20)); prefs.iterations = Math.max(KDF_MIN, +$('#sIter').value || KDF_MIN); savePrefs(); };
+  ['sAuto', 'sHide', 'sClip', 'sIter'].forEach(id => $('#' + id).addEventListener('change', () => { save(); toast('Settings saved', 'ok', 'settings'); }));
+  $$('[data-accent]', root).forEach(b => b.onclick = () => { prefs.accent = b.dataset.accent; savePrefs(); applyAccent(); $$('[data-accent]', root).forEach(x => x.classList.toggle('on', x === b)); });
+  $('#sChangePw').onclick = openChangeMaster; $('#sRecovery').onclick = recoveryKit; $('#sSync').onclick = syncVault;
+  $('#sExpEnc').onclick = exportEncrypted; $('#sImpEnc').onclick = () => importEncrypted(false); $('#sImpCsv').onclick = importCSV; $('#sExpCsv').onclick = exportCSV;
+  $('#sWipe').onclick = async () => { if (await confirmModal({ title: 'Wipe this vault?', body: 'Every item, its history and the encrypted record are deleted from this browser. There is no undo.', ok: 'Wipe vault', danger: true, typed: 'DELETE', icon: 'trash' })) { store.del('vault'); lock('Vault wiped from this device'); toast('Vault wiped', 'ok', 'trash'); } };
+}
+const applyAccent = () => document.documentElement.dataset.accent = prefs.accent;
+function openChangeMaster() {
+  openModal(`${modalHead('Change master password', 'key')}<form id="cmForm" autocomplete="off">
+    <label class="f" for="cmOld">Current master password</label><input id="cmOld" type="password" autocomplete="off" required>
+    <label class="f" for="cmNew">New master password</label><div class="pwwrap one"><input id="cmNew" type="password" autocomplete="off" required><div class="tools"><button type="button" class="iconbtn sm" data-toggle="cmNew" aria-label="Show password">${ic('eye')}</button></div></div><div id="cmMeter">${meterHTML(analyze(''))}</div>
+    <label class="f" for="cmNew2">Confirm new master password</label><input id="cmNew2" type="password" autocomplete="off" required>
+    <label class="f" for="cmIter">PBKDF2 iterations</label><input id="cmIter" type="number" min="${KDF_MIN}" step="100000" value="${prefs.iterations}">
+    <div id="cmErr" class="small bad" style="margin-top:6px;min-height:1.2em"></div>
+    <div class="modal-foot"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn primary" id="cmOk">${ic('key')} Re-encrypt vault</button></div></form>`);
+  $('#cmNew').addEventListener('input', () => { const a = analyze($('#cmNew').value); $('#cmMeter').innerHTML = meterHTML(a) + (a.len ? strengthLine(a) : ''); });
+  $('#cmForm').onsubmit = async ev => { ev.preventDefault(); const a = analyze($('#cmNew').value); const err = $('#cmErr');
+    if ($('#cmNew').value.length < 12 || a.score < 2) { err.textContent = 'New password must be 12+ characters and at least Fair.'; return; }
+    if ($('#cmNew').value !== $('#cmNew2').value) { err.textContent = 'New passwords do not match.'; return; }
+    const it = Math.max(KDF_MIN, +$('#cmIter').value || KDF_MIN); $('#cmOk').disabled = true; $('#cmOk').innerHTML = `${ic('refresh')} Re-encrypting…`;
+    try { await changeMasterPassword($('#cmOld').value, $('#cmNew').value, it); modalClose = null; closeModal(); toast('Master password changed — vault re-encrypted', 'ok', 'shield-check'); renderPage('settings'); } catch (e) { err.textContent = e.message; $('#cmOk').disabled = false; $('#cmOk').innerHTML = `${ic('key')} Re-encrypt vault`; } };
+}
+
+// ---------- import / export ----------
+function exportEncrypted() { const rec = store.get('vault'); download(`vault-export-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ ...rec, exportedAt: now() }, null, 2)); toast('Encrypted export downloaded', 'ok', 'download'); }
+function importEncrypted(fromLockScreen) {
+  pickFile('.json,application/json', async text => {
+    let rec; try { rec = JSON.parse(text); } catch { toast('Not a JSON file', 'bad'); return; }
+    if (!rec || rec.format !== 'pfpm-vault' || !rec.data || !rec.salt) { toast('Not a Vault export', 'bad'); return; }
+    openModal(`${modalHead('Unlock the imported file', 'upload')}<form id="imForm" autocomplete="off"><p class="small muted">The file was encrypted with its own master password (${rec.iterations.toLocaleString('en-PK')} iterations). Enter it to decrypt the export.</p>
+      <label class="f" for="imPw">Export's master password</label><input id="imPw" type="password" autocomplete="off" required>
+      ${fromLockScreen ? '' : `<label class="f">Mode</label><label class="chk"><input type="radio" name="imMode" value="merge" checked> Merge — add items that are not already here</label><label class="chk"><input type="radio" name="imMode" value="replace"> Replace — discard current items</label>`}
+      <div id="imErr" class="small bad" style="min-height:1.2em"></div><div class="modal-foot"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn primary">${ic('unlock')} Decrypt &amp; import</button></div></form>`);
+    $('#imForm').onsubmit = async ev => { ev.preventDefault(); try {
+      const key = await deriveKey($('#imPw').value, unb64(rec.salt), rec.iterations); await decryptJSON(key, rec.verifier); const data = await decryptJSON(key, rec.data);
+      if (fromLockScreen) { store.set('vault', { ...rec, savedAt: now() }); modalClose = null; closeModal(); demoHint = false; lockReason = 'Export restored — unlock with its master password'; renderLock('unlock'); return; }
+      const mode = $('input[name=imMode]:checked').value; const incoming = data.entries || [];
+      if (mode === 'replace') session.data.entries = incoming; else { const ids = new Set(entries().map(e => e.id)); incoming.forEach(e => { if (!ids.has(e.id)) entries().push(e); }); }
+      await saveVault(); modalClose = null; closeModal(); toast(`Imported ${incoming.length} item${incoming.length === 1 ? '' : 's'}`, 'ok', 'upload'); state.listKey = ''; location.hash = 'all';
+    } catch { $('#imErr').textContent = 'Wrong password for this export.'; } };
+  });
+}
+/** RFC 4180-ish CSV parser: quoted fields, doubled quotes, newlines inside quotes. */
+function parseCSV(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) { const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true; else if (c === ',') { row.push(cell); cell = ''; } else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; } else cell += c; }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim()));
+}
+function importCSV() {
+  pickFile('.csv,text/csv', async text => {
+    const rows = parseCSV(text.replace(/^﻿/, '')); if (!rows.length) { toast('Empty CSV', 'bad'); return; }
+    const ALIAS = { title: ['name', 'title', 'account'], url: ['url', 'website', 'login_uri', 'web site'], username: ['username', 'login', 'user', 'email', 'login_username'], password: ['password', 'login_password', 'pass'], notes: ['note', 'notes', 'extra', 'comments'] };
+    const head = rows[0].map(h => h.trim().toLowerCase()); const idx = {}; let hasHeader = false;
+    Object.entries(ALIAS).forEach(([k, al]) => { const i = head.findIndex(h => al.includes(h)); if (i >= 0) { idx[k] = i; hasHeader = true; } });
+    if (!hasHeader) Object.assign(idx, { title: 0, url: 1, username: 2, password: 3, notes: 4 });
+    const body = hasHeader ? rows.slice(1) : rows; const t = now();
+    const items = body.map(r => { const g = k => idx[k] != null ? (r[idx[k]] || '').trim() : ''; return { id: uid(), title: g('title') || host(g('url')) || 'Imported item', username: g('username'), password: g('password'), url: g('url'), notes: g('notes'), tags: ['imported'], fav: false, color: COLORS[7], fields: [], history: [], totp: '', created: t, updated: t, pwAt: t }; }).filter(x => x.password || x.username);
+    if (!items.length) { toast('No usable rows found', 'bad'); return; }
+    if (await confirmModal({ title: `Import ${items.length} item${items.length === 1 ? '' : 's'}?`, body: `Detected columns: <code>${esc(Object.keys(idx).join(', '))}</code>${hasHeader ? '' : ' (no header row — positional mapping)'}. Items get the tag <b>imported</b>. Delete the CSV file afterwards — it is plaintext.`, ok: 'Import', icon: 'file' })) { entries().push(...items); await saveVault(); toast(`Imported ${items.length} items`, 'ok', 'upload'); state.listKey = ''; location.hash = 'tag/imported'; }
+  });
+}
+async function exportCSV() {
+  if (!(await confirmModal({ title: 'Export plaintext CSV?', body: `<div class="note bad">${ic('alert')}<span>The file will contain every password <b>unencrypted</b>. Anyone who opens it can read everything. Use it only to migrate, then delete it securely.</span></div>`, ok: 'I understand, export', danger: true, typed: 'EXPORT', icon: 'alert' }))) return;
+  const csv = ['name,url,username,password,note', ...entries().map(e => [e.title, e.url, e.username, e.password, e.notes].map(v => '"' + String(v || '').replace(/"/g, '""') + '"').join(','))].join('\r\n');
+  download(`vault-plaintext-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv'); toast('Plaintext CSV downloaded — delete it after use', 'bad', 'alert');
+}
+
+// ---------- about ----------
+const TODOS = [
+  ['Argon2id KDF via WASM', 'deriveKey()', 'crypto', 'Memory-hard hashing resists GPU/ASIC cracking far better than PBKDF2; store the KDF name + parameters in the vault record and migrate on unlock.'],
+  ['WebAuthn / passkey unlock', 'unlockWithPasskey()', 'auth', 'Wrap the vault key with a secret derived from the authenticator (PRF or largeBlob extension) so a fingerprint or security key unlocks the vault.'],
+  ['Browser-extension autofill', 'autofillBridge()', 'platform', 'WebExtension content script that matches the active tab origin to an entry and fills username + password + TOTP.'],
+  ['End-to-end-encrypted sync', 'syncVault()', 'sync', 'Push only the encrypted record to a dumb backend (S3, Firebase, your own API); resolve conflicts per entry by `updated` timestamp.'],
+  ['Secure sharing with public-key crypto', 'shareEntry()', 'crypto', 'ECDH (X25519/P-256) key pair per user; encrypt an entry with a random AES key and wrap that key for each recipient.'],
+  ['Live HIBP range API check', 'checkRangeAPI()', 'network', 'Fetch https://api.pwnedpasswords.com/range/{prefix}, parse SUFFIX:COUNT lines, match locally — the UI and k-anonymity explainer already exist.'],
+  ['Emergency access / recovery kit', 'recoveryKit()', 'ux', 'Printable recovery key that wraps the vault key; optional Shamir secret sharing between trusted contacts with a waiting period.'],
+];
+function aboutHTML(compact = false) {
+  return `<div class="${compact ? 'list' : 'two'}">
+    <div class="list">
+      <div class="card"><h3>${ic('alert')} The problem</h3><p class="small muted" style="margin:0">People reuse one weak password across banking apps, JazzCash/Easypaisa, email and social accounts. Cloud password managers cost money or ask for trust in a company; this is a zero-knowledge, offline, single-file vault that also <b>teaches</b> the cryptography it uses.</p></div>
+      <div class="card"><h3>${ic('shield-check')} Threat model — what this protects against</h3><ul class="reasons"><li class="ok">${ic('check-circle')}<span><b>Device theft / lost laptop</b> while the vault is locked: the attacker only gets AES-GCM ciphertext and must brute-force your master password through 600,000 PBKDF2 rounds per guess.</span></li><li class="ok">${ic('check-circle')}<span><b>Cloud or provider leaks</b>: there is no server, account or sync, so nothing can leak from one.</span></li><li class="ok">${ic('check-circle')}<span><b>Casual snooping</b> in DevTools / localStorage: no plaintext, no password hash — only salt, parameters and ciphertext.</span></li><li class="ok">${ic('check-circle')}<span><b>Tampering</b>: AES-GCM is authenticated; a modified blob fails to decrypt instead of returning garbage.</span></li></ul></div>
+      <div class="card"><h3>${ic('alert-circle')} …and what it does not</h3><ul class="reasons"><li class="bad">${ic('alert-circle')}<span><b>Malware, keyloggers or a malicious extension</b> on this device can read the master password or the unlocked DOM.</span></li><li class="bad">${ic('alert-circle')}<span><b>Shoulder surfing</b> while a secret is revealed, and <b>clipboard sniffers</b> during the ${prefs.clipClear}-second copy window.</span></li><li class="bad">${ic('alert-circle')}<span><b>A weak master password</b> — 600k iterations only multiply an attacker's cost; they do not fix 20 bits of entropy.</span></li><li class="bad">${ic('alert-circle')}<span><b>Forgetting the master password</b>: there is no recovery (a recovery kit is a student TODO).</span></li><li class="bad">${ic('alert-circle')}<span><b>A tampered copy of this HTML file</b>: verify where you got it. Inline scripts mean a strict CSP cannot be applied; a bundled build with hashes would allow one.</span></li></ul></div>
+    </div>
+    <div class="list">
+      <div class="card"><h3>${ic('cpu')} How it works</h3><p class="small muted" style="margin:0">Master password → PBKDF2-SHA-256 (600,000 iterations, 16-byte random salt) → AES-GCM-256 key. The whole vault JSON is encrypted as one blob with a fresh 12-byte IV on every save and stored in <code>localStorage</code> beside the salt, iteration count and a verifier. TOTP codes use HMAC-SHA-1 (RFC 6238); the breach check uses SHA-1 k-anonymity. Everything is WebCrypto — no crypto library is loaded.</p></div>
+      <div class="card"><h3>${ic('graduation')} Left for students to build</h3><div class="list">${TODOS.map(([h, fn, tag, b]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span> <code>${esc(fn)}</code></h4><div class="small muted">${esc(b)}</div></div>`).join('')}</div><p class="small muted" style="margin:10px 0 0">Search the source for <code>TODO(student)</code> to find each stub.</p></div>
+      <div class="card"><h3>${ic('code')} Hygiene in the code</h3><ul class="reasons"><li class="muted">${ic('check')}<span>Secrets are rendered with <code>esc()</code>/<code>textContent</code>; copy buttons look values up by key, never from attributes.</span></li><li class="muted">${ic('check')}<span>Password inputs have <code>autocomplete="off"</code>; the key and decrypted data are nulled on lock; the strength cache is cleared.</span></li><li class="muted">${ic('check')}<span><code>referrer: no-referrer</code>, links open with <code>rel="noopener noreferrer"</code>, no analytics, no third-party script.</span></li></ul></div>
+    </div></div>`;
+}
+const renderAbout = root => { root.innerHTML = `<div class="page"><div class="page-head"><div><h2>About Vault</h2><p>Privacy-first password manager · FYP template #13 · idea #51</p></div></div>${aboutHTML()}</div>`; animateIn(root); };
+
+// ---------- router ----------
+function parseHash() { const p = (location.hash.slice(1) || 'all').split('/'); if (p[0] === 'tag') return { view: 'tag', tag: decodeURIComponent(p[1] || ''), id: p[2] || null }; return { view: p[0], tag: null, id: p[1] || null }; }
+function renderPage(view) { const root = $('#contentPane'); ({ health: renderHealth, generator: renderGenerator, settings: renderSettings, about: renderAbout }[view])(root); root.scrollTop = 0; }
+function route() {
+  if (!session.key) return;
+  const r = parseHash(); const vaultView = ['all', 'fav', 'tag'].includes(r.view);
+  if (!vaultView && !PAGES[r.view]) { location.hash = 'all'; return; }
+  if (r.view === 'tag' && !allTags().some(([t]) => t === r.tag)) { location.hash = 'all'; return; }
+  if (r.id !== state.selected) state.revealed.clear();
+  state.view = r.view; state.tag = r.tag; state.selected = vaultView ? r.id : null;
+  document.body.dataset.page = vaultView ? 'vault' : r.view; document.body.classList.toggle('detail-open', vaultView && !!r.id); document.body.classList.remove('rail-open'); $('#scrim').classList.remove('open');
+  renderRail();
+  if (vaultView) { renderList(); renderDetail(); } else { stopTotp(); renderPage(r.view); }
+}
+window.addEventListener('hashchange', route);
+$('#q').addEventListener('input', e => { state.q = e.target.value; renderList(); });
+$('#sortSel').addEventListener('change', e => { state.sort = e.target.value; state.listKey = ''; renderList(); });
+$('#newBtn').onclick = () => openEditor(null);
+$('#lockBtn').onclick = () => lock('Locked');
+$('#mLockBtn').onclick = () => lock('Locked');
+$('#menuBtn').onclick = () => { document.body.classList.add('rail-open'); $('#scrim').classList.add('open'); };
+$('#railNav').addEventListener('click', e => { if (e.target.closest('a')) { document.body.classList.remove('rail-open'); $('#scrim').classList.remove('open'); } });
+applyAccent();
+renderLock();
+</script>
+</body>
+</html>

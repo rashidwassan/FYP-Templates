@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sailab — Flood Preparedness & Relief Map</title>
+<meta name="description" content="Map-first flood preparedness app for Pakistan: district alert levels computed from upstream river gauges and rainfall, FFD-style gauge dashboard, family evacuation planner, relief-camp finder, missing-person reunification board and bilingual safety guide. Single-file FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: emergency-operations slate, river blue, amber / red flood categories ---------- */
+:root{
+  --slate:#1e3a5f; --slate-deep:#142a47; --slate-soft:#e4ebf5; --river:#2f80ed; --river-soft:#e1edfc; --amber:#f2a900; --amber-soft:#fdf1cc; --amber-deep:#9a6a00;
+  --red:#d7263d; --red-soft:#fbe0e4; --green:#2a9d5c; --green-soft:#e0f3e8; --orange:#e8711a; --orange-soft:#fde8d8; --maroon:#7a1b3a;
+  --bg:#f3f6fa; --surface:#ffffff; --surface-2:#eaf0f7; --ink:#15233a; --muted:#5b6b80; --line:#d7e0ea;
+  --radius:14px; --radius-sm:9px; --shadow:0 14px 40px -20px rgba(20,42,71,.45);
+  --font:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif; --font-h:"Archivo","Source Sans 3",system-ui,sans-serif; --font-ur:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
+  --ease:cubic-bezier(.2,.8,.2,1); --dur:.35s; --top:58px;
+}
+/* ---------- Motion kit ---------- */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes sheetIn{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
+@keyframes ring{from{transform:scale(1);opacity:.75}to{transform:scale(2.6);opacity:0}}
+@keyframes confetti{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(540deg);opacity:0}}
+.enter{animation:fadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
+.btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.card,.tile,.kpi{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
+.card:hover,.kpi:hover{transform:translateY(-2px);box-shadow:0 14px 34px -18px rgba(20,42,71,.4)}
+.fill,.bar>i{transition:width .6s var(--ease)}
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--river)}
+h1,h2,h3,h4{margin:0;line-height:1.25;letter-spacing:-.01em;font-family:var(--font-h)}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+.en{font-family:var(--font)!important;direction:ltr!important;text-align:left!important;line-height:1.45!important}
+.muted{color:var(--muted)} .small{font-size:.82rem} .hidden{display:none!important} .num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ur,[lang=ur]{font-family:var(--font-ur);line-height:1.95;direction:rtl;text-align:right}
+html[lang=ur] .txt,html[lang=ur] .lead,html[lang=ur] .note,html[lang=ur] .warn,html[lang=ur] .ok,html[lang=ur] .adv,html[lang=ur] .gcard p,html[lang=ur] .gcard li,html[lang=ur] .check span,html[lang=ur] .cl li{font-family:var(--font-ur);line-height:1.9;direction:rtl;text-align:right}
+html[lang=ur] .topnav a,html[lang=ur] .bottomnav a,html[lang=ur] .btn,html[lang=ur] .chip,html[lang=ur] .badge,html[lang=ur] .kpi .k,html[lang=ur] label.f,html[lang=ur] h2,html[lang=ur] h3,html[lang=ur] .phead h2,html[lang=ur] .seg button,html[lang=ur] .legend,html[lang=ur] .tab{font-family:var(--font-ur);letter-spacing:0;line-height:1.7}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+/* ---------- Top bar ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--top);z-index:40;background:linear-gradient(180deg,var(--slate-deep),var(--slate));color:#eef4fb;display:flex;align-items:center;gap:12px;padding:0 16px;box-shadow:0 4px 20px -8px rgba(0,0,0,.5)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .logo{width:36px;height:36px;border-radius:10px;background:var(--river);display:grid;place-items:center;color:#fff;flex:none}
+.brand h1{font-size:1.05rem;font-weight:800;white-space:nowrap;letter-spacing:.01em}
+.brand small{display:block;font-size:.7rem;opacity:.8;font-weight:500;font-family:var(--font)}
+.topnav{display:flex;gap:2px;margin-left:10px}
+.topnav a{color:#eef4fb;text-decoration:none;padding:8px 11px;border-radius:9px;font-weight:600;font-size:.88rem;opacity:.85;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.topnav a:hover{background:rgba(255,255,255,.08);opacity:1}
+.topnav a.active{background:var(--river);opacity:1}
+.spacer{flex:1}
+.mydist{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:4px 6px 4px 10px;min-width:0}
+.mydist span{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.8;white-space:nowrap}
+.mydist select{background:transparent;border:0;color:#fff;font-weight:700;outline:0;max-width:170px;padding:4px 2px;cursor:pointer}
+.mydist select option{color:var(--ink)}
+.lang{background:var(--amber);color:var(--slate-deep);border:0;border-radius:9px;padding:7px 11px;font-weight:800;cursor:pointer;min-height:40px}
+
+/* ---------- Map stage ---------- */
+#stage{position:fixed;inset:var(--top) 0 0 0;background:#dbe5ef}
+#map{position:absolute;inset:0;z-index:0;background:#dbe5ef}
+#map svg.schem{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#map svg.schem:active{cursor:grabbing}
+.leaflet-container{font-family:var(--font)}
+.mk{background:none!important;border:0!important}
+.mk .dot{display:block;position:relative;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35);transform:translate(-50%,-50%);transition:transform .2s var(--ease)}
+.mk .dot.sq{border-radius:4px} .mk .dot.dia{border-radius:3px;transform:translate(-50%,-50%) rotate(45deg)}
+.mk .dot.pulse::after{content:"";position:absolute;inset:-3px;border-radius:inherit;border:2px solid var(--c);animation:ring 1.6s ease-out infinite}
+.mk .dot.sel{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--c),0 4px 10px rgba(0,0,0,.35);z-index:2}
+.mk .dot.dim{opacity:.45}
+.mk:hover .dot{transform:translate(-50%,-50%) scale(1.15)} .mk:hover .dot.dia{transform:translate(-50%,-50%) rotate(45deg) scale(1.15)}
+.leaflet-tooltip{font-weight:700;font-size:.8rem;border-radius:8px;border-color:var(--line);color:var(--ink)}
+.schem .smk{cursor:pointer} .schem .smk circle,.schem .smk rect{stroke:#fff;stroke-width:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))} .schem .smk.dim{opacity:.45}
+.schem .smk .rg{fill:none;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:ring 1.6s ease-out infinite}
+.schem .smk.sel circle,.schem .smk.sel rect{stroke-width:4}
+.schem .river{fill:none;stroke:#5a9bea;stroke-linecap:round;stroke-linejoin:round} .schem .river.main{stroke-width:4} .schem .river.trib{stroke-width:2.2}
+.schem .rl{font-size:13px;fill:#2a5fa8;font-weight:600;font-style:italic} .schem .pl{font-size:20px;fill:#6a7d96;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
+.schem .land{fill:#eef3f7;stroke:#9fb3c8;stroke-width:2} .schem .sea{fill:#c9dcef}
+.mapctl{position:absolute;left:12px;top:12px;z-index:5;display:flex;flex-direction:column;gap:4px}
+.mapctl button{width:40px;height:40px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.15);color:var(--ink)}
+.mapstatus{position:absolute;left:12px;bottom:12px;z-index:5;display:flex;flex-direction:column;gap:6px;align-items:flex-start;max-width:calc(100% - 520px)}
+.mapstatus .pill{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:.78rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 10px rgba(0,0,0,.12);color:var(--ink)}
+.mapstatus .pill.sim{color:var(--amber-deep);background:var(--amber-soft);border-color:#ead49a}
+.legend{display:flex;gap:10px;flex-wrap:wrap;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:.76rem;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.legend i.sq{border-radius:2px} .legend i.dia{border-radius:2px;transform:rotate(45deg)}
+
+/* ---------- Floating panel / bottom sheet ---------- */
+.panel{position:absolute;top:14px;right:14px;bottom:14px;width:min(480px,calc(100vw - 28px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;z-index:6;animation:slideIn .45s var(--ease) both}
+.handle{display:none;padding:8px 0 4px;cursor:grab;touch-action:none;flex:none}
+.handle span{display:block;width:44px;height:5px;border-radius:3px;background:var(--line);margin:0 auto}
+.phead{display:flex;align-items:center;gap:10px;padding:14px 18px 10px;border-bottom:1px solid var(--line);flex:none}
+.phead h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
+.phead h2 .ic{color:var(--river)}
+.phead .pactions{margin-left:auto;display:flex;gap:6px;align-items:center}
+.pbody{padding:14px 18px 22px;overflow:auto;flex:1;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.pbody>*+*{margin-top:12px}
+.lead{margin:0;color:var(--muted);font-size:.92rem}
+
+/* ---------- Generic components ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;position:relative}
+.card.flat:hover{transform:none;box-shadow:none}
+.card.soft{background:var(--surface-2)}
+.card h3{font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--slate);color:#fff;display:inline-flex;align-items:center;gap:7px;min-height:40px;text-decoration:none;font-size:.9rem;white-space:nowrap}
+.btn.river{background:var(--river)} .btn.amber{background:var(--amber);color:var(--slate-deep)} .btn.danger{background:var(--red-soft);color:var(--red)} .btn.green{background:var(--green)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px;min-height:36px} .btn.block{width:100%;justify-content:center}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.iconbtn{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:9px;width:40px;height:40px;cursor:pointer;display:inline-grid;place-items:center}
+.iconbtn.on{background:var(--slate);color:#fff;border-color:var(--slate)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:6px 11px;font-size:.82rem;font-weight:700;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:5px;min-height:34px}
+.chip.on{background:var(--slate);border-color:var(--slate);color:#fff}
+.chip.lv{--c:var(--slate)} .chip.lv.on{background:var(--c);border-color:var(--c);color:#fff}
+.chip.need{background:var(--amber-soft);border-color:#ead49a;color:var(--amber-deep);cursor:default;min-height:28px;padding:3px 9px;font-size:.76rem}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:0;background:none;padding:8px 12px;cursor:pointer;font-weight:700;font-size:.85rem;min-height:40px;display:inline-flex;align-items:center;gap:6px}
+.seg button.on{background:var(--slate);color:#fff}
+select,input[type=number],input[type=text],input[type=tel],input[type=search],textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 11px;outline:0;min-height:40px}
+select:focus,input:focus,textarea:focus{border-color:var(--river);box-shadow:0 0 0 3px var(--river-soft)}
+textarea{resize:vertical;min-height:70px}
+label.f{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin:10px 0 5px}
+.cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px} .cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px}
+.stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.stepper button{border:0;background:var(--surface-2);width:40px;height:40px;cursor:pointer;display:grid;place-items:center}
+.stepper output{flex:1;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+.toggle{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:600;font-size:.88rem;min-height:40px}
+.toggle input{width:18px;height:18px;accent-color:var(--slate);margin:0}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:7px;padding:2px 8px;font-size:.72rem;font-weight:800;background:var(--surface-2);color:var(--muted);white-space:nowrap;letter-spacing:.02em}
+.badge.c{background:color-mix(in srgb,var(--c) 15%,#fff);color:var(--c)}
+.badge.solid{background:var(--c);color:#fff}
+.bar{height:8px;background:var(--surface-2);border-radius:5px;overflow:hidden;position:relative}
+.bar>i{display:block;height:100%;width:0;background:var(--c,var(--river));border-radius:5px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 10px 8px;background:var(--surface);cursor:pointer;text-align:left;border-top:4px solid var(--c)}
+.kpi.on{background:color-mix(in srgb,var(--c) 10%,#fff);border-color:var(--c)}
+.kpi .k{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;white-space:nowrap}
+.kpi .v{font-size:1.5rem;font-weight:800;font-family:var(--font-h);color:var(--c);line-height:1.1;margin-top:2px}
+.note{background:var(--river-soft);border-left:4px solid var(--river);padding:9px 12px;border-radius:8px;font-size:.88rem}
+.warn{background:var(--amber-soft);border-left:4px solid var(--amber);padding:9px 12px;border-radius:8px;font-size:.88rem}
+.danger-note{background:var(--red-soft);border-left:4px solid var(--red);padding:9px 12px;border-radius:8px;font-size:.88rem}
+.ok{background:var(--green-soft);border-left:4px solid var(--green);padding:9px 12px;border-radius:8px;font-size:.88rem}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface)}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.toolbar .search{flex:1;min-width:140px;display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--surface)}
+.toolbar .search input{border:0;padding:8px 0;min-height:38px} .toolbar .search input:focus{box-shadow:none}
+.empty{text-align:center;color:var(--muted);padding:26px 12px;border:1px dashed var(--line);border-radius:12px}
+.empty .ic{width:2em;height:2em;display:block;margin:0 auto 8px;color:var(--river)}
+.todo{border:1px dashed var(--slate);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
+.todo h4{margin:0 0 5px;font-size:.95rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.todo .tag{font-size:.68rem;background:var(--slate);color:#fff;border-radius:6px;padding:2px 6px;font-weight:800;font-family:var(--font)}
+.todo .stars{color:var(--amber-deep);font-size:.8rem;letter-spacing:.1em}
+.todo code{font-size:.8rem;background:#fff;border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.spark{width:96px;height:30px;display:block}
+
+/* ---------- Alerts ---------- */
+.dcard{border-left:5px solid var(--c);cursor:pointer}
+.dcard .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.dcard .name{font-weight:800;font-size:1.02rem;font-family:var(--font-h)}
+.dcard .sub{font-size:.78rem;color:var(--muted)}
+.dcard .score{font-family:var(--font-h);font-weight:800;font-size:1.35rem;color:var(--c);line-height:1}
+.dcard .meta{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:8px}
+.dcard .meta b{color:var(--ink)}
+.dcard .adv{display:none;margin-top:10px;font-size:.88rem;border-top:1px solid var(--line);padding-top:10px}
+.dcard.open .adv{display:block;animation:fadeIn .3s}
+.dcard.mine{box-shadow:0 0 0 2px var(--river-soft),var(--shadow)}
+.mine-tag{background:var(--river);color:#fff;border-radius:6px;padding:2px 7px;font-size:.68rem;font-weight:800}
+
+/* ---------- Gauges ---------- */
+.station{cursor:pointer;border-left:5px solid var(--c)}
+.station .top{display:flex;align-items:center;gap:10px}
+.station .nm{font-weight:800;font-family:var(--font-h)} .station .rv{font-size:.76rem;color:var(--muted)}
+.station .cur{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.station .cur b{font-family:var(--font-h);font-size:1.05rem}
+.station.sel{background:color-mix(in srgb,var(--c) 7%,#fff);border-color:var(--c)}
+.gbar{position:relative;height:12px;background:var(--surface-2);border-radius:6px;margin-top:8px;overflow:visible}
+.gbar .fill{position:absolute;left:0;top:0;height:100%;width:0;border-radius:6px;background:var(--c)}
+.gbar .tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;box-shadow:0 0 0 1px var(--line)}
+.gbar .tick::after{content:attr(data-l);position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:.6rem;font-weight:800;color:var(--muted);margin-top:2px}
+.chart{position:relative;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px}
+.chart svg{width:100%;height:230px;display:block;overflow:visible}
+.chart .tip{position:absolute;pointer-events:none;background:var(--slate-deep);color:#fff;border-radius:8px;padding:6px 9px;font-size:.76rem;transform:translate(-50%,-112%);white-space:nowrap;display:none;z-index:2;font-variant-numeric:tabular-nums}
+.lg{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;margin-top:6px}
+.lg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.lg i.dash{background:repeating-linear-gradient(90deg,currentColor 0 3px,transparent 3px 6px)}
+
+/* ---------- Plan ---------- */
+.ringwrap{display:flex;align-items:center;gap:14px}
+.ring{width:72px;height:72px;flex:none} .ring circle{fill:none;stroke-width:8} .ring .trk{stroke:var(--surface-2)} .ring .val{stroke:var(--green);stroke-linecap:round;transition:stroke-dashoffset .7s var(--ease);transform:rotate(-90deg);transform-origin:center}
+.ring text{font-family:var(--font-h);font-weight:800;font-size:17px;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.check{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;cursor:pointer;background:var(--surface);min-height:44px}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--green);flex:none}
+.check.done span{text-decoration:line-through;color:var(--muted)}
+.cl{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.cl li{display:flex;gap:9px;align-items:flex-start;border-radius:10px;padding:8px 10px;background:var(--surface-2);font-size:.9rem}
+.cl li .p{flex:none;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:.7rem;font-weight:800;color:#fff;background:var(--c);font-family:var(--font-h)}
+.leave{border-radius:14px;padding:14px 16px;color:#fff;background:var(--c)}
+.leave h3{color:#fff;font-size:1.1rem} .leave p{margin:6px 0 0;opacity:.95;font-size:.9rem}
+
+/* ---------- Camps ---------- */
+.camp .top{display:flex;gap:10px;align-items:flex-start} .camp .nm{font-weight:800;font-family:var(--font-h)} .camp .sub{font-size:.78rem;color:var(--muted)}
+.camp .ico{width:40px;height:40px;border-radius:10px;background:var(--slate-soft);display:grid;place-items:center;color:var(--slate);flex:none}
+.fac{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.fac span{display:inline-flex;align-items:center;gap:4px;font-size:.74rem;font-weight:700;border-radius:7px;padding:3px 7px;background:var(--green-soft);color:var(--green)}
+.fac span.no{background:var(--surface-2);color:var(--muted);text-decoration:line-through}
+.occ{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.8rem} .occ .bar{flex:1}
+.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+/* ---------- Missing ---------- */
+.post{display:flex;gap:12px;align-items:flex-start;border-left:5px solid var(--c)}
+.post .photo{width:72px;height:72px;border-radius:10px;object-fit:cover;background:var(--surface-2);flex:none;display:grid;place-items:center;color:var(--muted)}
+.post .photo .ic{width:1.8em;height:1.8em}
+.post .nm{font-weight:800;font-family:var(--font-h);font-size:1rem}
+.post .info{font-size:.82rem;color:var(--muted);margin-top:2px}
+.post .body{flex:1;min-width:0}
+.match{margin-top:8px;border:1px dashed var(--amber);background:var(--amber-soft);border-radius:10px;padding:8px 10px;font-size:.82rem}
+.match b.sc{font-family:var(--font-h);color:var(--amber-deep)}
+.photo-pick{display:flex;gap:10px;align-items:center}
+.photo-pick img{width:64px;height:64px;border-radius:10px;object-fit:cover;background:var(--surface-2)}
+
+/* ---------- Guide ---------- */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tab{border:0;background:none;padding:9px 12px;font-weight:700;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.tab.on{color:var(--slate);border-color:var(--river)}
+.gcard{border-left:5px solid var(--c)} .gcard h3{font-size:.98rem} .gcard h3 .ic{color:var(--c)} .gcard p{margin:6px 0 0;font-size:.9rem}
+.sos{background:var(--slate-deep);color:#eef4fb;border-radius:14px;padding:14px 16px}
+.sos h3{color:#fff} .sos textarea{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.2);font-size:.88rem;min-height:120px}
+.sos .btn.ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)}
+.help{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.help .n{font-weight:800;font-family:var(--font-h);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.help input{min-height:36px;padding:6px 9px}
+
+/* ---------- Modal / scrim / toasts / bottom nav ---------- */
+.scrim{position:fixed;inset:0;background:rgba(20,42,71,.45);backdrop-filter:blur(2px);z-index:60;opacity:0;pointer-events:none;transition:opacity .2s}
+body.modal-open .scrim{opacity:1;pointer-events:auto}
+.modal{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:16px}
+body.modal-open .modal{display:flex}
+.modal .box{background:var(--surface);border-radius:16px;width:min(520px,100%);max-height:calc(100vh - 32px);overflow:auto;box-shadow:var(--shadow);animation:pop .25s var(--ease) both}
+.modal .box header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.modal .box header h2{font-size:1.1rem;flex:1}
+.modal .box .mbody{padding:14px 18px 20px}
+#toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:90;pointer-events:none}
+.toast{background:var(--slate-deep);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);animation:toastIn .3s var(--ease) both,toastOut .3s ease-in 2.8s forwards;display:flex;align-items:center;gap:8px;max-width:min(92vw,520px)}
+.toast.ok{background:var(--green)} .toast.bad{background:var(--red)} .toast.amber{background:var(--amber);color:var(--slate-deep)}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;height:56px;background:var(--surface);border-top:1px solid var(--line);z-index:45;padding:0 2px}
+.bottomnav a{flex:1;text-align:center;text-decoration:none;color:var(--muted);font-size:.62rem;font-weight:700;padding:6px 0 4px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.bottomnav a .ic{width:1.35em;height:1.35em}
+.bottomnav a.active{color:var(--river)}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:95;overflow:hidden}
+.confetti i{position:absolute;left:50%;top:45%;width:10px;height:14px;border-radius:2px;animation:confetti 1.1s var(--ease) forwards}
+#printArea{display:none}
+
+@media (max-width:900px){
+  .topnav{display:none}
+  .brand small{display:none} .brand h1{font-size:1rem}
+  .mydist span{display:none} .mydist select{max-width:130px}
+  #stage{bottom:56px}
+  .bottomnav{display:flex}
+  .panel{top:auto;left:0;right:0;bottom:0;width:auto;border-radius:18px 18px 0 0;height:54vh;transition:height .3s var(--ease);animation:sheetIn .4s var(--ease) both;box-shadow:0 -10px 40px -16px rgba(20,42,71,.5)}
+  .panel.dragging{transition:none}
+  .panel[data-state=peek]{height:118px} .panel[data-state=full]{height:calc(100% - 10px)}
+  .handle{display:block}
+  .phead{padding:4px 16px 10px}
+  .pbody{padding:12px 14px 20px}
+  .mapstatus{max-width:calc(100% - 24px);bottom:auto;top:12px;left:60px;flex-direction:row;flex-wrap:wrap}
+  .legend{font-size:.7rem;gap:7px}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))} .kpi .v{font-size:1.25rem} .kpi .k{font-size:.6rem}
+  .cols3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:420px){ .mydist select{max-width:110px;font-size:.85rem} .lang{padding:7px 9px} }
+@media print{
+  body{overflow:visible;height:auto;background:#fff}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important;font-family:var(--font);color:#000;padding:10mm}
+  #printArea .pc{border:2px solid #1e3a5f;border-radius:10px;padding:14px 18px;max-width:720px;margin:0 auto}
+  #printArea h1{font-size:1.4rem;font-family:var(--font-h)} #printArea h2{font-size:1rem;margin-top:14px;border-bottom:1px solid #999;padding-bottom:4px}
+  #printArea table{width:100%;border-collapse:collapse;font-size:.9rem} #printArea td{padding:5px 6px;border-bottom:1px solid #ddd;vertical-align:top}
+  #printArea .ur{font-family:var(--font-ur);direction:rtl;text-align:right}
+}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5a5.5 5.5 0 0 0-10 3.5c0 2.3 1.5 4 3 5.5l7 7Z"/></symbol>
+<symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
+<symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01M15 12h.01M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.7a2 2 0 0 1 1.7 2z"/></symbol>
+<symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></symbol>
+<symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5Z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></symbol>
+<symbol id="i-cloud-rain" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 1 8.9"/><path d="M16 14v6M8 14v6M12 16v6"/></symbol>
+<symbol id="i-waves" viewBox="0 0 24 24"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2l.6-3.2a2 2 0 0 0-.1-1.1l-1.7-4.1A2 2 0 0 0 18 7.4H6a2 2 0 0 0-1.8 1.2L2.5 12.7a2 2 0 0 0-.1 1.1L3 17h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+<symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+<symbol id="i-graduation" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></symbol>
+<symbol id="i-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6"/></symbol>
+<symbol id="i-trending-down" viewBox="0 0 24 24"><path d="m22 17-8.5-8.5-5 5L2 7M16 17h6v-6"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.5M7.8 16.2a6 6 0 0 1 0-8.5M19.1 4.9a10 10 0 0 1 0 14.1M4.9 19.1a10 10 0 0 1 0-14.1"/></symbol>
+<symbol id="i-life-buoy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.2 4.2M14.9 14.9l4.2 4.2M14.9 9.1l4.2-4.2M9.1 14.9l-4.2 4.2"/></symbol>
+<symbol id="i-tent" viewBox="0 0 24 24"><path d="M3.5 21 14 3M20.5 21 10 3M15.5 21 12 15l-3.5 6M2 21h20"/></symbol>
+<symbol id="i-siren" viewBox="0 0 24 24"><path d="M7 18v-6a5 5 0 1 1 10 0v6M5 21a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v1H5zM21 12h1M2 12h1M12 2v1M4.9 4.9l.7.7M18.4 5.6l.7-.7"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></symbol>
+<symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
+<symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></symbol>
+<symbol id="i-thermometer" viewBox="0 0 24 24"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="M3.5 15.5a8.5 8.5 0 1 1 17 0"/><path d="m12 15.5 4-5.5"/><circle cx="12" cy="15.5" r="1.5"/><path d="M4 19.5h16"/></symbol>
+<symbol id="i-livestock" viewBox="0 0 24 24"><path d="M6 8C4 8 2.5 6.5 2.5 4.5c2 0 3.5 1 4.5 2.5M18 8c2 0 3.5-1.5 3.5-3.5-2 0-3.5 1-4.5 2.5"/><path d="M7 7h10l1.5 5-1 8h-2.5l-.5-4h-5l-.5 4H6.5l-1-8z"/><path d="M9.5 11h.01M14.5 11h.01M10 16h4"/></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M8 6V4a4 4 0 0 1 8 0v2"/><rect x="4" y="6" width="16" height="16" rx="3"/><path d="M4 13h16M9 17h6"/></symbol>
+<symbol id="i-navigation" viewBox="0 0 24 24"><path d="m3 11 19-9-9 19-2-8z"/></symbol>
+<symbol id="i-bottle" viewBox="0 0 24 24"><path d="M10 2h4v3l2 2v12a3 3 0 0 1-3 3h-2a3 3 0 0 1-3-3V7l2-2z"/><path d="M8 12h8"/></symbol>
+<symbol id="i-flashlight" viewBox="0 0 24 24"><path d="M18 6c0 2-2 3-2 3v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V9S6 8 6 6V2h12z"/><path d="M6 6h12M12 12v2"/></symbol>
+<symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2M6 11v2M10 11v2M14 11v2"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+<symbol id="i-boat" viewBox="0 0 24 24"><path d="M3 17l1.5 3h15l1.5-3"/><path d="M4 17c2-1 4-1 8-1s6 0 8 1"/><path d="M6 16l1-6h10l1 6"/><path d="M12 4v6M9 7h6"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v6c0 5 3.5 8.5 7.5 10 4-1.5 7.5-5 7.5-10v-6z"/><path d="M7 11c1 .8 1.8 1.2 3 1.2 1.8 0 1.8-1.4 3.4-1.4 1.1 0 1.6.6 2.6 1.2M7 15c1 .8 1.8 1.2 3 1.2 1.8 0 1.8-1.4 3.4-1.4 1.1 0 1.6.6 2.6 1.2"/></svg></div>
+    <div><h1 data-i18n="title">Sailab</h1><small data-i18n="tagline">Flood preparedness &amp; relief map</small></div>
+  </div>
+  <nav class="topnav" id="topnav" aria-label="Pages"></nav>
+  <div class="spacer"></div>
+  <label class="mydist"><span data-i18n="mydist">My district</span><select id="myDistrict" aria-label="My district"></select></label>
+  <button class="lang" id="langBtn" title="Switch language" aria-label="Switch language">اردو</button>
+</header>
+
+<div id="stage">
+  <div id="map" role="region" aria-label="Flood map"></div>
+  <div class="mapctl hidden" id="svgCtl"></div>
+  <div class="mapstatus" id="mapStatus"></div>
+  <aside class="panel" id="panel" data-state="half" aria-live="polite">
+    <div class="handle" id="handle" aria-hidden="true"><span></span></div>
+    <header class="phead"><h2 id="ptitle"></h2><div class="pactions" id="pactions"></div></header>
+    <div class="pbody" id="view"></div>
+  </aside>
+</div>
+<nav class="bottomnav" id="bottomnav" aria-label="Pages"></nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="box"><header><h2 id="modalTitle"></h2><button class="iconbtn" id="modalClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></header><div class="mbody" id="modalBody"></div></div></div>
+<div id="toasts" aria-live="polite"></div>
+<div id="printArea"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Sailab — Flood Preparedness & Relief Map (single-file FYP template)
+   Sections: utils · i18n · seed data (stations, districts, camps, guide) ·
+   flood engine (gauge series, categories, district risk) · map adapter
+   (Leaflet lazy → SVG schematic fallback) · views (alerts, gauges, plan,
+   camps, missing, guide, about) · bottom sheet · router / boot.
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+
+// ---------- utils ----------
+const NS = 'sailab:';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } },
+  del(k) { try { localStorage.removeItem(NS + k); } catch {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const nf = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 });
+const kfmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(Math.round(n));
+const toast = (msg, type = '', icon = 'info') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = ic(icon) + '<span></span>'; t.lastChild.textContent = msg; $('#toasts').append(t); setTimeout(() => t.remove(), 3200); };
+function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const haversine = (a, b) => { const R = 6371, d = x => x * Math.PI / 180; const dLat = d(b.lat - a.lat), dLng = d(b.lng - a.lng); const h = Math.sin(dLat / 2) ** 2 + Math.cos(d(a.lat)) * Math.cos(d(b.lat)) * Math.sin(dLng / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const asOf = new Date(today); asOf.setHours(6, 0, 0, 0);
+const dateOf = (i, n) => { const d = new Date(today); d.setDate(d.getDate() - (n - 1 - i)); return d; };
+const dLabel = d => d.toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', { day: 'numeric', month: 'short' });
+const timeAgo = ts => { const m = Math.max(1, Math.round((Date.now() - ts) / 60000)); if (m < 60) return m + ' ' + t('ago_m'); const h = Math.round(m / 60); if (h < 24) return h + ' ' + t('ago_h'); return Math.round(h / 24) + ' ' + t('ago_d'); };
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i))); };
+const countUp = (el, to, { dur = 700, fmt = v => Math.round(v).toLocaleString('en-PK') } = {}) => { const t0 = performance.now(); const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const drawPath = p => { const L0 = p.getTotalLength(); p.style.strokeDasharray = L0; p.style.strokeDashoffset = L0; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; };
+const download = (name, text) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 500); };
+
+// ---------- i18n ----------
+const TXT = {
+  en: {
+    title: 'Sailab', tagline: 'Flood preparedness & relief map', mydist: 'My district',
+    nav_alerts: 'Alerts', nav_gauges: 'Gauges', nav_plan: 'Plan', nav_camps: 'Camps', nav_missing: 'Missing', nav_guide: 'Guide', nav_about: 'About',
+    lv_normal: 'Normal', lv_watch: 'Watch', lv_warning: 'Warning', lv_severe: 'Severe',
+    adv_normal: 'No flood threat at present. Keep your family plan, documents and go-bag ready.',
+    adv_watch: 'River levels are rising upstream. Pack a go-bag, charge phones and check for updates twice a day.',
+    adv_warning: 'Flooding is likely within 24–48 hours. Move the elderly, pregnant women, children and livestock to high ground now; everyone else be ready to leave within 6 hours.',
+    adv_severe: 'Severe flooding is expected or under way. Evacuate to the nearest relief camp immediately. Do not wait for water to reach your home.',
+    gc_normal: 'Normal', gc_low: 'Low flood', gc_medium: 'Medium flood', gc_high: 'High flood', gc_vhigh: 'Very high flood', gc_ehigh: 'Exceptionally high',
+    prov_all: 'All provinces', Sindh: 'Sindh', Punjab: 'Punjab', KP: 'Khyber Pakhtunkhwa', Balochistan: 'Balochistan',
+    al_title: 'District alerts', al_lead: 'Risk is computed from the upstream river gauge and 7-day rainfall. Tap a card or a map marker for the advisory.', al_all: 'All levels', al_mine: 'My district', al_upstream: 'Upstream gauge', al_rain7: '7-day rain', al_risk: 'Risk', al_hill: 'Hill torrents / rain-driven', al_none: 'No districts match these filters.', al_sos: 'SOS text', al_plan: 'Evacuation plan', al_focus: 'Show on map', al_districts: 'districts', al_setmine: 'Set as my district', al_mine_set: 'My district updated',
+    g_title: 'River gauges', g_lead: 'FFD-style flood categories per station. Tap a station for its 14-day inflow / outflow chart.', g_inflow: 'Inflow', g_outflow: 'Outflow', g_asof: 'Data as of', g_sim: 'Simulated scenario — not live data', g_14d: '14-day flow (cusecs)', g_cusecs: 'cusecs', g_up: 'rising', g_down: 'falling', g_flat: 'steady', g_thresholds: 'Thresholds', g_live: 'Live FFD / WAPDA feed is a student extension — see fetchLiveGauges().', g_vs: 'vs yesterday',
+    p_title: 'Evacuation planner', p_lead: 'Describe your household once; the plan, go-bag and nearest camps update with your district\'s alert level.', p_family: 'Household', p_adults: 'Adults', p_children: 'Children (2–12)', p_infants: 'Infants (<2)', p_elderly: 'Elderly (60+)', p_pregnant: 'Pregnant women', p_disabled: 'People with disabilities', p_livestock: 'Livestock (count)', p_vehicle: 'We have a vehicle', p_docs: 'Documents we hold', p_doc_cnic: 'CNICs', p_doc_bform: 'B-forms (children)', p_doc_land: 'Land / house papers', p_doc_bank: 'Bank / BISP card', p_doc_med: 'Medical records', p_meet: 'Family meeting point', p_meet_ph: 'e.g. Govt High School gate, Johi', p_contacts: 'Emergency contacts', p_cname: 'Name', p_cphone: 'Phone', p_save: 'Save plan', p_saved: 'Plan saved on this device', p_checklist: 'Prioritised checklist', p_gobag: 'Go-bag', p_nearest: 'Nearest relief camps', p_leave: 'When to leave', p_print: 'Print family plan card', p_km: 'km', p_reset_bag: 'Untick all', p_members: 'members', p_card: 'Family flood plan', p_now: 'Now', p_soon: 'Soon', p_later: 'Later',
+    p_leave_severe: 'Leave now. Go to the nearest camp below by the shortest dry route. Take the go-bag, switch off gas and electricity, untie livestock.', p_leave_warning_v: 'Move vulnerable members now (elderly, pregnant women, infants, people with disabilities) and livestock to high ground. Everyone else must be ready to leave within 6 hours.', p_leave_warning: 'Be ready to leave within 6 hours. Keep the go-bag by the door, fuel the vehicle, and agree who checks the river level tonight.', p_leave_watch: 'Prepare: pack the go-bag, charge phones and power banks, photograph documents, confirm the meeting point with every member.', p_leave_normal: 'No evacuation needed. Review this plan with the family and refresh the water and medicines in the go-bag.',
+    c_title: 'Relief camps', c_lead: 'Schools, colleges and stadiums designated as relief camps or safe high ground. Occupancy and needs are seeded and can be updated locally.', c_cap: 'capacity', c_occ: 'occupancy', c_water: 'Water', c_latrines: 'Latrines', c_medical: 'Medical', c_food: 'Food', c_needs: 'Needs', c_contact: 'Contact', c_directions: 'Directions', c_update: 'Update', c_update_title: 'Report occupancy / needs', c_occ_now: 'Current occupancy (people)', c_needs_in: 'Needs (comma separated)', c_updated: 'Camp update saved on this device', c_full: 'Full', c_near: 'Nearest first', c_search: 'Search camp or district…', c_none: 'No camps match.', c_type_school: 'School', c_type_college: 'College', c_type_stadium: 'Stadium', c_type_ground: 'High ground', c_people: 'people',
+    m_title: 'Reunification board', m_lead: 'Post a missing or found person. Suggested matches use name similarity, age and location. Stored on this device only.', m_post: 'Post', m_missing: 'Missing', m_found: 'Found', m_reunited: 'Reunited', m_all: 'All', m_name: 'Name (as known)', m_age: 'Age (approx.)', m_gender: 'Gender', m_male: 'Male', m_female: 'Female', m_other: 'Other / unknown', m_where_missing: 'Last seen (place)', m_where_found: 'Found at (place / camp)', m_contact: 'Contact phone', m_photo: 'Photo (resized to 240 px)', m_note: 'Note (clothes, marks, health)', m_submit: 'Post to board', m_posted: 'Posted', m_matches: 'Possible match', m_share: 'WhatsApp', m_mark: 'Mark reunited', m_reunited_toast: 'Alhamdulillah — marked as reunited', m_search: 'Search name or place…', m_none: 'No posts match.', m_district: 'District', m_valid: 'Name, age and place are required.', m_status: 'Status', m_lastseen: 'Last seen', m_foundat: 'Found at', m_age_short: 'yrs', m_removed: 'Post removed',
+    gd_title: 'Flood safety guide', gd_lead: 'What to do before, during and after a flood. Helplines are editable; the SOS text includes your GPS position.', gd_before: 'Before', gd_during: 'During', gd_after: 'After', gd_help: 'Helplines', gd_help_lead: 'Verify numbers for your province and edit here.', gd_add_help: 'Add helpline', gd_name: 'Name', gd_number: 'Number', gd_sos: 'SOS text generator', gd_sos_lead: 'Builds a bilingual message with your district, headcount and GPS link. Send it by WhatsApp or SMS.', gd_gps: 'Add GPS location', gd_gps_wait: 'Getting location…', gd_gps_ok: 'GPS added', gd_gps_fail: 'Location unavailable — add a landmark instead', gd_copy: 'Copy', gd_copied: 'Copied', gd_sms: 'SMS', gd_landmark: 'Village / landmark', gd_need: 'We need', gd_need_evac: 'Evacuation', gd_need_boat: 'Boat', gd_need_medical: 'Medical help', gd_need_food: 'Food & water',
+    ab_title: 'About Sailab', ab_problem: 'The problem', ab_problem_t: 'The 2022 floods affected 33 million people. Warnings issued in Islamabad did not reach villages in time, families did not know where the relief camps were, and relatives separated during evacuation had no channel to find each other.', ab_how: 'How risk is computed', ab_how_t: 'Each district is linked to its upstream river gauge. The gauge\'s current discharge is placed on the FFD flood-category ladder (0–1), combined with seeded 7-day rainfall and a static vulnerability weight. Rain-driven districts (hill torrents) weight rainfall higher.', ab_formula: 'risk = 100 × (0.55 · gauge + 0.30 · rain + 0.15 · vulnerability) · levels: ≥70 Severe · ≥50 Warning · ≥30 Watch · else Normal', ab_data: 'Data & safety', ab_data_t: 'All gauge series, rainfall, camp occupancy, contacts and posts are simulated seed data for demonstration. Thresholds follow published FFD flood limits approximately. Nothing here replaces official NDMA / PDMA warnings.', ab_todo: 'Left for students to build', ab_export: 'Export my data', ab_import: 'Import', ab_reset: 'Reset demo data', ab_reset_ok: 'Demo data restored', ab_imported: 'Data imported', ab_bad_file: 'Could not read that file', ab_stack: 'Stack: one HTML file, vanilla JS, hand-drawn SVG charts, localStorage. Leaflet + OpenStreetMap load lazily; an SVG schematic of the Indus basin takes over when offline.',
+    map_sim: 'Simulated scenario', map_schem: 'Schematic map (offline)', map_tiles: 'Map tiles unavailable — switched to schematic', map_loading: 'Loading map…', map_fit: 'Fit all', lg_district: 'District', lg_station: 'Gauge station', lg_camp: 'Relief camp', lg_post: 'Missing / found',
+    save: 'Save', cancel: 'Cancel', close: 'Close', delete: 'Delete', people: 'people', ago_m: 'min ago', ago_h: 'h ago', ago_d: 'd ago', more: 'Details', less: 'Hide', call: 'Call'
+  },
+  ur: {
+    title: 'سیلاب', tagline: 'سیلاب سے بچاؤ اور امدادی نقشہ', mydist: 'میرا ضلع',
+    nav_alerts: 'الرٹس', nav_gauges: 'گیج', nav_plan: 'منصوبہ', nav_camps: 'کیمپ', nav_missing: 'گمشدہ', nav_guide: 'رہنمائی', nav_about: 'تعارف',
+    lv_normal: 'معمول', lv_watch: 'نگرانی', lv_warning: 'وارننگ', lv_severe: 'شدید',
+    adv_normal: 'فی الحال سیلاب کا خطرہ نہیں۔ خاندانی منصوبہ، دستاویزات اور ضروری سامان کا بیگ تیار رکھیں۔',
+    adv_watch: 'بالائی علاقوں میں دریا کی سطح بڑھ رہی ہے۔ ضروری سامان کا بیگ تیار کریں، فون چارج رکھیں اور دن میں دو بار اطلاعات دیکھیں۔',
+    adv_warning: 'اگلے 24 تا 48 گھنٹوں میں سیلاب کا خطرہ ہے۔ بزرگوں، حاملہ خواتین، بچوں اور مویشیوں کو ابھی اونچی جگہ منتقل کریں؛ باقی افراد 6 گھنٹوں میں نکلنے کے لیے تیار رہیں۔',
+    adv_severe: 'شدید سیلاب متوقع یا جاری ہے۔ فوری طور پر قریبی ریلیف کیمپ کی طرف نکلیں۔ پانی گھر تک پہنچنے کا انتظار نہ کریں۔',
+    gc_normal: 'معمول', gc_low: 'کم سیلاب', gc_medium: 'درمیانہ سیلاب', gc_high: 'اونچا سیلاب', gc_vhigh: 'بہت اونچا سیلاب', gc_ehigh: 'غیر معمولی اونچا',
+    prov_all: 'تمام صوبے', Sindh: 'سندھ', Punjab: 'پنجاب', KP: 'خیبر پختونخوا', Balochistan: 'بلوچستان',
+    al_title: 'ضلعی الرٹس', al_lead: 'خطرے کا اندازہ بالائی دریائی گیج اور 7 دن کی بارش سے لگایا جاتا ہے۔ ہدایت کے لیے کارڈ یا نقشے پر نشان دبائیں۔', al_all: 'تمام درجے', al_mine: 'میرا ضلع', al_upstream: 'بالائی گیج', al_rain7: '7 دن کی بارش', al_risk: 'خطرہ', al_hill: 'پہاڑی نالے / بارش سے', al_none: 'ان فلٹرز سے کوئی ضلع نہیں ملا۔', al_sos: 'ایس او ایس پیغام', al_plan: 'انخلا کا منصوبہ', al_focus: 'نقشے پر دکھائیں', al_districts: 'اضلاع', al_setmine: 'میرا ضلع بنائیں', al_mine_set: 'میرا ضلع تبدیل ہو گیا',
+    g_title: 'دریائی گیج', g_lead: 'ہر اسٹیشن کے لیے ایف ایف ڈی طرز کے سیلابی درجے۔ 14 دن کے چارٹ کے لیے اسٹیشن دبائیں۔', g_inflow: 'آمد', g_outflow: 'اخراج', g_asof: 'ڈیٹا بمطابق', g_sim: 'نمونہ ڈیٹا — براہِ راست نہیں', g_14d: '14 دن کا بہاؤ (کیوسک)', g_cusecs: 'کیوسک', g_up: 'بڑھ رہا', g_down: 'گھٹ رہا', g_flat: 'مستحکم', g_thresholds: 'حدیں', g_live: 'لائیو ایف ایف ڈی / واپڈا فیڈ طلبہ کا کام ہے — fetchLiveGauges() دیکھیں۔', g_vs: 'کل کے مقابلے',
+    p_title: 'انخلا کا منصوبہ ساز', p_lead: 'اپنے گھرانے کی تفصیل ایک بار درج کریں؛ منصوبہ، بیگ اور قریبی کیمپ آپ کے ضلع کے الرٹ کے ساتھ بدلتے ہیں۔', p_family: 'گھرانہ', p_adults: 'بالغ افراد', p_children: 'بچے (2–12)', p_infants: 'شیر خوار (<2)', p_elderly: 'بزرگ (60+)', p_pregnant: 'حاملہ خواتین', p_disabled: 'معذور افراد', p_livestock: 'مویشی (تعداد)', p_vehicle: 'ہمارے پاس گاڑی ہے', p_docs: 'ہمارے پاس موجود دستاویزات', p_doc_cnic: 'شناختی کارڈ', p_doc_bform: 'ب فارم (بچے)', p_doc_land: 'زمین / گھر کے کاغذات', p_doc_bank: 'بینک / بی آئی ایس پی کارڈ', p_doc_med: 'طبی ریکارڈ', p_meet: 'خاندان کے ملنے کی جگہ', p_meet_ph: 'مثلاً گورنمنٹ ہائی اسکول گیٹ، جوہی', p_contacts: 'ہنگامی رابطے', p_cname: 'نام', p_cphone: 'فون', p_save: 'منصوبہ محفوظ کریں', p_saved: 'منصوبہ اس آلے میں محفوظ ہو گیا', p_checklist: 'ترجیحی چیک لسٹ', p_gobag: 'ضروری سامان کا بیگ', p_nearest: 'قریبی ریلیف کیمپ', p_leave: 'کب نکلنا ہے', p_print: 'خاندانی منصوبہ کارڈ پرنٹ کریں', p_km: 'کلومیٹر', p_reset_bag: 'سب ہٹائیں', p_members: 'افراد', p_card: 'خاندانی سیلاب منصوبہ', p_now: 'ابھی', p_soon: 'جلد', p_later: 'بعد میں',
+    p_leave_severe: 'ابھی نکلیں۔ مختصر ترین خشک راستے سے نیچے دیے گئے قریبی کیمپ جائیں۔ بیگ ساتھ لیں، گیس اور بجلی بند کریں، مویشی کھول دیں۔', p_leave_warning_v: 'کمزور افراد (بزرگ، حاملہ خواتین، شیر خوار، معذور) اور مویشیوں کو ابھی اونچی جگہ منتقل کریں۔ باقی سب 6 گھنٹوں میں نکلنے کے لیے تیار رہیں۔', p_leave_warning: '6 گھنٹوں میں نکلنے کے لیے تیار رہیں۔ بیگ دروازے کے پاس رکھیں، گاڑی میں تیل ڈالیں، اور طے کریں کہ رات کو دریا کی سطح کون دیکھے گا۔', p_leave_watch: 'تیاری کریں: بیگ پیک کریں، فون اور پاور بینک چارج کریں، دستاویزات کی تصویر لیں، ہر فرد سے ملنے کی جگہ کی تصدیق کریں۔', p_leave_normal: 'انخلا کی ضرورت نہیں۔ خاندان کے ساتھ منصوبہ دیکھیں اور بیگ میں پانی اور دوائیں تازہ کریں۔',
+    c_title: 'ریلیف کیمپ', c_lead: 'اسکول، کالج اور اسٹیڈیم جو ریلیف کیمپ یا محفوظ اونچی جگہ قرار دیے گئے ہیں۔ گنجائش اور ضروریات نمونہ ہیں اور مقامی طور پر تبدیل کی جا سکتی ہیں۔', c_cap: 'گنجائش', c_occ: 'موجود افراد', c_water: 'پانی', c_latrines: 'بیت الخلا', c_medical: 'طبی', c_food: 'خوراک', c_needs: 'ضروریات', c_contact: 'رابطہ', c_directions: 'راستہ', c_update: 'اپ ڈیٹ', c_update_title: 'موجودگی / ضروریات کی اطلاع', c_occ_now: 'موجودہ افراد', c_needs_in: 'ضروریات (کوما سے الگ)', c_updated: 'کیمپ اپ ڈیٹ اس آلے میں محفوظ ہو گئی', c_full: 'بھرا ہوا', c_near: 'قریبی پہلے', c_search: 'کیمپ یا ضلع تلاش کریں…', c_none: 'کوئی کیمپ نہیں ملا۔', c_type_school: 'اسکول', c_type_college: 'کالج', c_type_stadium: 'اسٹیڈیم', c_type_ground: 'اونچی جگہ', c_people: 'افراد',
+    m_title: 'گمشدہ افراد بورڈ', m_lead: 'گمشدہ یا ملے ہوئے فرد کی اطلاع دیں۔ ممکنہ میچ نام، عمر اور جگہ کی مماثلت سے تجویز ہوتے ہیں۔ صرف اسی آلے میں محفوظ۔', m_post: 'اطلاع دیں', m_missing: 'گمشدہ', m_found: 'ملا', m_reunited: 'مل گئے', m_all: 'تمام', m_name: 'نام (جیسا معلوم ہو)', m_age: 'عمر (اندازاً)', m_gender: 'جنس', m_male: 'مرد', m_female: 'عورت', m_other: 'دیگر / نامعلوم', m_where_missing: 'آخری بار دیکھا گیا (جگہ)', m_where_found: 'کہاں ملا (جگہ / کیمپ)', m_contact: 'رابطہ فون', m_photo: 'تصویر (240 پکسل)', m_note: 'نوٹ (کپڑے، نشان، صحت)', m_submit: 'بورڈ پر لگائیں', m_posted: 'اطلاع لگ گئی', m_matches: 'ممکنہ میچ', m_share: 'واٹس ایپ', m_mark: 'مل گئے', m_reunited_toast: 'الحمدللہ — مل جانے کا نشان لگ گیا', m_search: 'نام یا جگہ تلاش کریں…', m_none: 'کوئی اطلاع نہیں ملی۔', m_district: 'ضلع', m_valid: 'نام، عمر اور جگہ ضروری ہیں۔', m_status: 'حالت', m_lastseen: 'آخری بار', m_foundat: 'ملا', m_age_short: 'سال', m_removed: 'اطلاع ہٹا دی گئی',
+    gd_title: 'سیلاب حفاظتی رہنمائی', gd_lead: 'سیلاب سے پہلے، دوران اور بعد میں کیا کرنا ہے۔ ہیلپ لائنیں تبدیل کی جا سکتی ہیں؛ ایس او ایس پیغام میں آپ کا جی پی ایس شامل ہوتا ہے۔', gd_before: 'پہلے', gd_during: 'دوران', gd_after: 'بعد', gd_help: 'ہیلپ لائنیں', gd_help_lead: 'اپنے صوبے کے نمبر تصدیق کر کے یہاں درج کریں۔', gd_add_help: 'ہیلپ لائن شامل کریں', gd_name: 'نام', gd_number: 'نمبر', gd_sos: 'ایس او ایس پیغام', gd_sos_lead: 'آپ کے ضلع، افراد کی تعداد اور جی پی ایس لنک کے ساتھ دو زبانی پیغام بناتا ہے۔ واٹس ایپ یا ایس ایم ایس سے بھیجیں۔', gd_gps: 'جی پی ایس شامل کریں', gd_gps_wait: 'مقام معلوم کیا جا رہا ہے…', gd_gps_ok: 'جی پی ایس شامل ہو گیا', gd_gps_fail: 'مقام دستیاب نہیں — کوئی نشانی لکھیں', gd_copy: 'کاپی', gd_copied: 'کاپی ہو گیا', gd_sms: 'ایس ایم ایس', gd_landmark: 'گاؤں / نشانی', gd_need: 'ہمیں چاہیے', gd_need_evac: 'انخلا', gd_need_boat: 'کشتی', gd_need_medical: 'طبی مدد', gd_need_food: 'خوراک اور پانی',
+    ab_title: 'سیلاب ایپ کا تعارف', ab_problem: 'مسئلہ', ab_problem_t: '2022 کے سیلاب نے 3 کروڑ 30 لاکھ افراد کو متاثر کیا۔ اسلام آباد سے جاری وارننگ گاؤں تک وقت پر نہ پہنچی، خاندانوں کو معلوم نہ تھا کہ ریلیف کیمپ کہاں ہیں، اور انخلا میں بچھڑے رشتہ داروں کے پاس ایک دوسرے کو تلاش کرنے کا کوئی ذریعہ نہ تھا۔', ab_how: 'خطرے کا حساب کیسے ہوتا ہے', ab_how_t: 'ہر ضلع اپنے بالائی دریائی گیج سے جڑا ہے۔ گیج کے موجودہ بہاؤ کو ایف ایف ڈی سیلابی درجوں (0–1) پر رکھا جاتا ہے، 7 دن کی نمونہ بارش اور مستقل حساسیت کے وزن سے ملایا جاتا ہے۔ بارش سے متاثر اضلاع (پہاڑی نالے) میں بارش کا وزن زیادہ ہے۔', ab_formula: 'خطرہ = 100 × (0.55 گیج + 0.30 بارش + 0.15 حساسیت) · درجے: ≥70 شدید · ≥50 وارننگ · ≥30 نگرانی · ورنہ معمول', ab_data: 'ڈیٹا اور حفاظت', ab_data_t: 'تمام گیج سیریز، بارش، کیمپ کی موجودگی، رابطے اور اطلاعات مظاہرے کے لیے نمونہ ڈیٹا ہیں۔ حدیں شائع شدہ ایف ایف ڈی حدوں کے قریب ہیں۔ یہ این ڈی ایم اے / پی ڈی ایم اے کی سرکاری وارننگ کا متبادل نہیں۔', ab_todo: 'طلبہ کے لیے باقی کام', ab_export: 'میرا ڈیٹا ایکسپورٹ', ab_import: 'امپورٹ', ab_reset: 'نمونہ ڈیٹا بحال کریں', ab_reset_ok: 'نمونہ ڈیٹا بحال ہو گیا', ab_imported: 'ڈیٹا امپورٹ ہو گیا', ab_bad_file: 'فائل نہیں پڑھی جا سکی', ab_stack: 'ٹیکنالوجی: ایک HTML فائل، سادہ جاوا اسکرپٹ، SVG چارٹ، localStorage۔ Leaflet اور OpenStreetMap ضرورت پر لوڈ ہوتے ہیں؛ آف لائن ہونے پر دریائے سندھ کا SVG خاکہ کام کرتا ہے۔',
+    map_sim: 'نمونہ منظرنامہ', map_schem: 'خاکہ نقشہ (آف لائن)', map_tiles: 'نقشے کی ٹائلیں دستیاب نہیں — خاکے پر منتقل', map_loading: 'نقشہ لوڈ ہو رہا ہے…', map_fit: 'سب دکھائیں', lg_district: 'ضلع', lg_station: 'گیج اسٹیشن', lg_camp: 'ریلیف کیمپ', lg_post: 'گمشدہ / ملا',
+    save: 'محفوظ', cancel: 'منسوخ', close: 'بند', delete: 'حذف', people: 'افراد', ago_m: 'منٹ پہلے', ago_h: 'گھنٹے پہلے', ago_d: 'دن پہلے', more: 'تفصیل', less: 'چھپائیں', call: 'کال'
+  }
+};
+let lang = store.get('lang', 'en');
+const t = k => (TXT[lang][k] ?? TXT.en[k] ?? k);
+const name = o => lang === 'ur' && o.ur ? o.ur : o.en;
+const bi = (en, ur) => lang === 'ur' ? ur : en;
+
+// ---------- seed data ----------
+// Alert levels and FFD flood categories (colours used everywhere: markers, badges, bars, chart bands)
+const LEVELS = { normal: { c: '#2a9d5c', min: 0 }, watch: { c: '#2f80ed', min: 30 }, warning: { c: '#f2a900', min: 50 }, severe: { c: '#d7263d', min: 70 } };
+const GCATS = [['normal', '#6b8cae'], ['low', '#2f80ed'], ['medium', '#f2a900'], ['high', '#e8711a'], ['vhigh', '#d7263d'], ['ehigh', '#7a1b3a']];
+const PROVS = ['Sindh', 'Punjab', 'KP', 'Balochistan'];
+// Stations: th = FFD flood limits [low, medium, high, very high, exceptionally high] in cusecs (approximate published values).
+// sc = scenario shape for the simulated 14-day inflow: base + peak·exp(-((i-tPeak)/w)^2) · noise. kind: dam (stores) | barrage (passes).
+const STATIONS = [
+  { id: 'tarbela', en: 'Tarbela', ur: 'تربیلا', river: 'Indus', riverUr: 'سندھ', lat: 34.09, lng: 72.70, kind: 'dam', th: [250000, 375000, 500000, 650000, 800000], sc: { base: 250000, peak: 230000, tPeak: 11, w: 3 } },
+  { id: 'kalabagh', en: 'Kalabagh', ur: 'کالاباغ', river: 'Indus', riverUr: 'سندھ', lat: 32.96, lng: 71.55, kind: 'barrage', th: [250000, 375000, 500000, 650000, 800000], sc: { base: 260000, peak: 230000, tPeak: 12, w: 3.2 } },
+  { id: 'chashma', en: 'Chashma', ur: 'چشمہ', river: 'Indus', riverUr: 'سندھ', lat: 32.44, lng: 71.38, kind: 'barrage', th: [250000, 375000, 500000, 650000, 800000], sc: { base: 260000, peak: 230000, tPeak: 12.5, w: 3.4 } },
+  { id: 'taunsa', en: 'Taunsa', ur: 'تونسہ', river: 'Indus', riverUr: 'سندھ', lat: 30.51, lng: 70.85, kind: 'barrage', th: [250000, 350000, 500000, 650000, 800000], sc: { base: 280000, peak: 300000, tPeak: 13, w: 3.5 } },
+  { id: 'guddu', en: 'Guddu', ur: 'گڈو', river: 'Indus', riverUr: 'سندھ', lat: 28.42, lng: 69.71, kind: 'barrage', th: [200000, 350000, 500000, 700000, 900000], sc: { base: 300000, peak: 330000, tPeak: 13.5, w: 3.5 } },
+  { id: 'sukkur', en: 'Sukkur', ur: 'سکھر', river: 'Indus', riverUr: 'سندھ', lat: 27.68, lng: 68.85, kind: 'barrage', th: [200000, 350000, 500000, 700000, 900000], sc: { base: 270000, peak: 310000, tPeak: 14, w: 3.5 } },
+  { id: 'kotri', en: 'Kotri', ur: 'کوٹری', river: 'Indus', riverUr: 'سندھ', lat: 25.37, lng: 68.31, kind: 'barrage', th: [150000, 300000, 450000, 650000, 800000], sc: { base: 180000, peak: 220000, tPeak: 15.5, w: 3.5 } },
+  { id: 'mangla', en: 'Mangla', ur: 'منگلا', river: 'Jhelum', riverUr: 'جہلم', lat: 33.14, lng: 73.64, kind: 'dam', th: [75000, 110000, 150000, 225000, 300000], sc: { base: 60000, peak: 50000, tPeak: 11, w: 3 } },
+  { id: 'marala', en: 'Marala', ur: 'مرالہ', river: 'Chenab', riverUr: 'چناب', lat: 32.67, lng: 74.46, kind: 'barrage', th: [100000, 150000, 200000, 400000, 600000], sc: { base: 90000, peak: 110000, tPeak: 12, w: 2.5 } },
+  { id: 'khanki', en: 'Khanki', ur: 'خانکی', river: 'Chenab', riverUr: 'چناب', lat: 32.40, lng: 73.97, kind: 'barrage', th: [100000, 150000, 200000, 400000, 600000], sc: { base: 75000, peak: 70000, tPeak: 12.5, w: 2.5 } },
+  { id: 'qadirabad', en: 'Qadirabad', ur: 'قادرآباد', river: 'Chenab', riverUr: 'چناب', lat: 32.33, lng: 73.68, kind: 'barrage', th: [100000, 150000, 200000, 400000, 600000], sc: { base: 68000, peak: 66000, tPeak: 13, w: 2.6 } },
+  { id: 'trimmu', en: 'Trimmu', ur: 'تریموں', river: 'Chenab', riverUr: 'چناب', lat: 31.14, lng: 72.15, kind: 'barrage', th: [100000, 150000, 200000, 300000, 450000], sc: { base: 90000, peak: 95000, tPeak: 13.5, w: 3 } },
+  { id: 'panjnad', en: 'Panjnad', ur: 'پنجند', river: 'Panjnad', riverUr: 'پنجند', lat: 29.35, lng: 71.03, kind: 'barrage', th: [100000, 150000, 200000, 300000, 450000], sc: { base: 80000, peak: 90000, tPeak: 14, w: 3 } },
+];
+const SM = Object.fromEntries(STATIONS.map(s => [s.id, s]));
+// Districts: gauge = upstream station (null → rain-driven hill-torrent district), rs = rainfall scale (0–1), vuln = static vulnerability (exposure, poverty, past floods)
+const DISTRICTS = [
+  ['dadu', 'Dadu', 'دادو', 'Sindh', 26.73, 67.78, 'sukkur', .45, .85, 'Kirthar hill torrents and Manchhar Lake backwater', 'کیرتھر کے پہاڑی نالے اور منچھر جھیل کا پانی'],
+  ['jamshoro', 'Jamshoro', 'جامشورو', 'Sindh', 25.43, 68.28, 'kotri', .4, .7, 'Right bank of Kotri; Indus Highway low points', 'کوٹری کا دایاں کنارہ؛ انڈس ہائی وے کے نشیبی مقامات'],
+  ['sehwan', 'Sehwan (Jamshoro)', 'سیہون (جامشورو)', 'Sindh', 26.42, 67.86, 'sukkur', .4, .8, 'Manchhar Lake outfall and MNV drain', 'منچھر جھیل کا اخراج اور ایم این وی ڈرین'],
+  ['khairpur', 'Khairpur', 'خیرپور', 'Sindh', 27.53, 68.76, 'sukkur', .25, .6, 'Left bank below Sukkur barrage', 'سکھر بیراج کے نیچے بایاں کنارہ'],
+  ['sukkur', 'Sukkur', 'سکھر', 'Sindh', 27.70, 68.86, 'sukkur', .2, .55, 'Barrage pond and katcha area', 'بیراج کا تالاب اور کچے کا علاقہ'],
+  ['larkana', 'Larkana', 'لاڑکانہ', 'Sindh', 27.56, 68.21, 'sukkur', .3, .7, 'Right bank katcha and Dadu canal breaches', 'دایاں کنارہ کچا اور دادو کینال کے شگاف'],
+  ['kashmore', 'Kashmore', 'کشمور', 'Sindh', 28.43, 69.58, 'guddu', .5, .85, 'Guddu pond area and Kandhkot katcha belt', 'گڈو تالاب کا علاقہ اور کندھکوٹ کچا بیلٹ'],
+  ['jacobabad', 'Jacobabad', 'جیکب آباد', 'Sindh', 28.28, 68.44, 'guddu', .6, .85, 'Flat terrain; receives Balochistan hill-torrent water', 'ہموار زمین؛ بلوچستان کے پہاڑی نالوں کا پانی آتا ہے'],
+  ['shikarpur', 'Shikarpur', 'شکارپور', 'Sindh', 27.96, 68.64, 'guddu', .4, .75, 'Begari canal and right-bank flood plain', 'بیگاری کینال اور دائیں کنارے کا سیلابی میدان'],
+  ['badin', 'Badin', 'بدین', 'Sindh', 24.65, 68.84, 'kotri', .55, .8, 'LBOD drain overflow and coastal rain', 'ایل بی او ڈی ڈرین کا بہاؤ اور ساحلی بارش'],
+  ['thatta', 'Thatta', 'ٹھٹھہ', 'Sindh', 24.75, 67.92, 'kotri', .2, .7, 'Delta area below Kotri', 'کوٹری کے نیچے ڈیلٹا کا علاقہ'],
+  ['sujawal', 'Sujawal', 'سجاول', 'Sindh', 24.60, 68.07, 'kotri', .35, .75, 'Left bank delta; dyke breaches', 'بائیں کنارے کا ڈیلٹا؛ بند کے شگاف'],
+  ['sanghar', 'Sanghar', 'سانگھڑ', 'Sindh', 26.05, 68.95, null, .3, .6, 'Rain-fed; Nara canal and desert runoff', 'بارش سے؛ نارا کینال اور صحرائی بہاؤ'],
+  ['mirpurkhas', 'Mirpurkhas', 'میرپور خاص', 'Sindh', 25.53, 69.01, null, .2, .6, 'Rain-fed; LBOD and Jamrao canal', 'بارش سے؛ ایل بی او ڈی اور جمڑاؤ کینال'],
+  ['umerkot', 'Umerkot', 'عمرکوٹ', 'Sindh', 25.36, 69.74, null, .1, .55, 'Rain-fed desert fringe', 'بارش سے؛ صحرائی کنارہ'],
+  ['rajanpur', 'Rajanpur', 'راجن پور', 'Punjab', 29.10, 70.33, 'guddu', .55, .85, 'Suleman range hill torrents (Kaha, Chachar)', 'کوہ سلیمان کے پہاڑی نالے (کاہا، چاچڑ)'],
+  ['dgkhan', 'Dera Ghazi Khan', 'ڈیرہ غازی خان', 'Punjab', 30.05, 70.63, 'taunsa', .5, .75, 'Hill torrents (Vidor, Sanghar) and Taunsa right bank', 'پہاڑی نالے (ودور، سنگھڑ) اور تونسہ کا دایاں کنارہ'],
+  ['muzaffargarh', 'Muzaffargarh', 'مظفرگڑھ', 'Punjab', 30.07, 71.19, 'taunsa', .3, .7, 'Between Indus and Chenab; TP Link canal', 'سندھ اور چناب کے درمیان؛ ٹی پی لنک کینال'],
+  ['layyah', 'Layyah', 'لیہ', 'Punjab', 30.96, 70.94, 'taunsa', .2, .6, 'Indus left-bank riverine belt', 'سندھ کے بائیں کنارے کی دریائی پٹی'],
+  ['jhang', 'Jhang', 'جھنگ', 'Punjab', 31.27, 72.32, 'trimmu', .15, .55, 'Chenab–Jhelum confluence at Trimmu', 'تریموں پر چناب اور جہلم کا سنگم'],
+  ['hafizabad', 'Hafizabad', 'حافظ آباد', 'Punjab', 32.07, 73.69, 'qadirabad', .1, .45, 'Chenab left bank below Qadirabad', 'قادرآباد کے نیچے چناب کا بایاں کنارہ'],
+  ['sialkot', 'Sialkot', 'سیالکوٹ', 'Punjab', 32.49, 74.53, 'marala', .2, .5, 'Chenab, Aik and Palkhu nullahs', 'چناب، ایک اور پلکھو نالے'],
+  ['narowal', 'Narowal', 'نارووال', 'Punjab', 32.10, 74.87, 'marala', .15, .5, 'Ravi and Bein nullah flash floods', 'راوی اور بئیں نالے کے اچانک سیلاب'],
+  ['swat', 'Swat', 'سوات', 'KP', 35.22, 72.43, null, .5, .7, 'Swat river flash floods; riverside hotels and bridges', 'دریائے سوات کے اچانک سیلاب؛ کنارے کے ہوٹل اور پل'],
+  ['charsadda', 'Charsadda', 'چارسدہ', 'KP', 34.15, 71.74, null, .45, .75, 'Swat–Kabul river confluence', 'سوات اور کابل دریا کا سنگم'],
+  ['nowshera', 'Nowshera', 'نوشہرہ', 'KP', 34.02, 71.98, null, .4, .7, 'Kabul river at Nowshera; cantonment low ground', 'نوشہرہ پر دریائے کابل؛ کنٹونمنٹ کا نشیب'],
+  ['dikhan', 'Dera Ismail Khan', 'ڈیرہ اسماعیل خان', 'KP', 31.83, 70.90, 'chashma', .45, .7, 'Chashma right bank and Suleman hill torrents', 'چشمہ کا دایاں کنارہ اور کوہ سلیمان کے نالے'],
+  ['tank', 'Tank', 'ٹانک', 'KP', 32.22, 70.38, null, .2, .65, 'Tank Zam and Gomal hill torrents', 'ٹانک زام اور گومل کے پہاڑی نالے'],
+  ['jaffarabad', 'Jaffarabad', 'جعفرآباد', 'Balochistan', 28.30, 68.20, null, .65, .9, 'Nari / Bolan hill torrents on flat Kachhi plain', 'کچھی میدان پر ناڑی / بولان کے پہاڑی نالے'],
+  ['naseerabad', 'Naseerabad', 'نصیرآباد', 'Balochistan', 28.65, 68.35, null, .6, .85, 'Pat Feeder canal breaches and hill torrents', 'پٹ فیڈر کینال کے شگاف اور پہاڑی نالے'],
+  ['sohbatpur', 'Sohbatpur', 'صحبت پور', 'Balochistan', 28.52, 68.54, null, .55, .85, 'Lowest point of the Kachhi plain; water stands for weeks', 'کچھی میدان کا نشیبی ترین مقام؛ پانی ہفتوں کھڑا رہتا ہے'],
+  ['lasbela', 'Lasbela', 'لسبیلہ', 'Balochistan', 25.87, 66.70, null, .12, .55, 'Porali and Hub river flash floods', 'پورالی اور حب دریا کے اچانک سیلاب'],
+].map(([id, en, ur, prov, lat, lng, gauge, rs, vuln, note, noteUr]) => ({ id, en, ur, prov, lat, lng, gauge, rs, vuln, note, noteUr }));
+const DM = Object.fromEntries(DISTRICTS.map(d => [d.id, d]));
+// Relief camps / safe high-ground sites. fac: w water, l latrines, m medical, f food. Contacts are demo numbers.
+const CAMPS = [
+  ['c01', 'Govt Degree College Dadu', 'dadu', 'college', 26.735, 67.775, 1200, 860, 'wlmf', '0300-2000011', 'tents,mosquito nets'],
+  ['c02', 'Govt Boys High School Johi', 'dadu', 'school', 26.69, 67.61, 600, 540, 'wl', '0300-2000012', 'drinking water,medicines,food'],
+  ['c03', 'Govt High School Sehwan Sharif', 'sehwan', 'school', 26.42, 67.86, 800, 300, 'wf', '0300-2000013', 'latrines'],
+  ['c04', 'Liaquat University Campus, Jamshoro', 'jamshoro', 'college', 25.42, 68.26, 2000, 650, 'wlmf', '0300-2000014', ''],
+  ['c05', 'Khairpur Sports Complex', 'khairpur', 'stadium', 27.53, 68.76, 1500, 400, 'wlf', '0300-2000015', 'medical camp'],
+  ['c06', 'Govt Degree College Larkana', 'larkana', 'college', 27.56, 68.21, 1000, 720, 'wlm', '0300-2000016', 'food,blankets'],
+  ['c07', 'Pir Bux Shah Stadium, Kandhkot', 'kashmore', 'stadium', 28.24, 69.18, 1800, 1750, 'wl', '0300-2000017', 'food,medicines,tents'],
+  ['c08', 'Govt Boys Degree College Jacobabad', 'jacobabad', 'college', 28.28, 68.44, 1200, 1150, 'wlf', '0300-2000018', 'medicines,mosquito nets'],
+  ['c09', 'Govt Degree College Shikarpur', 'shikarpur', 'college', 27.96, 68.64, 900, 500, 'wlmf', '0300-2000019', ''],
+  ['c10', 'Tando Bago Road High Ground, Badin', 'badin', 'ground', 24.66, 68.84, 2000, 900, 'w', '0300-2000020', 'latrines,tents,food'],
+  ['c11', 'Govt Degree College Thatta (Makli)', 'thatta', 'college', 24.74, 67.91, 700, 200, 'wlf', '0300-2000021', ''],
+  ['c12', 'Govt Boys Degree College Sanghar', 'sanghar', 'college', 26.05, 68.95, 800, 350, 'wlf', '0300-2000022', ''],
+  ['c13', 'Shaheed Benazir Stadium, Mirpurkhas', 'mirpurkhas', 'stadium', 25.52, 69.01, 1500, 300, 'wlm', '0300-2000023', ''],
+  ['c14', 'Barrage Colony High School, Sukkur', 'sukkur', 'school', 27.69, 68.85, 500, 180, 'wlf', '0300-2000024', ''],
+  ['c15', 'Govt Degree College Rajanpur', 'rajanpur', 'college', 29.10, 70.33, 1500, 1400, 'wl', '0300-2000025', 'food,tents,medicines'],
+  ['c16', 'Ghazi University Campus, DG Khan', 'dgkhan', 'college', 30.04, 70.64, 2500, 1300, 'wlmf', '0300-2000026', ''],
+  ['c17', 'Govt Post-Graduate College Muzaffargarh', 'muzaffargarh', 'college', 30.07, 71.19, 1200, 600, 'wlf', '0300-2000027', 'medical camp'],
+  ['c18', 'Layyah Sports Stadium', 'layyah', 'stadium', 30.96, 70.94, 1000, 250, 'wl', '0300-2000028', ''],
+  ['c19', 'Govt Islamia College Jhang', 'jhang', 'college', 31.27, 72.32, 900, 150, 'wlf', '0300-2000029', ''],
+  ['c20', 'Govt Degree College Charsadda', 'charsadda', 'college', 34.15, 71.74, 1200, 700, 'wlm', '0300-2000030', 'food'],
+  ['c21', 'Nowshera Sports Stadium', 'nowshera', 'stadium', 34.01, 71.98, 1500, 500, 'wlf', '0300-2000031', ''],
+  ['c22', 'Jahanzeb College, Saidu Sharif (Swat)', 'swat', 'college', 34.75, 72.36, 1000, 620, 'wlmf', '0300-2000032', 'blankets'],
+  ['c23', 'Gomal University Camp, DI Khan', 'dikhan', 'college', 31.82, 70.89, 2000, 800, 'wlmf', '0300-2000033', ''],
+  ['c24', 'Govt Boys Degree College Dera Allah Yar', 'jaffarabad', 'college', 28.37, 68.35, 1500, 1480, 'wl', '0300-2000034', 'drinking water,medicines,food,tents'],
+  ['c25', 'Dera Murad Jamali Sports Complex', 'naseerabad', 'stadium', 28.55, 68.22, 1500, 1350, 'wl', '0300-2000035', 'food,medicines'],
+  ['c26', 'Govt High School Sohbatpur', 'sohbatpur', 'school', 28.52, 68.54, 600, 590, 'w', '0300-2000036', 'latrines,food,medicines'],
+  ['c27', 'Govt Degree College Hub (Lasbela)', 'lasbela', 'college', 25.03, 66.90, 800, 60, 'wlf', '0300-2000037', ''],
+].map(([id, en, d, type, lat, lng, cap, occ, fac, phone, needs]) => ({ id, en, d, type, lat, lng, cap, occ, fac, phone, needs: needs ? needs.split(',') : [] }));
+const CAMP_TYPE_ICON = { school: 'building', college: 'graduation', stadium: 'flag', ground: 'layers' };
+// Guide content (bilingual)
+const GUIDE = {
+  before: [
+    ['map-pin', 'Know your route', 'Learn the way to the nearest high ground and relief camp. Agree a family meeting point and who carries whom.', 'راستہ جانیں', 'قریبی اونچی جگہ اور ریلیف کیمپ کا راستہ جانیں۔ خاندان کے ملنے کی جگہ طے کریں اور کون کس کو لے کر جائے گا۔'],
+    ['file', 'Waterproof your documents', 'Put CNICs, B-forms, land papers, bank cards and written phone numbers in a sealed plastic bag. Photograph them on your phone.', 'دستاویزات پانی سے بچائیں', 'شناختی کارڈ، ب فارم، زمین کے کاغذات، بینک کارڈ اور لکھے ہوئے فون نمبر پلاسٹک کے بند تھیلے میں رکھیں۔ فون سے تصویر بھی لیں۔'],
+    ['bottle', 'Stock 3 days of supplies', 'Clean water (4 litres per person per day), dry food, regular medicines, ORS, torch, power bank, matches in a dry box.', 'تین دن کا سامان رکھیں', 'صاف پانی (فی کس 4 لیٹر روزانہ)، خشک خوراک، روزمرہ دوائیں، او آر ایس، ٹارچ، پاور بینک، خشک ڈبے میں ماچس۔'],
+    ['livestock', 'Plan for livestock', 'Identify high ground for animals and store fodder there. If you must leave fast, untie them so they can escape.', 'مویشیوں کا منصوبہ', 'جانوروں کے لیے اونچی جگہ طے کریں اور وہاں چارہ رکھیں۔ جلدی نکلنا پڑے تو انہیں کھول دیں تاکہ وہ بچ سکیں۔'],
+    ['radio', 'Follow official warnings', 'Note the PDMA / district control room number. Rising river reports from upstream reach you one to three days before the water.', 'سرکاری وارننگ پر عمل کریں', 'پی ڈی ایم اے / ضلعی کنٹرول روم کا نمبر نوٹ کریں۔ بالائی علاقوں سے دریا بڑھنے کی خبر پانی سے ایک سے تین دن پہلے پہنچتی ہے۔'],
+  ],
+  during: [
+    ['waves', 'Never walk or drive through moving water', '15 cm of moving water can knock an adult down; 60 cm carries away a car. Turn around and find another way.', 'بہتے پانی میں کبھی نہ چلیں، نہ گاڑی چلائیں', '15 سینٹی میٹر بہتا پانی بالغ کو گرا سکتا ہے؛ 60 سینٹی میٹر گاڑی بہا دیتا ہے۔ واپس مڑیں اور دوسرا راستہ لیں۔'],
+    ['zap', 'Electrical hazards', 'Switch off the main electricity and gas before leaving. Stay away from fallen wires, poles and transformers in water.', 'بجلی کے خطرات', 'نکلنے سے پہلے مین بجلی اور گیس بند کریں۔ پانی میں گری ہوئی تاروں، کھمبوں اور ٹرانسفارمرز سے دور رہیں۔'],
+    ['home', 'Move up, not out', 'If trapped, go to the roof or highest floor with your phone and signal for help with a torch or bright cloth. Avoid closed attics.', 'باہر نہیں، اوپر جائیں', 'اگر پھنس جائیں تو فون کے ساتھ چھت یا سب سے اونچی منزل پر جائیں اور ٹارچ یا رنگین کپڑے سے مدد کا اشارہ کریں۔'],
+    ['alert', 'Snakes and animals', 'Snakes seek dry ground too. Wear shoes; if bitten keep the limb still, note the time and reach a health facility — no cutting or tying.', 'سانپ اور جانور', 'سانپ بھی خشک جگہ تلاش کرتے ہیں۔ جوتے پہنیں؛ کاٹ لے تو عضو کو ساکن رکھیں، وقت نوٹ کریں اور فوراً مرکزِ صحت جائیں — کاٹنا یا باندھنا نہیں۔'],
+    ['users', 'Keep children in sight', 'Write your phone number on each child\'s arm with a marker. Agree that nobody goes back for belongings.', 'بچوں کو نظر میں رکھیں', 'ہر بچے کے بازو پر مارکر سے اپنا فون نمبر لکھیں۔ طے کریں کہ کوئی سامان کے لیے واپس نہیں جائے گا۔'],
+  ],
+  after: [
+    ['droplet', 'Purify all drinking water', 'Boil for 1 minute or use chlorine tablets (1 tablet per 20 litres, wait 30 minutes). Flood water carries sewage.', 'پینے کا سارا پانی صاف کریں', 'ایک منٹ ابالیں یا کلورین گولیاں استعمال کریں (20 لیٹر میں ایک گولی، 30 منٹ انتظار)۔ سیلابی پانی میں گندگی ہوتی ہے۔'],
+    ['pill', 'Diarrhoea and cholera', 'Wash hands with soap, start ORS at the first loose motion, seek care for blood in stool or sunken eyes in children.', 'ڈائریا اور ہیضہ', 'صابن سے ہاتھ دھوئیں، پتلے پاخانے کی پہلی علامت پر او آر ایس شروع کریں؛ پاخانے میں خون یا بچوں کی آنکھیں دھنسنے پر فوراً علاج کروائیں۔'],
+    ['thermometer', 'Malaria and dengue', 'Standing water breeds mosquitoes for weeks. Sleep under nets, cover water containers, and treat fever with chills quickly.', 'ملیریا اور ڈینگی', 'کھڑا پانی ہفتوں مچھر پیدا کرتا ہے۔ مچھر دانی میں سوئیں، پانی کے برتن ڈھانپیں، سردی لگ کر بخار ہو تو فوراً علاج کروائیں۔'],
+    ['hand', 'Skin and eye infections', 'Keep wounds clean and dry and avoid standing in water for long. Itching rashes and red eyes are common — visit the camp medical post.', 'جلد اور آنکھوں کے انفیکشن', 'زخم صاف اور خشک رکھیں، زیادہ دیر پانی میں کھڑے نہ ہوں۔ خارش اور آنکھوں کی سرخی عام ہے — کیمپ کے میڈیکل پوسٹ سے رجوع کریں۔'],
+    ['shield-check', 'Return safely', 'Go back only when officials say it is safe. Check walls for cracks and smell for gas before entering; dry everything to prevent mould.', 'محفوظ واپسی', 'صرف حکام کی اجازت پر واپس جائیں۔ داخل ہونے سے پہلے دیواروں کی دراڑیں اور گیس کی بو چیک کریں؛ پھپھوندی سے بچنے کے لیے سب کچھ خشک کریں۔'],
+  ]
+};
+const HELPLINES_SEED = [{ id: 'h1', en: 'Rescue 1122', ur: 'ریسکیو 1122', num: '1122' }, { id: 'h2', en: 'NDMA helpline', ur: 'این ڈی ایم اے ہیلپ لائن', num: '051-111-157-157' }, { id: 'h3', en: 'PDMA KP helpline', ur: 'پی ڈی ایم اے کے پی', num: '1700' }, { id: 'h4', en: 'Edhi ambulance', ur: 'ایدھی ایمبولینس', num: '115' }, { id: 'h5', en: 'Police', ur: 'پولیس', num: '15' }];
+// Go-bag items: [id, icon, en, ur, condition(profile) → include]
+const GOBAG = [
+  ['docs', 'file', 'Documents in a sealed plastic bag (CNIC, B-forms, land papers)', 'بند پلاسٹک تھیلے میں دستاویزات (شناختی کارڈ، ب فارم، زمین کے کاغذات)'],
+  ['water', 'bottle', 'Drinking water for 3 days (4 L per person per day)', 'تین دن کا پینے کا پانی (فی کس 4 لیٹر روزانہ)'],
+  ['food', 'box', 'Dry food for 3 days (dates, biscuits, roasted chana, rice)', 'تین دن کی خشک خوراک (کھجور، بسکٹ، بھنے چنے، چاول)'],
+  ['meds', 'pill', 'Regular medicines for 2 weeks, ORS sachets, paracetamol, bandages', 'دو ہفتے کی روزمرہ دوائیں، او آر ایس، پیراسیٹامول، پٹیاں'],
+  ['phone', 'battery', 'Phone, charger and charged power bank', 'فون، چارجر اور چارج شدہ پاور بینک'],
+  ['cash', 'wallet', 'Cash in small notes', 'چھوٹے نوٹوں میں نقد رقم'],
+  ['torch', 'flashlight', 'Torch, spare batteries, whistle', 'ٹارچ، اضافی بیٹریاں، سیٹی'],
+  ['clothes', 'users', 'One change of clothes per person, chadar / blanket', 'فی کس ایک جوڑا کپڑے، چادر / کمبل'],
+  ['hygiene', 'droplet', 'Soap, chlorine tablets, sanitary pads, nappies', 'صابن، کلورین گولیاں، سینیٹری پیڈ، نیپی'],
+  ['rope', 'life-buoy', 'Rope (10 m) and empty plastic cans as floats', 'رسی (10 میٹر) اور خالی پلاسٹک کین بطور تیرنے والے سہارے'],
+  ['infant', 'baby', 'Infant formula, clean bottles, extra water', 'بچوں کا دودھ، صاف بوتلیں، اضافی پانی', p => p.infants > 0],
+  ['preg', 'heart', 'Mother & child card, clean delivery kit, LHW number', 'ماں اور بچے کا کارڈ، صاف ڈلیوری کٹ، ایل ایچ ڈبلیو کا نمبر', p => p.pregnant > 0],
+  ['mobility', 'hand', 'Mobility aid / spare glasses / hearing-aid batteries', 'چلنے کا سہارا / اضافی عینک / آلہ سماعت کی بیٹریاں', p => p.disabled > 0 || p.elderly > 0],
+  ['fodder', 'livestock', 'Rope, fodder for 3 days and vaccination record for animals', 'جانوروں کے لیے رسی، تین دن کا چارہ اور ویکسین ریکارڈ', p => p.livestock > 0],
+  ['fuel', 'car', 'Vehicle fuelled and parked facing the exit road', 'گاڑی میں تیل بھرا اور نکلنے کے راستے کی طرف کھڑی', p => p.vehicle],
+];
+// Reunification seed posts (one matching pair: Ghulam Hussain, 8, Dadu)
+const MISSING_SEED = () => [
+  { id: 'm1', status: 'missing', name: 'Ghulam Hussain', age: 8, gender: 'm', place: 'Johi, near the canal road', d: 'dadu', contact: '0301-7000012', note: 'Blue kameez, small scar on chin', photo: null, ts: Date.now() - 2 * 86400000 },
+  { id: 'm2', status: 'found', name: 'Ghulam (boy, says he is from Johi)', age: 8, gender: 'm', place: 'Govt Boys High School Johi relief camp', d: 'dadu', contact: '0300-2000012', note: 'Healthy, with camp volunteers', photo: null, ts: Date.now() - 20 * 3600000 },
+  { id: 'm3', status: 'missing', name: 'Sakina Bibi', age: 62, gender: 'f', place: 'Kandhkot bus stand during evacuation', d: 'kashmore', contact: '0333-7000045', note: 'Diabetic, needs insulin', photo: null, ts: Date.now() - 30 * 3600000 },
+  { id: 'm4', status: 'found', name: 'Allah Dino', age: 45, gender: 'm', place: 'Govt Degree College Rajanpur camp', d: 'rajanpur', contact: '0300-2000025', note: 'Separated from family while crossing by tractor', photo: null, ts: Date.now() - 6 * 3600000 },
+];
+
+// ---------- flood engine ----------
+const DAYS = 14;
+const seriesCache = new Map();
+/** 14-day inflow/outflow series (cusecs) for a station. Deterministic per station id — a simulated flood wave. */
+function series(id) {
+  if (seriesCache.has(id)) return seriesCache.get(id);
+  const s = SM[id], r = rng(hash('flow|' + id)), inflow = [], outflow = [];
+  for (let i = 0; i < DAYS; i++) {
+    const wave = s.sc.base + s.sc.peak * Math.exp(-(((i - s.sc.tPeak) / s.sc.w) ** 2));
+    inflow.push(Math.round(wave * (1 + (r() - .5) * .05) / 500) * 500);
+  }
+  for (let i = 0; i < DAYS; i++) {
+    const prev = inflow[Math.max(0, i - 1)];
+    outflow.push(Math.round((s.kind === 'dam' ? s.sc.base * .85 + (prev - s.sc.base) * .6 : prev * .94) / 500) * 500);
+  }
+  const out = { inflow, outflow }; seriesCache.set(id, out); return out;
+}
+// TODO(student): replace the simulated series with live FFD / WAPDA / PMD data. Return {[stationId]: {inflow:number[14], outflow:number[14], asOf: Date}}
+// in the same shape and cache it in localStorage so the app still works offline with the last fetched values.
+async function fetchLiveGauges() { throw new Error('fetchLiveGauges() is not implemented — student extension'); }
+const level = id => series(id).inflow[DAYS - 1];
+/** FFD category index 0..5 for a discharge against station thresholds. */
+function gcat(id, v = level(id)) { const th = SM[id].th; let k = 0; while (k < 5 && v >= th[k]) k++; return k; }
+const gcatMeta = k => ({ key: GCATS[k][0], c: GCATS[k][1] });
+/** Position of a discharge on the flood-category ladder, 0..1 (0.2 per band). */
+function gaugeFrac(id) { const th = SM[id].th, v = level(id); if (v < th[0]) return .2 * v / th[0]; for (let k = 0; k < 4; k++) if (v < th[k + 1]) return .2 * (k + 1) + .2 * (v - th[k]) / (th[k + 1] - th[k]); return 1; }
+/** Seeded 7-day rainfall (mm/day) for a district. */
+function rain7(d) { const r = rng(hash('rain|' + d.id)); return Array.from({ length: 7 }, () => Math.round(d.rs * 45 * (.3 + r() * 1.4))); }
+const sum = a => a.reduce((x, y) => x + y, 0);
+/** District risk 0–100 and alert level. */
+function risk(d) {
+  const rain = sum(rain7(d)), rf = clamp(rain / 250, 0, 1);
+  const score = d.gauge ? .55 * gaugeFrac(d.gauge) + .30 * rf + .15 * d.vuln : .70 * rf + .30 * d.vuln;
+  const s = Math.round(score * 100);
+  const lv = s >= 70 ? 'severe' : s >= 50 ? 'warning' : s >= 30 ? 'watch' : 'normal';
+  return { score: s, lv, rain, c: LEVELS[lv].c };
+}
+const riskCache = new Map();
+const R = d => { if (!riskCache.has(d.id)) riskCache.set(d.id, risk(d)); return riskCache.get(d.id); };
+const trend = id => { const a = series(id).inflow; const dlt = (a[DAYS - 1] - a[DAYS - 2]) / a[DAYS - 2] * 100; return { dlt, key: dlt > 1.5 ? 'g_up' : dlt < -1.5 ? 'g_down' : 'g_flat', icon: dlt > 1.5 ? 'trending-up' : dlt < -1.5 ? 'trending-down' : 'activity' }; };
+// TODO(student): NDMA / PDMA alert integration. Pull official district alerts and push them as SMS cell-broadcast / WhatsApp to users
+// who selected that district. This stub only toasts the current level when the app opens.
+function pushAlerts() { const d = DM[myDistrict]; if (!d) return; const r = R(d); if (r.lv === 'warning' || r.lv === 'severe') toast(`${name(d)}: ${t('lv_' + r.lv)} · ${t('al_risk')} ${r.score}`, r.lv === 'severe' ? 'bad' : 'amber', 'siren'); }
+
+// ---------- state ----------
+let myDistrict = store.get('district', 'dadu'); if (!DM[myDistrict]) myDistrict = 'dadu';
+const state = Object.assign({ prov: 'all', lvl: 'all', station: 'sukkur', campQ: '', campProv: 'all', mQ: '', mStatus: 'all', guideTab: 'before', openCard: null, selCamp: null }, store.get('ui', {}));
+const saveUI = () => store.set('ui', { prov: state.prov, lvl: state.lvl, station: state.station, campProv: state.campProv, mStatus: state.mStatus, guideTab: state.guideTab });
+let page = 'alerts';
+const view = $('#view');
+
+// ---------- map adapter: Leaflet (lazy) → SVG schematic fallback ----------
+const noMapFlag = () => /nomap=1/.test(location.search + location.hash);
+const loadScript = (src, ms = 8000) => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.append(s); setTimeout(() => rej(new Error('timeout ' + src)), ms); });
+const RIVERS = [ // schematic polylines [lat,lng] — Indus basin
+  ['Indus', 'main', [[35.9, 74.3], [35.4, 73.8], [34.9, 72.9], [34.3, 72.75], [34.09, 72.70], [33.9, 72.25], [33.3, 71.75], [32.96, 71.55], [32.44, 71.38], [31.6, 70.95], [30.51, 70.85], [29.6, 70.5], [28.95, 70.4], [28.42, 69.71], [27.68, 68.85], [27.0, 68.0], [26.4, 67.95], [25.8, 68.3], [25.37, 68.31], [24.8, 68.0], [24.2, 67.6]]],
+  ['Kabul', 'trib', [[34.4, 70.7], [34.0, 71.55], [34.02, 71.98], [33.9, 72.25]]],
+  ['Swat', 'trib', [[35.3, 72.4], [34.75, 72.36], [34.3, 71.85], [34.0, 71.75]]],
+  ['Jhelum', 'trib', [[34.1, 74.4], [33.6, 73.9], [33.14, 73.64], [32.9, 73.7], [32.4, 73.2], [31.8, 72.5], [31.14, 72.15]]],
+  ['Chenab', 'trib', [[33.4, 75.0], [32.67, 74.46], [32.40, 73.97], [32.33, 73.68], [31.9, 73.0], [31.14, 72.15], [30.8, 71.6], [30.3, 71.3], [29.35, 71.03]]],
+  ['Ravi', 'trib', [[32.2, 75.0], [31.6, 74.4], [30.9, 73.3], [30.6, 72.0], [30.5, 71.6]]],
+  ['Sutlej', 'trib', [[31.2, 74.7], [30.5, 73.9], [29.9, 73.0], [29.4, 71.6], [29.35, 71.03]]],
+  ['Panjnad', 'trib', [[29.35, 71.03], [28.95, 70.4]]],
+];
+const BORDER = [[23.7, 68.2], [24.3, 69.0], [25.0, 70.1], [26.5, 70.1], [27.8, 70.4], [28.9, 72.3], [29.9, 73.4], [30.7, 74.5], [31.8, 74.6], [32.4, 75.0], [33.0, 74.1], [34.0, 73.9], [34.6, 73.9], [35.3, 74.6], [35.9, 76.8], [36.9, 76.1], [37.0, 74.6], [36.7, 73.7], [36.9, 72.5], [36.5, 71.3], [35.4, 71.5], [34.5, 71.1], [34.0, 70.3], [33.4, 70.0], [32.5, 69.5], [31.5, 68.8], [31.2, 67.9], [30.9, 66.5], [29.8, 66.3], [29.4, 65.5], [29.8, 61.9], [28.2, 62.8], [27.3, 63.2], [26.3, 61.8], [25.2, 61.6], [25.3, 63.5], [25.4, 65.5], [24.9, 66.8], [24.5, 67.4], [24.0, 67.7], [23.9, 68.5]];
+const MapCtl = {
+  mode: null, map: null, layer: null, items: [], svg: null, g: null, vb: { x: 0, y: 0, w: 1000, h: 940 }, tileOk: 0, tileErr: 0,
+  proj(lat, lng) { return [(lng - 60.4) * 58.82, (37.3 - lat) * 68.3]; },
+  async init() {
+    // TODO(student): offline map tiles + PWA. Cache OSM tiles for the user's district in a service worker (or bundle MBTiles) so the real map works offline.
+    if (!noMapFlag() && navigator.onLine) {
+      try {
+        const css = new Promise((res, rej) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; l.onload = res; l.onerror = () => rej(new Error('leaflet css')); document.head.append(l); setTimeout(() => rej(new Error('timeout css')), 8000); });
+        await Promise.all([css, loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js')]);
+        this.initLeaflet(); return;
+      } catch { /* fall through to schematic */ }
+    }
+    this.initSvg();
+  },
+  initLeaflet() {
+    this.mode = 'leaflet';
+    this.map = L.map('map', { zoomControl: true, attributionControl: true, zoomSnap: .5 }).setView([28.6, 69.0], 6);
+    const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors' }).addTo(this.map);
+    tiles.on('tileload', () => this.tileOk++);
+    tiles.on('tileerror', () => { this.tileErr++; if (!this.tileOk && this.tileErr >= 4 && this.mode === 'leaflet') { this.map.remove(); this.map = null; $('#map').innerHTML = ''; this.initSvg(); toast(t('map_tiles'), 'amber', 'map'); this.setMarkers(this.items); } });
+    this.layer = L.layerGroup().addTo(this.map);
+    // TODO(student): satellite inundation layer. Add a Sentinel-1 flood-extent WMS/XYZ overlay here (e.g. UN-SPIDER / Copernicus EMS) with a date slider.
+    this.addOverlay = () => {};
+    this.updateStatus();
+  },
+  initSvg() {
+    this.mode = 'svg'; const P = this.proj.bind(this);
+    const poly = pts => pts.map(p => P(p[0], p[1]).map(v => v.toFixed(1)).join(',')).join(' ');
+    let svg = `<svg class="schem" viewBox="0 0 1000 940" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schematic map of the Indus basin"><rect class="sea" x="-2000" y="-2000" width="5000" height="5000"/><polygon class="land" points="${poly(BORDER)}"/>`;
+    [['SINDH', 26.3, 68.9], ['PUNJAB', 30.9, 72.9], ['BALOCHISTAN', 28.4, 65.2], ['KHYBER PAKHTUNKHWA', 34.2, 70.3], ['GILGIT-BALTISTAN', 36.1, 74.9], ['Arabian Sea', 23.6, 65.5]].forEach(([n, la, lo]) => { const [x, y] = P(la, lo); svg += `<text class="pl" x="${x}" y="${y}" text-anchor="middle">${n}</text>`; });
+    RIVERS.forEach(([n, cls, pts]) => { svg += `<polyline class="river ${cls}" points="${poly(pts)}"/>`; const mid = pts[Math.floor(pts.length / 2)], [x, y] = P(mid[0], mid[1]); svg += `<text class="rl" x="${x + 8}" y="${y - 6}">${n}</text>`; });
+    svg += '<g id="svgMarkers"></g></svg>';
+    $('#map').innerHTML = svg; this.svg = $('svg.schem'); this.g = $('#svgMarkers');
+    this.vb = { x: 0, y: 0, w: 1000, h: 940 }; this.applyVb();
+    // pan / zoom
+    let drag = null;
+    this.svg.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, vx: this.vb.x, vy: this.vb.y }; this.svg.setPointerCapture(e.pointerId); });
+    this.svg.addEventListener('pointermove', e => { if (!drag) return; const k = this.vb.w / this.svg.clientWidth; this.vb.x = drag.vx - (e.clientX - drag.x) * k; this.vb.y = drag.vy - (e.clientY - drag.y) * k; this.applyVb(); });
+    this.svg.addEventListener('pointerup', () => drag = null); this.svg.addEventListener('pointercancel', () => drag = null);
+    this.svg.addEventListener('wheel', e => { e.preventDefault(); this.zoomBy(e.deltaY > 0 ? 1.2 : 1 / 1.2); }, { passive: false });
+    const ctl = $('#svgCtl'); ctl.classList.remove('hidden');
+    ctl.innerHTML = `<button aria-label="Zoom in" data-z="in">${ic('plus')}</button><button aria-label="Zoom out" data-z="out">${ic('minus')}</button><button aria-label="${t('map_fit')}" data-z="fit">${ic('maximize')}</button>`;
+    $$('button', ctl).forEach(b => b.onclick = () => b.dataset.z === 'fit' ? this.fit() : this.zoomBy(b.dataset.z === 'in' ? 1 / 1.3 : 1.3));
+    this.updateStatus();
+  },
+  applyVb() { this.svg.setAttribute('viewBox', `${this.vb.x} ${this.vb.y} ${this.vb.w} ${this.vb.h}`); },
+  zoomBy(f) { const cx = this.vb.x + this.vb.w / 2, cy = this.vb.y + this.vb.h / 2; this.tweenVb({ w: clamp(this.vb.w * f, 120, 1600), h: clamp(this.vb.h * f, 113, 1504) }, cx, cy); },
+  tweenVb(size, cx, cy) {
+    const from = { ...this.vb }, to = { x: cx - size.w / 2, y: cy - size.h / 2, w: size.w, h: size.h }, t0 = performance.now();
+    const step = now => { const p = Math.min(1, (now - t0) / 380), e = 1 - Math.pow(1 - p, 3); for (const k of 'xywh') this.vb[k] = from[k] + (to[k] - from[k]) * e; this.applyVb(); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  },
+  updateStatus() {
+    $('#mapStatus').innerHTML = `<span class="pill sim">${ic('alert-circle')}${t('map_sim')} · ${t('g_asof')} ${asOf.toLocaleString(lang === 'ur' ? 'ur-PK' : 'en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} PKT</span>` +
+      (this.mode === 'svg' ? `<span class="pill">${ic('map')}${t('map_schem')}</span>` : '') + `<div class="legend" id="legend"></div>`;
+    this.legend(this.legendItems || []);
+  },
+  legend(items) { this.legendItems = items; const el = $('#legend'); if (el) el.innerHTML = items.map(([c, label, shape]) => `<span><i class="${shape || ''}" style="background:${c}"></i>${label}</span>`).join(''); },
+  /** items: [{id, lat, lng, r, color, shape:'circle'|'sq'|'dia', pulse, sel, dim, title, onClick}] */
+  setMarkers(items) {
+    this.items = items;
+    if (this.mode === 'leaflet') {
+      this.layer.clearLayers();
+      items.forEach(it => {
+        const icon = L.divIcon({ className: 'mk', iconSize: [0, 0], html: `<span class="dot ${it.shape || ''} ${it.pulse ? 'pulse' : ''} ${it.sel ? 'sel' : ''} ${it.dim ? 'dim' : ''}" style="--c:${it.color};--s:${it.r * 2}px"></span>` });
+        const m = L.marker([it.lat, it.lng], { icon, zIndexOffset: it.sel ? 1000 : it.dim ? -100 : 0, keyboard: false }).addTo(this.layer);
+        m.bindTooltip(esc(it.title), { direction: 'top', offset: [0, -it.r - 2] });
+        if (it.onClick) m.on('click', () => it.onClick(it));
+      });
+    } else if (this.mode === 'svg') {
+      this.g.innerHTML = items.map(it => { const [x, y] = this.proj(it.lat, it.lng); const r = it.r * 1.15;
+        const shape = it.shape === 'sq' ? `<rect x="${-r}" y="${-r}" width="${2 * r}" height="${2 * r}" rx="3" fill="${it.color}"/>` : it.shape === 'dia' ? `<rect x="${-r}" y="${-r}" width="${2 * r}" height="${2 * r}" rx="2" transform="rotate(45)" fill="${it.color}"/>` : `<circle r="${r}" fill="${it.color}"/>`;
+        return `<g class="smk ${it.sel ? 'sel' : ''} ${it.dim ? 'dim' : ''}" data-id="${esc(it.id)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})" tabindex="0" role="button" aria-label="${esc(it.title)}">${it.pulse ? `<circle class="rg" r="${r + 2}" stroke="${it.color}"/>` : ''}${shape}<title>${esc(it.title)}</title></g>`; }).join('');
+      $$('.smk', this.g).forEach(el => { const it = items.find(i => i.id === el.dataset.id); const go = () => it.onClick && it.onClick(it); el.onclick = go; el.onkeydown = e => { if (e.key === 'Enter') go(); }; });
+    }
+  },
+  focus(lat, lng, zoom = 8) {
+    if (this.mode === 'leaflet') this.map.flyTo([lat, lng], zoom, { duration: .7 });
+    else if (this.mode === 'svg') { const [x, y] = this.proj(lat, lng); const w = zoom >= 9 ? 180 : zoom >= 8 ? 260 : 420; this.tweenVb({ w, h: w * .94 }, x, y); }
+  },
+  fit(items = this.items) {
+    if (!items.length) return;
+    if (this.mode === 'leaflet') this.map.flyToBounds(L.latLngBounds(items.map(i => [i.lat, i.lng])).pad(.25), { duration: .7, maxZoom: 9 });
+    else if (this.mode === 'svg') { const pts = items.map(i => this.proj(i.lat, i.lng)); const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); const w = Math.max(220, (Math.max(...xs) - Math.min(...xs)) * 1.5), h = Math.max(207, (Math.max(...ys) - Math.min(...ys)) * 1.5); const s = Math.max(w, h / .94); this.tweenVb({ w: s, h: s * .94 }, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2); }
+  }
+};
+
+// ---------- view helpers ----------
+function setHead(icon, title, actions = '') { $('#ptitle').innerHTML = ic(icon) + '<span></span>'; $('#ptitle span').textContent = title; $('#pactions').innerHTML = actions; }
+const lvBadge = (lv, solid) => `<span class="badge ${solid ? 'solid' : 'c'}" style="--c:${LEVELS[lv].c}">${t('lv_' + lv)}</span>`;
+const catBadge = k => { const m = gcatMeta(k); return `<span class="badge c" style="--c:${m.c}">${t('gc_' + m.key)}</span>`; };
+const animateBars = root => requestAnimationFrame(() => $$('[data-w]', root).forEach(i => i.style.width = i.dataset.w + '%'));
+const provChips = (cur, onPick) => `<div class="chips" data-prov>${['all', ...PROVS].map(p => `<button class="chip ${cur === p ? 'on' : ''}" data-p="${p}">${p === 'all' ? t('prov_all') : t(p)}</button>`).join('')}</div>`;
+function sparkline(arr, color) {
+  const w = 96, h = 30, min = Math.min(...arr), max = Math.max(...arr), span = max - min || 1;
+  const pts = arr.map((v, i) => [i / (arr.length - 1) * w, h - 3 - (v - min) / span * (h - 6)]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d} L${w} ${h} L0 ${h}Z" fill="${color}" opacity=".14"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/></svg>`;
+}
+function modal(title, body, mount) { $('#modalTitle').textContent = title; $('#modalBody').innerHTML = body; document.body.classList.add('modal-open'); mount && mount($('#modalBody')); const f = $('input,select,textarea,button', $('#modalBody')); f && f.focus(); }
+function closeModal() { document.body.classList.remove('modal-open'); $('#modalBody').innerHTML = ''; }
+$('#modalClose').onclick = closeModal; $('#scrim').onclick = closeModal;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+function celebrate() { const c = document.createElement('div'); c.className = 'confetti'; const cols = ['#2f80ed', '#f2a900', '#2a9d5c', '#d7263d', '#1e3a5f']; c.innerHTML = Array.from({ length: 28 }, (_, i) => `<i style="--dx:${(Math.random() - .5) * 600}px;--dy:${-100 - Math.random() * 400}px;background:${cols[i % 5]};animation-delay:${Math.random() * .15}s"></i>`).join(''); document.body.append(c); setTimeout(() => c.remove(), 1400); }
+const mapsLink = (lat, lng) => `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+const sheetUp = () => { if (window.innerWidth <= 900 && $('#panel').dataset.state === 'peek') setSheet('half'); };
+
+// ---------- Alerts ----------
+const filteredDistricts = () => DISTRICTS.filter(d => (state.prov === 'all' || d.prov === state.prov) && (state.lvl === 'all' || R(d).lv === state.lvl)).sort((a, b) => R(b).score - R(a).score);
+function districtMarkers(list) {
+  const shown = new Set(list.map(d => d.id));
+  return DISTRICTS.map(d => { const r = R(d); return { id: d.id, lat: d.lat, lng: d.lng, r: 6 + r.score / 9, color: r.c, pulse: r.lv === 'severe' || (r.lv === 'warning' && d.id === myDistrict), sel: state.openCard === d.id, dim: !shown.has(d.id), title: `${name(d)} · ${t('lv_' + r.lv)} ${r.score}`, onClick: it => openDistrict(it.id) }; });
+}
+function districtCard(d) {
+  const r = R(d), g = d.gauge ? SM[d.gauge] : null, mine = d.id === myDistrict, open = state.openCard === d.id;
+  return `<article class="card dcard ${open ? 'open' : ''} ${mine ? 'mine' : ''}" data-d="${d.id}" style="--c:${r.c}" tabindex="0" role="button" aria-expanded="${open}">
+    <div class="top"><div><div class="name">${esc(name(d))} ${mine ? `<span class="mine-tag">${t('al_mine')}</span>` : ''}</div><div class="sub">${t(d.prov)} · ${g ? `${t('al_upstream')}: ${esc(name(g))}` : t('al_hill')}</div></div>
+      <div style="text-align:right;flex:none"><div class="score num">${r.score}</div>${lvBadge(r.lv)}</div></div>
+    <div class="bar" style="margin-top:8px;--c:${r.c}"><i data-w="${r.score}"></i></div>
+    <div class="meta">${g ? `<span>${ic('gauge')} <b>${kfmt(level(g.id))}</b> ${t('g_cusecs')} · ${t('gc_' + gcatMeta(gcat(g.id)).key)}</span>` : ''}<span>${ic('cloud-rain')} <b>${r.rain} mm</b> ${t('al_rain7')}</span></div>
+    <div class="adv"><div class="txt" style="font-weight:600">${t('adv_' + r.lv)}</div><div class="${lang === 'ur' ? 'en muted' : 'ur muted'}" style="margin-top:4px;font-size:.86rem">${lang === 'ur' ? TXT.en['adv_' + r.lv] : TXT.ur['adv_' + r.lv]}</div>
+      <div class="small muted txt" style="margin-top:8px">${ic('info')} ${esc(bi(d.note, d.noteUr))}</div>
+      <div class="actions"><button class="btn sm river" data-act="map">${ic('map-pin')}${t('al_focus')}</button><a class="btn sm ghost" href="#plan">${ic('bag')}${t('al_plan')}</a><a class="btn sm ghost" href="#guide/sos">${ic('siren')}${t('al_sos')}</a>${mine ? '' : `<button class="btn sm ghost" data-act="mine">${ic('home')}${t('al_setmine')}</button>`}</div></div>
+  </article>`;
+}
+function renderAlerts(param) {
+  if (param && DM[param]) state.openCard = param;
+  const counts = Object.fromEntries(Object.keys(LEVELS).map(k => [k, DISTRICTS.filter(d => R(d).lv === k).length]));
+  const list = filteredDistricts(), mine = DM[myDistrict], rest = list.filter(d => d.id !== myDistrict);
+  setHead('siren', t('al_title'), `<span class="badge">${list.length} ${t('al_districts')}</span>`);
+  view.innerHTML = `<p class="lead txt">${t('al_lead')}</p>
+    <div class="kpis stagger">${Object.keys(LEVELS).reverse().map(k => `<button class="kpi ${state.lvl === k ? 'on' : ''}" data-lvl="${k}" style="--c:${LEVELS[k].c}"><div class="k">${t('lv_' + k)}</div><div class="v num" data-n="${counts[k]}">0</div></button>`).join('')}</div>
+    ${provChips(state.prov)}
+    <div class="list stagger" id="dlist">${districtCard(mine)}${rest.map(districtCard).join('')}${!list.length ? `<div class="empty">${ic('filter')}${t('al_none')}</div>` : ''}</div>`;
+  $$('.kpi .v', view).forEach(el => countUp(el, +el.dataset.n, { dur: 600 }));
+  animateBars(view);
+  $$('[data-lvl]', view).forEach(b => b.onclick = () => { state.lvl = state.lvl === b.dataset.lvl ? 'all' : b.dataset.lvl; saveUI(); renderAlerts(); });
+  $$('[data-prov] .chip', view).forEach(b => b.onclick = () => { state.prov = b.dataset.p; saveUI(); renderAlerts(); });
+  $$('.dcard', view).forEach(card => {
+    const id = card.dataset.d;
+    card.addEventListener('click', e => { const act = e.target.closest('[data-act]'); if (e.target.closest('a')) return; if (act) { e.stopPropagation(); if (act.dataset.act === 'map') { MapCtl.focus(DM[id].lat, DM[id].lng, 9); } else setMyDistrict(id); return; } toggleDistrict(id); });
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === card) toggleDistrict(id); });
+  });
+  MapCtl.legend(Object.keys(LEVELS).map(k => [LEVELS[k].c, t('lv_' + k)]));
+  MapCtl.setMarkers(districtMarkers(list));
+  if (state.openCard && DM[state.openCard]) { const d = DM[state.openCard]; MapCtl.focus(d.lat, d.lng, 8); const el = $(`.dcard[data-d="${d.id}"]`); el && setTimeout(() => el.scrollIntoView({ block: 'nearest' }), 350); } else MapCtl.fit(districtMarkers(list).filter(m => !m.dim));
+}
+function toggleDistrict(id) {
+  state.openCard = state.openCard === id ? null : id;
+  $$('.dcard').forEach(c => { const on = c.dataset.d === state.openCard; c.classList.toggle('open', on); c.setAttribute('aria-expanded', on); });
+  MapCtl.setMarkers(districtMarkers(filteredDistricts()));
+  if (state.openCard) MapCtl.focus(DM[id].lat, DM[id].lng, 8);
+}
+function openDistrict(id) {
+  if (page !== 'alerts') { state.openCard = id; location.hash = 'alerts/' + id; return; }
+  if (state.openCard !== id) toggleDistrict(id);
+  sheetUp(); const el = $(`.dcard[data-d="${id}"]`); el && el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+function setMyDistrict(id) { myDistrict = id; store.set('district', id); $('#myDistrict').value = id; toast(`${t('al_mine_set')}: ${name(DM[id])}`, 'ok', 'home'); route(false); }
+
+// ---------- Gauges ----------
+function flowChart(el, s) {
+  const { inflow, outflow } = series(s.id), W = 600, H = 230, P = { l: 48, r: 34, t: 10, b: 24 }, th = s.th;
+  const ymax = Math.max(th[4] * 1.06, Math.max(...inflow) * 1.1), x = i => P.l + i / (DAYS - 1) * (W - P.l - P.r), y = v => P.t + (1 - v / ymax) * (H - P.t - P.b);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="${esc(t('g_14d'))}">`;
+  const bands = [0, ...th, ymax], lbl = ['', 'L', 'M', 'H', 'VH', 'EH'];
+  for (let k = 0; k < 6; k++) { const a = Math.min(bands[k], ymax), b = Math.min(bands[k + 1], ymax); if (b <= a) continue; svg += `<rect x="${P.l}" y="${y(b)}" width="${W - P.l - P.r}" height="${y(a) - y(b)}" fill="${GCATS[k][1]}" opacity="${k ? .13 : .05}"/>`; if (k) svg += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(a)}" y2="${y(a)}" stroke="${GCATS[k][1]}" stroke-dasharray="4 4" opacity=".7"/><text x="${W - P.r + 4}" y="${y(a) + 4}" font-size="10" font-weight="800" fill="${GCATS[k][1]}">${lbl[k]}</text>`; }
+  [0, .25, .5, .75, 1].forEach(f => { const v = ymax * f; svg += `<text x="${P.l - 6}" y="${y(v) + 4}" font-size="10" text-anchor="end" fill="#5b6b80">${kfmt(v)}</text>`; });
+  [0, 4, 9, 13].forEach(i => { svg += `<text x="${x(i)}" y="${H - 8}" font-size="10" text-anchor="middle" fill="#5b6b80">${dLabel(dateOf(i, DAYS))}</text>`; });
+  const path = a => a.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+  svg += `<path class="ln" d="${path(outflow)}" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round"/><path class="ln" d="${path(inflow)}" fill="none" stroke="#2f80ed" stroke-width="3" stroke-linejoin="round"/>`;
+  svg += `<line id="gcur" x1="0" x2="0" y1="${P.t}" y2="${H - P.b}" stroke="#15233a" stroke-dasharray="3 3" style="display:none"/><circle id="gd1" r="4.5" fill="#2f80ed" stroke="#fff" stroke-width="2" style="display:none"/><circle id="gd2" r="4" fill="#1e3a5f" stroke="#fff" stroke-width="2" style="display:none"/></svg><div class="tip"></div>`;
+  el.innerHTML = svg;
+  const svgEl = $('svg', el), tip = $('.tip', el), cur = $('#gcur', el), d1 = $('#gd1', el), d2 = $('#gd2', el);
+  $$('.ln', el).forEach(p => { const dash = p.getAttribute('stroke-dasharray'); drawPath(p); if (dash) setTimeout(() => { p.style.strokeDasharray = dash; p.style.transition = ''; }, 950); });
+  const show = ev => { const rect = svgEl.getBoundingClientRect(); const px = (ev.clientX - rect.left) / rect.width * W; const i = clamp(Math.round((px - P.l) / (W - P.l - P.r) * (DAYS - 1)), 0, DAYS - 1);
+    cur.setAttribute('x1', x(i)); cur.setAttribute('x2', x(i)); cur.style.display = ''; d1.setAttribute('cx', x(i)); d1.setAttribute('cy', y(inflow[i])); d1.style.display = ''; d2.setAttribute('cx', x(i)); d2.setAttribute('cy', y(outflow[i])); d2.style.display = '';
+    tip.style.display = 'block'; tip.style.left = (x(i) / W * rect.width) + 'px'; tip.style.top = (y(inflow[i]) / H * rect.height) + 'px';
+    tip.innerHTML = `<b>${dLabel(dateOf(i, DAYS))}</b><br>${t('g_inflow')}: ${nf.format(inflow[i])}<br>${t('g_outflow')}: ${nf.format(outflow[i])}`; };
+  svgEl.addEventListener('mousemove', show); svgEl.addEventListener('touchmove', e => { show(e.touches[0]); e.preventDefault(); }, { passive: false });
+  svgEl.addEventListener('mouseleave', () => { tip.style.display = 'none'; cur.style.display = 'none'; d1.style.display = 'none'; d2.style.display = 'none'; });
+}
+function stationRow(s) {
+  const k = gcat(s.id), m = gcatMeta(k), v = level(s.id), top = s.th[4] * 1.06, tr = trend(s.id);
+  return `<article class="card station ${state.station === s.id ? 'sel' : ''}" data-s="${s.id}" style="--c:${m.c}" tabindex="0" role="button">
+    <div class="top"><div style="min-width:0"><div class="nm">${esc(name(s))}</div><div class="rv">${bi(s.river, s.riverUr)} · ${s.kind === 'dam' ? bi('Dam', 'ڈیم') : bi('Barrage', 'بیراج')}</div></div>${sparkline(series(s.id).inflow, m.c)}<div class="cur"><b>${kfmt(v)}</b><div class="small muted">${t('g_cusecs')}</div></div></div>
+    <div class="gbar">${s.th.map((th, i) => `<span class="tick" style="left:${(th / top * 100).toFixed(1)}%" data-l="${['L', 'M', 'H', 'VH', 'EH'][i]}"></span>`).join('')}<div class="fill" data-w="${Math.min(100, v / top * 100).toFixed(1)}"></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:.78rem;gap:8px">${catBadge(k)}<span class="muted num">${ic(tr.icon)} ${t(tr.key)} · ${tr.dlt > 0 ? '+' : ''}${tr.dlt.toFixed(1)}% ${t('g_vs')}</span></div>
+  </article>`;
+}
+function renderGauges(param) {
+  if (param && SM[param]) state.station = param;
+  const s = SM[state.station] || STATIONS[0], k = gcat(s.id), m = gcatMeta(k), tr = trend(s.id), ser = series(s.id);
+  setHead('gauge', t('g_title'), `<span class="badge c" style="--c:#9a6a00">${ic('alert-circle')}${t('g_sim')}</span>`);
+  view.innerHTML = `<p class="lead txt">${t('g_lead')}</p>
+    <div class="card flat" style="border-left:5px solid ${m.c}">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><h3 style="font-size:1.2rem">${esc(name(s))} <span class="muted small" style="font-family:var(--font)">${bi(s.river, s.riverUr)}</span></h3><div class="small muted">${t('g_asof')} ${asOf.toLocaleString(lang === 'ur' ? 'ur-PK' : 'en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} PKT</div></div>${catBadge(k)}</div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;align-items:flex-end"><div><div class="small muted">${t('g_inflow')}</div><div class="num" style="font-family:var(--font-h);font-size:1.7rem;font-weight:800;color:${m.c}" id="gBig">0</div></div><div><div class="small muted">${t('g_outflow')}</div><div class="num" style="font-family:var(--font-h);font-size:1.2rem;font-weight:700">${nf.format(ser.outflow[DAYS - 1])}</div></div><div class="muted small num" style="padding-bottom:6px">${ic(tr.icon)} ${t(tr.key)} · ${tr.dlt > 0 ? '+' : ''}${tr.dlt.toFixed(1)}% ${t('g_vs')}</div></div>
+      <div class="chart" id="gchart" style="margin-top:10px"></div>
+      <div class="lg"><span><i style="background:#2f80ed"></i>${t('g_inflow')}</span><span><i class="dash" style="color:#1e3a5f"></i>${t('g_outflow')}</span><span class="muted">${t('g_thresholds')}: ${s.th.map(kfmt).join(' · ')} ${t('g_cusecs')}</span></div>
+    </div>
+    <div class="warn txt small">${ic('git-branch')} ${t('g_live')}</div>
+    <div class="list stagger" id="glist">${STATIONS.map(stationRow).join('')}</div>`;
+  countUp($('#gBig'), ser.inflow[DAYS - 1], { dur: 800 });
+  flowChart($('#gchart'), s); animateBars(view);
+  $$('.station', view).forEach(el => { const pick = () => { state.station = el.dataset.s; saveUI(); renderGauges(el.dataset.s); const st = SM[state.station]; MapCtl.focus(st.lat, st.lng, 8); $('#view').scrollTo({ top: 0, behavior: 'smooth' }); }; el.onclick = pick; el.onkeydown = e => { if (e.key === 'Enter') pick(); }; });
+  MapCtl.legend([...GCATS.slice(1).map(([k, c]) => [c, t('gc_' + k), 'dia']), ['#9fb3c8', t('lg_district')]]);
+  const markers = [...DISTRICTS.map(d => ({ id: 'd:' + d.id, lat: d.lat, lng: d.lng, r: 4, color: R(d).c, dim: true, title: name(d), onClick: () => openDistrict(d.id) })),
+    ...STATIONS.map(st => { const mm = gcatMeta(gcat(st.id)); return { id: st.id, lat: st.lat, lng: st.lng, r: 9, shape: 'dia', color: mm.c, pulse: gcat(st.id) >= 3, sel: st.id === s.id, title: `${name(st)} · ${kfmt(level(st.id))} ${t('g_cusecs')}`, onClick: it => { state.station = it.id; saveUI(); renderGauges(it.id); sheetUp(); } }; })];
+  MapCtl.setMarkers(markers); if (!param) MapCtl.fit(markers.filter(m => m.shape === 'dia'));
+}
+
+// ---------- Plan (evacuation planner) ----------
+const PLAN_DEFAULT = () => ({ adults: 2, children: 2, infants: 0, elderly: 1, pregnant: 0, disabled: 0, livestock: 4, vehicle: false, docs: { cnic: true, bform: false, land: true, bank: true, med: false }, meet: '', contacts: [{ name: '', phone: '' }, { name: '', phone: '' }], loc: null });
+const getPlan = () => Object.assign(PLAN_DEFAULT(), store.get('plan', {}));
+const headcount = p => p.adults + p.children + p.infants + p.elderly;
+const vulnerable = p => p.infants + p.elderly + p.pregnant + p.disabled;
+/** Prioritised checklist: pr 1 = now, 2 = soon, 3 = later; shifted by the district alert level. */
+function buildChecklist(p, lv) {
+  const n = headcount(p), items = [];
+  const add = (pr, icon, en, ur, cond = true) => cond && items.push({ pr, icon, en, ur });
+  add(1, 'file', 'Documents in a sealed waterproof bag: CNICs, B-forms, land papers', 'دستاویزات پانی سے محفوظ بند تھیلے میں: شناختی کارڈ، ب فارم، زمین کے کاغذات');
+  add(2, 'camera', 'Photograph the documents you do not hold and save to your phone / WhatsApp', 'جو دستاویزات موجود نہیں ان کی تصویر لے کر فون / واٹس ایپ میں محفوظ کریں', Object.values(p.docs).some(v => !v));
+  add(vulnerable(p) ? 1 : 2, 'pill', 'Regular medicines for 2 weeks, ORS, paracetamol, first-aid kit', 'دو ہفتے کی روزمرہ دوائیں، او آر ایس، پیراسیٹامول، فرسٹ ایڈ کٹ');
+  add(1, 'bottle', `Water and dry food for 3 days: about ${n * 12} litres of water for ${n} people`, `تین دن کا پانی اور خشک خوراک: ${n} افراد کے لیے تقریباً ${n * 12} لیٹر پانی`);
+  add(1, 'battery', 'Phones charged, power bank full, helpline numbers saved and written on paper', 'فون چارج، پاور بینک بھرا، ہیلپ لائن نمبر محفوظ اور کاغذ پر لکھے ہوئے');
+  add(2, 'wallet', 'Cash in small notes; bank / BISP card in the documents bag', 'چھوٹے نوٹوں میں نقد؛ بینک / بی آئی ایس پی کارڈ دستاویزات کے تھیلے میں');
+  add(lv === 'warning' || lv === 'severe' ? 1 : 2, 'livestock', `Livestock plan: move ${p.livestock} animals to high ground, store fodder; untie them if you must leave fast`, `مویشیوں کا منصوبہ: ${p.livestock} جانوروں کو اونچی جگہ لے جائیں، چارہ رکھیں؛ جلدی نکلنا پڑے تو کھول دیں`, p.livestock > 0);
+  add(1, 'zap', 'Switch off gas and electricity at the mains before leaving', 'نکلنے سے پہلے مین سے گیس اور بجلی بند کریں');
+  add(1, 'map-pin', p.meet ? `Family meeting point agreed: ${p.meet}` : 'Agree a family meeting point (set it below)', p.meet ? `خاندان کے ملنے کی جگہ طے: ${p.meet}` : 'خاندان کے ملنے کی جگہ طے کریں (نیچے درج کریں)');
+  add(1, 'heart', 'Pregnant women: mother card, clean delivery kit, nearest working BHU / RHC and ambulance number', 'حاملہ خواتین: ماں کارڈ، صاف ڈلیوری کٹ، قریبی فعال بی ایچ یو / آر ایچ سی اور ایمبولینس نمبر', p.pregnant > 0);
+  add(1, 'hand', 'Assign one helper to each person with a disability; mobility aid and medicines ready', 'ہر معذور فرد کے لیے ایک مددگار مقرر کریں؛ سہارا اور دوائیں تیار', p.disabled > 0);
+  add(1, 'baby', 'Infants: formula, clean bottles, extra water, warm wrap', 'شیر خوار: دودھ، صاف بوتلیں، اضافی پانی، گرم کپڑا', p.infants > 0);
+  add(1, 'user', 'Elderly: medicines, glasses, a chair or charpai to carry if needed', 'بزرگ: دوائیں، عینک، ضرورت پر اٹھانے کے لیے کرسی یا چارپائی', p.elderly > 0);
+  add(2, 'car', p.vehicle ? 'Fuel the vehicle, park it facing the exit road, keys in the go-bag' : 'Arrange transport with neighbours (tractor-trolley / pickup) and agree the pickup point', p.vehicle ? 'گاڑی میں تیل بھریں، نکلنے کے راستے کی طرف کھڑی کریں، چابی بیگ میں' : 'محلے داروں سے سواری (ٹریکٹر ٹرالی / پک اپ) طے کریں اور اٹھانے کی جگہ مقرر کریں');
+  add(2, 'users', 'Write your phone number on each child\'s arm with a marker', 'ہر بچے کے بازو پر مارکر سے اپنا فون نمبر لکھیں', p.children + p.infants > 0);
+  add(3, 'home', 'Raise grain, bedding and valuables onto high shelves; sandbag the doorway', 'اناج، بستر اور قیمتی سامان اونچی جگہ رکھیں؛ دروازے پر ریت کی بوریاں لگائیں');
+  add(3, 'share', 'Share the printed plan card with relatives in another district', 'پرنٹ شدہ منصوبہ کارڈ دوسرے ضلع کے رشتہ داروں کو دیں');
+  const shift = lv === 'severe' ? -1 : lv === 'normal' ? 1 : 0;
+  return items.map(i => ({ ...i, pr: clamp(i.pr + shift, 1, 3) })).sort((a, b) => a.pr - b.pr);
+}
+function nearestCamps(from, n = 3) { return CAMPS.map(c => ({ c: campData(c), km: haversine(from, c) })).sort((a, b) => a.km - b.km).slice(0, n); }
+function leaveRule(p, lv) { if (lv === 'severe') return { key: 'p_leave_severe', c: LEVELS.severe.c, icon: 'siren' }; if (lv === 'warning') return { key: vulnerable(p) > 0 || p.livestock > 0 ? 'p_leave_warning_v' : 'p_leave_warning', c: LEVELS.warning.c, icon: 'alert' }; if (lv === 'watch') return { key: 'p_leave_watch', c: LEVELS.watch.c, icon: 'clock' }; return { key: 'p_leave_normal', c: LEVELS.normal.c, icon: 'shield-check' }; }
+function renderPlan() {
+  const p = getPlan(), d = DM[myDistrict], r = R(d), lv = r.lv, bag = store.get('gobag', {}), rule = leaveRule(p, lv);
+  const items = GOBAG.filter(g => !g[4] || g[4](p)), done = items.filter(g => bag[g[0]]).length, pct = items.length ? Math.round(done / items.length * 100) : 0;
+  const near = nearestCamps(p.loc || d), list = buildChecklist(p, lv);
+  const stepper = (k, label) => `<div><label class="f">${label}</label><div class="stepper" data-k="${k}"><button type="button" aria-label="−">${ic('minus')}</button><output>${p[k]}</output><button type="button" aria-label="+">${ic('plus')}</button></div></div>`;
+  setHead('bag', t('p_title'), `<button class="btn sm ghost" id="printBtn">${ic('printer')}${t('p_print')}</button>`);
+  view.innerHTML = `<p class="lead txt">${t('p_lead')}</p>
+    <div class="leave" style="--c:${rule.c}"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3>${ic(rule.icon)} ${t('p_leave')}</h3><span class="badge" style="background:rgba(255,255,255,.22);color:#fff">${esc(name(d))} · ${t('lv_' + lv)} ${r.score}</span></div><p class="txt">${t(rule.key)}</p></div>
+    <div class="card flat"><h3>${ic('users')}${t('p_family')} <span class="badge">${headcount(p)} ${t('p_members')}</span></h3>
+      <div class="cols2">${stepper('adults', t('p_adults'))}${stepper('children', t('p_children'))}${stepper('infants', t('p_infants'))}${stepper('elderly', t('p_elderly'))}${stepper('pregnant', t('p_pregnant'))}${stepper('disabled', t('p_disabled'))}${stepper('livestock', t('p_livestock'))}<div><label class="f">&nbsp;</label><label class="toggle"><input type="checkbox" id="pVeh" ${p.vehicle ? 'checked' : ''}> ${ic('car')} ${t('p_vehicle')}</label></div></div>
+      <label class="f">${t('p_docs')}</label><div class="chips">${['cnic', 'bform', 'land', 'bank', 'med'].map(k => `<button type="button" class="chip ${p.docs[k] ? 'on' : ''}" data-doc="${k}">${p.docs[k] ? ic('check') : ''}${t('p_doc_' + k)}</button>`).join('')}</div>
+      <label class="f" for="pMeet">${t('p_meet')}</label><input id="pMeet" type="text" value="${esc(p.meet)}" placeholder="${esc(t('p_meet_ph'))}" maxlength="80">
+      <label class="f">${t('p_contacts')}</label>${p.contacts.map((c, i) => `<div class="cols2" style="margin-bottom:6px"><input type="text" data-cn="${i}" value="${esc(c.name)}" placeholder="${esc(t('p_cname'))}" aria-label="${esc(t('p_cname'))} ${i + 1}"><input type="tel" data-cp="${i}" value="${esc(c.phone)}" placeholder="${esc(t('p_cphone'))}" aria-label="${esc(t('p_cphone'))} ${i + 1}"></div>`).join('')}
+      <div class="actions"><button class="btn" id="pSave">${ic('check')}${t('p_save')}</button></div></div>
+    <div class="card flat"><h3>${ic('list')}${t('p_checklist')}</h3><ul class="cl stagger" style="margin-top:8px">${list.map(i => `<li style="--c:${i.pr === 1 ? LEVELS.severe.c : i.pr === 2 ? LEVELS.warning.c : LEVELS.watch.c}"><span class="p" title="${t(i.pr === 1 ? 'p_now' : i.pr === 2 ? 'p_soon' : 'p_later')}">${i.pr}</span>${ic(i.icon)}<span>${esc(bi(i.en, i.ur))}</span></li>`).join('')}</ul><div class="small muted" style="margin-top:8px">1 = ${t('p_now')} · 2 = ${t('p_soon')} · 3 = ${t('p_later')}</div></div>
+    <div class="card flat"><div class="ringwrap"><svg class="ring" viewBox="0 0 72 72" aria-hidden="true"><circle class="trk" cx="36" cy="36" r="30"/><circle class="val" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5" id="ringVal"/><text x="36" y="36" id="ringTxt">0%</text></svg><div style="flex:1"><h3>${ic('bag')}${t('p_gobag')}</h3><div class="small muted">${done}/${items.length} · <button class="btn sm ghost" id="bagReset" style="min-height:28px;padding:2px 8px">${t('p_reset_bag')}</button></div></div></div>
+      <div class="list stagger" style="margin-top:10px;gap:6px">${items.map(g => `<label class="check ${bag[g[0]] ? 'done' : ''}"><input type="checkbox" data-bag="${g[0]}" ${bag[g[0]] ? 'checked' : ''}>${ic(g[1])}<span>${esc(bi(g[2], g[3]))}</span></label>`).join('')}</div></div>
+    <div class="card flat"><h3>${ic('tent')}${t('p_nearest')}</h3><div class="list stagger" style="margin-top:8px">${near.map(({ c, km }) => campRow(c, km)).join('')}</div></div>`;
+  requestAnimationFrame(() => { $('#ringVal').style.strokeDashoffset = 188.5 * (1 - pct / 100); countUp($('#ringTxt'), pct, { fmt: v => Math.round(v) + '%' }); });
+  const save = (quiet) => { const np = getPlan(); $$('.stepper', view).forEach(s => np[s.dataset.k] = +$('output', s).textContent); np.vehicle = $('#pVeh').checked; ['cnic', 'bform', 'land', 'bank', 'med'].forEach(k => np.docs[k] = $(`[data-doc="${k}"]`).classList.contains('on')); np.meet = $('#pMeet').value.trim(); np.contacts = [0, 1].map(i => ({ name: $(`[data-cn="${i}"]`).value.trim(), phone: $(`[data-cp="${i}"]`).value.trim() })); store.set('plan', np); if (!quiet) { toast(t('p_saved'), 'ok', 'check-circle'); renderPlan(); } };
+  $$('.stepper', view).forEach(s => $$('button', s).forEach((b, i) => b.onclick = () => { const o = $('output', s); o.textContent = clamp(+o.textContent + (i ? 1 : -1), 0, 99); save(true); }));
+  $$('[data-doc]', view).forEach(b => b.onclick = () => { b.classList.toggle('on'); b.innerHTML = (b.classList.contains('on') ? ic('check') : '') + t('p_doc_' + b.dataset.doc); save(true); });
+  $('#pVeh').onchange = () => save(true);
+  $('#pSave').onclick = () => save(false);
+  $$('[data-bag]', view).forEach(cb => cb.onchange = () => { const b = store.get('gobag', {}); if (cb.checked) b[cb.dataset.bag] = true; else delete b[cb.dataset.bag]; store.set('gobag', b); cb.closest('.check').classList.toggle('done', cb.checked); const dn = items.filter(g => b[g[0]]).length, pc = Math.round(dn / items.length * 100); $('#ringVal').style.strokeDashoffset = 188.5 * (1 - pc / 100); $('#ringTxt').textContent = pc + '%'; if (pc === 100) toast(t('p_gobag') + ' ✓', 'ok', 'check-circle'); });
+  $('#bagReset').onclick = () => { store.set('gobag', {}); renderPlan(); };
+  $('#printBtn').onclick = () => printPlan(getPlan());
+  bindCampRows(view);
+  MapCtl.legend([[r.c, t('al_mine')], ['#1e3a5f', t('lg_camp'), 'sq']]);
+  const markers = [{ id: d.id, lat: d.lat, lng: d.lng, r: 11, color: r.c, pulse: lv !== 'normal', sel: true, title: name(d), onClick: () => openDistrict(d.id) }, ...near.map(({ c, km }) => ({ id: c.id, lat: c.lat, lng: c.lng, r: 8, shape: 'sq', color: '#1e3a5f', title: `${c.en} · ${km.toFixed(0)} km`, onClick: () => { location.hash = 'camps/' + c.id; } }))];
+  MapCtl.setMarkers(markers); MapCtl.fit(markers);
+}
+function printPlan(p) {
+  const d = DM[myDistrict], r = R(d), near = nearestCamps(p.loc || d), hl = store.get('helplines', HELPLINES_SEED);
+  $('#printArea').innerHTML = `<div class="pc"><h1>${t('p_card')} · <span class="ur">${TXT.ur.p_card}</span></h1><div>${esc(name(d))} · ${t('lv_' + r.lv)} ${r.score} · ${today.toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+    <h2>${TXT.en.p_family} / <span class="ur">${TXT.ur.p_family}</span></h2><table><tr><td>${TXT.en.p_adults} ${p.adults} · ${TXT.en.p_children} ${p.children} · ${TXT.en.p_infants} ${p.infants} · ${TXT.en.p_elderly} ${p.elderly} · ${TXT.en.p_pregnant} ${p.pregnant} · ${TXT.en.p_disabled} ${p.disabled} · ${TXT.en.p_livestock} ${p.livestock}</td></tr></table>
+    <h2>${TXT.en.p_meet} / <span class="ur">${TXT.ur.p_meet}</span></h2><p>${esc(p.meet) || '—'}</p>
+    <h2>${TXT.en.p_contacts} / <span class="ur">${TXT.ur.p_contacts}</span></h2><table>${p.contacts.filter(c => c.name || c.phone).map(c => `<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td></tr>`).join('') || '<tr><td>—</td></tr>'}${hl.map(h => `<tr><td>${esc(h.en)} <span class="ur">${esc(h.ur || '')}</span></td><td>${esc(h.num)}</td></tr>`).join('')}</table>
+    <h2>${TXT.en.p_nearest} / <span class="ur">${TXT.ur.p_nearest}</span></h2><table>${near.map(({ c, km }) => `<tr><td>${esc(c.en)}</td><td>${km.toFixed(0)} km</td><td>${esc(c.phone)}</td></tr>`).join('')}</table>
+    <h2>${TXT.en.p_leave} / <span class="ur">${TXT.ur.p_leave}</span></h2><p>${TXT.en[leaveRule(p, r.lv).key]}</p><p class="ur">${TXT.ur[leaveRule(p, r.lv).key]}</p>
+    <p style="font-size:.8rem;color:#555">Sailab — ${TXT.en.g_sim}. Verify helplines for your province.</p></div>`;
+  window.print();
+}
+
+// ---------- Camps ----------
+const campData = c => { const u = store.get('campUpdates', {})[c.id]; return u ? { ...c, occ: u.occ, needs: u.needs, updated: u.ts } : c; };
+const occColor = c => { const f = c.occ / c.cap; return f >= .95 ? LEVELS.severe.c : f >= .7 ? LEVELS.warning.c : LEVELS.normal.c; };
+function campRow(c, km) {
+  const f = Math.min(100, Math.round(c.occ / c.cap * 100)), col = occColor(c), d = DM[c.d];
+  const fac = [['w', 'droplet', 'c_water'], ['l', 'home', 'c_latrines'], ['m', 'stethoscope', 'c_medical'], ['f', 'box', 'c_food']];
+  return `<article class="card camp" data-c="${c.id}" tabindex="0">
+    <div class="top"><div class="ico">${ic(CAMP_TYPE_ICON[c.type])}</div><div style="flex:1;min-width:0"><div class="nm">${esc(c.en)}</div><div class="sub">${t('c_type_' + c.type)} · ${esc(name(d))}, ${t(d.prov)}${km != null ? ` · <b>${km.toFixed(0)} ${t('p_km')}</b>` : ''}</div></div>${f >= 95 ? `<span class="badge solid" style="--c:${col}">${t('c_full')}</span>` : ''}</div>
+    <div class="occ"><span class="num"><b>${nf.format(c.occ)}</b> / ${nf.format(c.cap)} ${t('c_people')}</span><div class="bar" style="--c:${col}"><i data-w="${f}"></i></div><b class="num" style="color:${col}">${f}%</b></div>
+    <div class="fac">${fac.map(([k, i, l]) => `<span class="${c.fac.includes(k) ? '' : 'no'}">${ic(i)}${t(l)}</span>`).join('')}</div>
+    ${c.needs.length ? `<div class="chips" style="margin-top:8px"><span class="small muted" style="align-self:center">${t('c_needs')}:</span>${c.needs.map(n => `<span class="chip need">${ic('alert-circle')}${esc(n.trim())}</span>`).join('')}</div>` : ''}
+    <div class="actions"><a class="btn sm ghost" href="tel:${esc(c.phone)}">${ic('phone')}${esc(c.phone)}</a><a class="btn sm river" href="${mapsLink(c.lat, c.lng)}" target="_blank" rel="noopener">${ic('navigation')}${t('c_directions')}</a><button class="btn sm ghost" data-upd="${c.id}">${ic('edit')}${t('c_update')}</button><button class="btn sm ghost" data-focus="${c.id}" aria-label="${t('al_focus')}">${ic('map-pin')}</button></div>
+  </article>`;
+}
+function bindCampRows(root) {
+  $$('[data-upd]', root).forEach(b => b.onclick = e => { e.stopPropagation(); const c = campData(CAMPS.find(x => x.id === b.dataset.upd));
+    modal(t('c_update_title'), `<div class="small muted" style="margin-bottom:6px">${esc(c.en)}</div><label class="f" for="uOcc">${t('c_occ_now')}</label><input id="uOcc" type="number" min="0" max="${c.cap * 2}" value="${c.occ}"><label class="f" for="uNeeds">${t('c_needs_in')}</label><input id="uNeeds" type="text" value="${esc(c.needs.join(', '))}" placeholder="food, tents, medicines"><div class="actions"><button class="btn" id="uSave">${ic('check')}${t('save')}</button><button class="btn ghost" id="uCancel">${t('cancel')}</button></div>`,
+      box => { $('#uCancel', box).onclick = closeModal; $('#uSave', box).onclick = () => saveCampUpdate(c.id, +$('#uOcc', box).value || 0, $('#uNeeds', box).value.split(',').map(s => s.trim()).filter(Boolean)); }); });
+  $$('[data-focus]', root).forEach(b => b.onclick = e => { e.stopPropagation(); const c = CAMPS.find(x => x.id === b.dataset.focus); if (page !== 'camps') { location.hash = 'camps/' + c.id; return; } state.selCamp = c.id; MapCtl.focus(c.lat, c.lng, 11); renderCampMarkers(); });
+}
+// TODO(student): volunteer & camp-inventory coordination backend. POST this update to a shared API with the reporter's phone/OTP, keep an audit
+// trail per camp, and let PDMA dashboards subscribe; this stub only writes to localStorage on this device.
+function saveCampUpdate(id, occ, needs) { const u = store.get('campUpdates', {}); u[id] = { occ, needs, ts: Date.now() }; store.set('campUpdates', u); closeModal(); toast(t('c_updated'), 'ok', 'check-circle'); route(false); }
+const visibleCamps = () => { const q = state.campQ.trim().toLowerCase(), from = DM[myDistrict]; return CAMPS.map(c => ({ c: campData(c), km: haversine(from, c) })).filter(({ c }) => (state.campProv === 'all' || DM[c.d].prov === state.campProv) && (!q || c.en.toLowerCase().includes(q) || DM[c.d].en.toLowerCase().includes(q) || DM[c.d].ur.includes(q))).sort((a, b) => a.km - b.km); };
+function renderCampMarkers() {
+  const rows = visibleCamps(), ids = new Set(rows.map(r => r.c.id)), d = DM[myDistrict];
+  const markers = [{ id: 'mine', lat: d.lat, lng: d.lng, r: 9, color: R(d).c, title: `${t('al_mine')}: ${name(d)}`, onClick: () => openDistrict(d.id) }, ...CAMPS.map(campData).map(c => ({ id: c.id, lat: c.lat, lng: c.lng, r: 7 + Math.min(4, c.cap / 600), shape: 'sq', color: occColor(c), dim: !ids.has(c.id), sel: state.selCamp === c.id, pulse: c.occ / c.cap >= .95, title: `${c.en} · ${Math.round(c.occ / c.cap * 100)}%`, onClick: it => { state.selCamp = it.id; renderCampMarkers(); const el = $(`.camp[data-c="${it.id}"]`); if (el) { sheetUp(); el.scrollIntoView({ block: 'start', behavior: 'smooth' }); el.style.boxShadow = '0 0 0 3px var(--river-soft)'; setTimeout(() => el.style.boxShadow = '', 1500); } } }))];
+  MapCtl.setMarkers(markers); return markers;
+}
+function renderCamps(param) {
+  if (param && CAMPS.some(c => c.id === param)) state.selCamp = param;
+  const rows = visibleCamps();
+  setHead('tent', t('c_title'), `<span class="badge">${rows.length} / ${CAMPS.length}</span>`);
+  view.innerHTML = `<p class="lead txt">${t('c_lead')}</p>
+    <div class="toolbar"><div class="search">${ic('search')}<input id="campQ" type="search" value="${esc(state.campQ)}" placeholder="${esc(t('c_search'))}" aria-label="${esc(t('c_search'))}"></div><span class="badge">${ic('navigation')}${t('c_near')}: ${esc(name(DM[myDistrict]))}</span></div>
+    ${provChips(state.campProv)}
+    <div class="list stagger" id="clist">${rows.map(({ c, km }) => campRow(c, km)).join('') || `<div class="empty">${ic('tent')}${t('c_none')}</div>`}</div>`;
+  animateBars(view); bindCampRows(view);
+  $('#campQ').oninput = e => { state.campQ = e.target.value; const list = $('#clist'); const rows2 = visibleCamps(); list.innerHTML = rows2.map(({ c, km }) => campRow(c, km)).join('') || `<div class="empty">${ic('tent')}${t('c_none')}</div>`; animateBars(list); bindCampRows(list); $('#pactions .badge').textContent = `${rows2.length} / ${CAMPS.length}`; renderCampMarkers(); };
+  $$('[data-prov] .chip', view).forEach(b => b.onclick = () => { state.campProv = b.dataset.p; saveUI(); renderCamps(); });
+  MapCtl.legend([[LEVELS.normal.c, '< 70%', 'sq'], [LEVELS.warning.c, '70–95%', 'sq'], [LEVELS.severe.c, t('c_full'), 'sq'], [R(DM[myDistrict]).c, t('al_mine')]]);
+  const markers = renderCampMarkers();
+  if (state.selCamp && CAMPS.some(c => c.id === state.selCamp)) { const c = CAMPS.find(x => x.id === state.selCamp); MapCtl.focus(c.lat, c.lng, 10); const el = $(`.camp[data-c="${c.id}"]`); el && setTimeout(() => el.scrollIntoView({ block: 'start' }), 300); } else MapCtl.fit(markers.filter(m => !m.dim));
+}
+
+// ---------- Missing (reunification board) ----------
+const getPosts = () => store.get('missing', null) || MISSING_SEED();
+const savePosts = p => store.set('missing', p);
+// TODO(student): verified reunification backend. Sync posts to a server with OTP-verified contacts, moderation, face-embedding photo matching
+// (e.g. a small on-device model) and cross-camp search; purge reunited posts after 30 days for privacy.
+async function syncMissing() { throw new Error('syncMissing() is not implemented — student extension'); }
+const norm = s => String(s || '').toLowerCase().replace(/[^a-z؀-ۿ0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+function dice(a, b) { const bg = s => { const o = new Map(); s.split(' ').forEach(w => { for (let i = 0; i < w.length - 1; i++) { const k = w.slice(i, i + 2); o.set(k, (o.get(k) || 0) + 1); } }); return o; }; const A = bg(norm(a)), B = bg(norm(b)); let hit = 0, nA = 0, nB = 0; A.forEach((v, k) => { nA += v; if (B.has(k)) hit += Math.min(v, B.get(k)); }); B.forEach(v => nB += v); return nA + nB ? 2 * hit / (nA + nB) : 0; }
+/** Match suggestions: opposite status, name bigram similarity (50%), age proximity (30%), location (20%). */
+function matches(p, all) {
+  const want = p.status === 'missing' ? 'found' : p.status === 'found' ? 'missing' : null; if (!want) return [];
+  return all.filter(o => o.status === want && o.id !== p.id).map(o => { const n = dice(p.name, o.name), a = clamp(1 - Math.abs(p.age - o.age) / 8, 0, 1), l = o.d === p.d ? 1 : DM[o.d].prov === DM[p.d].prov ? .4 : 0; let s = .5 * n + .3 * a + .2 * l; if (p.gender !== 'o' && o.gender !== 'o' && p.gender !== o.gender) s *= .5; return { o, s }; }).filter(m => m.s >= .45).sort((a, b) => b.s - a.s).slice(0, 3);
+}
+const STATUS_C = { missing: LEVELS.severe.c, found: LEVELS.watch.c, reunited: LEVELS.normal.c };
+function shareText(p) { const d = DM[p.d]; return `${p.status === 'missing' ? 'MISSING / گمشدہ' : 'FOUND / ملا'}: ${p.name}, ${p.age} ${p.gender === 'm' ? 'M' : p.gender === 'f' ? 'F' : ''}\n${p.status === 'missing' ? 'Last seen' : 'Found at'}: ${p.place}, ${d.en} (${d.ur})\n${p.note ? p.note + '\n' : ''}Contact: ${p.contact}\n— Sailab reunification board`; }
+function postCard(p, all) {
+  const d = DM[p.d], ms = p.status === 'reunited' ? [] : matches(p, all);
+  return `<article class="card post" data-m="${p.id}" style="--c:${STATUS_C[p.status]}">
+    ${p.photo ? `<img class="photo" src="${p.photo}" alt="">` : `<div class="photo">${ic('user')}</div>`}
+    <div class="body"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div class="nm">${esc(p.name)}</div><span class="badge solid" style="--c:${STATUS_C[p.status]}">${t('m_' + p.status)}</span></div>
+      <div class="info">${p.age} ${t('m_age_short')} · ${t(p.gender === 'm' ? 'm_male' : p.gender === 'f' ? 'm_female' : 'm_other')} · ${timeAgo(p.ts)}</div>
+      <div class="info">${ic('map-pin')} ${t(p.status === 'found' ? 'm_foundat' : 'm_lastseen')}: ${esc(p.place)}, ${esc(name(d))}</div>
+      ${p.note ? `<div class="info">${ic('info')} ${esc(p.note)}</div>` : ''}<div class="info">${ic('phone')} <a href="tel:${esc(p.contact)}">${esc(p.contact)}</a></div>
+      ${ms.map(m => `<div class="match">${ic('sparkles')} <b>${t('m_matches')}</b> <b class="sc">${Math.round(m.s * 100)}%</b> — ${esc(m.o.name)}, ${m.o.age} ${t('m_age_short')}, ${esc(m.o.place)} · <a href="tel:${esc(m.o.contact)}">${esc(m.o.contact)}</a> <button class="btn sm green" data-reunite="${p.id}" data-with="${m.o.id}" style="margin-left:6px">${ic('heart')}${t('m_mark')}</button></div>`).join('')}
+      <div class="actions"><a class="btn sm ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(p))}">${ic('message')}${t('m_share')}</a>${p.status !== 'reunited' ? `<button class="btn sm green" data-reunite="${p.id}">${ic('heart')}${t('m_mark')}</button>` : ''}<button class="btn sm danger" data-del="${p.id}" aria-label="${t('delete')}">${ic('trash')}</button></div>
+    </div></article>`;
+}
+function renderMissing() {
+  const all = getPosts(), q = norm(state.mQ);
+  const list = all.filter(p => (state.mStatus === 'all' || p.status === state.mStatus) && (!q || norm(p.name).includes(q) || norm(p.place).includes(q) || norm(name(DM[p.d])).includes(q))).sort((a, b) => b.ts - a.ts);
+  const counts = { missing: all.filter(p => p.status === 'missing').length, found: all.filter(p => p.status === 'found').length, reunited: all.filter(p => p.status === 'reunited').length };
+  setHead('users', t('m_title'), `<button class="btn sm amber" id="mPost">${ic('plus')}${t('m_post')}</button>`);
+  view.innerHTML = `<p class="lead txt">${t('m_lead')}</p>
+    <div class="toolbar"><div class="search">${ic('search')}<input id="mQ" type="search" value="${esc(state.mQ)}" placeholder="${esc(t('m_search'))}" aria-label="${esc(t('m_search'))}"></div></div>
+    <div class="seg" style="display:flex">${['all', 'missing', 'found', 'reunited'].map(s => `<button class="${state.mStatus === s ? 'on' : ''}" data-st="${s}" style="flex:1;justify-content:center">${t('m_' + s)}${s !== 'all' ? ` <span class="badge" style="background:rgba(0,0,0,.08);color:inherit">${counts[s]}</span>` : ''}</button>`).join('')}</div>
+    <div class="list stagger" id="mlist">${list.map(p => postCard(p, all)).join('') || `<div class="empty">${ic('users')}${t('m_none')}</div>`}</div>`;
+  $('#mQ').oninput = e => { state.mQ = e.target.value; renderMissing(); setTimeout(() => { const i = $('#mQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 0); };
+  $$('[data-st]', view).forEach(b => b.onclick = () => { state.mStatus = b.dataset.st; saveUI(); renderMissing(); });
+  $('#mPost').onclick = openPostForm;
+  $$('[data-reunite]', view).forEach(b => b.onclick = () => { const ps = getPosts(); [b.dataset.reunite, b.dataset.with].filter(Boolean).forEach(id => { const p = ps.find(x => x.id === id); if (p) { p.status = 'reunited'; p.ts = Date.now(); } }); savePosts(ps); celebrate(); toast(t('m_reunited_toast'), 'ok', 'heart'); renderMissing(); });
+  $$('[data-del]', view).forEach(b => b.onclick = () => { savePosts(getPosts().filter(p => p.id !== b.dataset.del)); toast(t('m_removed'), '', 'trash'); renderMissing(); });
+  MapCtl.legend([[STATUS_C.missing, t('m_missing')], [STATUS_C.found, t('m_found')], [STATUS_C.reunited, t('m_reunited')]]);
+  const markers = list.map(p => { const d = DM[p.d], r = rng(hash(p.id)); return { id: p.id, lat: d.lat + (r() - .5) * .12, lng: d.lng + (r() - .5) * .12, r: 7, color: STATUS_C[p.status], pulse: p.status === 'missing', title: `${p.name} · ${t('m_' + p.status)}`, onClick: it => { sheetUp(); const el = $(`.post[data-m="${it.id}"]`); el && el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }; });
+  MapCtl.setMarkers(markers); MapCtl.fit(markers.length ? markers : [DM[myDistrict]]);
+}
+function openPostForm() {
+  let photo = null;
+  modal(t('m_post'), `<div class="seg" style="display:flex"><button class="on" data-fs="missing" style="flex:1;justify-content:center">${ic('search')}${t('m_missing')}</button><button data-fs="found" style="flex:1;justify-content:center">${ic('check-circle')}${t('m_found')}</button></div>
+    <label class="f" for="fName">${t('m_name')}</label><input id="fName" type="text" maxlength="60">
+    <div class="cols2"><div><label class="f" for="fAge">${t('m_age')}</label><input id="fAge" type="number" min="0" max="110"></div><div><label class="f" for="fGender">${t('m_gender')}</label><select id="fGender"><option value="m">${t('m_male')}</option><option value="f">${t('m_female')}</option><option value="o">${t('m_other')}</option></select></div></div>
+    <label class="f" for="fPlace" id="fPlaceL">${t('m_where_missing')}</label><input id="fPlace" type="text" maxlength="90">
+    <label class="f" for="fDist">${t('m_district')}</label><select id="fDist">${DISTRICTS.map(d => `<option value="${d.id}" ${d.id === myDistrict ? 'selected' : ''}>${esc(name(d))}</option>`).join('')}</select>
+    <label class="f" for="fContact">${t('m_contact')}</label><input id="fContact" type="tel" placeholder="03xx-xxxxxxx">
+    <label class="f">${t('m_photo')}</label><div class="photo-pick"><img id="fPrev" alt="" class="hidden"><label class="btn ghost sm" for="fPhoto">${ic('camera')}${t('m_photo').split(' (')[0]}</label><input id="fPhoto" type="file" accept="image/*" class="sr"></div>
+    <label class="f" for="fNote">${t('m_note')}</label><textarea id="fNote" maxlength="200"></textarea>
+    <div class="actions"><button class="btn" id="fSubmit">${ic('send')}${t('m_submit')}</button><button class="btn ghost" id="fCancel">${t('cancel')}</button></div>`,
+    box => {
+      let status = 'missing';
+      $$('[data-fs]', box).forEach(b => b.onclick = () => { status = b.dataset.fs; $$('[data-fs]', box).forEach(x => x.classList.toggle('on', x === b)); $('#fPlaceL', box).textContent = t(status === 'found' ? 'm_where_found' : 'm_where_missing'); });
+      $('#fPhoto', box).onchange = e => { const f = e.target.files[0]; if (!f) return; const img = new Image(); img.onload = () => { const k = 240 / Math.max(img.width, img.height); const cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); photo = cv.toDataURL('image/jpeg', .8); const pv = $('#fPrev', box); pv.src = photo; pv.classList.remove('hidden'); URL.revokeObjectURL(img.src); }; img.src = URL.createObjectURL(f); };
+      $('#fCancel', box).onclick = closeModal;
+      $('#fSubmit', box).onclick = () => { const nm = $('#fName', box).value.trim(), age = +$('#fAge', box).value, place = $('#fPlace', box).value.trim(); if (!nm || !age || !place) { toast(t('m_valid'), 'bad', 'alert'); return; }
+        const ps = getPosts(); ps.unshift({ id: uid(), status, name: nm, age, gender: $('#fGender', box).value, place, d: $('#fDist', box).value, contact: $('#fContact', box).value.trim(), note: $('#fNote', box).value.trim(), photo, ts: Date.now() }); savePosts(ps); closeModal(); toast(t('m_posted'), 'ok', 'check-circle'); state.mStatus = 'all'; renderMissing(); };
+    });
+}
+
+// ---------- Guide ----------
+let sos = { landmark: '', needs: ['evac'], gps: null };
+function sosText() {
+  const d = DM[myDistrict], p = getPlan(), n = headcount(p), v = vulnerable(p);
+  const needs = sos.needs.map(k => ({ evac: 'evacuation / انخلا', boat: 'boat / کشتی', medical: 'medical help / طبی مدد', food: 'food & water / خوراک اور پانی' })[k]).join(', ');
+  const gps = sos.gps ? `GPS: ${sos.gps.lat.toFixed(5)}, ${sos.gps.lng.toFixed(5)} https://maps.google.com/?q=${sos.gps.lat.toFixed(5)},${sos.gps.lng.toFixed(5)}` : 'GPS: not available';
+  return `SOS — FLOOD EMERGENCY / سیلاب — مدد درکار\n${n} people (${v} vulnerable: elderly/pregnant/infants/disabled)${p.livestock ? `, ${p.livestock} livestock` : ''}\nDistrict: ${d.en} (${d.ur})${sos.landmark ? `\nLandmark: ${sos.landmark}` : ''}\n${gps}\nNeed: ${needs}\n${n} افراد، ضلع ${d.ur}${sos.landmark ? '، ' + sos.landmark : ''}۔ فوری مدد چاہیے۔\nSent via Sailab ${new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' })}`;
+}
+// TODO(student): SMS / USSD access for feature phones. Expose district alerts and this SOS flow through an SMS keyword service
+// (e.g. "SAILAB DADU" → current level + nearest camp) so households without smartphones are covered.
+function renderGuide(param) {
+  const hl = store.get('helplines', HELPLINES_SEED), tab = state.guideTab;
+  setHead('book', t('gd_title'), `<a class="btn sm danger" href="#guide/sos">${ic('siren')}SOS</a>`);
+  view.innerHTML = `<p class="lead txt">${t('gd_lead')}</p>
+    <div class="tabs">${['before', 'during', 'after'].map(k => `<button class="tab ${tab === k ? 'on' : ''}" data-tab="${k}">${ic(k === 'before' ? 'clock' : k === 'during' ? 'waves' : 'shield-check')}${t('gd_' + k)}</button>`).join('')}</div>
+    <div class="list stagger" id="gcards">${GUIDE[tab].map((g, i) => `<article class="card gcard flat" style="--c:${tab === 'before' ? LEVELS.watch.c : tab === 'during' ? LEVELS.severe.c : LEVELS.normal.c}"><h3>${ic(g[0])}${esc(bi(g[1], g[3]))}</h3><p class="txt">${esc(bi(g[2], g[4]))}</p></article>`).join('')}</div>
+    <div class="card flat"><h3>${ic('phone')}${t('gd_help')}</h3><p class="lead txt small">${t('gd_help_lead')}</p><div class="list" id="hlist" style="margin-top:8px">${hl.map(h => `<div class="help" data-h="${h.id}"><div style="flex:1;min-width:0"><input type="text" value="${esc(bi(h.en, h.ur || h.en))}" data-hn aria-label="${t('gd_name')}" style="margin-bottom:4px"><input type="tel" value="${esc(h.num)}" data-hnum aria-label="${t('gd_number')}"></div><a class="btn sm river" href="tel:${esc(h.num)}">${ic('phone')}${t('call')}</a><button class="btn sm danger" data-hdel aria-label="${t('delete')}">${ic('trash')}</button></div>`).join('')}</div><div class="actions"><button class="btn ghost sm" id="hAdd">${ic('plus')}${t('gd_add_help')}</button></div></div>
+    <div class="sos" id="sos"><h3>${ic('siren')}${t('gd_sos')}</h3><p class="small txt" style="opacity:.9;margin:6px 0 0">${t('gd_sos_lead')}</p>
+      <label class="f" for="sosLm" style="color:#cfe0f5">${t('gd_landmark')}</label><input id="sosLm" type="text" value="${esc(sos.landmark)}" maxlength="80" style="background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.2)">
+      <label class="f" style="color:#cfe0f5">${t('gd_need')}</label><div class="chips">${[['evac', 'gd_need_evac', 'navigation'], ['boat', 'gd_need_boat', 'boat'], ['medical', 'gd_need_medical', 'stethoscope'], ['food', 'gd_need_food', 'box']].map(([k, l, i]) => `<button class="chip ${sos.needs.includes(k) ? 'on' : ''}" data-need="${k}" style="${sos.needs.includes(k) ? 'background:var(--amber);border-color:var(--amber);color:var(--slate-deep)' : 'background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff'}">${ic(i)}${t(l)}</button>`).join('')}</div>
+      <div class="actions"><button class="btn ghost sm" id="sosGps">${ic('target')}${sos.gps ? t('gd_gps_ok') : t('gd_gps')}</button></div>
+      <textarea id="sosTxt" readonly aria-label="SOS" style="margin-top:10px">${esc(sosText())}</textarea>
+      <div class="actions"><button class="btn amber" id="sosCopy">${ic('copy')}${t('gd_copy')}</button><a class="btn green" id="sosWa" target="_blank" rel="noopener">${ic('message')}WhatsApp</a><a class="btn ghost" id="sosSms">${ic('send')}${t('gd_sms')}</a></div></div>`;
+  const refresh = () => { const txt = sosText(); $('#sosTxt').value = txt; $('#sosWa').href = 'https://wa.me/?text=' + encodeURIComponent(txt); $('#sosSms').href = 'sms:?body=' + encodeURIComponent(txt); }; refresh();
+  $$('[data-tab]', view).forEach(b => b.onclick = () => { state.guideTab = b.dataset.tab; saveUI(); renderGuide(); });
+  const saveHl = () => store.set('helplines', $$('.help', view).map(el => ({ id: el.dataset.h, en: $('[data-hn]', el).value.trim(), ur: $('[data-hn]', el).value.trim(), num: $('[data-hnum]', el).value.trim() })));
+  $$('.help input', view).forEach(i => i.onchange = () => { saveHl(); const row = i.closest('.help'); $('a.btn', row).href = 'tel:' + $('[data-hnum]', row).value.trim(); });
+  $$('[data-hdel]', view).forEach(b => b.onclick = () => { b.closest('.help').remove(); saveHl(); });
+  $('#hAdd').onclick = () => { const h = store.get('helplines', HELPLINES_SEED); h.push({ id: uid(), en: '', ur: '', num: '' }); store.set('helplines', h); renderGuide(); setTimeout(() => { const last = $$('.help [data-hn]').pop(); last && last.focus(); }, 50); };
+  $('#sosLm').oninput = e => { sos.landmark = e.target.value; refresh(); };
+  $$('[data-need]', view).forEach(b => b.onclick = () => { const k = b.dataset.need; sos.needs = sos.needs.includes(k) ? sos.needs.filter(x => x !== k) : [...sos.needs, k]; renderGuide(); });
+  $('#sosGps').onclick = () => { const b = $('#sosGps'); b.innerHTML = ic('target') + t('gd_gps_wait'); if (!navigator.geolocation) { b.innerHTML = ic('target') + t('gd_gps_fail'); return; } navigator.geolocation.getCurrentPosition(pos => { sos.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude }; b.innerHTML = ic('check') + t('gd_gps_ok'); refresh(); toast(t('gd_gps_ok'), 'ok', 'target'); }, () => { b.innerHTML = ic('target') + t('gd_gps_fail'); toast(t('gd_gps_fail'), 'amber', 'alert'); }, { timeout: 8000 }); };
+  $('#sosCopy').onclick = async () => { try { await navigator.clipboard.writeText($('#sosTxt').value); } catch { $('#sosTxt').select(); document.execCommand && document.execCommand('copy'); } toast(t('gd_copied'), 'ok', 'copy'); };
+  if (param === 'sos') setTimeout(() => $('#sos').scrollIntoView({ block: 'start', behavior: 'smooth' }), 100);
+  const d = DM[myDistrict];
+  MapCtl.legend([[R(d).c, t('al_mine')], ['#1e3a5f', t('lg_camp'), 'sq']]);
+  const markers = [{ id: d.id, lat: d.lat, lng: d.lng, r: 11, color: R(d).c, sel: true, pulse: true, title: name(d), onClick: () => openDistrict(d.id) }, ...nearestCamps(d).map(({ c, km }) => ({ id: c.id, lat: c.lat, lng: c.lng, r: 8, shape: 'sq', color: '#1e3a5f', title: `${c.en} · ${km.toFixed(0)} km`, onClick: () => { location.hash = 'camps/' + c.id; } }))];
+  MapCtl.setMarkers(markers); MapCtl.fit(markers);
+}
+
+// ---------- About ----------
+const TODOS = [
+  ['Live FFD / PMD / WAPDA gauge & rainfall feeds', '★★', 'Replace the simulated series with daily FFD discharge and PMD rainfall; cache the last fetch for offline use.', 'fetchLiveGauges()'],
+  ['NDMA / PDMA alert integration + SMS cell broadcast', '★★★', 'Pull official district alerts and deliver them by SMS / cell broadcast to everyone who picked that district.', 'pushAlerts()'],
+  ['Satellite inundation layers (Sentinel-1)', '★★★', 'Overlay flood-extent rasters (Copernicus EMS / UN-SPIDER recipes) on the Leaflet map with a date slider.', 'MapCtl.addOverlay()'],
+  ['Offline map tiles + installable PWA', '★★', 'Service worker caching OSM tiles for the user\'s district, manifest, install prompt; keep the SVG schematic as last resort.', 'MapCtl.init()'],
+  ['Volunteer & camp-inventory coordination backend', '★★', 'Shared API for camp occupancy, needs and stock with OTP-verified reporters and a PDMA dashboard.', 'saveCampUpdate()'],
+  ['Verified reunification backend with photo matching', '★★★', 'Server-side posts with moderation, face-embedding similarity and cross-camp search; privacy purge after reunion.', 'syncMissing()'],
+  ['SMS / USSD access for feature phones', '★★', 'Keyword service ("SAILAB DADU") returning the alert level, advisory and nearest camp; SOS by SMS.', 'sosText()'],
+];
+function renderAbout() {
+  setHead('info', t('ab_title'));
+  view.innerHTML = `<div class="card flat"><h3>${ic('alert')}${t('ab_problem')}</h3><p class="lead txt" style="margin-top:6px">${t('ab_problem_t')}</p></div>
+    <div class="card flat"><h3>${ic('activity')}${t('ab_how')}</h3><p class="lead txt" style="margin-top:6px">${t('ab_how_t')}</p><div class="note txt small" style="margin-top:8px;font-family:var(--font);direction:ltr;text-align:left"><code>${t('ab_formula')}</code></div>
+      <div class="chips" style="margin-top:8px">${Object.keys(LEVELS).map(k => lvBadge(k, true)).join('')}${GCATS.slice(1).map(([k, c]) => `<span class="badge c" style="--c:${c}">${t('gc_' + k)}</span>`).join('')}</div></div>
+    <div class="card flat"><h3>${ic('shield')}${t('ab_data')}</h3><p class="lead txt" style="margin-top:6px">${t('ab_data_t')}</p><p class="small muted txt">${t('ab_stack')}</p>
+      <div class="actions"><button class="btn sm" id="expJson">${ic('download')}${t('ab_export')}</button><label class="btn sm ghost" for="impFile">${ic('upload')}${t('ab_import')}</label><input type="file" id="impFile" accept="application/json,.json" class="sr"><button class="btn sm danger" id="resetDemo">${ic('refresh')}${t('ab_reset')}</button></div></div>
+    <h3 style="display:flex;align-items:center;gap:8px;font-size:1rem">${ic('git-branch')}${t('ab_todo')}</h3>
+    <div class="list stagger">${TODOS.map(([h, s, b, fn]) => `<div class="todo"><h4>${esc(h)} <span class="stars">${s}</span></h4><div class="small muted">${esc(b)}</div><div class="small" style="margin-top:5px">${ic('code')}<code>${esc(fn)}</code></div></div>`).join('')}</div>`;
+  $('#expJson').onclick = () => download(`sailab-backup-${today.toISOString().slice(0, 10)}.json`, JSON.stringify({ app: 'sailab', exported: new Date().toISOString(), district: myDistrict, plan: store.get('plan', {}), gobag: store.get('gobag', {}), campUpdates: store.get('campUpdates', {}), missing: getPosts(), helplines: store.get('helplines', HELPLINES_SEED) }, null, 2));
+  $('#impFile').onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (d.app !== 'sailab') throw 0; ['plan', 'gobag', 'campUpdates', 'missing', 'helplines'].forEach(k => d[k] && store.set(k, d[k])); if (DM[d.district]) { myDistrict = d.district; store.set('district', myDistrict); $('#myDistrict').value = myDistrict; } toast(t('ab_imported'), 'ok', 'check-circle'); route(false); } catch { toast(t('ab_bad_file'), 'bad', 'alert'); } }; r.readAsText(f); };
+  $('#resetDemo').onclick = () => { ['plan', 'gobag', 'campUpdates', 'missing', 'helplines', 'ui'].forEach(k => store.del(k)); myDistrict = 'dadu'; store.set('district', 'dadu'); $('#myDistrict').value = 'dadu'; toast(t('ab_reset_ok'), 'ok', 'refresh'); route(false); };
+  MapCtl.legend(Object.keys(LEVELS).map(k => [LEVELS[k].c, t('lv_' + k)]));
+  MapCtl.setMarkers(districtMarkers(DISTRICTS)); MapCtl.fit();
+}
+
+// ---------- bottom sheet (mobile) ----------
+const panel = $('#panel'), handle = $('#handle');
+function setSheet(st) { panel.dataset.state = st; store.set('sheet', st); }
+{ let drag = null;
+  handle.addEventListener('pointerdown', e => { drag = { y: e.clientY, h: panel.getBoundingClientRect().height, moved: false }; panel.classList.add('dragging'); handle.setPointerCapture(e.pointerId); });
+  handle.addEventListener('pointermove', e => { if (!drag) return; const dy = drag.y - e.clientY; if (Math.abs(dy) > 4) drag.moved = true; panel.style.height = clamp(drag.h + dy, 90, window.innerHeight - 66) + 'px'; });
+  const end = () => { if (!drag) return; const h = panel.getBoundingClientRect().height, H = window.innerHeight - 114; panel.classList.remove('dragging'); panel.style.height = '';
+    setSheet(!drag.moved ? (panel.dataset.state === 'full' ? 'half' : 'full') : h < H * .3 ? 'peek' : h < H * .78 ? 'half' : 'full'); drag = null; };
+  handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end); }
+setSheet(store.get('sheet', 'half'));
+
+// ---------- nav / router / boot ----------
+const NAV = [['alerts', 'nav_alerts', 'siren'], ['gauges', 'nav_gauges', 'gauge'], ['plan', 'nav_plan', 'bag'], ['camps', 'nav_camps', 'tent'], ['missing', 'nav_missing', 'users'], ['guide', 'nav_guide', 'book'], ['about', 'nav_about', 'info']];
+const VIEWS = { alerts: renderAlerts, gauges: renderGauges, plan: renderPlan, camps: renderCamps, missing: renderMissing, guide: renderGuide, about: renderAbout };
+function renderNav() {
+  $('#topnav').innerHTML = NAV.map(([id, k, i]) => `<a href="#${id}" class="${page === id ? 'active' : ''}">${ic(i)}${t(k)}</a>`).join('');
+  $('#bottomnav').innerHTML = NAV.map(([id, k, i]) => `<a href="#${id}" class="${page === id ? 'active' : ''}">${ic(i)}${t(k)}</a>`).join('');
+}
+function route(animate = true) {
+  const h = location.hash.slice(1).split('?')[0], [p, param] = h.split('/');
+  page = VIEWS[p] ? p : 'alerts';
+  document.body.dataset.page = page; renderNav();
+  VIEWS[page](param);
+  if (animate) { animateIn(view); view.scrollTop = 0; if (window.innerWidth <= 900 && panel.dataset.state === 'peek') setSheet('half'); }
+  else $$('.stagger', view).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i)));
+}
+function fillDistrictSelect() { const sel = $('#myDistrict'); sel.innerHTML = PROVS.map(p => `<optgroup label="${t(p)}">${DISTRICTS.filter(d => d.prov === p).map(d => `<option value="${d.id}">${esc(name(d))}</option>`).join('')}</optgroup>`).join(''); sel.value = myDistrict; }
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English';
+  fillDistrictSelect(); if (MapCtl.mode) MapCtl.updateStatus(); route(false);
+}
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+$('#myDistrict').onchange = e => setMyDistrict(e.target.value);
+window.addEventListener('hashchange', () => route(true));
+const pending = { focus: null, fit: null };
+const _focus = MapCtl.focus.bind(MapCtl), _fit = MapCtl.fit.bind(MapCtl);
+MapCtl.focus = (...a) => { if (!MapCtl.mode) { pending.focus = a; pending.fit = null; return; } _focus(...a); };
+MapCtl.fit = (...a) => { if (!MapCtl.mode) { pending.fit = a; pending.focus = null; return; } _fit(...a); };
+applyLang();
+MapCtl.init().then(() => { MapCtl.setMarkers(MapCtl.items); MapCtl.updateStatus(); if (pending.focus) MapCtl.focus(...pending.focus); else if (pending.fit) MapCtl.fit(...pending.fit); });
+setTimeout(pushAlerts, 900);
+</script>
+</body>
+</html>
