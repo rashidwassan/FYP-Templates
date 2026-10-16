@@ -70,7 +70,7 @@ h1,h2,h3,h4{margin:0;line-height:1.2}
 .cnt.zero{display:none}
 .bellbtn{position:relative;border:1px solid var(--line);background:var(--surface);border-radius:10px;width:42px;height:40px;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .bellbtn .cnt{right:-6px;top:-6px;transform:none}
-main{padding:24px 26px 90px;max-width:1240px}
+main{padding:24px 26px 90px;max-width:1240px;min-width:0}
 .pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
 .pagehead h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
 .pagehead p{margin:4px 0 0;color:var(--muted)}
@@ -320,7 +320,7 @@ mark{background:var(--amber-soft);color:var(--amber);border-radius:3px;padding:0
 
 /* ---------- responsive ---------- */
 @media (max-width:980px){
-  .shell{grid-template-columns:1fr}
+  .shell{grid-template-columns:minmax(0,1fr)}
   .rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 14px;overflow:visible}
   .rail a,.navgroup{display:none}
   .rail .foot{margin:0;display:flex;flex:1;justify-content:flex-end;padding:0}
@@ -487,14 +487,14 @@ html.still *,html.still *::before,html.still *::after{animation-duration:.01ms!i
       <div><h2 data-i18n="c_title">Case line list</h2><p data-i18n="c_lead">Anonymised records: age band, sex, town, onset week, severity and outcome. Seeded cases match the dashboard; add your own from hospital registers.</p></div>
       <div class="row noprint"><button class="btn ghost sm" id="caseCsv"></button><button class="btn teal sm" id="caseAdd"></button></div>
     </div>
-    <div id="cases"></div>
+    <div id="casesPage"></div>
   </section>
 
   <section data-page="vector">
     <div class="pagehead">
       <div><h2 data-i18n="v_title">Vector surveillance</h2><p data-i18n="v_lead">Enter larval survey results per town. House, Container and Breteau indices are computed with transmission-risk thresholds and a trend.</p></div>
     </div>
-    <div id="vector"></div>
+    <div id="vectorPage"></div>
   </section>
 
   <!-- clinical -->
@@ -524,7 +524,7 @@ html.still *,html.still *::before,html.still *::after{animation-duration:.01ms!i
       <div><h2 data-i18n="f_title">Fever diary</h2><p data-i18n="f_lead">Track temperature, fluids and warning signs day by day. Days 3–7, when the fever drops, are the dangerous critical phase.</p></div>
       <button class="btn teal noprint" id="newEp"></button>
     </div>
-    <div id="diary"></div>
+    <div id="diaryPage"></div>
   </section>
 
   <section data-page="hospitals">
@@ -532,7 +532,7 @@ html.still *,html.still *::before,html.still *::after{animation-duration:.01ms!i
       <div><h2 data-i18n="h_title">Hospital board</h2><p data-i18n="h_lead">Dengue beds, ICU and platelet units per facility. Seeded values are illustrative; the ward or control room edits them (admin PIN).</p></div>
       <div class="row noprint"><button class="btn ghost sm" onclick="window.print()"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> <span data-i18n="print">Print</span></button></div>
     </div>
-    <div id="hospitals"></div>
+    <div id="hospitalsPage"></div>
   </section>
 
   <!-- community -->
@@ -553,22 +553,22 @@ html.still *,html.still *::before,html.still *::after{animation-duration:.01ms!i
       <div><h2 data-i18n="k_title">Campaign planner</h2><p data-i18n="k_lead">Schedule fogging, larviciding, awareness walks, school sessions and clean-up drives. Upcoming activities also appear on the report map.</p></div>
       <button class="btn teal noprint" id="campAdd"></button>
     </div>
-    <div id="campaigns"></div>
+    <div id="campaignsPage"></div>
   </section>
 
   <section data-page="prevent">
     <div class="pagehead"><div><h2 data-i18n="p_title">Weekly prevention</h2><p data-i18n="p_lead">Ten minutes every week breaks the mosquito's 7–10 day life cycle. Pick a “dry day” and keep the streak.</p></div></div>
-    <div id="prevent"></div>
+    <div id="preventPage"></div>
   </section>
 
   <section data-page="risk">
     <div class="pagehead"><div><h2 data-i18n="q_title">Household risk check</h2><p data-i18n="q_lead">Twelve questions about your home and habits. Get a risk score and a checklist tailored to what you answered.</p></div></div>
-    <div id="risk"></div>
+    <div id="riskPage"></div>
   </section>
 
   <section data-page="school">
     <div class="pagehead"><div><h2 data-i18n="s_title">School module</h2><p data-i18n="s_lead">Three ready lesson plans for teachers and a ten-question quiz with saved scores.</p></div></div>
-    <div id="school"></div>
+    <div id="schoolPage"></div>
   </section>
 
   <!-- more -->
@@ -583,17 +583,17 @@ html.still *,html.still *::before,html.still *::after{animation-duration:.01ms!i
       <div><h2 data-i18n="n_title">Notifications</h2><p data-i18n="n_lead">Alerts generated on this device from the data you can see: hotspots, high larval indices, campaigns, diary warnings and reminders.</p></div>
       <button class="btn ghost sm noprint" id="readAll"></button>
     </div>
-    <div id="inbox"></div>
+    <div id="inboxPage"></div>
   </section>
 
   <section data-page="settings">
     <div class="pagehead"><div><h2 data-i18n="g_title">Settings</h2><p data-i18n="g_lead">Language, demo data, admin PIN, export and import. Everything is stored only in this browser.</p></div></div>
-    <div id="settings"></div>
+    <div id="settingsPage"></div>
   </section>
 
   <section data-page="about">
     <div class="pagehead"><div><h2 data-i18n="a_title">About this project</h2></div></div>
-    <div class="two" id="about"></div>
+    <div class="two" id="aboutPage"></div>
   </section>
 </main>
 </div>
@@ -2415,7 +2415,7 @@ function renderCases() {
   $('#caseCsv').onclick = () => exportCasesCsv(rows);
 
   const opt = (v, label, cur) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${label}</option>`;
-  $('#cases').innerHTML = `<div class="filters noprint">
+  $('#casesPage').innerHTML = `<div class="filters noprint">
       <select id="cfTown" aria-label="${t('c_town')}">${opt('all', t('c_alltowns'), caseFilter.town)}${city.towns.map(tw => opt(tw.id, esc(nm(tw)), caseFilter.town)).join('')}</select>
       <select id="cfSev" aria-label="${t('c_sev')}">${opt('all', t('c_allsev'), caseFilter.sev)}${SEV_KEYS.map(k => opt(k, t('sev_' + k), caseFilter.sev)).join('')}</select>
       <select id="cfSex" aria-label="${t('c_sex')}">${opt('all', t('c_allsex'), caseFilter.sex)}${opt('M', t('sex_M'), caseFilter.sex)}${opt('F', t('sex_F'), caseFilter.sex)}</select>
@@ -2447,7 +2447,7 @@ function renderCases() {
       renderCases();
     };
   });
-  animateKpis($('#cases'));
+  animateKpis($('#casesPage'));
   epiCurve($('#epi'), rows);
   pyramid($('#pyr'), rows);
   donut($('#sevDonut'), SEV_KEYS.map(k => ({ label: t('sev_' + k), value: rows.filter(c => c.sev === k).length, color: { DF: '#2dd4bf', DWS: '#ffb547', SD: '#ff5a5f' }[k] })));
@@ -2678,7 +2678,7 @@ function renderVector() {
   });
   const high = rows.filter(r => r.level === 'high').length;
 
-  $('#vector').innerHTML = `<div class="kpis">
+  $('#vectorPage').innerHTML = `<div class="kpis">
       ${kpiHtml('red', 'v_high', high, t('v_high_s'), { n: high })}
       ${kpiHtml(cityAgg.HI > 5 ? 'red' : cityAgg.HI >= 1 ? 'amber' : 'teal', 'v_hi', cityAgg.HI.toFixed(1) + '%', t('v_hi_s'))}
       ${kpiHtml(cityAgg.BI > 20 ? 'red' : cityAgg.BI >= 5 ? 'amber' : 'teal', 'v_bi', cityAgg.BI.toFixed(0), t('v_bi_s'))}
@@ -2709,7 +2709,7 @@ function renderVector() {
     </div>
     <div class="card mt"><h3>${ic('list')} ${t('v_recent')}</h3><div class="list" id="svList"></div></div>`;
 
-  animateKpis($('#vector'));
+  animateKpis($('#vectorPage'));
   surveyForm($('#svForm'));
   lineChart($('#svTrend'), {
     labels: surveyTrend(surveys).map(w => w.week.slice(5)),
@@ -3012,7 +3012,7 @@ const phaseOf = d => (d < 3 ? 'f' : d < 7 ? 'c' : 'r');
 function renderDiary() {
   const eps = store.get('episodes', []);
   const ep = eps.find(e => e.id === epId) || eps[0];
-  const el = $('#diary');
+  const el = $('#diaryPage');
   $('#newEp').innerHTML = ic('plus') + ' ' + t('f_new');
   if (!ep) {
     el.innerHTML = `<div class="card"><p class="muted" style="margin:0">${t('f_none')}</p></div>`;
@@ -3114,7 +3114,7 @@ function bindDiary(ep, eps) {
       hct: +$('#dHct').value || null,
       fluids: +$('#dFl').value || null,
       urine: $('#dUr').value === '1',
-      ws: $$('#diary .check input:checked').map(i => i.dataset.k),
+      ws: $$('#diaryPage .check input:checked').map(i => i.dataset.k),
       note: $('#dNote').value.trim(),
     };
     store.set('episodes', eps);
@@ -3461,7 +3461,7 @@ function renderCampaigns() {
   $('#campAdd').innerHTML = ic('plus') + ' ' + t('k_add');
   $('#campAdd').onclick = () => openCampaignForm(null, calSel);
 
-  $('#campaigns').innerHTML = `<div class="kpis">
+  $('#campaignsPage').innerHTML = `<div class="kpis">
       ${kpiHtml('amber', 'k_upcoming', in14.length, t('k_upcoming_s'), { n: in14.length })}
       ${kpiHtml('teal', 'k_done', thisMonth.filter(c => c.done).length, `${t('k_of')} ${thisMonth.length} ${t('k_thismonth')}`, { n: thisMonth.filter(c => c.done).length })}
       ${kpiHtml('blue', 'k_towns', towns.size, `${t('k_of')} ${CITY[cityId].towns.length}`, { n: towns.size })}
@@ -3475,7 +3475,7 @@ function renderCampaigns() {
       </div>
     </div>
     <div class="card mt"><h3>${t('k_legend')}</h3><div class="legend">${CAMP_TYPES.map(c => `<span><i class="sw" style="background:${c[4]}"></i>${esc(pick(c[1], c[2]))}</span>`).join('')}</div></div>`;
-  animateKpis($('#campaigns'));
+  animateKpis($('#campaignsPage'));
   renderCalendar(all);
   renderDayPanel(all);
   $('#upList').innerHTML = in14.length ? in14.slice(0, 6).map(activityCard).join('') : `<p class="muted" style="margin:0">${t('k_none14')}</p>`;
@@ -3634,7 +3634,7 @@ function renderHospitals() {
   list = [...list].sort(sorters[hospFilter.sort]);
   const opt = (v, label, cur) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${label}</option>`;
 
-  $('#hospitals').innerHTML = `<div class="kpis">
+  $('#hospitalsPage').innerHTML = `<div class="kpis">
       ${kpiHtml(freeBeds < 30 ? 'red' : 'teal', 'h_free', freeBeds, t('h_free_s'), { n: freeBeds })}
       ${kpiHtml(freeIcu < 5 ? 'red' : 'amber', 'h_icu', freeIcu, t('h_icu_s'), { n: freeIcu })}
       ${kpiHtml('blue', 'h_plt', plt, t('h_plt_s'), { n: plt })}
@@ -3648,7 +3648,7 @@ function renderHospitals() {
     </div>
     <div class="list" id="hospList">${list.map(hospitalRow).join('')}</div>
     <p class="muted small" style="margin:12px 0 0">${t('h_note')}</p>`;
-  animateKpis($('#hospitals'));
+  animateKpis($('#hospitalsPage'));
 
   $('#hfType').onchange = e => {
     hospFilter.type = e.target.value;
@@ -3749,7 +3749,7 @@ function renderPrevent() {
   const nextDry = addDays(today, (dry - today.getDay() + 7) % 7 || 7);
   const hist = Array.from({ length: 8 }, (_, i) => store.get('prev:' + isoWeek(addDays(today, -7 * (7 - i))), []).length);
 
-  $('#prevent').innerHTML = `<div class="two">
+  $('#preventPage').innerHTML = `<div class="two">
       <div class="list">${TASKS.map(([k, en, ur]) => `<label class="task ${done.includes(k) ? 'done' : ''}"><input type="checkbox" data-k="${k}" ${done.includes(k) ? 'checked' : ''}><div><div>${esc(en)}</div><div class="ur">${esc(ur)}</div></div></label>`).join('')}</div>
       <div class="card">
         <div class="row" style="gap:16px">
@@ -3772,7 +3772,7 @@ function renderPrevent() {
       </div>
     </div>`;
 
-  $$('#prevent .task input').forEach(i => {
+  $$('#preventPage .task input').forEach(i => {
     i.onchange = () => {
       const d = store.get('prev:' + wkKey, []);
       const k = i.dataset.k;
@@ -3826,7 +3826,7 @@ function renderRisk() {
   const history = store.get('risk', []);
   const segBtn = (q, val, label, cls) => `<button class="${riskAnswers[q.id] === val ? 'on ' + cls : ''}" data-q="${q.id}" data-a="${val}">${label}</button>`;
 
-  $('#risk').innerHTML = `<div class="two wide">
+  $('#riskPage').innerHTML = `<div class="two wide">
       <div class="list">${RISK_Q.map((q, i) => `<div class="q">
           <div class="qt">${i + 1}. ${esc(pick(q.en, q.ur))}</div>
           ${lang === 'en' ? `<div class="ur">${esc(q.ur)}</div>` : ''}
@@ -3845,7 +3845,7 @@ function renderRisk() {
     </div>`;
 
   renderRiskChecklist(answered);
-  $$('#risk .seg button').forEach(b => {
+  $$('#riskPage .seg button').forEach(b => {
     b.onclick = () => {
       riskAnswers[b.dataset.q] = b.dataset.a;
       renderRisk();
@@ -3922,8 +3922,8 @@ let quiz = { i: 0, picked: null, correct: 0, running: false, name: '' };
 
 function renderSchool() {
   const tabs = [['lessons', 'book', 's_tab_lessons'], ['quiz', 'help', 's_tab_quiz'], ['scores', 'trophy', 's_tab_scores']];
-  $('#school').innerHTML = `<div class="tabs noprint">${tabs.map(([k, icn, lb]) => `<button class="${schoolTab === k ? 'on' : ''}" data-tab="${k}">${ic(icn)} ${t(lb)}</button>`).join('')}</div><div id="schoolBody"></div>`;
-  $$('#school .tabs button').forEach(b => {
+  $('#schoolPage').innerHTML = `<div class="tabs noprint">${tabs.map(([k, icn, lb]) => `<button class="${schoolTab === k ? 'on' : ''}" data-tab="${k}">${ic(icn)} ${t(lb)}</button>`).join('')}</div><div id="schoolBody"></div>`;
+  $$('#schoolPage .tabs button').forEach(b => {
     b.onclick = () => {
       schoolTab = b.dataset.tab;
       renderSchool();
@@ -4225,7 +4225,7 @@ function renderInbox() {
     renderInbox();
     refreshBell();
   };
-  $('#inbox').innerHTML = `<div class="tabs noprint">
+  $('#inboxPage').innerHTML = `<div class="tabs noprint">
       <button class="${notifFilter.unread ? '' : 'on'}" data-nf="all">${ic('list')} ${t('n_all')} <span class="badge">${all.length}</span></button>
       <button class="${notifFilter.unread ? 'on' : ''}" data-nf="unread">${ic('bell')} ${t('n_unread')} <span class="badge red">${all.filter(n => !read.has(n.id)).length}</span></button>
     </div>
@@ -4234,7 +4234,7 @@ function renderInbox() {
         <div style="flex:1;min-width:0"><h4>${n.title}</h4><p>${n.body}</p><div class="muted" style="font-size:.72rem;margin-top:4px">${relTime(n.ts)} ${t('ago')}</div></div>
         ${ic('chevron-right')}
       </div>`).join('') : `<div class="card"><p class="muted" style="margin:0">${t('n_none')}</p></div>`}</div>`;
-  $$('#inbox [data-nf]').forEach(b => {
+  $$('#inboxPage [data-nf]').forEach(b => {
     b.onclick = () => {
       notifFilter.unread = b.dataset.nf === 'unread';
       renderInbox();
@@ -4273,7 +4273,7 @@ function renderSettings() {
   });
   const sw = (id, on, label, hint) => `<label class="between" style="cursor:pointer;padding:8px 0;border-bottom:1px solid var(--line)"><span><div>${label}</div><div class="muted small">${hint}</div></span><span class="switch ${on ? 'on' : ''}" id="${id}" role="switch" aria-checked="${on}"></span></label>`;
 
-  $('#settings').innerHTML = `<div class="two">
+  $('#settingsPage').innerHTML = `<div class="two">
       <div class="stack">
         <div class="card"><h3>${ic('settings')} ${t('g_general')}</h3>
           <label class="f">${t('g_lang')}</label>
@@ -4306,7 +4306,7 @@ function renderSettings() {
       </div>
     </div>`;
 
-  $$('#settings [data-lang]').forEach(b => {
+  $$('#settingsPage [data-lang]').forEach(b => {
     b.onclick = () => {
       lang = b.dataset.lang;
       applyLang();
@@ -4422,7 +4422,7 @@ const TODOS = [
 ];
 
 function renderAbout() {
-  $('#about').innerHTML = `<div class="card">
+  $('#aboutPage').innerHTML = `<div class="card">
       <h3>${t('a_title')}</h3>
       <p class="muted">Dengue returns to Lahore, Rawalpindi and Karachi every autumn. Breeding sites go unreported, families mistake the critical phase for recovery, and the wrong painkillers cause bleeding. Dengue Watch puts surveillance, triage, prevention, vector control and school education in one offline-first page.</p>
       <p class="muted">Case counts, the anonymised line list, larval surveys, weather, hospital availability and campaigns are simulated from a seasonal curve peaking in mid-October with per-town baselines and are re-seeded weekly. The triage follows the WHO 2009 case classification (probable dengue, warning signs, severe dengue; Groups A/B/C). Nothing here replaces clinical judgement.</p>

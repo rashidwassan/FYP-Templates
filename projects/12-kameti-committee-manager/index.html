@@ -1631,3 +1631,558 @@ function monthEvents(ymS) {
   return events.sort((a, b) => a.date.localeCompare(b.date) || (a.kind === 'in' ? -1 : 1));
 }
 
+// ---------- 6. seed data ----------
+/* Four deterministic committees: one mid-way (office), one young (mohalla), one finished (family), one not yet started (university, need-based). */
+function demoData() {
+  const rnd = seeded(2026);
+  const mk = (id, name, phone, slots = 1, cnic4 = '') => ({ id, name, phone, cnic4, slots });
+  const pay = (c, i, mid, s, frac = 1, dayOff = null, note = '') => {
+    const m = memberById(c, mid);
+    const due = dueDate(c, i);
+    const offset = dayOff ?? -Math.floor(rnd() * 5);
+    c.payments[`${i}:${mid}`] = { s, amt: Math.round(expectedFor(c, m) * frac), date: iso(addDays(due, offset)), note };
+  };
+  const payoutAll = (c, upto, dayOff = 1) => {
+    for (let i = 0; i < upto; i++) c.payouts[i] = { date: iso(addDays(dueDate(c, i), dayOff)), amt: monthStats(c, i).payout };
+  };
+  const office = seedOffice(mk, pay, payoutAll, rnd);
+  const mohalla = seedMohalla(mk, pay, payoutAll);
+  const family = seedFamily(mk, pay, payoutAll);
+  const uni = seedUni(mk);
+  const log = seedLog(office, mohalla, family, uni);
+  return { db: { committees: [office, mohalla, family, uni], activeId: 'c-office' }, log };
+}
+function seedOffice(mk, pay, payoutAll, rnd) {
+  const c = {
+    id: 'c-office', name: 'Office Kameti', contribution: 10000, planned: 12, startMonth: '2026-03', collectionDay: 5, method: 'lottery',
+    lateFee: { type: 'flat', value: 500 }, graceDays: 3, feeCap: 0, organizer: { name: 'Farhan Siddiqui', phone: '0300-1234567' }, created: '2026-02-20',
+    notes: 'Finance department committee. Cash or Raast transfer to Farhan by the 5th; payout handed over on the 6th.',
+    members: [
+      mk('m1', 'Ahmed Raza', '0301-2345678', 1, '4521'), mk('m2', 'Sana Malik', '0321-4567890', 1, '8830'), mk('m3', 'Bilal Hussain', '0333-7654321', 1, '1194'),
+      mk('m4', 'Hira Khan', '0345-1122334'), mk('m5', 'Usman Tariq', '0312-9988776', 1, '7702'), mk('m6', 'Ayesha Siddiqui', '0300-5566778'),
+      mk('m7', 'Kamran Ali', '0302-3344556', 1, '6613'), mk('m8', 'Nadia Farooq', '0336-2233445'), mk('m9', 'Zain Abbas', '0315-6677889', 1, '0457'),
+      mk('m10', 'Mehwish Iqbal', '0344-9900112'), mk('m11', 'Faisal Mehmood', '0323-4455667', 1, '3328'), mk('m12', 'Rabia Anwar', '0308-7788990')
+    ],
+    order: ['m4', 'm9', 'm1', 'm11', 'm7', 'm2', 'm12', 'm3', 'm5', 'm10', 'm6', 'm8'], payments: {}, payouts: {}, needs: [], disputes: []
+  };
+  const lateMap = { m5: [2, 4, 6], m9: [1, 5], m12: [3] };
+  for (let i = 0; i < 7; i++) {
+    for (const m of c.members) {
+      if (m.id === 'm8' && i === 2) {
+        c.payments['2:m8'] = { s: 'waived', amt: 0, date: '', note: 'Hospital emergency — group agreed to waive' };
+        continue;
+      }
+      if ((lateMap[m.id] || []).includes(i)) pay(c, i, m.id, 'late', 1, 4 + Math.floor(rnd() * 9));
+      else pay(c, i, m.id, 'paid');
+    }
+  }
+  ['m1', 'm2', 'm3', 'm4', 'm6', 'm7', 'm8', 'm10'].forEach(id => pay(c, 7, id, 'paid'));
+  pay(c, 7, 'm12', 'late', 1, 4, 'Paid 9 Oct, Rs 500 fee agreed');
+  pay(c, 7, 'm9', 'partial', 0.5, -1, 'Balance promised by 20 Oct');
+  c.payments['7:m9'].rcpt = 'KM-OFF-08-M9';
+  payoutAll(c, 7);
+  c.disputes = [
+    { id: 'd1', memberId: 'm9', cycle: 7, type: 'amount', note: 'I handed Rs 7,000 to Farhan on 4 Oct, the register shows 5,000.', status: 'review', created: '2026-10-10T18:20:00',
+      history: [{ at: '2026-10-10T18:20:00', status: 'open', note: 'Raised from statement' }, { at: '2026-10-12T09:05:00', status: 'review', note: 'Organizer checking Raast history' }] },
+    { id: 'd2', memberId: 'm5', cycle: 4, type: 'fee', note: 'Collection day was a public holiday; late fee should not apply.', status: 'resolved', created: '2026-07-12T11:00:00',
+      history: [{ at: '2026-07-12T11:00:00', status: 'open', note: '' }, { at: '2026-07-15T20:30:00', status: 'resolved', note: 'Group agreed: fee kept, Usman given 3 extra grace days in future' }] }
+  ];
+  return c;
+}
+function seedMohalla(mk, pay, payoutAll) {
+  const c = {
+    id: 'c-mohalla', name: 'Mohalla Beesi', contribution: 5000, planned: 6, startMonth: '2026-08', collectionDay: 10, method: 'fixed',
+    lateFee: { type: 'pct', value: 2 }, graceDays: 2, feeCap: 1000, organizer: { name: 'Shahid Mahmood', phone: '0322-5556667' }, created: '2026-07-25',
+    notes: "Street committee, G-9/4. Collected after Maghrib at Shahid sahib's shop. Bushra holds two slots.",
+    members: [mk('n1', 'Bushra Bibi', '0311-2223334', 2), mk('n2', 'Shahid Mahmood', '0322-5556667', 1, '9075'), mk('n3', 'Nasreen Akhtar', '0334-8889990'), mk('n4', 'Kamran Ali', '0302-3344556', 1, '6613'), mk('n5', 'Saima Yousaf', '0346-1112223')],
+    order: ['n2', 'n1', 'n4', 'n3', 'n1', 'n5'], payments: {}, payouts: {}, needs: [], disputes: []
+  };
+  for (let i = 0; i < 2; i++) {
+    for (const m of c.members) {
+      if (m.id === 'n3' && i === 1) pay(c, i, m.id, 'late', 1, 9);
+      else pay(c, i, m.id, 'paid');
+    }
+  }
+  ['n1', 'n2', 'n4'].forEach(id => pay(c, 2, id, 'paid'));
+  payoutAll(c, 2, 0);
+  return c;
+}
+function seedFamily(mk, pay, payoutAll) {
+  const c = {
+    id: 'c-family', name: 'Khandani Kameti', contribution: 15000, planned: 8, startMonth: '2025-11', collectionDay: 1, method: 'organizer',
+    lateFee: { type: 'none', value: 0 }, graceDays: 5, feeCap: 0, organizer: { name: 'Amma Jaan (Razia Begum)', phone: '0333-1010101' }, created: '2025-10-15',
+    notes: 'Extended-family committee for Eid and school fees. Finished June 2026; kept as the family record.',
+    members: [
+      mk('f1', 'Razia Begum', '0333-1010101'), mk('f2', 'Sana Malik', '0321-4567890', 1, '8830'), mk('f3', 'Tariq Malik', '0300-2020202'), mk('f4', 'Fouzia Tariq', '0345-3030303'),
+      mk('f5', 'Imran Baig', '0312-4040404', 1, '5522'), mk('f6', 'Kamran Ali', '0302-3344556', 1, '6613'), mk('f7', 'Shazia Imran', '0336-5050505'), mk('f8', 'Danish Malik', '0315-6060606')
+    ],
+    order: ['f4', 'f7', 'f1', 'f5', 'f2', 'f8', 'f3', 'f6'], payments: {}, payouts: {}, needs: [], disputes: []
+  };
+  const late = { f3: [1, 4], f6: [3], f8: [6] };
+  for (let i = 0; i < 8; i++) {
+    for (const m of c.members) {
+      if (m.id === 'f7' && i === 5) {
+        pay(c, i, m.id, 'partial', 2 / 3, 2, 'Rs 5,000 settled on 20 Apr');
+        continue;
+      }
+      if ((late[m.id] || []).includes(i)) pay(c, i, m.id, 'late', 1, 8);
+      else pay(c, i, m.id, 'paid');
+    }
+  }
+  payoutAll(c, 8, 2);
+  c.disputes = [
+    { id: 'd3', memberId: 'f7', cycle: 5, type: 'amount', note: 'Balance of Rs 5,000 was paid in cash to Amma on 20 April but the cell still shows partial.', status: 'resolved', created: '2026-04-22T10:00:00',
+      history: [{ at: '2026-04-22T10:00:00', status: 'open', note: '' }, { at: '2026-04-23T19:00:00', status: 'resolved', note: 'Cash was counted into May pot by mistake; noted on both statements.' }] }
+  ];
+  return c;
+}
+function seedUni(mk) {
+  const c = {
+    id: 'c-uni', name: 'Uni Batch 2022 Kameti', contribution: 3000, planned: 10, startMonth: '2026-11', collectionDay: 15, method: 'need',
+    lateFee: { type: 'flat', value: 100 }, graceDays: 3, feeCap: 0, organizer: { name: 'Hamza Sheikh', phone: '0331-7070707' }, created: '2026-10-02',
+    notes: 'Batch-mates saving for laptops and fees. Payout order decided by need requests reviewed in the group.',
+    members: [
+      mk('u1', 'Hamza Sheikh', '0331-7070707'), mk('u2', 'Maryam Noor', '0301-8080808'), mk('u3', 'Ali Hamza', '0345-9090909'), mk('u4', 'Zoya Rehman', '0312-1212121'),
+      mk('u5', 'Saad Qureshi', '0300-2323232'), mk('u6', 'Hina Aslam', '0321-3434343'), mk('u7', 'Bilal Hussain', '0333-7654321', 1, '1194'), mk('u8', 'Areeba Khan', '0336-4545454'),
+      mk('u9', 'Taha Siddiqui', '0315-5656565'), mk('u10', 'Noor Fatima', '0344-6767676')
+    ],
+    order: [], payments: {}, payouts: {},
+    needs: [
+      { id: 'nd1', memberId: 'u2', reason: 'medical', urgency: 5, amount: 30000, byMonth: '2026-12', detail: "Mother's cataract surgery scheduled for December.", status: 'open', created: '2026-10-04T12:00:00' },
+      { id: 'nd2', memberId: 'u5', reason: 'wedding', urgency: 4, amount: 30000, byMonth: '2027-02', detail: "Sister's wedding in February.", status: 'open', created: '2026-09-28T15:30:00' },
+      { id: 'nd3', memberId: 'u8', reason: 'education', urgency: 3, amount: 25000, byMonth: '2027-01', detail: 'Spring semester fee due mid-January.', status: 'open', created: '2026-10-09T09:15:00' },
+      { id: 'nd4', memberId: 'u9', reason: 'business', urgency: 2, amount: 30000, byMonth: '2027-03', detail: 'Stock for the phone-accessories stall.', status: 'declined', created: '2026-10-05T17:45:00' }
+    ],
+    disputes: []
+  };
+  return c;
+}
+function seedLog(office, mohalla, family, uni) {
+  const L = [];
+  const add = (at, key, vars, cid) => L.push({ id: uid(), at, key, vars, cid });
+  add('2026-10-02T10:12:00', 'lg_c_new', { c: uni.name }, uni.id);
+  add('2026-10-04T12:01:00', 'lg_need', { who: 'Maryam Noor' }, uni.id);
+  add('2026-10-05T18:40:00', 'lg_pay', { who: 'Ahmed Raza', m: 'Oct 2026', s: 'paid' }, office.id);
+  add('2026-10-06T09:30:00', 'lg_payout', { a: 7, who: 'Rabia Anwar', amt: 'Rs 120,500' }, office.id);
+  add('2026-10-09T09:16:00', 'lg_need', { who: 'Areeba Khan' }, uni.id);
+  add('2026-10-09T19:05:00', 'lg_pay', { who: 'Rabia Anwar', m: 'Oct 2026', s: 'late' }, office.id);
+  add('2026-10-10T18:21:00', 'lg_dispute', { who: 'Zain Abbas', m: 'Oct 2026' }, office.id);
+  add('2026-10-10T20:00:00', 'lg_pay', { who: 'Kamran Ali', m: 'Oct 2026', s: 'paid' }, mohalla.id);
+  add('2026-10-12T09:06:00', 'lg_dispute_st', { a: 'd1', s: 'review' }, office.id);
+  add('2026-10-13T21:10:00', 'lg_remind', { a: 2 }, mohalla.id);
+  add('2026-06-04T11:00:00', 'lg_payout', { a: 8, who: 'Kamran Ali', amt: 'Rs 120,000' }, family.id);
+  return L.sort((a, b) => b.at.localeCompare(a.at));
+}
+
+let DB = store.get('db', null);
+if (!DB || !Array.isArray(DB.committees)) {
+  const seed = demoData();
+  DB = seed.db;
+  if (!LOG.length) {
+    LOG = seed.log;
+    store.set('log', LOG);
+  }
+  store.set('db', DB);
+}
+DB.committees.forEach(syncOrder);
+const active = () => DB.committees.find(c => c.id === DB.activeId) || DB.committees[0] || null;
+function save() {
+  store.set('db', DB);
+  scanAlerts();
+}
+
+// ---------- 7. charts (hand-drawn SVG) ----------
+function lineChart(el, series, labels, { fmt = v => nf.format(v), max = null, min = null, h = 230 } = {}) {
+  const W = 600;
+  const H = h;
+  const P = { l: 52, r: 14, t: 14, b: 30 };
+  const n = labels.length;
+  const all = series.flatMap(s => s.values);
+  const mx = max ?? Math.max(1, ...all) * 1.1;
+  const mn = min ?? Math.min(0, ...all) * 1.1;
+  const x = i => (n > 1 ? P.l + ((W - P.l - P.r) * i) / (n - 1) : (P.l + W - P.r) / 2);
+  const y = v => P.t + (H - P.t - P.b) * (1 - (v - mn) / (mx - mn || 1));
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map(f => mn + (mx - mn) * f);
+  const grid = ticks.map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="var(--line)" stroke-dasharray="${v === mn ? '0' : '3 4'}"/>` +
+    `<text x="${P.l - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="var(--muted)">${esc(fmt(v))}</text>`).join('');
+  const zero = mn < 0 ? `<line x1="${P.l}" x2="${W - P.r}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="var(--muted)"/>` : '';
+  const step = Math.ceil(n / 8);
+  const xl = labels.map((l, i) => (i % step ? '' : `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(l)}</text>`)).join('');
+  const paths = series.map(s => {
+    const d = s.values.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+    const area = s.area ? `<path d="${d} L${x(n - 1).toFixed(1)} ${y(Math.max(0, mn)).toFixed(1)} L${x(0).toFixed(1)} ${y(Math.max(0, mn)).toFixed(1)}Z" fill="${s.color}" opacity=".1"/>` : '';
+    return area + `<path class="ln" d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" ${s.dash ? 'stroke-dasharray="6 5"' : ''}/>`;
+  }).join('');
+  const dots = n > 40 ? '' : series.map(s => s.values.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.2" fill="var(--surface)" stroke="${s.color}" stroke-width="2"/>`).join('')).join('');
+  const bw = n > 1 ? (W - P.l - P.r) / (n - 1) : 80;
+  const hits = labels.map((_, i) => `<rect data-i="${i}" x="${(x(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${H - P.t - P.b}" fill="transparent"/>`).join('');
+  const legend = series.length > 1 ? `<div class="clegend">${series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>` : '';
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img">${grid}${zero}${xl}${paths}${dots}${hits}</svg><div class="tip"></div>${legend}`;
+  attachTip(el, series, labels, fmt, i => x(i), i => y(Math.max(...series.map(s => s.values[i]))), W, H);
+  $$('.ln', el).forEach(drawPath);
+}
+function attachTip(el, series, labels, fmt, xAt, yAt, W, H) {
+  const tip = $('.tip', el);
+  const svg = $('svg', el);
+  svg.addEventListener('mousemove', e => {
+    const r = e.target.closest('rect[data-i]');
+    if (!r) {
+      tip.style.display = 'none';
+      return;
+    }
+    const i = +r.dataset.i;
+    const b = svg.getBoundingClientRect();
+    const pb = el.getBoundingClientRect();
+    tip.style.display = 'block';
+    tip.style.left = b.left - pb.left + (xAt(i) * b.width) / W + 'px';
+    tip.style.top = b.top - pb.top + (yAt(i) * b.height) / H + 'px';
+    const parts = series.map(s => `${series.length > 1 ? esc(s.name) + ' ' : ''}${esc(fmt(s.values[i]))}`);
+    tip.innerHTML = `<b>${esc(labels[i])}</b> ` + parts.join(' · ');
+  });
+  svg.addEventListener('mouseleave', () => (tip.style.display = 'none'));
+}
+/* Grouped vertical bars; negative values hang below a zero line. */
+function barChart(el, series, labels, { fmt = v => nf.format(v), h = 230, hi = -1 } = {}) {
+  const W = 600;
+  const H = h;
+  const P = { l: 52, r: 14, t: 14, b: 30 };
+  const n = labels.length;
+  const all = series.flatMap(s => s.values);
+  const mx = Math.max(1, ...all) * 1.1;
+  const mn = Math.min(0, ...all) * 1.1;
+  const y = v => P.t + (H - P.t - P.b) * (1 - (v - mn) / (mx - mn || 1));
+  const gw = (W - P.l - P.r) / n;
+  const bw = Math.min(28, (gw * 0.7) / series.length);
+  const x = i => P.l + gw * i + gw / 2;
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map(f => mn + (mx - mn) * f);
+  const grid = ticks.map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="var(--line)" stroke-dasharray="3 4"/>` +
+    `<text x="${P.l - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="var(--muted)">${esc(fmt(v))}</text>`).join('');
+  const step = Math.ceil(n / 10);
+  const xl = labels.map((l, i) => (i % step ? '' : `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(l)}</text>`)).join('');
+  const bars = series.map((s, si) => s.values.map((v, i) => {
+    const x0 = x(i) - (bw * series.length) / 2 + si * bw;
+    const top = Math.min(y(v), y(0));
+    const hgt = Math.abs(y(v) - y(0));
+    return `<rect x="${x0.toFixed(1)}" y="${top.toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${Math.max(1, hgt).toFixed(1)}" rx="3" fill="${v < 0 ? s.neg || s.color : s.color}" opacity="${hi >= 0 && hi !== i ? 0.45 : 0.95}"/>`;
+  }).join('')).join('');
+  const zero = `<line x1="${P.l}" x2="${W - P.r}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="var(--muted)"/>`;
+  const hits = labels.map((_, i) => `<rect data-i="${i}" x="${(x(i) - gw / 2).toFixed(1)}" y="${P.t}" width="${gw.toFixed(1)}" height="${H - P.t - P.b}" fill="transparent"/>`).join('');
+  const legend = series.length > 1 ? `<div class="clegend">${series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>` : '';
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img">${grid}${bars}${zero}${xl}${hits}</svg><div class="tip"></div>${legend}`;
+  attachTip(el, series, labels, fmt, x, i => Math.min(...series.map(s => y(Math.max(0, s.values[i])))), W, H);
+}
+function sparkline(values, color = 'var(--forest)') {
+  if (values.length < 2) return `<span class="spark"><svg viewBox="0 0 110 30"><line x1="0" x2="110" y1="15" y2="15" stroke="var(--line)"/></svg></span>`;
+  const mx = Math.max(...values);
+  const mn = Math.min(...values);
+  const x = i => (110 * i) / (values.length - 1);
+  const y = v => 27 - (24 * (v - mn)) / (mx - mn || 1);
+  const d = values.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+  const last = values[values.length - 1];
+  return `<span class="spark"><svg viewBox="0 0 110 30"><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/><circle cx="110" cy="${y(last).toFixed(1)}" r="2.6" fill="${color}"/></svg></span>`;
+}
+const hbars = items => `<div class="hbars">${items.map(it => `<div class="hbar"><span class="l" title="${esc(it.label)}">${esc(it.label)}</span><div class="bar ${it.cls || ''}"><i data-w="${Math.round(it.value * 100)}%"></i></div><span class="v">${esc(it.text)}</span></div>`).join('')}</div>`;
+
+// ---------- 8. pot hero + banner ----------
+function renderPot() {
+  const c = active();
+  const el = $('#pot');
+  if (!c) {
+    el.innerHTML = `<div class="pot-empty">${ic('coins', 'big')}<div style="flex:1"><div class="k">${t('noC')}</div><div class="of txt">${t('pot_empty')}</div></div><button class="btn gold" id="potNew">${ic('plus')}${t('newC')}</button></div>`;
+    $('#potNew').onclick = () => committeeForm();
+    return;
+  }
+  const n = c.order.length;
+  const i = currentCycle(c);
+  const st = monthStats(c, i);
+  const slots = totalSlots(c);
+  const due = dueDate(c, i);
+  const dd = daysBetween(today, due);
+  const status = committeeStatus(c);
+  const r = 50;
+  const C = 2 * Math.PI * r;
+  const recName = st.recipient ? esc(st.recipient.name) + slotLabel(c, st.recipient.id, i) : t('pot_unassigned');
+  el.innerHTML = `<div class="ring"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="${r}"/><circle class="prog" id="potRing" cx="60" cy="60" r="${r}" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><div class="lbl" id="potPct">0%</div></div>
+    <div style="min-width:0"><div class="k">${t('pot_title')} · ${monthLabel(monthOf(c, i), true)}</div><div class="big"><span style="font-size:.55em;opacity:.8">Rs </span><span id="potAmt">0</span></div>
+      <div class="of">${tf('pot_of', { a: rsFull(st.expected), b: tf('pot_paid', { a: st.paidSlots, b: slots }) })}</div>
+      <div class="meta"><span class="pill gold">${ic('award')}${t('pot_recipient')}: ${recName}</span>${duePill(c, i, st, dd, status)}${st.late ? `<span class="pill warn">${ic('clock')}${tf('pot_late', { a: st.late })}</span>` : ''}${st.unpaid && status !== 'notstarted' ? `<span class="pill warn">${ic('alert-circle')}${tf('pot_unpaid', { a: st.unpaid })}</span>` : ''}</div></div>
+    <div class="side"><a class="btn mint" href="#payments">${ic('grid')}${t('pot_payments')}</a><button class="btn gold" id="potRemind" ${st.unpaid || st.partial ? '' : 'disabled'}>${ic('whatsapp')}${t('pot_remind')}</button></div>`;
+  $('#potRemind').onclick = () => reminderModal(c, i);
+  requestAnimationFrame(() => {
+    $('#potRing').style.strokeDashoffset = C * (1 - st.progress);
+    countUp($('#potAmt'), st.collected);
+    countUp($('#potPct'), st.progress * 100, { fmt: v => Math.round(v) + '%' });
+  });
+}
+function duePill(c, i, st, dd, status) {
+  if (status === 'finished') return `<span class="pill">${ic('check-circle')}${t('pot_finished')}</span>`;
+  if (status === 'notstarted') return `<span class="pill">${ic('calendar')}${tf('pot_notStarted', { a: monthLabel(monthOf(c, 0), true) })}</span>`;
+  const when = dd < 0 ? tf('pot_overdue', { a: -dd }) : dd === 0 ? t('sch_today') : tf('pot_days', { a: dd });
+  const grace = dd < 0 && c.graceDays && today <= graceEnd(c, i) ? ` · ${tf('pot_grace', { a: dateLabel(iso(graceEnd(c, i))) })}` : '';
+  return `<span class="pill ${dd < 0 && st.unpaid ? 'warn' : ''}">${ic(dd < 0 ? 'alert' : 'calendar')}${tf('pot_due', { a: dateLabel(iso(dueDate(c, i))) })} · ${when}${grace}</span>`;
+}
+function renderBanner() {
+  const el = $('#banner');
+  if (SETTINGS.bannerDismissed || SETTINGS.tourDone) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div class="banner enter">${ic('sparkles')}<p class="txt">${t('tour_banner')}</p><button class="btn sm gold" id="bnTour">${ic('play')}${t('tour_start')}</button><button class="btn sm ghost" id="bnClose" aria-label="${t('tour_dismiss')}">${ic('x')}</button></div>`;
+  $('#bnTour').onclick = startTour;
+  $('#bnClose').onclick = () => {
+    saveSettings({ bannerDismissed: true });
+    renderBanner();
+  };
+}
+
+// ---------- 9. views ----------
+const view = $('#view');
+let selMonth = null;
+let calMonth = curMonth;
+let peopleQuery = '';
+let disputeFilter = 'all';
+let reportKind = 'monthly';
+let reportCycle = null;
+
+function emptyView() {
+  view.innerHTML = `<div class="card"><div class="empty">${ic('piggy')}<p class="txt">${t('pot_empty')}</p><button class="btn" id="evNew">${ic('plus')}${t('newC')}</button></div></div>`;
+  $('#evNew').onclick = () => committeeForm();
+}
+const cnicMask = m => (m.cnic4 ? `•••••-•••••••-${esc(m.cnic4)}` : '—');
+function slotLabel(c, id, k) {
+  const m = memberById(c, id);
+  if (!m || (m.slots || 1) <= 1) return '';
+  return ` <small>· ${tf('mem_slot_n', { a: c.order.slice(0, k + 1).filter(x => x === id).length })}</small>`;
+}
+function trustRing(s) {
+  const r = 15;
+  const C = 2 * Math.PI * r;
+  const cls = s >= 75 ? '' : s >= 50 ? 'mid' : 'low';
+  return `<div class="tring ${cls}" title="${t('mem_trust')} ${s}"><svg viewBox="0 0 36 36"><circle class="t" cx="18" cy="18" r="${r}"/><circle class="p" cx="18" cy="18" r="${r}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}" data-off="${(C * (1 - s / 100)).toFixed(1)}"/></svg><span>${s}</span></div>`;
+}
+const ST_CLS = { paid: 'ok', late: 'late', partial: 'part', waived: 'waive' };
+const ST_ICON = { paid: 'check', late: 'clock', partial: 'pie-chart', waived: 'hand' };
+function stBadge(s, over) {
+  const k = ST_CLS[s] || (over ? 'bad' : 'muted');
+  const icn = ST_ICON[s] || (over ? 'alert' : 'clock');
+  const label = over && (!s || s === 'unpaid') ? 'st_overdue' : 'st_' + (s || 'unpaid');
+  return `<span class="badge ${k}">${ic(icn)}${t(label)}</span>`;
+}
+const kpi = (cls, icon, k, v, s) => `<div class="kpi ${cls}"><div class="icw">${ic(icon)}</div><div style="min-width:0"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div></div>`;
+const statusBadge = c => {
+  const s = committeeStatus(c);
+  const cls = s === 'running' ? 'ok' : s === 'finished' ? 'muted' : 'gold';
+  return `<span class="badge ${cls}">${t(s === 'running' ? 'db_active' : s === 'finished' ? 'db_finished' : 'db_notstarted')}</span>`;
+};
+const dueCycles = c => [...Array(c.order.length).keys()].filter(k => dueDate(c, k) <= today);
+
+/* --- Dashboard: every committee at once + cash-flow calendar --- */
+function dashboardTotals() {
+  let collected = 0;
+  let outstanding = 0;
+  let disputes = 0;
+  for (const c of DB.committees) {
+    for (const k of dueCycles(c)) {
+      const st = monthStats(c, k);
+      collected += st.collected + st.fees;
+      outstanding += st.pending;
+    }
+    disputes += openDisputes(c).length;
+  }
+  const running = DB.committees.filter(c => committeeStatus(c) === 'running').length;
+  return { collected, outstanding, disputes, running, people: allPeople().length };
+}
+function renderDashboard() {
+  const T = dashboardTotals();
+  const cards = DB.committees.map(committeeCard).join('');
+  view.innerHTML = `<div class="grid g5 stagger" style="margin-bottom:14px">
+      ${kpi('', 'layers', t('db_kpi_committees'), DB.committees.length, tf('db_running', { a: T.running }))}
+      ${kpi('', 'users', t('db_kpi_people'), T.people, t('db_people_s'))}
+      ${kpi('', 'coins', t('db_kpi_collected'), `<span data-count="${T.collected}">0</span>`, t('db_collected'))}
+      ${kpi(T.outstanding ? 'bad' : 'gold', 'clock', t('db_kpi_pending'), `<span data-count="${T.outstanding}">0</span>`, t('db_expected'))}
+      ${kpi(T.disputes ? 'bad' : '', 'flag', t('db_kpi_disputes'), T.disputes, t('nav_disputes'))}
+    </div>
+    <div class="grid g2 stagger" style="margin-bottom:14px">${cards || `<div class="card"><div class="empty">${ic('piggy')}<p class="txt">${t('pot_empty')}</p></div></div>`}</div>
+    <div class="grid g21 stagger">
+      <div class="card"><h2>${ic('calendar')}${t('db_cal')}<span class="spacer"></span><button class="btn sm ghost icon" id="calPrev" aria-label="${t('back')}">${ic('chevron-left')}</button><b id="calLbl" class="small" style="min-width:120px;text-align:center">${monthLabel(calMonth, true)}</b><button class="btn sm ghost icon" id="calNext" aria-label="${t('tour_next')}">${ic('chevron-right')}</button></h2>
+        <p class="lead txt">${t('db_cal_s')}</p><div id="calBox"></div></div>
+      <div style="display:grid;gap:14px;align-content:start">
+        <div class="card"><h2>${ic('bar-chart')}${t('db_6m')}</h2><p class="lead txt">${t('db_6m_s')}</p><div class="chart" id="chInflow"></div></div>
+        <div class="card"><h2>${ic('activity')}${t('db_recent')}</h2>${activityList(LOG.slice(0, 6))}</div>
+      </div>
+    </div>`;
+  renderCalendar();
+  renderInflowChart();
+  countAll(view);
+  animBars(view);
+  animRings(view);
+  $$('[data-open]', view).forEach(b => (b.onclick = () => openCommittee(b.dataset.open)));
+  $('#calPrev').onclick = () => shiftCal(-1);
+  $('#calNext').onclick = () => shiftCal(1);
+}
+function openCommittee(id) {
+  DB.activeId = id;
+  selMonth = null;
+  save();
+  location.hash = '#overview';
+  renderAll();
+}
+function committeeCard(c) {
+  const n = c.order.length;
+  const done = Object.keys(c.payouts).length;
+  const i = currentCycle(c);
+  const st = monthStats(c, i);
+  const r = 26;
+  const C = 2 * Math.PI * r;
+  const nextI = [...Array(n).keys()].find(k => !c.payouts[k] && monthOf(c, k) >= curMonth);
+  const next = nextI == null ? t('sch_complete') : `${dateLabel(iso(dueDate(c, nextI)))} · ${monthStats(c, nextI).recipient?.name || t('ord_unassigned')}`;
+  return `<div class="card ccard ${c.id === DB.activeId ? 'active' : ''}" data-open="${c.id}" role="button" tabindex="0">
+      <div class="ring"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="${r}"/><circle class="prog" cx="32" cy="32" r="${r}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}" data-off="${(C * (1 - (n ? done / n : 0))).toFixed(1)}"/></svg><div class="lbl">${done}/${n}</div></div>
+      <div style="min-width:0"><h3>${esc(c.name)} ${statusBadge(c)} <span class="badge mint">${methodName(c.method)}</span></h3>
+        <div class="row"><span>${ic('users')} ${c.members.length}</span><span class="amt">${rs(c.contribution)} × ${totalSlots(c)} = ${rs(c.contribution * totalSlots(c))}</span>${openDisputes(c).length ? `<span class="badge bad">${ic('flag')}${tf('ds_open_count', { a: openDisputes(c).length })}</span>` : ''}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px"><div class="bar" style="flex:1"><i data-w="${Math.round(st.progress * 100)}%"></i></div><span class="small amt muted">${pctf(st.progress)} · ${monthLabel(monthOf(c, i))}</span></div>
+        <div class="row"><span>${ic('award')} ${t('db_next')}: <b>${esc(next)}</b></span></div></div></div>`;
+}
+function shiftCal(n) {
+  calMonth = addMonths(calMonth, n);
+  $('#calLbl').textContent = monthLabel(calMonth, true);
+  renderCalendar();
+}
+function renderCalendar() {
+  const box = $('#calBox');
+  const events = monthEvents(calMonth);
+  const [y, m] = calMonth.split('-').map(Number);
+  const first = new Date(y, m - 1, 1);
+  const lead = (first.getDay() + 6) % 7;   // Monday-first grid
+  const days = daysInMonth(calMonth);
+  const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="dow">${d}</div>`).join('');
+  let cells = '';
+  for (let k = 0; k < lead; k++) cells += '<div class="day other"></div>';
+  for (let d = 1; d <= days; d++) {
+    const dIso = `${calMonth}-${pad2(d)}`;
+    const evs = events.filter(e => e.date === dIso);
+    const chips = evs.slice(0, 3).map(e => `<div class="ev ${e.kind}" title="${esc(e.c.name)} · ${rsFull(e.amt)}">${ic(e.kind === 'in' ? 'arrow-down' : 'arrow-up')}<span>${esc(shortName(e.c.name))} ${kfmt(e.amt)}</span></div>`).join('');
+    const more = evs.length > 3 ? `<div class="ev">+${evs.length - 3}</div>` : '';
+    cells += `<div class="day ${dIso === iso(today) ? 'today' : ''}"><span class="dn">${d}</span>${chips}${more}</div>`;
+  }
+  const totIn = sum(events.filter(e => e.kind === 'in').map(e => e.amt));
+  const totOut = sum(events.filter(e => e.kind === 'out').map(e => e.amt));
+  const list = events.map(e => `<div class="evrow"><span class="d">${dateLabel(e.date)}</span><span>${ic(e.kind === 'in' ? 'arrow-down' : 'arrow-up')} <b>${esc(e.c.name)}</b> · ${e.kind === 'in' ? t('db_month_in') : t('db_month_out')}${e.who ? ' → ' + esc(e.who.name) : ''}${e.done ? ` <span class="badge ok">${t('sch_done')}</span>` : ''}</span><span class="amt" style="color:${e.kind === 'in' ? 'var(--in)' : 'var(--gold-deep)'}">${e.kind === 'in' ? '+' : '−'}${rs(e.amt)}</span></div>`).join('');
+  box.innerHTML = `<div class="legend" style="margin-bottom:8px"><span><i style="background:var(--mint)"></i>${t('db_month_in')}: <b class="amt">${rs(totIn)}</b></span><span><i style="background:var(--gold-soft);border:1px solid var(--gold)"></i>${t('db_month_out')}: <b class="amt">${rs(totOut)}</b></span></div>
+    <div class="cal">${dows}${cells}</div>
+    <h3 style="font-size:.9rem;margin:14px 0 0">${t('db_events')}</h3>
+    <div class="evlist">${list || `<div class="empty small">${t('db_noevents')}</div>`}</div>`;
+}
+const shortName = name => name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
+function renderInflowChart() {
+  const months = [...Array(6).keys()].map(k => addMonths(curMonth, k - 4));
+  const expected = months.map(mm => sum(monthEvents(mm).filter(e => e.kind === 'in').map(e => e.amt)));
+  const collected = months.map(mm => sum(monthEvents(mm).filter(e => e.kind === 'in').map(e => e.collected)));
+  barChart($('#chInflow'), [{ name: t('db_expected'), color: 'var(--mint-2)', values: expected }, { name: t('db_collected'), color: 'var(--forest)', values: collected }], months.map(mm => monthLabel(mm)), { fmt: kfmt, h: 200 });
+}
+function activityList(entries) {
+  if (!entries.length) return `<div class="empty small">${t('in_log_empty')}</div>`;
+  return entries.map(e => {
+    const c = e.cid ? committeeById(e.cid) : null;
+    return `<div class="logline"><span class="at">${dateLabel(e.at.slice(0, 10))}</span><span>${esc(logText(e))}${c ? ` <span class="badge muted">${esc(c.name)}</span>` : ''}</span></div>`;
+  }).join('');
+}
+
+/* --- Overview: one committee --- */
+function renderOverview() {
+  const c = active();
+  if (!c) return emptyView();
+  const n = c.order.length;
+  const i = currentCycle(c);
+  const st = monthStats(c, i);
+  const slots = totalSlots(c);
+  const done = Object.keys(c.payouts).length;
+  const dd = daysBetween(today, dueDate(c, i));
+  const dueIdx = [...Array(n).keys()].filter(k => monthOf(c, k) <= curMonth);
+  view.innerHTML = `<div class="grid g4 stagger" style="margin-bottom:14px">
+      ${kpi('', 'coins', t('kpi_collected'), `<span data-count="${st.collected}">0</span>`, tf('kpi_ofpot', { a: rs(st.expected) }))}
+      ${kpi(st.pending && dd < 0 ? 'bad' : 'gold', 'clock', t('kpi_pending'), `<span data-count="${st.pending}">0</span>`, st.unpaid && dd < 0 ? tf('kpi_overdue', { a: st.unpaid }) : t('kpi_onTrack'))}
+      ${kpi('', 'users', t('kpi_members'), c.members.length, tf('kpi_slots', { a: slots }))}
+      ${kpi('', 'calendar', t('kpi_cycles'), `${done}/${n}`, tf('kpi_total', { a: rs(c.contribution * slots * n) }))}
+    </div>
+    <div class="grid g21 stagger" style="margin-bottom:14px">
+      <div class="card"><h2>${ic('trending-up')}${t('ch_rate')}</h2><p class="lead txt">${t('ch_rate_s')}</p>${dueIdx.length ? '<div class="chart" id="chRate"></div>' : `<div class="empty">${ic('calendar')}<p>${t('ch_nodata')}</p></div>`}</div>
+      <div class="card"><h2>${ic('bar-chart')}${t('ch_ontime')}</h2><p class="lead txt">${t('ch_ontime_s')}</p>${ontimeBars(c, dueIdx)}</div>
+    </div>
+    <div class="grid g21 stagger">
+      <div class="card"><h2>${ic('pie-chart')}${t('ch_cum')}</h2><p class="lead txt">${t('ch_cum_s')}</p>${dueIdx.length ? '<div class="chart" id="chCum"></div>' : `<div class="empty">${ic('calendar')}<p>${t('ch_nodata')}</p></div>`}</div>
+      <div style="display:grid;gap:14px;align-content:start">${alertsCard(c, i, dd)}${termsCard(c, n, slots)}
+        <div class="card"><h2>${ic('activity')}${t('db_recent')}</h2>${activityList(LOG.filter(e => e.cid === c.id).slice(0, 5))}</div></div>
+    </div>`;
+  if (dueIdx.length) overviewCharts(c, dueIdx);
+  countAll(view);
+  animBars(view);
+  $('#ovEdit').onclick = () => committeeForm(c);
+  $('#ovDel').onclick = () => deleteCommittee(c);
+}
+function ontimeBars(c, dueIdx) {
+  if (!c.members.length) return `<div class="empty">${ic('users')}<p>${t('mem_empty')}</p></div>`;
+  const rows = c.members.map(m => {
+    let due = 0;
+    let ok = 0;
+    for (const k of dueIdx) {
+      if (dueDate(c, k) > today) continue;
+      const p = cell(c, k, m.id);
+      if (p && p.s === 'waived') continue;
+      due++;
+      if (p && p.s === 'paid' && !paidAfterGrace(c, k, p.date)) ok++;
+    }
+    return { label: m.name, value: due ? ok / due : 0, text: due ? `${ok}/${due}` : '—', cls: due && ok / due < 0.6 ? 'gold' : '' };
+  }).sort((a, b) => b.value - a.value);
+  return hbars(rows);
+}
+function overviewCharts(c, dueIdx) {
+  const labels = dueIdx.map(k => monthLabel(monthOf(c, k)));
+  const rates = dueIdx.map(k => Math.round(monthStats(c, k).progress * 100));
+  let cumIn = 0;
+  let cumOut = 0;
+  const inS = [];
+  const outS = [];
+  for (const k of dueIdx) {
+    const s = monthStats(c, k);
+    cumIn += s.collected + s.fees;
+    cumOut += c.payouts[k] ? c.payouts[k].amt : 0;
+    inS.push(cumIn);
+    outS.push(cumOut);
+  }
+  lineChart($('#chRate'), [{ name: t('ch_rate'), color: 'var(--forest)', values: rates, area: true }], labels, { fmt: v => Math.round(v) + '%', max: 100, min: 0 });
+  lineChart($('#chCum'), [{ name: t('ch_in'), color: 'var(--forest)', values: inS }, { name: t('ch_out'), color: 'var(--gold)', values: outS }], labels, { fmt: kfmt, min: 0 });
+}
+function alertsCard(c, i, dd) {
+  const alerts = c.members.filter(m => {
+    const p = cell(c, i, m.id);
+    return !p || p.s === 'unpaid' || p.s === 'partial';
+  });
+  const rows = alerts.map(m => {
+    const p = cell(c, i, m.id);
+    const owed = expectedFor(c, m) - (p?.amt || 0);
+    return `<div class="rowi"><div class="who"><div class="avatar">${esc(initials(m.name))}</div><div><div class="n">${esc(m.name)}</div><div class="p">${stBadge(p?.s, dd < 0)} <span class="amt">${rs(owed)}</span></div></div></div><a class="btn sm mint" target="_blank" rel="noopener" href="${waLink(m.phone, reminderText(c, i, m))}" aria-label="WhatsApp ${esc(m.name)}">${ic('whatsapp')}</a></div>`;
+  }).join('');
+  return `<div class="card"><h2>${ic('alert-circle')}${t('ov_alerts')}</h2><p class="lead txt">${t('ov_alerts_s')}</p>${alerts.length ? `<div class="list">${rows}</div>` : `<div class="note">${ic('check-circle')} ${t('ov_allgood')}</div>`}</div>`;
+}
+function termsCard(c, n, slots) {
+  const row = (k, v) => `<div><b class="muted">${k}</b><div>${v}</div></div>`;
+  return `<div class="card"><h2>${ic('settings')}${t('ov_terms')}<span class="spacer"></span><button class="btn sm ghost" id="ovEdit">${ic('edit')}${t('ov_edit')}</button><button class="btn sm danger" id="ovDel" aria-label="${t('ov_delete')}">${ic('trash')}</button></h2>
+      <div class="cols small" style="gap:8px 14px">
+        ${row(t('ov_contrib'), `<span class="amt">${rs(c.contribution)}</span>`)}${row(t('ov_pot'), `<span class="amt">${rs(c.contribution * slots)}</span>`)}
+        ${row(t('ov_cycles'), `<span class="amt">${n}</span> ${t('months')}`)}${row(t('ov_start'), monthLabel(c.startMonth, true))}
+        ${row(t('ov_day'), `<span class="amt">${c.collectionDay}</span>`)}${row(t('ov_method'), methodName(c.method))}
+        ${row(t('ov_late'), lateRuleName(c.lateFee))}${row(t('ov_grace'), tf('ov_grace_v', { a: c.graceDays || 0 }) + (c.feeCap ? ` · ${t('ov_cap')} ${rs(c.feeCap)}` : ''))}
+        ${row(t('ov_org'), `${esc(c.organizer?.name || '—')} <span class="amt muted small">${esc(c.organizer?.phone || '')}</span>`)}
+      </div>${c.notes ? `<p class="small muted txt" style="margin:10px 0 0">${ic('sticky-note')} ${esc(c.notes)}</p>` : ''}</div>`;
+}
+async function deleteCommittee(c) {
+  if (!(await confirmDlg(tf('del_c', { a: c.name }), t('del_ok')))) return;
+  DB.committees = DB.committees.filter(x => x.id !== c.id);
+  DB.activeId = DB.committees[0]?.id || null;
+  logEvent('lg_c_del', { c: c.name }, null);
+  save();
+  toast(t('deleted'), 'ok');
+  renderAll();
+}
+

@@ -139,8 +139,8 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .hchip.warn .ico{background:var(--warn-soft);color:var(--warn)} .hchip.bad .ico{background:var(--bad-soft);color:var(--bad)} .hchip.sky .ico{background:var(--sky);color:#1d5a7a} .hchip.gold .ico{background:var(--gold-soft);color:#8a6410} .hchip.soil .ico{background:#e8d9c8;color:var(--soil-deep)}
 .turnbar{flex:1 1 150px;min-width:130px}
 .turnbar .k{font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800;display:flex;justify-content:space-between;margin-bottom:4px}
-.farm{grid-column:1;grid-row:2;position:relative;padding:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:380px}
-.farm svg{width:100%;height:100%;max-height:540px;display:block}
+.farmstage{grid-column:1;grid-row:2;position:relative;padding:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:380px}
+.farmstage svg{width:100%;height:100%;max-height:540px;display:block}
 .panel{grid-column:2;grid-row:2/4;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:auto;max-height:calc(100vh - 160px);position:sticky;top:72px}
 .panel .close-sheet{display:none}
 .ticker{grid-column:1;grid-row:3;padding:10px 14px;max-height:200px;display:flex;flex-direction:column}
@@ -162,7 +162,7 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .glow{opacity:0;transition:opacity .3s}
 .sprite.grew{animation:growIn .55s var(--ease)}
 .badge-g{filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
-.plabel{font-family:var(--font);font-size:9px;font-weight:800;fill:#fff;opacity:.85;pointer-events:none}
+.plabel{font-family:var(--font);font-size:10px;font-weight:800;fill:#fff;opacity:.85;pointer-events:none}
 
 /* panel internals */
 .ptitle{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -214,7 +214,7 @@ body.modal-open .scrim,body.modal-open .modal{opacity:1;pointer-events:auto} bod
   .topnav{display:none} .brand small{display:none}
   .game{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;padding:10px 12px 120px;min-height:0;gap:10px}
   .hud{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;padding:8px 10px} .hud::-webkit-scrollbar{display:none} .turnbar{flex:0 0 130px}
-  .farm{grid-column:1;grid-row:2;min-height:0;padding:4px} .farm svg{max-height:330px}
+  .farmstage{grid-column:1;grid-row:2;min-height:0;padding:4px} .farmstage svg{max-height:330px}
   .ticker{grid-column:1;grid-row:3;max-height:230px}
   .panel{position:fixed;inset:auto 0 0 0;top:auto;max-height:80vh;border-radius:20px 20px 0 0;transform:translateY(105%);transition:transform .3s var(--ease);z-index:62;grid-column:auto;grid-row:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
   .panel .close-sheet{display:inline-grid}
@@ -2494,7 +2494,7 @@ function logHTML() {
 function renderFarm() {
   view.innerHTML = `<div class="game">
     <div class="hud paper" id="hud">${hudHTML()}</div>
-    <div class="farm paper" id="farmBox">${farmSVG()}</div>
+    <div class="farmstage paper" id="farmBox">${farmSVG()}</div>
     <aside class="panel paper" id="panel" aria-label="${t('farm_actions')}">${panelHTML()}</aside>
     <section class="ticker paper" id="logBox">${logHTML()}</section>
   </div>`;
