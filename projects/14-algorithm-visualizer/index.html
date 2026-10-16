@@ -4785,7 +4785,10 @@ function learnQuiz() {
     const saved = quizStore();
     body.innerHTML = quizResultHtml(saved);
     countUp($('#qScore'), QZ.score, { dur: 900 });
-    requestAnimationFrame(() => { $('#qBar').style.width = (QZ.score / QUIZ_LEN * 100) + '%'; });
+    requestAnimationFrame(() => {
+      const bar = $('#qBar');
+      if (bar) bar.style.width = (QZ.score / QUIZ_LEN * 100) + '%';
+    });
     $('#qAgain').onclick = () => {
       QZ = null;
       learnQuiz();

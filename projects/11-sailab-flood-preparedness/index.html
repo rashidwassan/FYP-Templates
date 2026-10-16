@@ -3726,3 +3726,293 @@ function printReport(kind, arg) {
   logActivity('act_print', kind, 'printer');
   window.print();
 }
+
+// =====================================================================
+// 19. global search, onboarding tour, "more" menu
+// =====================================================================
+const NAV = [
+  ['alerts', 'nav_alerts', 'siren'], ['gauges', 'nav_gauges', 'gauge'], ['plan', 'nav_plan', 'bag'], ['camps', 'nav_camps', 'tent'],
+  ['supplies', 'nav_supplies', 'box'], ['missing', 'nav_missing', 'users'], ['history', 'nav_history', 'history'], ['guide', 'nav_guide', 'book'], ['about', 'nav_about', 'info']
+];
+const MOBILE_PRIMARY = ['alerts', 'gauges', 'plan', 'camps'];
+
+/** Builds the flat search index on demand so it always reflects the current language and local posts. */
+function searchIndex() {
+  const rows = [];
+  DISTRICTS.forEach(d => rows.push({ grp: 'sr_g_district', icon: 'map-pin', label: name(d), sub: `${t(d.prov)} · ${t('lv_' + R(d).lv)} ${R(d).score}`, text: `${d.en} ${d.ur} ${d.prov}`, go: '#alerts/' + d.id }));
+  STATIONS.forEach(s => rows.push({ grp: 'sr_g_station', icon: 'gauge', label: name(s), sub: `${bi(s.river, s.riverUr)} · ${flowShort(level(s.id))} ${flowUnit()}`, text: `${s.en} ${s.ur} ${s.river}`, go: '#gauges/' + s.id }));
+  CAMPS.forEach(c => rows.push({ grp: 'sr_g_camp', icon: 'tent', label: c.en, sub: name(DM[c.d]), text: `${c.en} ${DM[c.d].en} ${DM[c.d].ur}`, go: '#camps/' + c.id }));
+  getPosts().forEach(p => rows.push({ grp: 'sr_g_post', icon: 'users', label: p.name, sub: `${t('m_' + p.status)} · ${p.place}`, text: `${p.name} ${p.place} ${DM[p.d].en}`, go: '#missing' }));
+  Object.keys(GUIDE).forEach(tab => GUIDE[tab].forEach(g => rows.push({ grp: 'sr_g_guide', icon: g[0], label: bi(g[1], g[3]), sub: t('gd_' + tab), text: `${g[1]} ${g[2]} ${g[3]}`, go: '#guide/' + tab })));
+  [...NAV, ['inbox', 'nav_inbox', 'inbox'], ['settings', 'nav_settings', 'settings']].forEach(([id, key, icon]) => rows.push({ grp: 'sr_g_page', icon, label: t(key), sub: '', text: `${TXT.en[key]} ${TXT.ur[key]}`, go: '#' + id }));
+  return rows;
+}
+
+function runSearch(q) {
+  const needle = norm(q);
+  if (!needle) return [];
+  return searchIndex()
+    .filter(row => norm(row.label + ' ' + row.text).includes(needle))
+    .slice(0, 24);
+}
+
+function openSearch() {
+  modal(t('sr_title'), `<div class="srch">${ic('search')}<input id="srIn" type="search" placeholder="${esc(t('sr_ph'))}" aria-label="${esc(t('sr_title'))}" autocomplete="off"></div>
+    <div class="sres" id="srRes"><div class="small muted" style="padding:8px 4px">${t('sr_hint')}</div></div>`,
+  box => {
+    const input = $('#srIn', box);
+    const out = $('#srRes', box);
+    const render = () => {
+      const rows = runSearch(input.value);
+      if (!input.value.trim()) { out.innerHTML = `<div class="small muted" style="padding:8px 4px">${t('sr_hint')}</div>`; return; }
+      if (!rows.length) { out.innerHTML = `<div class="empty">${ic('search')}${t('sr_none')}</div>`; return; }
+      let html = '';
+      let lastGroup = null;
+      rows.forEach((row, i) => {
+        if (row.grp !== lastGroup) { html += `<div class="grp">${t(row.grp)}</div>`; lastGroup = row.grp; }
+        html += `<a href="${row.go}" class="${i === 0 ? 'on' : ''}">${ic(row.icon)}<span>${esc(row.label)}</span><small>${esc(row.sub)}</small></a>`;
+      });
+      out.innerHTML = html;
+      $$('a', out).forEach(a => { a.onclick = () => closeModal(); });
+    };
+    input.oninput = render;
+    input.onkeydown = e => {
+      if (e.key !== 'Enter') return;
+      const first = $('a', out);
+      if (first) { closeModal(); location.hash = first.getAttribute('href').slice(1); }
+    };
+  });
+}
+
+// ---- onboarding tour: spotlight + card, five steps ----
+const TOUR_STEPS = [
+  { target: () => (window.innerWidth <= 900 ? $('.mydist') : $('#myDistrict')), title: 'tr_1t', body: 'tr_1b' },
+  { target: () => $('#map'), title: 'tr_2t', body: 'tr_2b', inset: 80 },
+  { target: () => $('#panel'), title: 'tr_3t', body: 'tr_3b' },
+  { target: () => (window.innerWidth <= 900 ? $('.bottomnav a[href="#plan"]') : $('.topnav a[href="#plan"]')), title: 'tr_4t', body: 'tr_4b' },
+  { target: () => $('#inboxBtn'), title: 'tr_5t', body: 'tr_5b' }
+];
+let tourStep = -1;
+
+function startTour(force = false) {
+  if (!force && store.get('tourDone', false)) return;
+  closeModal();
+  tourStep = 0;
+  renderTourStep();
+}
+
+function endTour() {
+  tourStep = -1;
+  store.set('tourDone', true);
+  $('#tourRoot').innerHTML = '';
+}
+
+function renderTourStep() {
+  const step = TOUR_STEPS[tourStep];
+  const target = step.target();
+  const root = $('#tourRoot');
+  const rect = target ? target.getBoundingClientRect() : { left: window.innerWidth / 2 - 40, top: window.innerHeight / 2 - 40, width: 80, height: 80 };
+  const inset = step.inset || 0;
+  const spot = { x: rect.left + inset - 6, y: rect.top + inset - 6, w: Math.max(40, rect.width - inset * 2 + 12), h: Math.max(40, rect.height - inset * 2 + 12) };
+  const boxW = Math.min(340, window.innerWidth - 32);
+  const below = spot.y + spot.h + 190 < window.innerHeight;
+  const boxTop = below ? spot.y + spot.h + 12 : Math.max(12, spot.y - 200);
+  const boxLeft = clamp(spot.x + spot.w / 2 - boxW / 2, 16, window.innerWidth - boxW - 16);
+  const dots = TOUR_STEPS.map((_, i) => `<i class="${i === tourStep ? 'on' : ''}"></i>`).join('');
+  const last = tourStep === TOUR_STEPS.length - 1;
+
+  root.innerHTML = `<div class="tour" role="dialog" aria-modal="true" aria-label="${t('tr_step')} ${tourStep + 1}">
+    <div class="spot" style="left:${spot.x}px;top:${spot.y}px;width:${spot.w}px;height:${spot.h}px"></div>
+    <div class="tourbox" style="left:${boxLeft}px;top:${boxTop}px">
+      <div class="small muted">${t('tr_step')} ${tourStep + 1} / ${TOUR_STEPS.length}</div>
+      <h3>${t(step.title)}</h3><p class="txt">${t(step.body)}</p>
+      <div class="foot"><div class="dots">${dots}</div>
+        <button class="btn sm ghost" id="tourSkip">${t('tr_skip')}</button>
+        ${tourStep > 0 ? `<button class="btn sm ghost" id="tourBack">${ic('chevron-left')}${t('tr_back')}</button>` : ''}
+        <button class="btn sm river" id="tourNext">${last ? t('tr_done') : t('tr_next')}${last ? ic('check') : ic('chevron-right')}</button>
+      </div>
+    </div>
+  </div>`;
+  $('#tourSkip').onclick = endTour;
+  $('#tourNext').onclick = () => { if (last) endTour(); else { tourStep++; renderTourStep(); } };
+  const back = $('#tourBack');
+  if (back) back.onclick = () => { tourStep--; renderTourStep(); };
+  $('#tourNext').focus();
+}
+
+// ---- "more" menu on phones: the pages that do not fit in the bottom bar ----
+function openMoreMenu() {
+  const extra = [...NAV.filter(([id]) => !MOBILE_PRIMARY.includes(id)), ['inbox', 'nav_inbox', 'inbox'], ['settings', 'nav_settings', 'settings']];
+  const unread = unreadCount();
+  const tiles = extra.map(([id, key, icon]) => `<a href="#${id}" class="${page === id ? 'active' : ''}">${ic(icon)}${t(key)}${id === 'inbox' && unread ? `<span class="cnt">${unread}</span>` : ''}</a>`);
+  tiles.push(`<a href="#" id="moreSearch">${ic('search')}${t('sr_title')}</a>`);
+  modal(t('nav_more'), `<div class="moregrid">${tiles.join('')}</div>`, box => {
+    $$('a', box).forEach(a => { a.onclick = () => closeModal(); });
+    $('#moreSearch', box).onclick = e => { e.preventDefault(); closeModal(); openSearch(); };
+  });
+}
+
+// =====================================================================
+// 20. bottom sheet, navigation, router, boot
+// =====================================================================
+const panel = $('#panel');
+const handle = $('#handle');
+let refitTimer = 0;
+
+function setSheet(st) {
+  const changed = panel.dataset.state !== st;
+  panel.dataset.state = st;
+  store.set('sheet', st);
+  if (!changed) return;
+  clearTimeout(refitTimer);
+  refitTimer = setTimeout(() => MapCtl.refit(), 340);
+}
+
+function bindSheetDrag() {
+  let drag = null;
+  handle.addEventListener('pointerdown', e => {
+    drag = { y: e.clientY, h: panel.getBoundingClientRect().height, moved: false };
+    panel.classList.add('dragging');
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dy = drag.y - e.clientY;
+    if (Math.abs(dy) > 4) drag.moved = true;
+    panel.style.height = clamp(drag.h + dy, 90, window.innerHeight - 66) + 'px';
+  });
+  const end = () => {
+    if (!drag) return;
+    const h = panel.getBoundingClientRect().height;
+    const H = window.innerHeight - 114;
+    panel.classList.remove('dragging');
+    panel.style.height = '';
+    if (!drag.moved) setSheet(panel.dataset.state === 'full' ? 'half' : 'full');
+    else setSheet(h < H * .3 ? 'peek' : h < H * .78 ? 'half' : 'full');
+    drag = null;
+  };
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
+}
+
+window.addEventListener('resize', () => {
+  clearTimeout(refitTimer);
+  refitTimer = setTimeout(() => MapCtl.refit(), 250);
+});
+
+const VIEWS = {
+  alerts: renderAlerts, gauges: renderGauges, plan: renderPlan, camps: renderCamps, supplies: renderSupplies, missing: renderMissing,
+  history: renderHistory, guide: renderGuide, inbox: renderInbox, settings: renderSettings, about: renderAbout
+};
+
+function renderNav() {
+  $('#topnav').innerHTML = NAV.map(([id, key, icon]) => `<a href="#${id}" class="${page === id ? 'active' : ''}" title="${t(key)}">${ic(icon)}<span class="lbl">${t(key)}</span></a>`).join('');
+  const primary = NAV.filter(([id]) => MOBILE_PRIMARY.includes(id)).map(([id, key, icon]) => `<a href="#${id}" class="${page === id ? 'active' : ''}">${ic(icon)}${t(key)}</a>`);
+  const moreActive = !MOBILE_PRIMARY.includes(page);
+  const unread = unreadCount();
+  primary.push(`<a href="#" id="moreBtn" class="${moreActive ? 'active' : ''}">${ic('grid')}${t('nav_more')}<span class="cnt ${unread ? '' : 'hidden'}">${unread}</span></a>`);
+  $('#bottomnav').innerHTML = primary.join('');
+  $('#moreBtn').onclick = e => { e.preventDefault(); openMoreMenu(); };
+  $('#inboxBtn').classList.toggle('on', page === 'inbox');
+}
+
+function route(animate = true) {
+  const hashPath = location.hash.slice(1).split('?')[0];
+  const [p, param] = hashPath.split('/');
+  page = VIEWS[p] ? p : 'alerts';
+  document.body.dataset.page = page;
+  renderNav();
+  closeModal();
+  VIEWS[page](param);
+  if (animate) {
+    animateIn(view);
+    view.scrollTop = 0;
+    if (window.innerWidth <= 900 && panel.dataset.state === 'peek') setSheet('half');
+  } else {
+    staggerChildren(view);
+  }
+}
+
+function fillDistrictSelect() {
+  const sel = $('#myDistrict');
+  sel.innerHTML = PROVS.map(p => `<optgroup label="${t(p)}">${DISTRICTS.filter(d => d.prov === p).map(d => `<option value="${d.id}">${esc(name(d))}</option>`).join('')}</optgroup>`).join('');
+  sel.value = myDistrict;
+}
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  store.set('lang', lang);
+  $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English';
+  $('#searchBtn').setAttribute('aria-label', t('sr_title'));
+  $('#inboxBtn').setAttribute('aria-label', t('nav_inbox'));
+  $('#settingsBtn').setAttribute('aria-label', t('nav_settings'));
+  fillDistrictSelect();
+  if (MapCtl.mode) MapCtl.updateStatus();
+  route(false);
+}
+
+function bindGlobalKeys() {
+  document.addEventListener('keydown', e => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+    if (e.key === 'Escape') {
+      closeModal();
+      if (tourStep >= 0) endTour();
+      return;
+    }
+    if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === '/') { e.preventDefault(); openSearch(); return; }
+    if (e.key === '?') { location.hash = 'settings'; return; }
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= NAV.length) location.hash = NAV[n - 1][0];
+  });
+}
+
+function bindTopbar() {
+  $('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+  $('#myDistrict').onchange = e => setMyDistrict(e.target.value);
+  $('#searchBtn').onclick = openSearch;
+  $('#inboxBtn').onclick = () => { location.hash = 'inbox'; };
+  $('#settingsBtn').onclick = () => { location.hash = 'settings'; };
+  window.addEventListener('hashchange', () => route(true));
+}
+
+// Map calls made before the map library is ready are queued and replayed after init.
+function wrapMapCalls() {
+  const focus = MapCtl.focus.bind(MapCtl);
+  const fit = MapCtl.fit.bind(MapCtl);
+  MapCtl.focus = (...args) => {
+    if (!MapCtl.mode) { MapCtl.pending.focus = args; MapCtl.pending.fit = null; return; }
+    focus(...args);
+  };
+  MapCtl.fit = (...args) => {
+    if (!MapCtl.mode) { MapCtl.pending.fit = args; MapCtl.pending.focus = null; return; }
+    fit(...args);
+  };
+}
+
+function boot() {
+  applySettings();
+  wrapMapCalls();
+  bindTopbar();
+  bindGlobalKeys();
+  bindSheetDrag();
+  setSheet(store.get('sheet', settings.sheet));
+  applyLang();
+  updateInboxBadge();
+  MapCtl.init().then(() => {
+    MapCtl.setMarkers(MapCtl.items);
+    MapCtl.setRoute(MapCtl.route);
+    MapCtl.updateStatus();
+    const pending = MapCtl.pending;
+    if (pending.focus) MapCtl.focus(...pending.focus);
+    else if (pending.fit) MapCtl.fit(...pending.fit);
+  });
+  setTimeout(pushAlerts, 900);
+  setTimeout(() => startTour(false), 1400);
+}
+
+boot();
+</script>
+</body>
+</html>

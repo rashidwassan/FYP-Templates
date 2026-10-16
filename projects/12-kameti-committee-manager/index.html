@@ -4,23 +4,49 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kameti Committee Manager</title>
-<meta name="description" content="Run a rotating savings committee (kameti / beesi / ROSCA): payments matrix, lottery draw, payout schedule, default simulator, trust scores and a bilingual printable agreement. Single-file FYP template.">
+<meta name="description" content="Run rotating savings committees (kameti / beesi / ROSCA): multi-committee dashboard with cash-flow calendar, payments matrix, lottery and need-based payout order, default simulator, disputes, receipts, trust scores, savings planner and bilingual printable agreements. Single-file FYP template.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ---------- Design tokens: forest ledger, mint surfaces, gold payouts ---------- */
 :root{
-  --forest:#14532d; --forest-deep:#0b3b1f; --forest-soft:#1f6b3a; --mint:#d1fae5; --mint-2:#a7f3d0; --mint-soft:#ecfdf5;
+  --forest:#14532d; --forest-deep:#0b3b1f; --forest-soft:#1f6b3a;
+  --mint:#d1fae5; --mint-2:#a7f3d0; --mint-soft:#ecfdf5;
   --gold:#ca8a04; --gold-soft:#fef3c7; --gold-deep:#854d0e;
   --bg:#f8faf7; --surface:#ffffff; --surface-2:#eef4f0; --ink:#0f1f16; --muted:#5b6b62; --line:#d9e4dc;
-  --ok:#15803d; --ok-soft:#dcfce7; --late:#b45309; --late-soft:#fef3c7; --bad:#b91c1c; --bad-soft:#fee2e2; --part:#0369a1; --part-soft:#e0f2fe; --waive:#6b7280; --waive-soft:#f1f3f4;
+  --ok:#15803d; --ok-soft:#dcfce7; --late:#b45309; --late-soft:#fef3c7; --bad:#b91c1c; --bad-soft:#fee2e2;
+  --part:#0369a1; --part-soft:#e0f2fe; --waive:#6b7280; --waive-soft:#f1f3f4;
+  --in:#14532d; --out:#ca8a04;
   --radius:14px; --radius-sm:9px; --shadow:0 10px 30px -18px rgba(15,31,22,.35);
-  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace; --font-ur:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --font-ur:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
   --ease:cubic-bezier(.2,.8,.2,1); --dur:.35s;
+  color-scheme:light;
 }
+/* Dark theme: same forest identity, deeper surfaces, lifted text colours */
+html[data-theme=dark]{
+  --bg:#0c1710; --surface:#132019; --surface-2:#1a2d21; --ink:#e7f3ea; --muted:#9fb6a7; --line:#27402f;
+  --mint:#1f4a33; --mint-2:#2f6b48; --mint-soft:#15271c;
+  --gold-soft:#3b2d0b; --gold-deep:#f1c75a;
+  --ok:#4ade80; --ok-soft:rgba(74,222,128,.14); --late:#fbbf24; --late-soft:rgba(251,191,36,.14);
+  --bad:#f87171; --bad-soft:rgba(248,113,113,.14); --part:#60a5fa; --part-soft:rgba(96,165,250,.14);
+  --waive:#9ca3af; --waive-soft:rgba(156,163,175,.14);
+  --in:#4ade80; --shadow:0 10px 30px -18px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+html[data-theme=dark] .avatar,html[data-theme=dark] .kpi .icw,html[data-theme=dark] .oitem .pos,html[data-theme=dark] .brand .logo{color:var(--mint-2)}
+html[data-theme=dark] .avatar,html[data-theme=dark] .kpi .icw,html[data-theme=dark] .oitem .pos{color:#d1fae5}
+html[data-theme=dark] .btn.mint,html[data-theme=dark] .tb-btn{background:var(--mint-2);color:#f1fff6}
+html[data-theme=dark] .badge.mint,html[data-theme=dark] .badge.gold{color:#f1fff6}
+html[data-theme=dark] .pill.gold,html[data-theme=dark] .btn.gold,html[data-theme=dark] .oitem.cur .pos,html[data-theme=dark] .toast.gold{color:#1f1300}
+html[data-theme=dark] .doc{background:var(--surface)}
+html[data-theme=dark] .chart .tip{background:#000}
+
 /* ---------- Motion kit ---------- */
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
@@ -28,10 +54,13 @@
 @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(202,138,4,.45)}60%{box-shadow:0 0 0 10px rgba(202,138,4,0)}}
+@keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
 .enter{animation:fadeUp var(--dur) var(--ease) both}
 .stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
 .btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s}
-.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.98)}
 .card,.tile,.kpi{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
 .card:hover,.kpi:hover{transform:translateY(-2px);box-shadow:0 14px 34px -18px rgba(15,31,22,.4)}
 .fill,.bar>i{transition:width .6s var(--ease)}
@@ -42,30 +71,35 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--forest)}
+html[data-theme=dark] a{color:var(--mint-2)}
 h1,h2,h3,h4{margin:0;line-height:1.25;letter-spacing:-.01em}
 .ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
 .mono,.num,.matrix,.tbl td.num,.amt{font-family:var(--mono);font-variant-numeric:tabular-nums;direction:ltr}
-.muted{color:var(--muted)} .small{font-size:.82rem} .hidden{display:none!important}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+.hidden{display:none!important}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .ur,[lang=ur]{font-family:var(--font-ur);line-height:1.95;direction:rtl;text-align:right}
 html[lang=ur] body{font-family:var(--font-ur);line-height:1.85}
-html[lang=ur] .txt,html[lang=ur] .lead,html[lang=ur] .note,html[lang=ur] .faq summary,html[lang=ur] .faq p,html[lang=ur] .todo{direction:rtl;text-align:right}
+html[lang=ur] .txt,html[lang=ur] .lead,html[lang=ur] .note,html[lang=ur] .faq summary,html[lang=ur] .faq p,html[lang=ur] .todo,html[lang=ur] .tour-card p{direction:rtl;text-align:right}
 html[lang=ur] .tabs a,html[lang=ur] .btn,html[lang=ur] .kpi .k,html[lang=ur] h2,html[lang=ur] h3{letter-spacing:0}
 html[lang=ur] .mono,html[lang=ur] .num,html[lang=ur] .matrix,html[lang=ur] .amt,html[lang=ur] input,html[lang=ur] select{font-family:var(--mono)}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 /* ---------- Top bar ---------- */
-.topbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--forest-deep),var(--forest));color:#eafff1;display:flex;align-items:center;gap:12px;padding:10px 18px;box-shadow:0 4px 20px -8px rgba(0,0,0,.45)}
+.topbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--forest-deep),var(--forest));color:#eafff1;display:flex;align-items:center;gap:10px;padding:10px 18px;box-shadow:0 4px 20px -8px rgba(0,0,0,.45)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .brand .logo{width:38px;height:38px;border-radius:11px;background:var(--mint);display:grid;place-items:center;color:var(--forest-deep);flex:none}
 .brand h1{font-size:1.02rem;font-weight:700;white-space:nowrap}
 .brand small{display:block;font-size:.72rem;opacity:.8;font-weight:500}
 .spacer{flex:1}
 .switcher{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:4px 6px 4px 10px;min-width:0}
-.switcher select{background:transparent;border:0;outline:0;color:#fff;font-weight:600;min-width:0;max-width:260px;padding:6px 2px;cursor:pointer}
-.switcher select option{color:var(--ink)}
-.tb-btn{background:var(--mint);color:var(--forest-deep);border:0;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-height:40px}
+.switcher select{appearance:none;-webkit-appearance:none;background:transparent;border:0;outline:0;color:#fff;font-weight:600;min-width:0;max-width:260px;padding:6px 2px;cursor:pointer}
+.switcher select option{color:var(--ink);background:var(--surface)}
+.tb-btn{position:relative;background:var(--mint);color:var(--forest-deep);border:0;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-height:40px}
 .tb-btn.ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.tb-btn.icon{width:40px;padding:8px;justify-content:center}
+.tb-btn .dot{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--gold);color:#1f1300;font-size:.68rem;font-weight:800;display:grid;place-items:center;padding:0 4px;font-family:var(--mono)}
 .lang{min-width:64px;justify-content:center}
 
 /* ---------- Pot hero ---------- */
@@ -75,7 +109,8 @@ html[lang=ur] .mono,html[lang=ur] .num,html[lang=ur] .matrix,html[lang=ur] .amt,
 .ring{width:118px;height:118px;position:relative;flex:none}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:10;stroke-linecap:round}
-.ring .track{stroke:rgba(255,255,255,.18)} .ring .prog{stroke:var(--mint-2);transition:stroke-dashoffset .9s var(--ease)}
+.ring .track{stroke:rgba(255,255,255,.18)}
+.ring .prog{stroke:#a7f3d0;transition:stroke-dashoffset .9s var(--ease)}
 .ring .lbl{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:1.35rem;font-family:var(--mono)}
 .pot .k{font-size:.74rem;text-transform:uppercase;letter-spacing:.1em;opacity:.8;font-weight:600}
 .pot .big{font-family:var(--mono);font-size:clamp(1.6rem,3vw,2.3rem);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:4px 0}
@@ -87,26 +122,38 @@ html[lang=ur] .mono,html[lang=ur] .num,html[lang=ur] .matrix,html[lang=ur] .amt,
 .pot .side{display:flex;flex-direction:column;gap:8px;align-items:stretch;min-width:170px}
 .pot .side .btn{justify-content:center}
 .pot-empty{display:flex;align-items:center;gap:16px;grid-column:1/-1}
+.banner{display:flex;align-items:center;gap:12px;background:var(--gold-soft);border:1px solid var(--gold);border-radius:12px;padding:10px 14px;margin-top:12px;color:var(--ink)}
+.banner .ic{color:var(--gold-deep)}
+.banner p{margin:0;flex:1;font-size:.9rem}
 
 /* ---------- Tabs ---------- */
 .tabs{position:relative;display:flex;gap:2px;margin:18px 0 14px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tabs a{color:var(--muted);text-decoration:none;padding:10px 14px;font-weight:600;font-size:.92rem;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;border-radius:8px 8px 0 0;min-height:42px}
+.tabs a{color:var(--muted);text-decoration:none;padding:10px 12px;font-weight:600;font-size:.9rem;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;border-radius:8px 8px 0 0;min-height:42px}
 .tabs a:hover{color:var(--forest);background:var(--mint-soft)}
 .tabs a.active{color:var(--forest)}
+html[data-theme=dark] .tabs a.active,html[data-theme=dark] .tabs a:hover{color:var(--mint-2)}
 .tabs .ink{position:absolute;bottom:-1px;left:0;height:3px;width:0;background:var(--forest);border-radius:3px 3px 0 0;transition:transform .3s var(--ease),width .3s var(--ease)}
+html[data-theme=dark] .tabs .ink{background:var(--mint-2)}
 
 /* ---------- Cards / KPIs ---------- */
 .grid{display:grid;gap:14px}
-.g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
 .g21{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.g12{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);min-width:0}
-.card h2{font-size:1.05rem;display:flex;align-items:center;gap:8px;margin-bottom:10px;color:var(--forest-deep)}
+.card h2{font-size:1.05rem;display:flex;align-items:center;gap:8px;margin-bottom:10px;color:var(--forest-deep);flex-wrap:wrap}
+html[data-theme=dark] .card h2,html[data-theme=dark] .sheet header h2{color:var(--mint-2)}
 .card h2 .ic{color:var(--forest)}
+html[data-theme=dark] .card h2 .ic{color:var(--mint-2)}
 .card .lead{margin:-4px 0 12px;color:var(--muted);font-size:.9rem}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start}
 .kpi .icw{width:38px;height:38px;border-radius:10px;background:var(--mint);color:var(--forest);display:grid;place-items:center;flex:none}
-.kpi.gold .icw{background:var(--gold-soft);color:var(--gold-deep)} .kpi.bad .icw{background:var(--bad-soft);color:var(--bad)}
+.kpi.gold .icw{background:var(--gold-soft);color:var(--gold-deep)}
+.kpi.bad .icw{background:var(--bad-soft);color:var(--bad)}
 .kpi .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
 .kpi .v{font-size:1.3rem;font-weight:600;font-family:var(--mono);margin-top:2px;letter-spacing:-.01em}
 .kpi .s{font-size:.8rem;color:var(--muted)}
@@ -115,21 +162,34 @@ html[lang=ur] .mono,html[lang=ur] .num,html[lang=ur] .matrix,html[lang=ur] .amt,
 .btn{border:0;border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer;background:var(--forest);color:#fff;display:inline-flex;align-items:center;gap:7px;min-height:40px;text-decoration:none;white-space:nowrap}
 .btn.gold{background:var(--gold);color:#1f1300}
 .btn.ghost{background:var(--surface);color:var(--forest-deep);border:1px solid var(--line)}
+html[data-theme=dark] .btn.ghost{color:var(--ink)}
 .btn.mint{background:var(--mint);color:var(--forest-deep)}
 .btn.danger{background:var(--bad-soft);color:var(--bad)}
 .btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px;min-height:36px}
 .btn.icon{padding:8px;width:40px;justify-content:center}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .badge{display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:2px 8px;font-size:.74rem;font-weight:700;white-space:nowrap}
-.badge.ok{background:var(--ok-soft);color:var(--ok)} .badge.late{background:var(--late-soft);color:var(--late)} .badge.bad{background:var(--bad-soft);color:var(--bad)} .badge.part{background:var(--part-soft);color:var(--part)} .badge.waive{background:var(--waive-soft);color:var(--waive)} .badge.gold{background:var(--gold-soft);color:var(--gold-deep)} .badge.mint{background:var(--mint);color:var(--forest-deep)} .badge.muted{background:var(--surface-2);color:var(--muted)}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.badge.late{background:var(--late-soft);color:var(--late)}
+.badge.bad{background:var(--bad-soft);color:var(--bad)}
+.badge.part{background:var(--part-soft);color:var(--part)}
+.badge.waive{background:var(--waive-soft);color:var(--waive)}
+.badge.gold{background:var(--gold-soft);color:var(--gold-deep)}
+.badge.mint{background:var(--mint);color:var(--forest-deep)}
+.badge.muted{background:var(--surface-2);color:var(--muted)}
 .note{background:var(--mint-soft);border-left:4px solid var(--forest);padding:10px 12px;border-radius:8px;font-size:.88rem}
 .note.gold{background:var(--gold-soft);border-color:var(--gold)}
 .note.bad{background:var(--bad-soft);border-color:var(--bad)}
 .bar{height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden}
 .bar>i{display:block;height:100%;width:0;background:var(--forest);border-radius:999px}
+html[data-theme=dark] .bar>i{background:var(--mint-2)}
 .bar.gold>i{background:var(--gold)}
+.bar.bad>i{background:var(--bad)}
 .empty{text-align:center;padding:28px 16px;color:var(--muted)}
 .empty .ic{width:38px;height:38px;color:var(--forest);opacity:.6}
+.search{position:relative;flex:1;min-width:180px;max-width:360px}
+.search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search input{padding-left:36px}
 
 /* ---------- Tables ---------- */
 .tblwrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
@@ -137,48 +197,65 @@ html[lang=ur] .mono,html[lang=ur] .num,html[lang=ur] .matrix,html[lang=ur] .amt,
 .tbl th,.tbl td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
 .tbl th{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:var(--surface-2);font-weight:700;white-space:nowrap}
 .tbl tr:last-child td{border-bottom:0}
-.tbl tbody tr{transition:background .15s} .tbl tbody tr:hover{background:var(--mint-soft)}
+.tbl tbody tr{transition:background .15s}
+.tbl tbody tr:hover{background:var(--mint-soft)}
 .tbl td.num,.tbl th.num{text-align:right;white-space:nowrap}
 .tbl .acts{display:flex;gap:4px;justify-content:flex-end}
 .tbl .acts .btn{min-height:36px}
+.tbl tr.clickable{cursor:pointer}
 .who{display:flex;align-items:center;gap:10px;min-width:0}
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--mint);color:var(--forest-deep);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
-.who .n{font-weight:600;white-space:nowrap} .who .p{font-size:.78rem;color:var(--muted);font-family:var(--mono)}
+.who .n{font-weight:600;white-space:nowrap}
+.who .p{font-size:.78rem;color:var(--muted);font-family:var(--mono)}
 .tring{width:36px;height:36px;position:relative;flex:none}
-.tring svg{width:100%;height:100%;transform:rotate(-90deg)} .tring circle{fill:none;stroke-width:4}
-.tring .t{stroke:var(--surface-2)} .tring .p{stroke:var(--ok);transition:stroke-dashoffset .8s var(--ease)}
-.tring.mid .p{stroke:var(--late)} .tring.low .p{stroke:var(--bad)}
+.tring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.tring circle{fill:none;stroke-width:4}
+.tring .t{stroke:var(--surface-2)}
+.tring .p{stroke:var(--ok);transition:stroke-dashoffset .8s var(--ease)}
+.tring.mid .p{stroke:var(--late)}
+.tring.low .p{stroke:var(--bad)}
 .tring span{position:absolute;inset:0;display:grid;place-items:center;font-size:.62rem;font-weight:700;font-family:var(--mono)}
 
 /* ---------- Payments matrix ---------- */
 .matrixwrap{overflow:auto;border:1px solid var(--line);border-radius:12px;max-width:100%;-webkit-overflow-scrolling:touch;direction:ltr}
 .matrix{border-collapse:separate;border-spacing:0;font-size:.78rem;min-width:max-content}
 .matrix th,.matrix td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;white-space:nowrap;background:var(--surface)}
-.matrix thead th{background:var(--surface-2);position:sticky;top:0;z-index:2;padding:8px 10px;font-weight:600;text-align:center;font-size:.72rem;color:var(--muted)}
+.matrix thead th{background:var(--surface-2);position:sticky;top:0;z-index:2;padding:8px 10px;font-weight:600;text-align:center;font-size:.72rem;color:var(--muted);cursor:pointer}
 .matrix thead th.cur{color:var(--forest-deep);background:var(--mint)}
+html[data-theme=dark] .matrix thead th.cur{color:#f1fff6}
 .matrix thead th.sel{box-shadow:inset 0 -3px 0 var(--gold)}
 .matrix th.name,.matrix td.name{position:sticky;left:0;z-index:3;text-align:left;padding:6px 12px;font-family:var(--font);font-weight:600;min-width:160px;max-width:200px;box-shadow:2px 0 0 var(--line)}
 .matrix thead th.name{z-index:4;background:var(--surface-2)}
 .matrix td.name small{display:block;font-weight:400;color:var(--muted);font-family:var(--mono);font-size:.7rem}
 .matrix tbody tr:hover td{background:var(--mint-soft)}
 .matrix tfoot td{background:var(--surface-2);padding:6px 8px;text-align:center;font-weight:600;color:var(--forest-deep)}
+html[data-theme=dark] .matrix tfoot td{color:var(--ink)}
 .matrix tfoot td.name{background:var(--surface-2);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
 .matrix tfoot .bar{height:6px;margin:4px 0 0;width:72px;display:inline-block}
-.cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:96px;height:50px;cursor:pointer;user-select:none;border:0;background:transparent;font-family:var(--mono);font-size:.76rem;line-height:1.2;transition:background .15s,transform .1s;padding:0}
+.cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:100px;height:52px;cursor:pointer;user-select:none;border:0;background:transparent;font-family:var(--mono);font-size:.76rem;line-height:1.2;transition:background .15s,transform .1s;padding:0;color:inherit}
 .cell:active{transform:scale(.96)}
 .cell .st{display:inline-flex;align-items:center;gap:3px;font-weight:700;font-size:.7rem}
 .cell .d{font-size:.64rem;opacity:.75}
-.cell.unpaid{color:var(--muted)} .cell.unpaid:hover{background:var(--surface-2)}
-.cell.over{background:var(--bad-soft);color:var(--bad)} .cell.paid{background:var(--ok-soft);color:var(--ok)} .cell.late{background:var(--late-soft);color:var(--late)} .cell.partial{background:var(--part-soft);color:var(--part)} .cell.waived{background:var(--waive-soft);color:var(--waive)}
-.cell.future{color:#b8c4bc;cursor:default} .cell.future:hover{background:transparent}
+.cell.unpaid{color:var(--muted)}
+.cell.unpaid:hover{background:var(--surface-2)}
+.cell.over{background:var(--bad-soft);color:var(--bad)}
+.cell.paid{background:var(--ok-soft);color:var(--ok)}
+.cell.late{background:var(--late-soft);color:var(--late)}
+.cell.partial{background:var(--part-soft);color:var(--part)}
+.cell.waived{background:var(--waive-soft);color:var(--waive)}
+.cell.future{color:#b8c4bc;cursor:default}
+.cell.future:hover{background:transparent}
 .cell.me{box-shadow:inset 0 0 0 2px var(--gold)}
+.cell.disputed::after{content:"";position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--bad)}
+.cell{position:relative}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);align-items:center}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
 .mstats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
 .mstat{background:var(--surface-2);border-radius:10px;padding:10px 12px}
 .mstat .k{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
 .mstat .v{font-family:var(--mono);font-weight:600;font-size:1.05rem;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mstat.gold{background:var(--gold-soft)} .mstat.gold .v{color:var(--gold-deep)}
+.mstat.gold{background:var(--gold-soft)}
+.mstat.gold .v{color:var(--gold-deep)}
 
 /* ---------- Charts ---------- */
 .chart{position:relative;background:var(--surface-2);border-radius:12px;padding:8px;min-width:0}
@@ -189,7 +266,10 @@ html[lang=ur] .mono,html[lang=ur] .num,html[lang=ur] .matrix,html[lang=ur] .amt,
 .hbars{display:flex;flex-direction:column;gap:7px}
 .hbar{display:grid;grid-template-columns:120px minmax(0,1fr) 54px;gap:10px;align-items:center;font-size:.82rem}
 .hbar .l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-.hbar .bar{height:10px} .hbar .v{text-align:right;font-family:var(--mono);color:var(--muted)}
+.hbar .bar{height:10px}
+.hbar .v{text-align:right;font-family:var(--mono);color:var(--muted)}
+.spark{display:inline-block;width:110px;height:30px;vertical-align:middle}
+.spark svg{width:100%;height:100%;overflow:visible}
 
 /* ---------- Schedule timeline ---------- */
 .timeline{position:relative;padding-inline-start:26px}
@@ -200,83 +280,224 @@ html[lang=ur] .mono,html[lang=ur] .num,html[lang=ur] .matrix,html[lang=ur] .amt,
 .tl.done::before{background:var(--forest);border-color:var(--forest)}
 .tl.current{border-color:var(--gold);background:linear-gradient(90deg,var(--gold-soft),var(--surface) 60%)}
 .tl.current::before{background:var(--gold);border-color:var(--gold);animation:pulse 2s infinite}
-.tl .m{font-weight:700;color:var(--forest-deep)} .tl .r{font-size:.86rem;color:var(--muted)}
-.tl>.amt{font-weight:600;text-align:right;white-space:nowrap} .tl>.amt .small{white-space:normal;font-weight:400}
+.tl .m{font-weight:700;color:var(--forest-deep)}
+html[data-theme=dark] .tl .m{color:var(--ink)}
+.tl .r{font-size:.86rem;color:var(--muted)}
+.tl>.amt{font-weight:600;text-align:right;white-space:nowrap}
+.tl>.amt .small{white-space:normal;font-weight:400}
 .tl .bot{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .countdown{display:flex;align-items:baseline;gap:8px}
 .countdown .n{font-family:var(--mono);font-size:2.6rem;font-weight:600;color:var(--gold-deep);line-height:1}
 .optgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
 .opt{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface-2)}
 .opt h4{font-size:.9rem;display:flex;align-items:center;gap:6px;margin-bottom:6px;color:var(--forest-deep)}
+html[data-theme=dark] .opt h4{color:var(--ink)}
 .opt .v{font-family:var(--mono);font-weight:600;font-size:1.05rem}
 
-/* ---------- Members / order list ---------- */
+/* ---------- Members / order list / needs ---------- */
 .orderlist{display:flex;flex-direction:column;gap:6px}
 .oitem{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);transition:transform .2s var(--ease),box-shadow .2s,border-color .2s}
-.oitem:hover{border-color:var(--mint-2)} .oitem.dragging{opacity:.5} .oitem.over{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
+.oitem:hover{border-color:var(--mint-2)}
+.oitem.dragging{opacity:.5}
+.oitem.over{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
 .oitem .pos{width:30px;height:30px;border-radius:8px;background:var(--mint);color:var(--forest-deep);display:grid;place-items:center;font-weight:700;font-family:var(--mono);font-size:.8rem;flex:none}
-.oitem.done .pos{background:var(--surface-2);color:var(--muted)} .oitem.cur .pos{background:var(--gold);color:#1f1300}
+.oitem.done .pos{background:var(--surface-2);color:var(--muted)}
+.oitem.cur .pos{background:var(--gold);color:#1f1300}
 .oitem .grip{color:var(--muted);cursor:grab;display:grid;place-items:center;width:28px;height:36px}
-.oitem .nm{flex:1;min-width:0;font-weight:600;line-height:1.3} .oitem .nm small{display:block;color:var(--muted);font-weight:400;font-family:var(--mono);font-size:.72rem;margin-top:2px}
+.oitem .nm{flex:1;min-width:0;font-weight:600;line-height:1.3}
+.oitem .nm small{display:block;color:var(--muted);font-weight:400;font-family:var(--mono);font-size:.72rem;margin-top:2px}
 .oitem .ud{display:flex;gap:2px}
-/* lottery */
+.urg{display:inline-flex;gap:2px}
+.urg i{width:8px;height:8px;border-radius:2px;background:var(--surface-2);border:1px solid var(--line)}
+.urg i.on{background:var(--gold);border-color:var(--gold)}
 .lotto{position:relative;height:var(--h,300px);transition:height .3s}
 .litem{position:absolute;left:0;right:0;height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);transition:top .28s var(--ease),background .3s,border-color .3s;font-weight:600}
 .litem .pos{width:28px;height:28px;border-radius:7px;background:var(--surface-2);display:grid;place-items:center;font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--muted)}
-.litem.final{border-color:var(--mint-2);background:var(--mint-soft)} .litem.final .pos{background:var(--forest);color:#fff}
+.litem.final{border-color:var(--mint-2);background:var(--mint-soft)}
+.litem.final .pos{background:var(--forest);color:#fff}
 .litem.spin{background:var(--gold-soft)}
 
 /* ---------- Forms ---------- */
 label.f{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin:10px 0 5px}
-input[type=text],input[type=number],input[type=date],input[type=month],input[type=tel],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 11px;outline:0;min-height:40px}
+input[type=text],input[type=number],input[type=date],input[type=month],input[type=tel],input[type=password],input[type=search],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 11px;outline:0;min-height:40px}
 input:focus,select:focus,textarea:focus{border-color:var(--forest);box-shadow:0 0 0 3px var(--mint)}
 input.bad{border-color:var(--bad);box-shadow:0 0 0 3px var(--bad-soft)}
 textarea{min-height:70px;resize:vertical}
+input[type=range]{width:100%;accent-color:var(--forest)}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}
 .err{color:var(--bad);font-size:.78rem;margin-top:4px;min-height:1em}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2)}
-.seg button{border:0;background:none;padding:8px 11px;cursor:pointer;font-weight:600;font-size:.82rem;min-height:38px;display:inline-flex;align-items:center;gap:5px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2);flex-wrap:wrap}
+.seg button{border:0;background:none;padding:8px 11px;cursor:pointer;font-weight:600;font-size:.82rem;min-height:38px;display:inline-flex;align-items:center;gap:5px;color:var(--ink)}
 .seg button.on{background:var(--forest);color:#fff}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.switch:last-child{border-bottom:0}
+.switch .lbl{flex:1;min-width:0}
+.switch .lbl b{display:block;font-size:.92rem}
+.switch .lbl span{font-size:.8rem;color:var(--muted)}
+.toggle{position:relative;width:46px;height:26px;border-radius:13px;background:var(--line);border:0;cursor:pointer;flex:none;transition:background .2s}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle[aria-checked=true]{background:var(--forest)}
+.toggle[aria-checked=true]::after{transform:translateX(20px)}
+.rangeval{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);font-family:var(--mono)}
 
-/* ---------- Modal / popover / toasts ---------- */
+/* ---------- Modal / popover / drawer / toasts ---------- */
 .scrim{position:fixed;inset:0;background:rgba(11,59,31,.45);backdrop-filter:blur(2px);z-index:40;opacity:0;pointer-events:none;transition:opacity .22s}
-body.modal-open .scrim{opacity:1;pointer-events:auto}
+body.modal-open .scrim,body.drawer-open .scrim{opacity:1;pointer-events:auto}
 .modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
 body.modal-open .modal{display:flex}
 .sheet{background:var(--surface);border-radius:16px;width:min(620px,100%);max-height:92vh;overflow:auto;box-shadow:0 30px 80px -30px rgba(0,0,0,.6);animation:pop .25s var(--ease)}
-.sheet.wide{width:min(820px,100%)}
+.sheet.wide{width:min(860px,100%)}
 .sheet header{display:flex;align-items:center;gap:10px;padding:16px 20px 8px;position:sticky;top:0;background:var(--surface);z-index:1}
 .sheet header h2{font-size:1.1rem;flex:1;display:flex;align-items:center;gap:8px;color:var(--forest-deep)}
 .sheet .body{padding:4px 20px 18px}
 .sheet .foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 20px 18px;flex-wrap:wrap;position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line)}
 .sheet .foot .left{margin-right:auto}
-.close{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;width:38px;height:38px;cursor:pointer;display:grid;place-items:center}
-.pop{position:fixed;z-index:55;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 50px -20px rgba(0,0,0,.45);padding:14px;width:300px;display:none;animation:pop .2s var(--ease)}
+.close{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;width:38px;height:38px;cursor:pointer;display:grid;place-items:center;color:var(--ink)}
+.pop{position:fixed;z-index:55;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 50px -20px rgba(0,0,0,.45);padding:14px;width:320px;display:none;animation:pop .2s var(--ease)}
 .pop.open{display:block}
 .pop h4{font-size:.9rem;margin-bottom:6px;display:flex;align-items:center;gap:6px}
 .stbtns{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
-.stbtns button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 9px;font-size:.78rem;font-weight:700;cursor:pointer;min-height:36px;display:inline-flex;align-items:center;gap:4px}
-.stbtns button.on.paid{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)} .stbtns button.on.late{background:var(--late-soft);color:var(--late);border-color:var(--late)} .stbtns button.on.partial{background:var(--part-soft);color:var(--part);border-color:var(--part)} .stbtns button.on.waived{background:var(--waive-soft);color:var(--waive);border-color:var(--waive)} .stbtns button.on.unpaid{background:var(--surface-2);border-color:var(--muted)}
+.stbtns button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 9px;font-size:.78rem;font-weight:700;cursor:pointer;min-height:36px;display:inline-flex;align-items:center;gap:4px;color:var(--ink)}
+.stbtns button.on.paid{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.stbtns button.on.late{background:var(--late-soft);color:var(--late);border-color:var(--late)}
+.stbtns button.on.partial{background:var(--part-soft);color:var(--part);border-color:var(--part)}
+.stbtns button.on.waived{background:var(--waive-soft);color:var(--waive);border-color:var(--waive)}
+.stbtns button.on.unpaid{background:var(--surface-2);border-color:var(--muted)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--surface);z-index:52;box-shadow:-20px 0 60px -30px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .3s var(--ease);display:flex;flex-direction:column}
+body.drawer-open .drawer{transform:none}
+.drawer header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.drawer header h2{font-size:1.05rem;flex:1;display:flex;align-items:center;gap:8px}
+.drawer .dbody{flex:1;overflow:auto;padding:12px 16px}
+.drawer .dfoot{padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
+.ntf{display:flex;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--surface);cursor:pointer;transition:background .15s;animation:slideIn .3s var(--ease) both}
+.ntf:hover{background:var(--mint-soft)}
+.ntf.unread{border-color:var(--gold);background:linear-gradient(90deg,var(--gold-soft),var(--surface) 70%)}
+.ntf .icw{width:34px;height:34px;border-radius:9px;background:var(--mint);color:var(--forest);display:grid;place-items:center;flex:none}
+.ntf.bad .icw{background:var(--bad-soft);color:var(--bad)}
+.ntf.gold .icw{background:var(--gold-soft);color:var(--gold-deep)}
+.ntf .t{font-weight:600;font-size:.9rem}
+.ntf .b{font-size:.82rem;color:var(--muted)}
+.ntf .at{font-size:.72rem;color:var(--muted);font-family:var(--mono);margin-top:2px}
+.logline{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:.86rem}
+.logline:last-child{border-bottom:0}
+.logline .at{font-family:var(--mono);font-size:.72rem;color:var(--muted);white-space:nowrap;padding-top:2px}
 #toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;width:max-content;max-width:92vw}
 .toast{background:var(--forest-deep);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);animation:toastIn .3s var(--ease) both,toastOut .4s var(--ease) 2.8s both;display:flex;align-items:center;gap:8px}
-.toast.ok{background:var(--ok)} .toast.bad{background:var(--bad)} .toast.gold{background:var(--gold);color:#1f1300}
+.toast.ok{background:var(--ok);color:#fff}
+.toast.bad{background:var(--bad);color:#fff}
+.toast.gold{background:var(--gold);color:#1f1300}
+html[data-theme=dark] .toast.ok{background:#166534}
+html[data-theme=dark] .toast.bad{background:#991b1b}
 
-/* ---------- Agreement / FAQ / About ---------- */
+/* ---------- Dashboard: committee cards + cash-flow calendar ---------- */
+.ccard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;cursor:pointer;position:relative}
+.ccard .ring{width:66px;height:66px}
+.ccard .ring circle{stroke-width:8}
+.ccard .ring .track{stroke:var(--surface-2)}
+.ccard .ring .prog{stroke:var(--forest)}
+html[data-theme=dark] .ccard .ring .prog{stroke:var(--mint-2)}
+.ccard .ring .lbl{font-size:.8rem;color:var(--ink)}
+.ccard h3{font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ccard .row{display:flex;gap:8px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:4px}
+.ccard.active{border-color:var(--forest);box-shadow:0 0 0 2px var(--mint)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .dow{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;font-weight:700;padding:4px 0}
+.cal .day{min-height:74px;border:1px solid var(--line);border-radius:8px;padding:4px;background:var(--surface);font-size:.72rem;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cal .day.other{opacity:.35}
+.cal .day.today{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.cal .day .dn{font-family:var(--mono);font-weight:600;color:var(--muted)}
+.cal .ev{border-radius:5px;padding:2px 5px;font-size:.66rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:3px;align-items:center}
+.cal .ev.in{background:var(--mint);color:var(--forest-deep)}
+.cal .ev.out{background:var(--gold-soft);color:var(--gold-deep)}
+html[data-theme=dark] .cal .ev.in{color:#f1fff6}
+.cal .ev .ic{width:.9em;height:.9em}
+.evlist{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.evrow{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:.86rem}
+.evrow .d{font-family:var(--mono);font-weight:700;color:var(--forest-deep)}
+html[data-theme=dark] .evrow .d{color:var(--mint-2)}
+.evrow .amt{font-weight:600}
+
+/* ---------- People / profile / disputes ---------- */
+.pcard{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.pcard .avatar{width:44px;height:44px;font-size:.95rem}
+.pcard .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.outc{display:flex;gap:4px;flex-wrap:wrap}
+.outc i{display:inline-block;width:10px;height:10px;border-radius:2px}
+.hist{position:relative;padding-left:18px;margin-top:8px}
+.hist::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.hist .h{position:relative;padding:4px 0 10px;font-size:.86rem}
+.hist .h::before{content:"";position:absolute;left:-17px;top:9px;width:8px;height:8px;border-radius:50%;background:var(--forest);border:2px solid var(--surface)}
+.hist .h .at{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.dstatus{display:inline-flex;align-items:center;gap:4px}
+
+/* ---------- Planner ---------- */
+.planner .res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.planner .res div{background:var(--surface-2);border-radius:12px;padding:12px 14px}
+.planner .res b{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.planner .res .v{font-family:var(--mono);font-size:1.15rem;font-weight:600;margin-top:2px}
+.planner .res .v.pos{color:var(--ok)}
+.planner .res .v.neg{color:var(--bad)}
+.turnrow td.hi{background:var(--gold-soft)}
+
+/* ---------- Receipt / QR ---------- */
+.receipt{border:1px dashed var(--line);border-radius:12px;padding:16px;background:var(--surface);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start}
+.receipt h3{font-size:1rem;letter-spacing:.06em;text-transform:uppercase;color:var(--forest-deep)}
+.receipt .no{font-family:var(--mono);color:var(--muted);font-size:.8rem}
+.receipt dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:10px 0;font-size:.9rem}
+.receipt dt{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;align-self:center}
+.receipt dd{margin:0;font-weight:600}
+.receipt canvas{width:132px;height:132px;image-rendering:pixelated;border:1px solid var(--line);border-radius:8px;background:#fff}
+.receipt .code{font-family:var(--mono);font-size:.7rem;color:var(--muted);text-align:center;margin-top:4px;word-break:break-all;max-width:132px}
+.receipt .stamp{display:inline-block;border:2px solid var(--ok);color:var(--ok);border-radius:6px;padding:2px 8px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;transform:rotate(-4deg);margin-top:6px}
+
+/* ---------- Lock screen + tour ---------- */
+.lock{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,var(--forest-deep),var(--forest) 60%,#2a7d47);color:#f1fff6;display:none;align-items:center;justify-content:center;padding:20px}
+body.locked .lock{display:flex}
+body.locked .wrap,body.locked .topbar{filter:blur(6px);pointer-events:none;user-select:none}
+.lockbox{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:26px 24px;width:min(340px,100%);text-align:center;backdrop-filter:blur(8px)}
+.lockbox h2{font-size:1.1rem;margin:10px 0 4px}
+.lockbox p{margin:0 0 14px;opacity:.8;font-size:.9rem}
+.dots{display:flex;justify-content:center;gap:10px;margin:10px 0 18px;min-height:16px}
+.dots i{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.6)}
+.dots i.on{background:var(--mint-2);border-color:var(--mint-2)}
+.dots.wrong{animation:shake .4s}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keypad button{height:52px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:1.2rem;font-weight:600;cursor:pointer;font-family:var(--mono)}
+.keypad button:hover{background:rgba(255,255,255,.2)}
+.tour-hi{position:fixed;z-index:70;border-radius:12px;box-shadow:0 0 0 9999px rgba(11,59,31,.6),0 0 0 3px var(--gold);pointer-events:none;transition:all .3s var(--ease);display:none}
+.tour-card{position:fixed;z-index:71;width:min(340px,calc(100vw - 24px));background:var(--surface);color:var(--ink);border-radius:14px;padding:16px 18px;box-shadow:0 30px 70px -20px rgba(0,0,0,.6);display:none;animation:pop .25s var(--ease)}
+body.touring .tour-hi,body.touring .tour-card{display:block}
+.tour-card h4{font-size:1rem;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.tour-card p{margin:0 0 12px;font-size:.9rem;color:var(--muted)}
+.tour-card .steps{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.tour-card .foot{display:flex;gap:6px;align-items:center}
+.kbd{font-family:var(--mono);font-size:.74rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;background:var(--surface-2)}
+
+/* ---------- Agreement / FAQ / About / statements ---------- */
 .doc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px 32px;max-width:860px;margin:0 auto;font-size:.92rem;direction:ltr;text-align:left}
 .doc h3{font-size:1.25rem;text-align:center;letter-spacing:.04em;text-transform:uppercase;color:var(--forest-deep);margin-bottom:4px}
+html[data-theme=dark] .doc h3,html[data-theme=dark] .receipt h3{color:var(--mint-2)}
 .doc .sub{text-align:center;color:var(--muted);margin-bottom:18px;font-size:.85rem}
-.doc ol{padding-left:20px;margin:8px 0} .doc li{margin:6px 0}
+.doc ol{padding-left:20px;margin:8px 0}
+.doc li{margin:6px 0}
 .doc .terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 16px;background:var(--mint-soft);border-radius:10px;padding:12px 14px;margin:12px 0}
 .doc .terms div b{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .doc .ur{margin-top:22px;padding-top:18px;border-top:1px dashed var(--line);font-size:1rem}
 .doc .ur h3{font-family:var(--font-ur);text-transform:none;font-size:1.3rem}
 .doc .ur ol{padding-right:22px;padding-left:0}
+.doc .pagebreak{page-break-after:always;break-after:page;height:0;margin:24px 0;border-top:1px dashed var(--line)}
+.doc .tot4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.doc .tot4 div{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.doc .tot4 b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .sigs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px 20px;margin-top:20px}
-.sig{border-top:1px solid var(--ink);padding-top:6px;font-size:.82rem} .sig b{display:block} .sig span{color:var(--muted)}
+.sig{border-top:1px solid var(--ink);padding-top:6px;font-size:.82rem}
+.sig b{display:block}
+.sig span{color:var(--muted)}
 .faq details{border:1px solid var(--line);border-radius:10px;padding:0 14px;margin-bottom:8px;background:var(--surface)}
 .faq summary{padding:12px 0;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none;min-height:44px}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary .ic{color:var(--forest);transition:transform .25s var(--ease)} .faq details[open] summary .ic{transform:rotate(90deg)}
+.faq summary .ic{color:var(--forest);transition:transform .25s var(--ease)}
+.faq details[open] summary .ic{transform:rotate(90deg)}
 .faq p{margin:0 0 12px;color:var(--muted);font-size:.9rem}
 .todo{border:1px dashed var(--forest);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
 .todo h4{margin:0 0 6px;font-size:.95rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -286,39 +507,66 @@ body.modal-open .modal{display:flex}
 .rowi{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--surface);transition:background .15s}
 .rowi:hover{background:var(--mint-soft)}
 .statement .tot{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
-.statement .tot div{background:var(--surface-2);border-radius:10px;padding:8px 10px} .statement .tot b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.statement .tot div{background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.statement .tot b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.modmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.modmap div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.84rem;background:var(--surface)}
+.modmap b{display:flex;align-items:center;gap:6px}
 
 /* ---------- Responsive ---------- */
-@media (max-width:1000px){ .g4{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(2,minmax(0,1fr))} .g21{grid-template-columns:minmax(0,1fr)} .mstats{grid-template-columns:repeat(3,minmax(0,1fr))} .optgrid{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:1000px){
+  .g4,.g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g5{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g21,.g12{grid-template-columns:minmax(0,1fr)}
+  .mstats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .optgrid{grid-template-columns:minmax(0,1fr)}
+}
 @media (max-width:700px){
   .topbar{flex-wrap:wrap;row-gap:8px;padding:10px 12px}
-  .brand small{display:none} .brand h1{font-size:.95rem}
-  .switcher{order:10;flex:1 1 100%;justify-content:space-between} .switcher select{max-width:none;flex:1}
+  .brand small{display:none}
+  .brand h1{font-size:.95rem}
+  .switcher{order:10;flex:1 1 100%;justify-content:space-between}
+  .switcher select{max-width:none;flex:1}
   .topbar .spacer{display:none}
-  .tb-btn .lbl{display:none} .tb-btn{padding:8px 10px}
+  .tb-btn .lbl{display:none}
+  .tb-btn{padding:8px 10px}
   .wrap{padding:12px 12px 70px}
   .pot{grid-template-columns:auto minmax(0,1fr);padding:16px;gap:12px 14px}
-  .pot .side{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0} .pot .side .btn{flex:1}
-  .ring{width:96px;height:96px} .ring .lbl{font-size:1.1rem}
-  .g2,.g3,.g4{grid-template-columns:minmax(0,1fr)} .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pot .side{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0}
+  .pot .side .btn{flex:1}
+  .ring{width:96px;height:96px}
+  .ring .lbl{font-size:1.1rem}
+  .g2,.g3{grid-template-columns:minmax(0,1fr)}
+  .g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mstats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .planner .res{grid-template-columns:minmax(0,1fr)}
   .kpi .v{font-size:1.1rem}
   .hbar{grid-template-columns:88px minmax(0,1fr) 46px}
   .doc{padding:18px 16px}
+  .doc .tot4{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sheet .foot .left{margin-right:0;width:100%}
   .statement .tot{grid-template-columns:repeat(2,minmax(0,1fr))}
   .tbl th,.tbl td{padding:8px 10px}
   .matrix th.name,.matrix td.name{min-width:128px;max-width:140px;padding:6px 8px;font-size:.78rem}
-  .cell{width:84px}
+  .cell{width:86px}
   .countdown .n{font-size:2rem}
-  .tl{grid-template-columns:minmax(0,1fr)} .tl>.amt{text-align:left}
+  .tl{grid-template-columns:minmax(0,1fr)}
+  .tl>.amt{text-align:left}
+  .cal .day{min-height:46px;padding:3px}
+  .cal .ev span{display:none}
+  .cal .ev{justify-content:center;padding:2px}
+  .receipt{grid-template-columns:minmax(0,1fr)}
+  .receipt canvas{justify-self:center}
+  .evrow{grid-template-columns:44px minmax(0,1fr)}
+  .evrow .amt{grid-column:2}
 }
 @media print{
   body.printing>*:not(#printRoot){display:none!important}
   #printRoot{display:block!important;padding:0}
-  .doc{border:0;padding:0;max-width:none;box-shadow:none}
+  .doc{border:0;padding:0;max-width:none;box-shadow:none;background:#fff;color:#000}
   .btn,.toolbar{display:none!important}
   body{background:#fff}
+  .receipt{break-inside:avoid}
 }
 #printRoot{display:none}
 .noanim.enter,.noanim .enter,.noanim .stagger>*{animation:none}
@@ -337,17 +585,18 @@ body.modal-open .modal{display:flex}
 <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
 <symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
 <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
 <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
 <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
 <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
 <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
 <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
 <symbol id="i-timer" viewBox="0 0 24 24"><path d="M10 2h4M12 14l3-3"/><circle cx="12" cy="14" r="8"/></symbol>
 <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
 <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
 <symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
-<symbol id="i-whatsapp" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M9 8.5c.2 2.6 2.4 5.4 5.3 6.4.6.2 1.2 0 1.6-.4l.6-.7-1.9-1.2-1 .8a6 6 0 0 1-2.5-2.5l.8-1L10.7 8 10 8c-.6 0-1 .3-1 .5Z"/></symbol>
 <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
 <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
@@ -356,11 +605,13 @@ body.modal-open .modal{display:flex}
 <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
 <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol>
 <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
 <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
 <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.1 10.4a6 6 0 1 1-7.7 7.7"/><path d="M7 6h1v4"/></symbol>
 <symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1M16 11h.01"/></symbol>
 <symbol id="i-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6"/></symbol>
+<symbol id="i-trending-down" viewBox="0 0 24 24"><path d="m22 17-8.5-8.5-5 5L2 7M16 17h6v-6"/></symbol>
 <symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-3"/></symbol>
 <symbol id="i-pie-chart" viewBox="0 0 24 24"><path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></symbol>
 <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
@@ -379,6 +630,28 @@ body.modal-open .modal{display:flex}
 <symbol id="i-pen-tool" viewBox="0 0 24 24"><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.6 7.6"/><circle cx="11" cy="11" r="2"/></symbol>
 <symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
 <symbol id="i-sort" viewBox="0 0 24 24"><path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
+<symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
+<symbol id="i-hash" viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></symbol>
+<symbol id="i-credit-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5Z"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
+<symbol id="i-whatsapp" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M9 8.5c.2 2.6 2.4 5.4 5.3 6.4.6.2 1.2 0 1.6-.4l.6-.7-1.9-1.2-1 .8a6 6 0 0 1-2.5-2.5l.8-1L10.7 8 10 8c-.6 0-1 .3-1 .5Z"/></symbol>
 </svg>
 
 <header class="topbar">
@@ -386,731 +659,435 @@ body.modal-open .modal{display:flex}
     <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v4c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 10v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/><path d="M5 14v4c0 1.7 3.1 3 7 3s7-1.3 7-3v-4"/></svg></div>
     <div><h1 id="appTitle">Kameti Manager</h1><small id="appTag">Every rupee, every month, on record</small></div>
   </div>
-  <div class="switcher"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg><label class="sr" for="cSel">Committee</label><select id="cSel" aria-label="Switch committee"></select><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></div>
+  <div class="switcher" id="switcher"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg><label class="sr" for="cSel">Committee</label><select id="cSel" aria-label="Switch committee"></select><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg></div>
   <div class="spacer"></div>
   <button class="tb-btn" id="newBtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span class="lbl" id="newLbl">New committee</span></button>
+  <button class="tb-btn ghost icon" id="bellBtn" aria-label="Notifications"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span class="dot hidden" id="bellDot">0</span></button>
+  <button class="tb-btn ghost icon hidden" id="lockBtn" aria-label="Lock"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></button>
+  <a class="tb-btn ghost icon" id="settingsBtn" href="#settings" aria-label="Settings"><svg class="ic" aria-hidden="true"><use href="#i-settings"/></svg></a>
   <button class="tb-btn ghost lang" id="langBtn" aria-label="Switch language"><svg class="ic" aria-hidden="true"><use href="#i-languages"/></svg><span>اردو</span></button>
 </header>
 
 <div class="wrap">
   <section class="pot" id="pot" aria-live="polite"></section>
+  <div id="banner"></div>
   <nav class="tabs" id="tabs" aria-label="Sections"></nav>
   <main id="view"></main>
 </div>
 
 <div class="scrim" id="scrim"></div>
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<aside class="drawer" id="drawer" role="dialog" aria-label="Inbox"></aside>
 <div class="pop" id="pop" role="dialog"></div>
 <div id="toasts" aria-live="polite"></div>
+<div class="lock" id="lock" role="dialog" aria-modal="true" aria-label="Locked"></div>
+<div class="tour-hi" id="tourHi" aria-hidden="true"></div>
+<div class="tour-card" id="tourCard" role="dialog" aria-live="polite"></div>
 <div id="printRoot"></div>
 
 <script>
 'use strict';
 /* =====================================================================
    Kameti (Committee / ROSCA) Manager — single-file app
-   Sections: utils · i18n · seed data · model (cycles, payments, trust) ·
-             charts · pot hero · views (overview, members, payments,
-             schedule, agreement, about) · modals · router
+   Sections:
+     1. utils            $, store, esc, formatters, dates, hashing, RNG
+     2. i18n             TXT.en / TXT.ur dictionaries, t(), tf()
+     3. settings         theme, motion, PIN, reminder lead, tour flag
+     4. activity + inbox append-only log, notifications with read state
+     5. model            cycles, payments, grace & penalties, trust, needs
+     6. seed data        4 deterministic demo committees
+     7. charts           lineChart, barChart, sparkline, hbars (SVG)
+     8. pot hero + banner
+     9. views            dashboard, overview, members, payments, schedule,
+                         disputes, people, planner, reports, agreement,
+                         settings, about
+    10. modals           committee, member, lottery, need, dispute, receipt,
+                         statement, cell editor, reminders, PIN, tour
+    11. router & init
    Student extension points are marked with  TODO(student)
    ===================================================================== */
 
-// ---------- utils ----------
+// ---------- 1. utils ----------
 const NS = 'kameti:';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
 const store = {
-  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch {} syncToBackend(k, v); }
+  get(k, d) {
+    try {
+      const v = localStorage.getItem(NS + k);
+      return v == null ? d : JSON.parse(v);
+    } catch {
+      return d;
+    }
+  },
+  set(k, v) {
+    try {
+      localStorage.setItem(NS + k, JSON.stringify(v));
+    } catch {
+      /* quota or private mode: keep working in memory */
+    }
+    syncToBackend(k, v);
+  },
+  remove(k) {
+    try {
+      localStorage.removeItem(NS + k);
+    } catch {
+      /* ignore */
+    }
+  },
+  keys() {
+    const out = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(NS)) out.push(k.slice(NS.length));
+      }
+    } catch {
+      /* ignore */
+    }
+    return out;
+  },
+  bytes() {
+    let n = 0;
+    try {
+      for (const k of this.keys()) n += (localStorage.getItem(NS + k) || '').length * 2;
+    } catch {
+      /* ignore */
+    }
+    return n;
+  }
 };
-// TODO(student): multi-device sync. Push every store.set() to a backend (Firebase / Supabase / your own REST API) with member logins,
-// and pull on startup. Keep localStorage as the offline cache and resolve conflicts with a lastModified timestamp per record.
+
+// TODO(student): multi-device sync. Push every store.set() to a backend (Firebase / Supabase / your own REST API) with member
+// logins, and pull on startup. Keep localStorage as the offline cache and resolve conflicts with a lastModified timestamp per record.
 function syncToBackend(/* key, value */) {}
+
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const uid = () => Math.random().toString(36).slice(2, 9);
 const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const nf = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 });
-const rs = n => 'Rs ' + nf.format(Math.round(n || 0));
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const sum = arr => arr.reduce((a, b) => a + b, 0);
+
+/* Rupee formatting honours the "compact numbers" setting (Rs 1.2M / Rs 45k). */
+function rs(n) {
+  const v = Math.round(n || 0);
+  if (SETTINGS.compact && Math.abs(v) >= 100000) return 'Rs ' + (v / 1000000).toFixed(v >= 10000000 ? 0 : 2).replace(/\.?0+$/, '') + 'M';
+  if (SETTINGS.compact && Math.abs(v) >= 10000) return 'Rs ' + Math.round(v / 1000) + 'k';
+  return 'Rs ' + nf.format(v);
+}
+const rsFull = n => 'Rs ' + nf.format(Math.round(n || 0));
 const pctf = n => Math.round(n * 100) + '%';
-const toast = (msg, type = '', icon = 'info') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = ic(type === 'ok' ? 'check-circle' : type === 'bad' ? 'alert-circle' : icon) + `<span>${esc(msg)}</span>`; $('#toasts').append(t); setTimeout(() => t.remove(), 3300); };
-const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i))); };
-const countUp = (el, to, { dur = 700, fmt = v => nf.format(Math.round(v)) } = {}) => { if (!el) return; const t0 = performance.now(); const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
-const drawPath = p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; };
-const animBars = root => requestAnimationFrame(() => $$('[data-w]', root).forEach(b => b.style.width = b.dataset.w));
-const today = new Date(); today.setHours(0, 0, 0, 0);
-const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const fromIso = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const kfmt = v => (v >= 1000 ? Math.round(v / 1000) + 'k' : String(Math.round(v)));
+
+function toast(msg, type = '', icon = 'info') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icn = type === 'ok' ? 'check-circle' : type === 'bad' ? 'alert-circle' : icon;
+  el.innerHTML = ic(icn) + `<span>${esc(msg)}</span>`;
+  $('#toasts').append(el);
+  setTimeout(() => el.remove(), 3300);
+}
+
+/* Motion helpers from the kit */
+function animateIn(root) {
+  root.classList.remove('enter');
+  void root.offsetWidth;
+  root.classList.add('enter');
+  $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i)));
+}
+function countUp(el, to, { dur = 700, fmt = v => nf.format(Math.round(v)) } = {}) {
+  if (!el) return;
+  const t0 = performance.now();
+  const step = now => {
+    const p = Math.min(1, (now - t0) / dur);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(to * e);
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function drawPath(p) {
+  const L = p.getTotalLength();
+  p.style.strokeDasharray = L;
+  p.style.strokeDashoffset = L;
+  p.getBoundingClientRect();
+  p.style.transition = 'stroke-dashoffset .9s var(--ease)';
+  p.style.strokeDashoffset = 0;
+}
+const animBars = root => requestAnimationFrame(() => $$('[data-w]', root).forEach(b => (b.style.width = b.dataset.w)));
+const animRings = root => requestAnimationFrame(() => $$('[data-off]', root).forEach(p => (p.style.strokeDashoffset = p.dataset.off)));
+const countAll = root => $$('[data-count]', root).forEach(el => countUp(el, +el.dataset.count));
+
+/* Dates: the app works in whole days and calendar months. */
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const pad2 = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+function fromIso(s) {
+  const [y, m, d] = String(s).split('-').map(Number);
+  return new Date(y, m - 1, d || 1);
+}
 const ym = d => iso(d).slice(0, 7);
-const addMonths = (ymS, n) => { const [y, m] = ymS.split('-').map(Number); return ym(new Date(y, m - 1 + n, 1)); };
+function addMonths(ymS, n) {
+  const [y, m] = ymS.split('-').map(Number);
+  return ym(new Date(y, m - 1 + n, 1));
+}
+function addDays(d, n) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
 const daysBetween = (a, b) => Math.round((b - a) / 86400000);
-const loc = () => lang === 'ur' ? 'ur-PK-u-nu-latn' : 'en-PK';
-const monthLabel = (ymS, long = false) => { const [y, m] = ymS.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString(loc(), long ? { month: 'long', year: 'numeric' } : { month: 'short', year: '2-digit' }); };
-const dateLabel = (isoS, long = false) => isoS ? fromIso(isoS).toLocaleDateString(loc(), long ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' }) : '—';
-const initials = n => n.split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
+const daysInMonth = ymS => {
+  const [y, m] = ymS.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+};
+const loc = () => (lang === 'ur' ? 'ur-PK-u-nu-latn' : 'en-PK');
+function monthLabel(ymS, long = false) {
+  const [y, m] = ymS.split('-').map(Number);
+  const opts = long ? { month: 'long', year: 'numeric' } : { month: 'short', year: '2-digit' };
+  return new Date(y, m - 1, 1).toLocaleDateString(loc(), opts);
+}
+function dateLabel(isoS, long = false) {
+  if (!isoS) return '—';
+  const opts = long ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' };
+  return fromIso(isoS).toLocaleDateString(loc(), opts);
+}
+function timeAgo(isoTs) {
+  const diff = Math.max(0, Date.now() - new Date(isoTs).getTime());
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return tf('ago_m', { a: Math.max(1, mins) });
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return tf('ago_h', { a: hrs });
+  return tf('ago_d', { a: Math.floor(hrs / 24) });
+}
+
+const initials = n => String(n || '').split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
 const digits = p => String(p || '').replace(/\D/g, '');
 const waLink = (phone, text) => `https://wa.me/92${digits(phone).replace(/^0/, '')}?text=${encodeURIComponent(text)}`;
-const PHONE_RE = /^03\d{2}-\d{7}$/, CNIC_RE = /^\d{5}-\d{7}-\d$/;
-const download = (name, text, type = 'application/json') => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
-const seeded = seed => () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+const PHONE_RE = /^03\d{2}-\d{7}$/;
+const CNIC_RE = /^\d{5}-\d{7}-\d$/;
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-// ---------- i18n ----------
+function download(name, text, type = 'application/json') {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* Deterministic pseudo-randomness (LCG) for seed data and QR-style codes */
+function seeded(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) % 4294967296;
+    return s / 4294967296;
+  };
+}
+/* FNV-1a 32-bit: fast, deterministic, good enough for receipt codes and a local PIN check (not cryptographic). */
+function hash32(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+const hashHex = str => hash32(str).toString(16).padStart(8, '0') + hash32(str + '|k').toString(16).padStart(8, '0');
+
+// ---------- 2. i18n ----------
 let lang = store.get('lang', 'en');
-const L = {
-  en: {
-    title: 'Kameti Manager', tag: 'Every rupee, every month, on record', newC: 'New committee', noC: 'No committee yet',
-    nav_overview: 'Overview', nav_members: 'Members', nav_payments: 'Payments', nav_schedule: 'Schedule', nav_agreement: 'Agreement', nav_about: 'About',
-    pot_title: "This month's pot", pot_of: 'of {a} collected · {b}', pot_paid: '{a}/{b} slots paid', pot_recipient: 'Recipient', pot_due: 'Due {a}', pot_overdue: '{a} days overdue', pot_days: '{a} days left', pot_late: '{a} late', pot_unpaid: '{a} unpaid', pot_empty: 'Create your first committee to start tracking contributions.', pot_notStarted: 'Starts {a}', pot_finished: 'All cycles complete', pot_payments: 'Open payments', pot_remind: 'Remind unpaid', pot_unassigned: 'Unassigned slot',
-    kpi_collected: 'Collected this month', kpi_pending: 'Pending', kpi_members: 'Members', kpi_cycles: 'Cycles done', kpi_slots: '{a} slots', kpi_ofpot: 'of {a} pot', kpi_overdue: '{a} overdue', kpi_onTrack: 'on track', kpi_total: 'total {a}',
-    ch_rate: 'Collection rate per month', ch_ontime: 'On-time rate by member', ch_cum: 'Cumulative in vs out', ch_in: 'Collected (in)', ch_out: 'Paid out', ch_rate_s: 'Share of the expected pot actually collected each cycle.', ch_ontime_s: 'Paid on or before the collection day, across due cycles.', ch_cum_s: 'Money entering the pot vs. payouts handed over.', ch_nodata: 'No due cycles yet.',
-    ov_terms: 'Committee terms', ov_edit: 'Edit', ov_delete: 'Delete', ov_contrib: 'Monthly contribution', ov_pot: 'Pot per cycle', ov_cycles: 'Cycles', ov_start: 'Start', ov_day: 'Collection day', ov_method: 'Payout method', ov_late: 'Late-fee rule', ov_org: 'Organizer', ov_notes: 'Notes', ov_alerts: 'Needs attention', ov_alerts_s: 'Unpaid or partial for the current cycle.', ov_allgood: 'Everyone has paid this month.', ov_due: 'due {a}',
-    m_fixed: 'Fixed order', m_lottery: 'Lottery', m_organizer: 'Organizer decides', lf_none: 'No late fee', lf_flat: 'Rs {a} per late payment', lf_pct: '{a}% of contribution per week late',
-    mem_title: 'Members', mem_add: 'Add member', mem_name: 'Member', mem_phone: 'Phone', mem_cnic: 'CNIC', mem_slots: 'Slots', mem_turn: 'Payout turn', mem_trust: 'Trust', mem_month: 'This month', mem_actions: 'Actions', mem_statement: 'Statement', mem_edit: 'Edit', mem_delete: 'Remove', mem_empty: 'No members yet. Add the people in this committee.', mem_slot_n: 'slot {a}',
-    ord_title: 'Payout order', ord_s: 'Drag a row (or use the arrows) to change the order. Lottery assigns it randomly with a draw.', ord_draw: 'Lottery draw', ord_unassigned: 'Unassigned', ord_locked: 'already paid out', ord_count: '{a} of {b} slots filled',
-    trust_s: 'Trust score 0–100 from on-time, late and missed payments across all committees on this device.',
-    f_name: 'Committee name', f_contrib: 'Monthly contribution (PKR)', f_planned: 'Number of members (= cycles)', f_start: 'Start month', f_day: 'Collection day (1–28)', f_method: 'Payout method', f_late: 'Late-fee rule', f_lateval: 'Amount / percent', f_org: 'Organizer name', f_orgphone: 'Organizer phone', f_notes: 'Notes', f_save: 'Save', f_cancel: 'Cancel', f_create: 'Create committee', f_edit: 'Edit committee', f_delete: 'Delete committee', f_required: 'Required', f_phone_err: 'Use the format 03xx-xxxxxxx', f_cnic_err: 'Use the format 12345-1234567-1', f_num_err: 'Enter a valid number', f_day_err: '1 to 28',
-    mf_add: 'Add member', mf_edit: 'Edit member', mf_name: 'Full name', mf_phone: 'Mobile (03xx-xxxxxxx)', mf_cnic: 'CNIC (optional, only last 4 digits are stored)', mf_slots: 'Slots held', mf_pos: 'Payout position (slot {a})', mf_pos_any: 'Next free', mf_cnic_hint: 'Stored masked as •••••-•••••••-{a}',
-    del_c: 'Delete "{a}" and all its payments? This cannot be undone.', del_m: 'Remove {a} from this committee? Their payment records in this committee will be deleted.', del_ok: 'Delete', saved: 'Saved', deleted: 'Deleted', added: 'Added',
-    pay_title: 'Payments matrix', pay_hint: 'Click a cell to cycle its status (unpaid → paid → late → partial → waived). Long-press or right-click to edit amount, date and note.', pay_month: 'Month', pay_markall: 'Mark all paid', pay_remind: 'WhatsApp reminders', pay_csv: 'Export CSV', pay_expected: 'Expected pot', pay_collected: 'Collected', pay_pending: 'Pending', pay_fees: 'Late fees', pay_recipient: 'Recipient', pay_progress: 'Progress', pay_recip_row: 'Recipient', pay_marked: 'Marked {a} payments as paid', pay_none_unpaid: 'Nothing unpaid for this month', pay_future: 'Not yet due',
-    st_unpaid: 'Unpaid', st_paid: 'Paid', st_late: 'Late', st_partial: 'Partial', st_waived: 'Waived', st_overdue: 'Overdue',
-    ce_title: 'Edit payment', ce_amount: 'Amount (PKR)', ce_date: 'Date paid', ce_note: 'Note', ce_expected: 'Expected {a}', ce_ack: 'Request OTP acknowledgement',
-    wa_title: 'WhatsApp reminders', wa_s: 'One tap opens WhatsApp with the message pre-filled. Numbers are converted to +92 format.', wa_copy: 'Copy all', wa_send: 'Send', wa_sms: 'SMS', wa_copied: 'Copied', wa_text: 'Salam {name}, reminder from "{c}": your contribution of {amt} for {m} was due on {d}. Please pay {org} and reply with a confirmation. Shukriya!', wa_text_partial: 'Salam {name}, reminder from "{c}": {amt} is still pending on your {m} contribution (due {d}). Please pay {org}. Shukriya!',
-    sch_title: 'Payout schedule', sch_next: 'Next payout', sch_days: 'days', sch_in: 'in', sch_today: 'today', sch_ago: 'ago', sch_to: 'to', sch_expected: 'expected', sch_payout: 'payout', sch_done: 'Paid out', sch_current: 'Current', sch_upcoming: 'Upcoming', sch_pending: 'Payout pending', sch_record: 'Record payout', sch_recorded: 'Payout recorded', sch_undo: 'Undo payout', sch_on: 'on {a}', sch_fees: 'incl. {a} late fees', sch_complete: 'All payouts complete.',
-    sim_title: 'What if a member defaults?', sim_s: 'Pick a member and see the shortfall for every remaining cycle, plus the usual ways to handle it.', sim_pick: 'Member who stops paying', sim_month: 'Cycle', sim_short: 'Shortfall', sim_pot: 'Pot after shortfall', sim_total: 'Total shortfall over {a} remaining cycles', sim_split: 'Split among others', sim_split_s: 'each remaining member pays extra per cycle', sim_org: 'Organizer covers', sim_org_s: 'total the organizer would front', sim_swap: 'Swap order', sim_swap_s: 'move their turn to the last cycle so the pot is protected', sim_swap_done: 'Already received {a} on {b} — the group would need to recover it.', sim_none: 'No remaining cycles.', sim_received: 'received payout', sim_notyet: 'turn not yet reached',
-    ag_title: 'Committee agreement', ag_s: 'Generated from the committee terms in English and Urdu. Print it, have everyone sign, and keep a copy with the organizer.', ag_print: 'Print agreement', ag_sign: 'E-sign', ag_faq: 'How kametis work — and their risks', ag_risk: 'A kameti has no legal protection. Join only with people you trust, keep written records and never hand over cash without a signed entry.',
-    ab_title: 'About this project', ab_problem: 'The problem', ab_problem_t: 'Millions of Pakistani households save through informal rotating committees (kameti / beesi). They run on memory, paper and WhatsApp, so disputes over who paid, who is next and late payments are common — and there is no legal protection when things go wrong.', ab_how: 'How it works', ab_how_t: 'Each committee stores its members, payout order and a cycle × member payment matrix in your browser. Every number on screen — pot progress, pending, late fees, recipient, trust scores and charts — is derived from that matrix, so one tap on a cell updates everything.', ab_stack: 'Single HTML file, vanilla JS, hand-drawn SVG charts, localStorage, no backend.', ab_todo: 'Left for students', ab_data: 'Data & backup', ab_data_t: 'Everything lives in this browser under the "kameti:" prefix. Export a JSON backup regularly; import it on another device to move your committees.', ab_export: 'Export JSON', ab_import: 'Import JSON', ab_reset: 'Reset demo data', ab_imported: 'Imported {a} committees', ab_import_err: 'Could not read that file', ab_reset_q: 'Replace all data with the demo committees?', ab_reset_ok: 'Demo data restored',
-    faq: [
-      ['What is a kameti?', 'A kameti (also beesi or committee) is a rotating savings group: every member pays a fixed amount each month and one member takes the whole pot each cycle, until everyone has had a turn. It is an interest-free way to save for a large expense.'],
-      ['Who benefits from an early turn?', 'Early recipients effectively receive an interest-free loan; late recipients are effectively lending. That is why the order matters and should be transparent — a lottery or an agreed list that everyone signs.'],
-      ['What are the risks?', 'There is no legal protection: if the organizer or an early recipient disappears, the later members lose money. Only join committees run by people you know, keep written records and receipts, and never hand over cash without a signed entry.'],
-      ['What if someone stops paying?', 'Agree the rule before you start (clause 5 of the agreement). Use the default simulator in Schedule to see the shortfall and the options: split it, the organizer covers it, or move the defaulter\'s turn to the end.'],
-      ['Is a kameti like a bank account?', 'No. Banks are regulated and deposits are protected up to a limit; a kameti relies entirely on trust. Many families still prefer it because it enforces saving discipline and involves no interest.']
-    ],
-    stm_title: 'Member statement', stm_print: 'Print', stm_paid: 'Total paid', stm_fees: 'Late fees', stm_received: 'Received', stm_ontime: 'On-time', stm_dispute: 'Log dispute', stm_s: '{a} · {b} slot(s) · payout turn {c}',
-    lot_title: 'Lottery draw', lot_s: 'Shuffles every slot into a random payout order. Slots that have already been paid out stay fixed.', lot_draw: 'Draw', lot_again: 'Draw again', lot_apply: 'Apply this order', lot_applied: 'Payout order updated', lot_need: 'Add at least two members first',
-    confirm: 'Confirm', cancel: 'Cancel', close: 'Close', copy: 'Copy', none: 'None', unknown: 'Unknown', yes: 'Yes', no: 'No', months: 'months', m_short: 'mo', soon: 'Coming soon', not_built: 'This is a student extension — see About.'
-  },
-  ur: {
-    title: 'کمیٹی منیجر', tag: 'ہر روپیہ، ہر مہینہ، ریکارڈ پر', newC: 'نئی کمیٹی', noC: 'ابھی کوئی کمیٹی نہیں',
-    nav_overview: 'خلاصہ', nav_members: 'ممبران', nav_payments: 'ادائیگیاں', nav_schedule: 'شیڈول', nav_agreement: 'معاہدہ', nav_about: 'تعارف',
-    pot_title: 'اس مہینے کی وصولی', pot_of: '{a} میں سے وصول · {b}', pot_paid: '{b} میں سے {a} حصے ادا', pot_recipient: 'وصول کنندہ', pot_due: 'آخری تاریخ {a}', pot_overdue: '{a} دن تاخیر', pot_days: '{a} دن باقی', pot_late: '{a} تاخیر سے', pot_unpaid: '{a} غیر ادا', pot_empty: 'قسطوں کا حساب شروع کرنے کے لیے پہلی کمیٹی بنائیں۔', pot_notStarted: 'آغاز {a}', pot_finished: 'تمام سائیکل مکمل', pot_payments: 'ادائیگیاں دیکھیں', pot_remind: 'یاد دہانی بھیجیں', pot_unassigned: 'خالی حصہ',
-    kpi_collected: 'اس ماہ وصولی', kpi_pending: 'باقی', kpi_members: 'ممبران', kpi_cycles: 'مکمل سائیکل', kpi_slots: '{a} حصے', kpi_ofpot: '{a} میں سے', kpi_overdue: '{a} واجب الادا', kpi_onTrack: 'سب ٹھیک', kpi_total: 'کل {a}',
-    ch_rate: 'ماہانہ وصولی کی شرح', ch_ontime: 'ممبر کے لحاظ سے بروقت ادائیگی', ch_cum: 'مجموعی آمد بمقابلہ ادائیگی', ch_in: 'وصول شدہ', ch_out: 'ادا شدہ', ch_rate_s: 'ہر سائیکل میں متوقع رقم کا کتنا حصہ واقعی وصول ہوا۔', ch_ontime_s: 'وصولی کی تاریخ تک یا اس سے پہلے ادا کی گئی قسطوں کا تناسب۔', ch_cum_s: 'پاٹ میں آنے والی رقم بمقابلہ دی گئی ادائیگیاں۔', ch_nodata: 'ابھی کوئی سائیکل واجب نہیں۔',
-    ov_terms: 'کمیٹی کی شرائط', ov_edit: 'ترمیم', ov_delete: 'حذف', ov_contrib: 'ماہانہ قسط', ov_pot: 'فی سائیکل رقم', ov_cycles: 'سائیکل', ov_start: 'آغاز', ov_day: 'وصولی کی تاریخ', ov_method: 'ادائیگی کا طریقہ', ov_late: 'تاخیری جرمانہ', ov_org: 'منتظم', ov_notes: 'نوٹس', ov_alerts: 'توجہ درکار', ov_alerts_s: 'موجودہ سائیکل میں غیر ادا یا جزوی ادائیگیاں۔', ov_allgood: 'اس مہینے سب نے ادائیگی کر دی۔', ov_due: 'آخری تاریخ {a}',
-    m_fixed: 'مقررہ ترتیب', m_lottery: 'قرعہ اندازی', m_organizer: 'منتظم کا فیصلہ', lf_none: 'کوئی تاخیری جرمانہ نہیں', lf_flat: 'ہر تاخیری ادائیگی پر {a} روپے', lf_pct: 'ہر ہفتے کی تاخیر پر قسط کا {a}%',
-    mem_title: 'ممبران', mem_add: 'ممبر شامل کریں', mem_name: 'ممبر', mem_phone: 'فون', mem_cnic: 'شناختی کارڈ', mem_slots: 'حصے', mem_turn: 'باری', mem_trust: 'اعتماد', mem_month: 'اس ماہ', mem_actions: 'عمل', mem_statement: 'گوشوارہ', mem_edit: 'ترمیم', mem_delete: 'نکالیں', mem_empty: 'ابھی کوئی ممبر نہیں۔ اس کمیٹی کے لوگ شامل کریں۔', mem_slot_n: 'حصہ {a}',
-    ord_title: 'ادائیگی کی ترتیب', ord_s: 'ترتیب بدلنے کے لیے قطار کو گھسیٹیں یا تیر استعمال کریں۔ قرعہ اندازی ترتیب خود مقرر کرتی ہے۔', ord_draw: 'قرعہ اندازی', ord_unassigned: 'خالی', ord_locked: 'ادائیگی ہو چکی', ord_count: '{b} میں سے {a} حصے پُر',
-    trust_s: 'اعتماد کا اسکور 0–100: اس ڈیوائس پر تمام کمیٹیوں میں بروقت، تاخیری اور چھوٹی ہوئی ادائیگیوں سے۔',
-    f_name: 'کمیٹی کا نام', f_contrib: 'ماہانہ قسط (روپے)', f_planned: 'ممبران کی تعداد (= سائیکل)', f_start: 'آغاز کا مہینہ', f_day: 'وصولی کی تاریخ (1–28)', f_method: 'ادائیگی کا طریقہ', f_late: 'تاخیری جرمانے کا اصول', f_lateval: 'رقم / فیصد', f_org: 'منتظم کا نام', f_orgphone: 'منتظم کا فون', f_notes: 'نوٹس', f_save: 'محفوظ کریں', f_cancel: 'منسوخ', f_create: 'کمیٹی بنائیں', f_edit: 'کمیٹی میں ترمیم', f_delete: 'کمیٹی حذف کریں', f_required: 'لازمی', f_phone_err: 'فارمیٹ 03xx-xxxxxxx استعمال کریں', f_cnic_err: 'فارمیٹ 12345-1234567-1 استعمال کریں', f_num_err: 'درست نمبر درج کریں', f_day_err: '1 سے 28',
-    mf_add: 'ممبر شامل کریں', mf_edit: 'ممبر میں ترمیم', mf_name: 'پورا نام', mf_phone: 'موبائل (03xx-xxxxxxx)', mf_cnic: 'شناختی کارڈ (اختیاری، صرف آخری 4 ہندسے محفوظ ہوں گے)', mf_slots: 'حصوں کی تعداد', mf_pos: 'باری کا نمبر (حصہ {a})', mf_pos_any: 'اگلا خالی', mf_cnic_hint: 'اس طرح محفوظ ہوگا: •••••-•••••••-{a}',
-    del_c: '"{a}" اور اس کی تمام ادائیگیاں حذف کریں؟ یہ واپس نہیں ہو سکتا۔', del_m: '{a} کو اس کمیٹی سے نکالیں؟ اس کمیٹی میں ان کا ادائیگی ریکارڈ حذف ہو جائے گا۔', del_ok: 'حذف کریں', saved: 'محفوظ ہو گیا', deleted: 'حذف ہو گیا', added: 'شامل ہو گیا',
-    pay_title: 'ادائیگیوں کا جدول', pay_hint: 'خانے پر کلک کریں تو حالت بدلتی ہے (غیر ادا ← ادا ← تاخیر ← جزوی ← معاف)۔ رقم، تاریخ اور نوٹ کے لیے دیر تک دبائیں یا رائٹ کلک کریں۔', pay_month: 'مہینہ', pay_markall: 'سب ادا شدہ کریں', pay_remind: 'واٹس ایپ یاد دہانی', pay_csv: 'CSV برآمد', pay_expected: 'متوقع رقم', pay_collected: 'وصول شدہ', pay_pending: 'باقی', pay_fees: 'تاخیری جرمانہ', pay_recipient: 'وصول کنندہ', pay_progress: 'پیش رفت', pay_recip_row: 'وصول کنندہ', pay_marked: '{a} ادائیگیاں ادا شدہ کر دی گئیں', pay_none_unpaid: 'اس مہینے کوئی قسط باقی نہیں', pay_future: 'ابھی واجب نہیں',
-    st_unpaid: 'غیر ادا', st_paid: 'ادا', st_late: 'تاخیر', st_partial: 'جزوی', st_waived: 'معاف', st_overdue: 'واجب الادا',
-    ce_title: 'ادائیگی میں ترمیم', ce_amount: 'رقم (روپے)', ce_date: 'ادائیگی کی تاریخ', ce_note: 'نوٹ', ce_expected: 'متوقع {a}', ce_ack: 'OTP تصدیق طلب کریں',
-    wa_title: 'واٹس ایپ یاد دہانی', wa_s: 'ایک ٹیپ پر واٹس ایپ پیغام کے ساتھ کھلتا ہے۔ نمبر خود بخود +92 فارمیٹ میں بدل جاتے ہیں۔', wa_copy: 'سب کاپی کریں', wa_send: 'بھیجیں', wa_sms: 'SMS', wa_copied: 'کاپی ہو گیا', wa_text: 'سلام {name}، "{c}" کی طرف سے یاد دہانی: {m} کی آپ کی قسط {amt} کی آخری تاریخ {d} تھی۔ براہ کرم {org} کو ادا کریں اور تصدیق بھیجیں۔ شکریہ!', wa_text_partial: 'سلام {name}، "{c}" کی طرف سے یاد دہانی: {m} کی قسط میں {amt} باقی ہیں (آخری تاریخ {d})۔ براہ کرم {org} کو ادا کریں۔ شکریہ!',
-    sch_title: 'ادائیگی کا شیڈول', sch_next: 'اگلی ادائیگی', sch_days: 'دن', sch_in: 'بعد', sch_today: 'آج', sch_ago: 'پہلے', sch_to: 'کو', sch_expected: 'متوقع', sch_payout: 'ادائیگی', sch_done: 'ادا ہو گئی', sch_current: 'موجودہ', sch_upcoming: 'آنے والی', sch_pending: 'ادائیگی باقی', sch_record: 'ادائیگی درج کریں', sch_recorded: 'ادائیگی درج ہو گئی', sch_undo: 'ادائیگی واپس', sch_on: '{a} کو', sch_fees: 'بشمول {a} تاخیری جرمانہ', sch_complete: 'تمام ادائیگیاں مکمل۔',
-    sim_title: 'اگر کوئی ممبر ادائیگی روک دے؟', sim_s: 'ایک ممبر چنیں اور باقی ہر سائیکل میں کمی اور اسے سنبھالنے کے عام طریقے دیکھیں۔', sim_pick: 'ادائیگی روکنے والا ممبر', sim_month: 'سائیکل', sim_short: 'کمی', sim_pot: 'کمی کے بعد رقم', sim_total: 'باقی {a} سائیکلوں میں کل کمی', sim_split: 'باقی ممبران میں تقسیم', sim_split_s: 'ہر باقی ممبر فی سائیکل اضافی ادا کرے', sim_org: 'منتظم ادا کرے', sim_org_s: 'منتظم کو کل اتنی رقم پیشگی دینی ہوگی', sim_swap: 'باری بدلیں', sim_swap_s: 'ان کی باری آخری سائیکل میں کر دیں تاکہ رقم محفوظ رہے', sim_swap_done: '{b} کو {a} وصول کر چکے ہیں — گروپ کو یہ رقم واپس لینی ہوگی۔', sim_none: 'کوئی سائیکل باقی نہیں۔', sim_received: 'ادائیگی وصول', sim_notyet: 'باری ابھی نہیں آئی',
-    ag_title: 'کمیٹی معاہدہ', ag_s: 'کمیٹی کی شرائط سے انگریزی اور اردو میں تیار کیا گیا۔ پرنٹ کریں، سب سے دستخط لیں اور ایک نقل منتظم کے پاس رکھیں۔', ag_print: 'معاہدہ پرنٹ کریں', ag_sign: 'ای-دستخط', ag_faq: 'کمیٹی کیسے چلتی ہے — اور اس کے خطرات', ag_risk: 'کمیٹی کو کوئی قانونی تحفظ نہیں۔ صرف بھروسے کے لوگوں کے ساتھ شامل ہوں، تحریری ریکارڈ رکھیں اور دستخط شدہ اندراج کے بغیر نقد رقم کبھی نہ دیں۔',
-    ab_title: 'اس پروجیکٹ کے بارے میں', ab_problem: 'مسئلہ', ab_problem_t: 'پاکستان کے لاکھوں گھرانے غیر رسمی کمیٹیوں (بیسی) کے ذریعے بچت کرتے ہیں۔ یہ یادداشت، کاغذ اور واٹس ایپ پر چلتی ہیں، اس لیے کس نے ادا کیا، اگلی باری کس کی ہے اور تاخیری ادائیگیوں پر جھگڑے عام ہیں — اور معاملہ خراب ہو تو کوئی قانونی تحفظ نہیں۔', ab_how: 'یہ کیسے کام کرتا ہے', ab_how_t: 'ہر کمیٹی اپنے ممبران، ادائیگی کی ترتیب اور سائیکل × ممبر ادائیگی جدول آپ کے براؤزر میں محفوظ رکھتی ہے۔ سکرین پر ہر عدد — وصولی، باقی، جرمانے، وصول کنندہ، اعتماد اسکور اور چارٹ — اسی جدول سے نکلتا ہے، لہٰذا ایک خانے پر ٹیپ سب کچھ اپڈیٹ کر دیتا ہے۔', ab_stack: 'ایک HTML فائل، سادہ جاوا اسکرپٹ، ہاتھ سے بنے SVG چارٹ، localStorage، کوئی بیک اینڈ نہیں۔', ab_todo: 'طلبہ کے لیے باقی کام', ab_data: 'ڈیٹا اور بیک اپ', ab_data_t: 'سب کچھ اسی براؤزر میں "kameti:" کے تحت محفوظ ہے۔ باقاعدگی سے JSON بیک اپ لیں؛ دوسرے آلے پر درآمد کر کے کمیٹیاں منتقل کریں۔', ab_export: 'JSON برآمد کریں', ab_import: 'JSON درآمد کریں', ab_reset: 'ڈیمو ڈیٹا بحال کریں', ab_imported: '{a} کمیٹیاں درآمد ہوئیں', ab_import_err: 'فائل پڑھی نہ جا سکی', ab_reset_q: 'تمام ڈیٹا کی جگہ ڈیمو کمیٹیاں رکھ دیں؟', ab_reset_ok: 'ڈیمو ڈیٹا بحال ہو گیا',
-    faq: [
-      ['کمیٹی کیا ہے؟', 'کمیٹی (بیسی) گھومتی بچت کا طریقہ ہے: ہر ممبر ہر مہینے ایک مقررہ رقم جمع کرتا ہے اور ہر سائیکل میں ایک ممبر پوری رقم لے جاتا ہے، یہاں تک کہ سب کی باری آ جائے۔ یہ بڑے خرچ کے لیے بلا سود بچت کا ذریعہ ہے۔'],
-      ['پہلی باری کا فائدہ کسے؟', 'پہلی باری والے ممبر کو گویا بلا سود قرض ملتا ہے، جبکہ آخری باری والے دراصل قرض دیتے ہیں۔ اسی لیے ترتیب اہم ہے اور شفاف ہونی چاہیے — قرعہ اندازی یا متفقہ فہرست جس پر سب دستخط کریں۔'],
-      ['خطرات کیا ہیں؟', 'کوئی قانونی تحفظ نہیں: اگر منتظم یا پہلی باری والا ممبر غائب ہو جائے تو بعد والے ممبران کا نقصان ہوتا ہے۔ صرف جانے پہچانے لوگوں کی کمیٹی میں شامل ہوں، تحریری ریکارڈ اور رسیدیں رکھیں، اور دستخط شدہ اندراج کے بغیر نقد رقم کبھی نہ دیں۔'],
-      ['اگر کوئی ادائیگی روک دے؟', 'شروع کرنے سے پہلے اصول طے کر لیں (معاہدے کی شق ۵)۔ شیڈول میں نادہندگی سمیولیٹر سے کمی اور اختیارات دیکھیں: تقسیم کریں، منتظم ادا کرے، یا نادہندہ کی باری آخر میں کر دیں۔'],
-      ['کیا کمیٹی بینک اکاؤنٹ جیسی ہے؟', 'نہیں۔ بینک ریگولیٹڈ ہوتے ہیں اور رقم ایک حد تک محفوظ ہوتی ہے؛ کمیٹی مکمل طور پر اعتماد پر چلتی ہے۔ پھر بھی بہت سے گھرانے اسے پسند کرتے ہیں کیونکہ یہ بچت کی پابندی لاتی ہے اور اس میں سود نہیں۔']
-    ],
-    stm_title: 'ممبر گوشوارہ', stm_print: 'پرنٹ', stm_paid: 'کل ادا', stm_fees: 'تاخیری جرمانہ', stm_received: 'وصول کیا', stm_ontime: 'بروقت', stm_dispute: 'تنازعہ درج کریں', stm_s: '{a} · {b} حصے · باری {c}',
-    lot_title: 'قرعہ اندازی', lot_s: 'تمام حصوں کو بے ترتیب ادائیگی ترتیب میں پھینٹتا ہے۔ جن حصوں کی ادائیگی ہو چکی وہ اپنی جگہ رہتے ہیں۔', lot_draw: 'قرعہ نکالیں', lot_again: 'دوبارہ نکالیں', lot_apply: 'یہ ترتیب لاگو کریں', lot_applied: 'ادائیگی کی ترتیب اپڈیٹ ہو گئی', lot_need: 'پہلے کم از کم دو ممبر شامل کریں',
-    confirm: 'تصدیق', cancel: 'منسوخ', close: 'بند کریں', copy: 'کاپی', none: 'کوئی نہیں', unknown: 'نامعلوم', yes: 'ہاں', no: 'نہیں', months: 'ماہ', m_short: 'ماہ', soon: 'جلد آ رہا ہے', not_built: 'یہ طلبہ کے لیے توسیعی کام ہے — تعارف دیکھیں۔'
-  }
+const TXT = {};
+TXT.en = {
+  title: 'Kameti Manager', tag: 'Every rupee, every month, on record', newC: 'New committee', noC: 'No committee yet',
+  nav_dashboard: 'Dashboard', nav_overview: 'Overview', nav_members: 'Members', nav_payments: 'Payments', nav_schedule: 'Schedule',
+  nav_disputes: 'Disputes', nav_people: 'People', nav_planner: 'Planner', nav_reports: 'Reports', nav_agreement: 'Agreement',
+  nav_settings: 'Settings', nav_about: 'About',
+  ago_m: '{a} min ago', ago_h: '{a} h ago', ago_d: '{a} d ago',
+  confirm: 'Confirm', cancel: 'Cancel', close: 'Close', copy: 'Copy', none: 'None', unknown: 'Unknown', yes: 'Yes', no: 'No',
+  months: 'months', m_short: 'mo', edit: 'Edit', view: 'View', all: 'All', apply: 'Apply', open: 'Open', back: 'Back', today: 'Today',
+  not_built: 'This is a student extension — see About.', saved: 'Saved', deleted: 'Deleted', added: 'Added',
+
+  // pot hero + banner
+  pot_title: "This month's pot", pot_of: 'of {a} collected · {b}', pot_paid: '{a}/{b} slots paid', pot_recipient: 'Recipient',
+  pot_due: 'Due {a}', pot_overdue: '{a} days overdue', pot_days: '{a} days left', pot_late: '{a} late', pot_unpaid: '{a} unpaid',
+  pot_empty: 'Create your first committee to start tracking contributions.', pot_notStarted: 'Starts {a}', pot_finished: 'All cycles complete',
+  pot_payments: 'Open payments', pot_remind: 'Remind unpaid', pot_unassigned: 'Unassigned slot', pot_grace: 'grace until {a}',
+  tour_banner: 'New here? Take a 60-second tour of the register.', tour_start: 'Start tour', tour_dismiss: 'Dismiss',
+  tour_next: 'Next', tour_back: 'Back', tour_done: 'Done', tour_skip: 'Skip', tour_step: '{a} of {b}',
+  tour_1_t: 'Switch committees', tour_1_b: 'Every committee you organise lives here. The dashboard shows all of them together.',
+  tour_2_t: 'The pot', tour_2_b: 'This month at a glance: how much of the pot is in, who receives it, and who is late.',
+  tour_3_t: 'Sections', tour_3_b: 'Members and payout order, the payments matrix, schedule with the default simulator, disputes, people, planner and printable reports.',
+  tour_4_t: 'Inbox', tour_4_b: 'Overdue payments, upcoming payouts and dispute reminders appear here, with a full activity log.',
+  tour_5_t: 'Settings', tour_5_b: 'Language, dark theme, grace rules, organizer PIN lock, and JSON backup / restore.',
+  tour_6_t: 'New committee', tour_6_b: 'Start a committee in a minute: amount, members, collection day and payout method.',
+
+  // dashboard
+  db_title: 'All committees', db_kpi_committees: 'Committees', db_kpi_people: 'People', db_kpi_collected: 'Collected to date',
+  db_kpi_pending: 'Outstanding', db_kpi_disputes: 'Open disputes', db_running: '{a} running', db_people_s: 'unique by phone',
+  db_notstarted: 'Not started', db_finished: 'Finished', db_active: 'Running', db_cycles: '{a}/{b} cycles', db_next: 'Next payout',
+  db_cal: 'Cash-flow calendar', db_cal_s: 'Collection days (money in) and payout days (money out) across every committee.',
+  db_in: 'In', db_out: 'Out', db_month_in: 'Expected in', db_month_out: 'Payouts', db_events: 'Events this month',
+  db_noevents: 'No collections or payouts this month.', db_6m: 'Six-month inflow', db_6m_s: 'Expected contributions vs actually collected, all committees.',
+  db_expected: 'Expected', db_collected: 'Collected', db_open_c: 'Open committee', db_recent: 'Recent activity',
+
+  // overview
+  kpi_collected: 'Collected this month', kpi_pending: 'Pending', kpi_members: 'Members', kpi_cycles: 'Cycles done', kpi_slots: '{a} slots',
+  kpi_ofpot: 'of {a} pot', kpi_overdue: '{a} overdue', kpi_onTrack: 'on track', kpi_total: 'total {a}',
+  ch_rate: 'Collection rate per month', ch_ontime: 'On-time rate by member', ch_cum: 'Cumulative in vs out', ch_in: 'Collected (in)', ch_out: 'Paid out',
+  ch_rate_s: 'Share of the expected pot actually collected each cycle.', ch_ontime_s: 'Paid on or before the collection day (plus grace), across due cycles.',
+  ch_cum_s: 'Money entering the pot vs. payouts handed over.', ch_nodata: 'No due cycles yet.',
+  ov_terms: 'Committee terms', ov_edit: 'Edit', ov_delete: 'Delete', ov_contrib: 'Monthly contribution', ov_pot: 'Pot per cycle', ov_cycles: 'Cycles',
+  ov_start: 'Start', ov_day: 'Collection day', ov_method: 'Payout method', ov_late: 'Late-fee rule', ov_grace: 'Grace period', ov_grace_v: '{a} days',
+  ov_cap: 'Fee cap', ov_org: 'Organizer', ov_notes: 'Notes', ov_alerts: 'Needs attention', ov_alerts_s: 'Unpaid or partial for the current cycle.',
+  ov_allgood: 'Everyone has paid this month.', ov_due: 'due {a}',
+  m_fixed: 'Fixed order', m_lottery: 'Lottery', m_organizer: 'Organizer decides', m_need: 'Need-based',
+  lf_none: 'No late fee', lf_flat: 'Rs {a} per late payment', lf_pct: '{a}% of contribution per week late',
+
+  // members + order + needs
+  mem_title: 'Members', mem_add: 'Add member', mem_name: 'Member', mem_phone: 'Phone', mem_cnic: 'CNIC', mem_slots: 'Slots', mem_turn: 'Payout turn',
+  mem_trust: 'Trust', mem_month: 'This month', mem_actions: 'Actions', mem_statement: 'Statement', mem_edit: 'Edit', mem_delete: 'Remove',
+  mem_empty: 'No members yet. Add the people in this committee.', mem_slot_n: 'slot {a}', mem_profile: 'Profile',
+  ord_title: 'Payout order', ord_s: 'Drag a row (or use the arrows) to change the order. Lottery assigns it randomly with a draw; need-based ranks open requests.',
+  ord_draw: 'Lottery draw', ord_unassigned: 'Unassigned', ord_locked: 'already paid out', ord_count: '{a} of {b} slots filled',
+  trust_s: 'Trust score 0–100 from on-time, late and missed payments across all committees on this device.',
+  nd_title: 'Need requests', nd_s: 'Members explain why they need an early turn. "Rank by need" proposes an order for the slots not yet paid out.',
+  nd_add: 'Add request', nd_rank: 'Rank by need', nd_member: 'Member', nd_reason: 'Reason', nd_urgency: 'Urgency', nd_amount: 'Amount needed',
+  nd_by: 'Needed by', nd_status: 'Status', nd_open: 'Open', nd_granted: 'Granted', nd_declined: 'Declined', nd_empty: 'No need requests yet.',
+  nd_score: 'Need score', nd_proposed: 'Proposed order', nd_apply: 'Apply proposed order', nd_applied: 'Order ranked by need',
+  nd_score_s: 'Score = urgency × 2 + months waiting + trust ÷ 25. Members who already received the pot go last; paid-out slots stay fixed.',
+  nd_add_t: 'New need request', nd_waiting: '{a} mo waiting', nd_detail: 'Details (optional)', nd_need_two: 'Add at least two open requests first.',
+  nd_r_medical: 'Medical', nd_r_wedding: 'Wedding', nd_r_education: 'Education / fees', nd_r_rent: 'Rent / house', nd_r_business: 'Business stock',
+  nd_r_debt: 'Repay a debt', nd_r_other: 'Other', nd_mark: 'Mark',
+
+  // forms
+  f_name: 'Committee name', f_contrib: 'Monthly contribution (PKR)', f_planned: 'Number of members (= cycles)', f_start: 'Start month', f_day: 'Collection day (1–28)',
+  f_method: 'Payout method', f_late: 'Late-fee rule', f_lateval: 'Amount / percent', f_grace: 'Grace days (0–10)', f_cap: 'Late-fee cap (PKR, 0 = none)',
+  f_org: 'Organizer name', f_orgphone: 'Organizer phone', f_notes: 'Notes', f_save: 'Save', f_cancel: 'Cancel', f_create: 'Create committee',
+  f_edit: 'Edit committee', f_delete: 'Delete committee', f_required: 'Required', f_phone_err: 'Use the format 03xx-xxxxxxx',
+  f_cnic_err: 'Use the format 12345-1234567-1', f_num_err: 'Enter a valid number', f_day_err: '1 to 28',
+  mf_add: 'Add member', mf_edit: 'Edit member', mf_name: 'Full name', mf_phone: 'Mobile (03xx-xxxxxxx)', mf_cnic: 'CNIC (optional, only last 4 digits are stored)',
+  mf_slots: 'Slots held', mf_pos: 'Payout position', mf_pos_any: 'Next free', mf_cnic_hint: 'Stored masked as •••••-•••••••-{a}',
+  del_c: 'Delete "{a}" and all its payments? This cannot be undone.', del_m: 'Remove {a} from this committee? Their payment records in this committee will be deleted.', del_ok: 'Delete',
+
+  // payments
+  pay_title: 'Payments matrix', pay_hint: 'Click a cell to cycle its status (unpaid → paid → late → partial → waived). Long-press or right-click to edit amount, date and note, print a receipt or raise a dispute. A red dot marks a disputed cell.',
+  pay_month: 'Month', pay_markall: 'Mark all paid', pay_remind: 'WhatsApp reminders', pay_csv: 'Export CSV', pay_expected: 'Expected pot', pay_collected: 'Collected',
+  pay_pending: 'Pending', pay_fees: 'Late fees', pay_recipient: 'Recipient', pay_progress: 'Progress', pay_recip_row: 'Recipient',
+  pay_marked: 'Marked {a} payments as paid', pay_none_unpaid: 'Nothing unpaid for this month', pay_future: 'Not yet due',
+  st_unpaid: 'Unpaid', st_paid: 'Paid', st_late: 'Late', st_partial: 'Partial', st_waived: 'Waived', st_overdue: 'Overdue', st_balance: '{a} of {b}',
+  gr_auto: 'Recorded as late: paid after the {a}-day grace period.',
+  ce_title: 'Edit payment', ce_amount: 'Amount (PKR)', ce_date: 'Date paid', ce_note: 'Note', ce_expected: 'Expected {a}', ce_ack: 'Request OTP acknowledgement',
+  ce_settle: 'Settle balance', ce_balance: 'Balance {a}', ce_receipt: 'Receipt', ce_dispute: 'Raise dispute',
+  wa_title: 'WhatsApp reminders', wa_s: 'One tap opens WhatsApp with the message pre-filled. Numbers are converted to +92 format.', wa_copy: 'Copy all',
+  wa_send: 'Send', wa_sms: 'SMS', wa_copied: 'Copied',
+  wa_text: 'Salam {name}, reminder from "{c}": your contribution of {amt} for {m} was due on {d}. Please pay {org} and reply with a confirmation. Shukriya!',
+  wa_text_partial: 'Salam {name}, reminder from "{c}": {amt} is still pending on your {m} contribution (due {d}). Please pay {org}. Shukriya!',
+
+  // schedule + simulator
+  sch_title: 'Payout schedule', sch_next: 'Next payout', sch_days: 'days', sch_in: 'in', sch_today: 'today', sch_ago: 'ago', sch_to: 'to', sch_expected: 'expected',
+  sch_payout: 'payout', sch_done: 'Paid out', sch_current: 'Current', sch_upcoming: 'Upcoming', sch_pending: 'Payout pending', sch_record: 'Record payout',
+  sch_recorded: 'Payout recorded', sch_undo: 'Undo payout', sch_on: 'on {a}', sch_fees: 'incl. {a} late fees', sch_complete: 'All payouts complete.', sch_receipt: 'Acknowledgement',
+  sim_title: 'What if a member defaults?', sim_s: 'Pick a member and see the shortfall for every remaining cycle, plus the usual ways to handle it.',
+  sim_pick: 'Member who stops paying', sim_month: 'Cycle', sim_short: 'Shortfall', sim_pot: 'Pot after shortfall', sim_total: 'Total shortfall over {a} remaining cycles',
+  sim_split: 'Split among others', sim_split_s: 'each remaining member pays extra per cycle', sim_org: 'Organizer covers', sim_org_s: 'total the organizer would front',
+  sim_swap: 'Swap order', sim_swap_s: 'move their turn to the last cycle so the pot is protected',
+  sim_swap_done: 'Already received {a} on {b} — the group would need to recover it.', sim_none: 'No remaining cycles.', sim_received: 'received payout', sim_notyet: 'turn not yet reached',
+
+  // disputes
+  ds_title: 'Dispute log', ds_s: 'Every disagreement about a payment, a fee or a payout is logged with its full status history, so nobody argues from memory.',
+  ds_new: 'New dispute', ds_type: 'Type', ds_t_amount: 'Amount mismatch', ds_t_missing: 'Payment not recorded', ds_t_fee: 'Late fee disputed',
+  ds_t_payout: 'Payout disagreement', ds_t_other: 'Other', ds_status: 'Status', ds_open: 'Open', ds_review: 'Under review', ds_resolved: 'Resolved', ds_rejected: 'Rejected',
+  ds_note: 'Details', ds_cycle: 'Cycle', ds_raised: 'Raised', ds_history: 'History', ds_update: 'Update status', ds_add_note: 'Note for this update',
+  ds_empty: 'No disputes — a good sign.', ds_open_count: '{a} open', ds_evidence: 'Attach evidence', ds_updated: 'Dispute updated', ds_created: 'Dispute logged',
+  ds_who: 'Raised by', ds_detail: 'Dispute', ds_days: '{a} days open',
+
+  // people
+  pp_title: 'People across committees', pp_s: 'Members are matched by phone number, so one person in two committees has a single trust history.',
+  pp_search: 'Search name or phone', pp_committees: 'Committees', pp_slots: 'Slots', pp_paid: 'Paid', pp_received: 'Received', pp_trend: 'Trust trend',
+  pp_profile: 'Member profile', pp_history: 'Payment history', pp_outcomes: 'Outcomes', pp_ontime: 'On time', pp_late: 'Late', pp_partial: 'Partial', pp_missed: 'Missed',
+  pp_empty: 'No people match.', pp_turns: 'Turns', pp_open_disputes: 'Open disputes', pp_trend_s: 'Score after each due payment, oldest to newest.', pp_none_due: 'No due payments yet.',
+
+  // planner
+  pl_title: 'What-if planner', pl_s: 'Is a kameti worth it? Compare the pot you receive with a bank savings account and with inflation, for every payout turn.',
+  pl_contrib: 'Monthly amount (PKR)', pl_months: 'Months (= members)', pl_turn: 'Your payout turn', pl_bank: 'Bank savings rate (annual %)', pl_infl: 'Inflation (annual %)',
+  pl_kameti: 'Kameti payout', pl_kameti_s: 'nominal pot received in month {a}', pl_real: 'Real value today', pl_real_s: 'pot deflated by inflation to today',
+  pl_bank_fv: 'Bank balance at end', pl_bank_s: 'monthly deposits compounding at {a}%', pl_gain: 'Real gain vs contributions', pl_gain_s: 'positive = kameti beat inflation for you',
+  pl_irr: 'Implied annual rate', pl_irr_s: 'rate at which your payments and the pot balance out',
+  pl_chart: 'Cumulative position by month', pl_chart_s: 'Kameti balance (contributions out, pot in) vs bank savings growing.',
+  pl_turn_chart: 'Who benefits by turn', pl_turn_s: 'Real gain for every payout position: early turns borrow interest-free, late turns lend.',
+  pl_col_turn: 'Turn', pl_col_month: 'Month', pl_col_real: 'Real value', pl_col_gain: 'Real gain', pl_col_rate: 'Implied rate',
+  pl_verdict_early: 'Turn {a} works like an interest-free loan: you receive {b} early and repay it through later contributions.',
+  pl_verdict_late: 'Turn {a} means you are lending to the group. A bank account at {r}% would leave you with {b} instead of a pot worth {c} in real terms.',
+  pl_bank_label: 'Bank savings', pl_kameti_label: 'Kameti', pl_from: 'Use active committee', pl_live: 'Live rates',
+
+  // reports
+  rp_title: 'Printable reports', rp_s: 'Pick a report, check the preview, then print or save as PDF. Everything is generated from the payments matrix.',
+  rp_monthly: 'Monthly collection report', rp_ledger: 'Full ledger', rp_payouts: 'Payout register', rp_statements: 'All member statements', rp_disputes: 'Dispute log',
+  rp_print: 'Print', rp_cycle: 'Cycle', rp_prepared: 'Prepared {a} · Organizer {b}', rp_sign_org: 'Organizer signature', rp_sign_rec: 'Recipient signature',
+  rp_total: 'Total', rp_recv_by: 'Received by', rp_no_payouts: 'No payouts recorded yet.', rp_fee: 'Fee', rp_date: 'Date',
+
+  // receipts
+  rc_title: 'Payment receipt', rc_payout_title: 'Payout acknowledgement', rc_no: 'Receipt no.', rc_member: 'Member', rc_committee: 'Committee', rc_month: 'Cycle',
+  rc_amount: 'Amount', rc_date: 'Date', rc_status: 'Status', rc_org: 'Organizer', rc_code: 'Verification code',
+  rc_qr_s: 'QR-style code drawn from the receipt hash — the same data always draws the same pattern, so a reprinted receipt can be compared.',
+  rc_share: 'Share on WhatsApp', rc_received: 'Received with thanks', rc_none: 'No payment recorded for this cell yet.',
+  rc_text: 'Receipt {no}: {who} paid {amt} for {m} to "{c}" on {d}. Verification {code}.',
+  rc_payout_text: 'Payout {no}: {who} received {amt} from "{c}" for {m} on {d}. Verification {code}.',
+
+  // agreement / statement
+  ag_title: 'Committee agreement', ag_s: 'Generated from the committee terms in English and Urdu. Print it, have everyone sign, and keep a copy with the organizer.',
+  ag_print: 'Print agreement', ag_sign: 'E-sign', ag_faq: 'How kametis work — and their risks',
+  ag_risk: 'A kameti has no legal protection. Join only with people you trust, keep written records and never hand over cash without a signed entry.',
+  stm_title: 'Member statement', stm_print: 'Print', stm_paid: 'Total paid', stm_fees: 'Late fees', stm_received: 'Received', stm_ontime: 'On-time',
+  stm_dispute: 'Log dispute', stm_s: '{a} · {b} slot(s) · payout turn {c}',
+  lot_title: 'Lottery draw', lot_s: 'Shuffles every slot into a random payout order. Slots that have already been paid out stay fixed.', lot_draw: 'Draw',
+  lot_again: 'Draw again', lot_apply: 'Apply this order', lot_applied: 'Payout order updated', lot_need: 'Add at least two members first',
+
+  // inbox + log
+  in_title: 'Inbox', in_notifs: 'Notifications', in_activity: 'Activity', in_empty: 'You are all caught up.', in_log_empty: 'No activity yet.',
+  in_markall: 'Mark all read', in_clear: 'Clear read', in_unread: '{a} unread',
+  n_overdue_t: '{a} unpaid in {c}', n_overdue_b: '{m} contributions were due on {d}.', n_payout_t: 'Payout due soon: {c}', n_payout_b: '{m} pot of {amt} goes to {who} on {d}.',
+  n_dispute_t: 'Dispute open {a} days', n_dispute_b: '{who} · {c} · {m}', n_start_t: '{c} starts next month', n_start_b: 'First collection on {d}. {a} of {b} slots assigned.',
+  n_done_t: 'Committee complete: {c}', n_done_b: 'All {a} payouts recorded. Time for the final statements.',
+  lg_pay: '{who} · {m} marked {s}', lg_payout: 'Payout #{a} recorded to {who} ({amt})', lg_undo: 'Payout #{a} undone', lg_member_add: 'Member added: {who}',
+  lg_member_edit: 'Member edited: {who}', lg_member_del: 'Member removed: {who}', lg_c_new: 'Committee created: {c}', lg_c_edit: 'Committee terms edited',
+  lg_c_del: 'Committee deleted: {c}', lg_order: 'Payout order changed', lg_lottery: 'Lottery draw applied', lg_need: 'Need request by {who}',
+  lg_need_rank: 'Payout order ranked by need', lg_dispute: 'Dispute opened by {who} · {m}', lg_dispute_st: 'Dispute #{a} → {s}', lg_remind: 'Reminders prepared for {a} members',
+  lg_import: 'Backup imported', lg_reset: 'Demo data restored', lg_pin: 'Organizer PIN changed', lg_markall: '{a} payments marked paid · {m}', lg_receipt: 'Receipt {a} issued',
+
+  // settings + lock
+  se_title: 'Settings', se_appearance: 'Appearance', se_lang: 'Language', se_theme: 'Theme', se_light: 'Light', se_dark: 'Dark', se_system: 'System',
+  se_motion: 'Reduce motion', se_motion_s: 'Turn off animations and transitions.', se_compact: 'Compact numbers', se_compact_s: 'Show Rs 1.2M instead of Rs 1,200,000 in summaries.',
+  se_rules: 'Defaults for new committees', se_grace: 'Grace days', se_remind: 'Reminder lead (days before collection day)', se_remind_s: 'The inbox warns about payouts this many days ahead.',
+  se_security: 'Organizer lock', se_pin_set: 'Set PIN', se_pin_change: 'Change PIN', se_pin_remove: 'Remove PIN',
+  se_pin_s: 'A 4–6 digit PIN hides the register from anyone who picks up the phone. Stored as a hash on this device only.',
+  se_autolock: 'Auto-lock after inactivity', se_never: 'Never', se_min: '{a} min', se_data: 'Data', se_storage: 'Storage used', se_export: 'Export everything (JSON)',
+  se_import: 'Import JSON', se_clear: 'Erase all data', se_clear_q: 'Erase every committee, setting and log entry on this device?', se_cleared: 'All data erased',
+  se_demo: 'Demo data', se_tour: 'Replay onboarding tour', se_shortcuts: 'Keyboard shortcuts', se_saved: 'Setting saved',
+  sc_1: 'Go to section 1–9 (Dashboard … Reports)', sc_2: 'Open / close the inbox', sc_3: 'New committee', sc_4: 'Toggle language', sc_5: 'Close dialog or drawer', sc_6: 'Lock the register (when a PIN is set)',
+  pin_title: 'Enter PIN', pin_s: 'This register is locked by the organizer.', pin_wrong: 'Wrong PIN', pin_new: 'Choose a new PIN (4–6 digits)', pin_confirm: 'Repeat the PIN',
+  pin_mismatch: 'PINs do not match', pin_set: 'PIN set', pin_removed: 'PIN removed', pin_len: '4 to 6 digits', pin_current: 'Current PIN', lock_now: 'Lock now', pin_locked: 'Register locked',
+
+  // about
+  ab_title: 'About this project', ab_problem: 'The problem',
+  ab_problem_t: 'Millions of Pakistani households save through informal rotating committees (kameti / beesi). They run on memory, paper and WhatsApp, so disputes over who paid, who is next and late payments are common — and there is no legal protection when things go wrong.',
+  ab_how: 'How it works',
+  ab_how_t: 'Each committee stores its members, payout order and a cycle × member payment matrix in your browser. Every number on screen — pot progress, pending, late fees, recipient, trust scores, calendar, reports and charts — is derived from that matrix, so one tap on a cell updates everything.',
+  ab_stack: 'Single HTML file, vanilla JS, hand-drawn SVG charts, canvas receipts, localStorage, no backend.', ab_todo: 'Left for students', ab_modules: 'Module map',
+  ab_data: 'Data & backup', ab_data_t: 'Everything lives in this browser under the "kameti:" prefix. Export a JSON backup regularly; import it on another device to move your committees.',
+  ab_export: 'Export JSON', ab_import: 'Import JSON', ab_reset: 'Reset demo data', ab_imported: 'Imported {a} committees', ab_import_err: 'Could not read that file',
+  ab_reset_q: 'Replace all data with the demo committees?', ab_reset_ok: 'Demo data restored',
+  faq: [
+    ['What is a kameti?', 'A kameti (also beesi or committee) is a rotating savings group: every member pays a fixed amount each month and one member takes the whole pot each cycle, until everyone has had a turn. It is an interest-free way to save for a large expense.'],
+    ['Who benefits from an early turn?', 'Early recipients effectively receive an interest-free loan; late recipients are effectively lending. That is why the order matters and should be transparent — a lottery, a need-based ranking everyone can see, or an agreed list that everyone signs. The Planner tab puts numbers on this.'],
+    ['What are the risks?', 'There is no legal protection: if the organizer or an early recipient disappears, the later members lose money. Only join committees run by people you know, keep written records and receipts, and never hand over cash without a signed entry.'],
+    ['What if someone stops paying?', 'Agree the rule before you start (clause 5 of the agreement). Use the default simulator in Schedule to see the shortfall and the options: split it, the organizer covers it, or move the defaulter\'s turn to the end.'],
+    ['What are grace days and fee caps?', 'A grace period gives members a few days after the collection day before a payment counts as late. A fee cap stops percentage-based late fees from growing without limit. Both are written into the agreement.'],
+    ['Is a kameti like a bank account?', 'No. Banks are regulated and deposits are protected up to a limit; a kameti relies entirely on trust. Many families still prefer it because it enforces saving discipline and involves no interest.']
+  ]
 };
-const t = k => (L[lang][k] ?? L.en[k] ?? k);
-const tf = (k, v = {}) => String(t(k)).replace(/\{(\w+)\}/g, (_, n) => v[n] ?? '');
 
-// ---------- model helpers ----------
-const curMonth = ym(today);
-const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-const totalSlots = c => c.members.reduce((a, m) => a + (m.slots || 1), 0);
-const monthOf = (c, i) => addMonths(c.startMonth, i);
-const dueDate = (c, i) => { const [y, m] = monthOf(c, i).split('-').map(Number); return new Date(y, m - 1, Math.min(28, Math.max(1, c.collectionDay || 1))); };
-const memberById = (c, id) => c.members.find(m => m.id === id) || null;
-const expectedFor = (c, m) => c.contribution * (m.slots || 1);
-const cell = (c, i, mid) => c.payments[`${i}:${mid}`] || null;
-const methodName = m => t({ fixed: 'm_fixed', lottery: 'm_lottery', organizer: 'm_organizer' }[m] || 'm_fixed');
-const lateRuleName = lf => !lf || lf.type === 'none' ? t('lf_none') : lf.type === 'flat' ? tf('lf_flat', { a: nf.format(lf.value || 0) }) : tf('lf_pct', { a: lf.value || 0 });
-/* The payout order is an array with one entry per cycle (= slot). A member holding two slots appears twice; null = unassigned. */
-function syncOrder(c) {
-  const n = Math.max(c.planned || 0, totalSlots(c));
-  const ids = new Set(c.members.map(m => m.id));
-  let o = (c.order || []).map(id => (ids.has(id) ? id : null));
-  for (const m of c.members) {
-    const want = m.slots || 1; let have = o.filter(x => x === m.id).length;
-    while (have > want) { o[o.lastIndexOf(m.id)] = null; have--; }
-    while (have < want) { const free = o.indexOf(null); if (free >= 0) o[free] = m.id; else o.push(m.id); have++; }
-  }
-  while (o.length < n) o.push(null);
-  while (o.length > n && o.includes(null)) o.splice(o.lastIndexOf(null), 1);
-  c.order = o;
-}
-function currentCycle(c) {
-  const n = c.order.length; if (!n) return 0;
-  const idx = c.order.findIndex((_, i) => monthOf(c, i) === curMonth);
-  if (idx >= 0) return idx; return monthOf(c, 0) > curMonth ? 0 : n - 1;
-}
-const cycleState = (c, i) => c.payouts[i] ? 'done' : monthOf(c, i) === curMonth ? 'current' : monthOf(c, i) < curMonth ? 'pending' : 'upcoming';
-function lateFeeFor(c, i, m, p) {
-  if (!p || p.s !== 'late') return 0; const lf = c.lateFee || { type: 'none' };
-  if (lf.type === 'flat') return +lf.value || 0;
-  if (lf.type === 'pct') { const days = Math.max(1, daysBetween(dueDate(c, i), p.date ? fromIso(p.date) : today)); return Math.round(expectedFor(c, m) * (+lf.value || 0) / 100 * Math.ceil(days / 7)); }
-  return 0;
-}
-/* Everything shown for a month derives from this one function. */
-function monthStats(c, i) {
-  const expected = c.contribution * totalSlots(c);
-  let collected = 0, waived = 0, fees = 0, paidSlots = 0, late = 0, unpaid = 0, partial = 0;
-  for (const m of c.members) {
-    const p = cell(c, i, m.id), exp = expectedFor(c, m);
-    if (!p || p.s === 'unpaid') { unpaid++; continue; }
-    if (p.s === 'waived') { waived += exp; continue; }
-    collected += p.amt || 0;
-    if (p.s === 'late') { late++; fees += lateFeeFor(c, i, m, p); }
-    if (p.s === 'partial') partial++;
-    if ((p.s === 'paid' || p.s === 'late') && (p.amt || 0) >= exp) paidSlots += m.slots || 1;
-  }
-  const rid = c.order[i];
-  return { expected, collected, waived, fees, pending: Math.max(0, expected - collected - waived), late, unpaid, partial, paidSlots, recipient: rid ? memberById(c, rid) : null, payout: collected + fees, progress: expected ? Math.min(1, collected / expected) : 0 };
-}
-/* Trust: every due cell of every member with the same phone number, across all committees on this device. */
-function outcomes(phone) {
-  const key = digits(phone), out = [];
-  for (const c of DB.committees) for (const m of c.members) {
-    if (!key || digits(m.phone) !== key) continue;
-    for (let i = 0; i < c.order.length; i++) {
-      const due = dueDate(c, i); if (due > today) continue;
-      const p = cell(c, i, m.id);
-      if (!p || p.s === 'unpaid') { out.push('missed'); continue; }
-      if (p.s === 'waived') continue;
-      if (p.s === 'partial') { out.push('partial'); continue; }
-      if (p.s === 'late') { out.push('late'); continue; }
-      out.push(p.date && fromIso(p.date) > due ? 'late' : 'ontime');
-    }
-  }
-  return out;
-}
-// TODO(student): portable trust score — sign each member's outcome history with the organizer's key and publish it to a shared
-// registry (or a verifiable credential) so reputation travels between committees, devices and organizers.
-function trustScore(phone) {
-  const o = outcomes(phone), W = { ontime: 1, late: .5, partial: .4, missed: 0 };
-  const pts = o.reduce((a, x) => a + W[x], 0), k = 2, prior = .7;   // Bayesian smoothing: new members start near 70
-  return Math.round(100 * (pts + prior * k) / (o.length + k));
-}
-const trustRing = s => { const r = 15, C = 2 * Math.PI * r, cls = s >= 75 ? '' : s >= 50 ? 'mid' : 'low'; return `<div class="tring ${cls}" title="${t('mem_trust')} ${s}"><svg viewBox="0 0 36 36"><circle class="t" cx="18" cy="18" r="${r}"/><circle class="p" cx="18" cy="18" r="${r}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}" data-off="${(C * (1 - s / 100)).toFixed(1)}"/></svg><span>${s}</span></div>`; };
-const animRings = root => requestAnimationFrame(() => $$('[data-off]', root).forEach(p => p.style.strokeDashoffset = p.dataset.off));
-const stBadge = (s, over) => { const k = s === 'paid' ? 'ok' : s === 'late' ? 'late' : s === 'partial' ? 'part' : s === 'waived' ? 'waive' : over ? 'bad' : 'muted'; const icn = s === 'paid' ? 'check' : s === 'late' ? 'clock' : s === 'partial' ? 'pie-chart' : s === 'waived' ? 'hand' : over ? 'alert' : 'clock'; return `<span class="badge ${k}">${ic(icn)}${t(over && (!s || s === 'unpaid') ? 'st_overdue' : 'st_' + (s || 'unpaid'))}</span>`; };
-
-// ---------- seed data ----------
-function demoData() {
-  const rnd = seeded(2026);
-  const mk = (id, name, phone, slots = 1, cnic4 = '') => ({ id, name, phone, cnic4, slots });
-  const pay = (c, i, mid, s, frac = 1, dayOff = null, note = '') => { const m = memberById(c, mid), due = dueDate(c, i); c.payments[`${i}:${mid}`] = { s, amt: Math.round(expectedFor(c, m) * frac), date: iso(addDays(due, dayOff ?? -Math.floor(rnd() * 5))), note }; };
-  const office = {
-    id: 'c-office', name: 'Office Kameti', contribution: 10000, planned: 12, startMonth: '2026-03', collectionDay: 5, method: 'lottery',
-    lateFee: { type: 'flat', value: 500 }, organizer: { name: 'Farhan Siddiqui', phone: '0300-1234567' }, created: '2026-02-20',
-    notes: 'Finance department committee. Cash or Raast transfer to Farhan by the 5th; payout handed over on the 6th.',
-    members: [mk('m1', 'Ahmed Raza', '0301-2345678', 1, '4521'), mk('m2', 'Sana Malik', '0321-4567890', 1, '8830'), mk('m3', 'Bilal Hussain', '0333-7654321', 1, '1194'), mk('m4', 'Hira Khan', '0345-1122334'), mk('m5', 'Usman Tariq', '0312-9988776', 1, '7702'), mk('m6', 'Ayesha Siddiqui', '0300-5566778'), mk('m7', 'Kamran Ali', '0302-3344556', 1, '6613'), mk('m8', 'Nadia Farooq', '0336-2233445'), mk('m9', 'Zain Abbas', '0315-6677889', 1, '0457'), mk('m10', 'Mehwish Iqbal', '0344-9900112'), mk('m11', 'Faisal Mehmood', '0323-4455667', 1, '3328'), mk('m12', 'Rabia Anwar', '0308-7788990')],
-    order: ['m4', 'm9', 'm1', 'm11', 'm7', 'm2', 'm12', 'm3', 'm5', 'm10', 'm6', 'm8'], payments: {}, payouts: {}
-  };
-  const lateMap = { m5: [2, 4, 6], m9: [1, 5], m12: [3] };
-  for (let i = 0; i < 7; i++) for (const m of office.members) {
-    if (m.id === 'm8' && i === 2) { office.payments[`2:m8`] = { s: 'waived', amt: 0, date: '', note: 'Hospital emergency — group agreed to waive' }; continue; }
-    if ((lateMap[m.id] || []).includes(i)) pay(office, i, m.id, 'late', 1, 3 + Math.floor(rnd() * 9)); else pay(office, i, m.id, 'paid');
-  }
-  ['m1', 'm2', 'm3', 'm4', 'm6', 'm7', 'm8', 'm10'].forEach(id => pay(office, 7, id, 'paid'));
-  pay(office, 7, 'm12', 'late', 1, 4, 'Paid 9 Oct, Rs 500 fee agreed');
-  pay(office, 7, 'm9', 'partial', .5, -1, 'Balance promised by 20 Oct');
-  for (let i = 0; i < 7; i++) office.payouts[i] = { date: iso(addDays(dueDate(office, i), 1)), amt: monthStats(office, i).payout };
-
-  const mohalla = {
-    id: 'c-mohalla', name: 'Mohalla Beesi', contribution: 5000, planned: 6, startMonth: '2026-08', collectionDay: 10, method: 'fixed',
-    lateFee: { type: 'pct', value: 2 }, organizer: { name: 'Shahid Mahmood', phone: '0322-5556667' }, created: '2026-07-25',
-    notes: 'Street committee, G-9/4. Collected after Maghrib at Shahid sahib\'s shop. Bushra holds two slots.',
-    members: [mk('n1', 'Bushra Bibi', '0311-2223334', 2), mk('n2', 'Shahid Mahmood', '0322-5556667', 1, '9075'), mk('n3', 'Nasreen Akhtar', '0334-8889990'), mk('n4', 'Kamran Ali', '0302-3344556', 1, '6613'), mk('n5', 'Saima Yousaf', '0346-1112223')],
-    order: ['n2', 'n1', 'n4', 'n3', 'n1', 'n5'], payments: {}, payouts: {}
-  };
-  for (let i = 0; i < 2; i++) for (const m of mohalla.members) { if (m.id === 'n3' && i === 1) pay(mohalla, i, m.id, 'late', 1, 9); else pay(mohalla, i, m.id, 'paid'); }
-  ['n1', 'n2', 'n4'].forEach(id => pay(mohalla, 2, id, 'paid'));
-  for (let i = 0; i < 2; i++) mohalla.payouts[i] = { date: iso(addDays(dueDate(mohalla, i), 0)), amt: monthStats(mohalla, i).payout };
-  return { committees: [office, mohalla], activeId: 'c-office' };
-}
-let DB = store.get('db', null);
-if (!DB || !Array.isArray(DB.committees)) { DB = demoData(); store.set('db', DB); }
-DB.committees.forEach(syncOrder);
-const save = () => store.set('db', DB);
-const active = () => DB.committees.find(c => c.id === DB.activeId) || DB.committees[0] || null;
-
-// ---------- charts (hand-drawn SVG) ----------
-function lineChart(el, series, labels, { fmt = v => nf.format(v), max = null } = {}) {
-  const W = 600, H = 230, P = { l: 52, r: 14, t: 14, b: 30 }, n = labels.length;
-  const mx = max ?? Math.max(1, ...series.flatMap(s => s.values)) * 1.1;
-  const x = i => n > 1 ? P.l + (W - P.l - P.r) * i / (n - 1) : (P.l + W - P.r) / 2, y = v => P.t + (H - P.t - P.b) * (1 - v / mx);
-  const grid = [0, .25, .5, .75, 1].map(f => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(mx * f).toFixed(1)}" y2="${y(mx * f).toFixed(1)}" stroke="var(--line)" stroke-dasharray="${f ? '3 4' : '0'}"/><text x="${P.l - 8}" y="${(y(mx * f) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="var(--muted)">${esc(fmt(mx * f))}</text>`).join('');
-  const step = Math.ceil(n / 8);
-  const xl = labels.map((l, i) => i % step ? '' : `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--muted)">${esc(l)}</text>`).join('');
-  const paths = series.map(s => { const d = s.values.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' '); return (s.area ? `<path d="${d} L${x(n - 1).toFixed(1)} ${y(0)} L${x(0).toFixed(1)} ${y(0)}Z" fill="${s.color}" opacity=".1"/>` : '') + `<path class="ln" d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`; }).join('');
-  const dots = series.map(s => s.values.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3.2" fill="#fff" stroke="${s.color}" stroke-width="2"/>`).join('')).join('');
-  const hits = labels.map((_, i) => `<rect data-i="${i}" x="${(x(i) - (n > 1 ? (W - P.l - P.r) / (n - 1) / 2 : 40)).toFixed(1)}" y="${P.t}" width="${(n > 1 ? (W - P.l - P.r) / (n - 1) : 80).toFixed(1)}" height="${H - P.t - P.b}" fill="transparent"/>`).join('');
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img">${grid}${xl}${paths}${dots}${hits}</svg><div class="tip"></div>` + (series.length > 1 ? `<div class="clegend">${series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>` : '');
-  const tip = $('.tip', el), svg = $('svg', el);
-  svg.addEventListener('mousemove', e => { const r = e.target.closest('rect[data-i]'); if (!r) { tip.style.display = 'none'; return; } const i = +r.dataset.i, b = svg.getBoundingClientRect(), pb = el.getBoundingClientRect(); tip.style.display = 'block'; tip.style.left = (b.left - pb.left + x(i) * b.width / W) + 'px'; tip.style.top = (b.top - pb.top + y(Math.max(...series.map(s => s.values[i]))) * b.height / H) + 'px'; tip.innerHTML = `<b>${esc(labels[i])}</b> ` + series.map(s => `${series.length > 1 ? esc(s.name) + ' ' : ''}${esc(fmt(s.values[i]))}`).join(' · '); });
-  svg.addEventListener('mouseleave', () => tip.style.display = 'none');
-  $$('.ln', el).forEach(drawPath);
-}
-const hbars = items => `<div class="hbars">${items.map(it => `<div class="hbar"><span class="l" title="${esc(it.label)}">${esc(it.label)}</span><div class="bar ${it.cls || ''}"><i data-w="${Math.round(it.value * 100)}%"></i></div><span class="v">${esc(it.text)}</span></div>`).join('')}</div>`;
-
-// ---------- pot hero ----------
-function renderPot() {
-  const c = active(), el = $('#pot');
-  if (!c) { el.innerHTML = `<div class="pot-empty">${ic('coins', 'big')}<div style="flex:1"><div class="k">${t('noC')}</div><div class="of txt">${t('pot_empty')}</div></div><button class="btn gold" id="potNew">${ic('plus')}${t('newC')}</button></div>`; $('#potNew').onclick = () => committeeForm(); return; }
-  const n = c.order.length, i = currentCycle(c), st = monthStats(c, i), slots = totalSlots(c), due = dueDate(c, i), dd = daysBetween(today, due);
-  const notStarted = n && monthOf(c, 0) > curMonth, finished = n && monthOf(c, n - 1) < curMonth;
-  const r = 50, C = 2 * Math.PI * r;
-  const recName = st.recipient ? esc(st.recipient.name) + ((st.recipient.slots || 1) > 1 ? ` <small>(${tf('mem_slot_n', { a: c.order.slice(0, i + 1).filter(x => x === st.recipient.id).length })})</small>` : '') : t('pot_unassigned');
-  const duePill = finished ? `<span class="pill">${ic('check-circle')}${t('pot_finished')}</span>` : notStarted ? `<span class="pill">${ic('calendar')}${tf('pot_notStarted', { a: monthLabel(monthOf(c, 0), true) })}</span>` : `<span class="pill ${dd < 0 && st.unpaid ? 'warn' : ''}">${ic(dd < 0 ? 'alert' : 'calendar')}${tf('pot_due', { a: dateLabel(iso(due)) })} · ${dd < 0 ? tf('pot_overdue', { a: -dd }) : dd === 0 ? t('sch_today') : tf('pot_days', { a: dd })}</span>`;
-  el.innerHTML = `<div class="ring"><svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="${r}"/><circle class="prog" id="potRing" cx="60" cy="60" r="${r}" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><div class="lbl" id="potPct">0%</div></div>
-    <div style="min-width:0"><div class="k">${t('pot_title')} · ${monthLabel(monthOf(c, i), true)}</div><div class="big"><span style="font-size:.55em;opacity:.8">Rs </span><span id="potAmt">0</span></div>
-      <div class="of">${tf('pot_of', { a: rs(st.expected), b: tf('pot_paid', { a: st.paidSlots, b: slots }) })}</div>
-      <div class="meta"><span class="pill gold">${ic('award')}${t('pot_recipient')}: ${recName}</span>${duePill}${st.late ? `<span class="pill warn">${ic('clock')}${tf('pot_late', { a: st.late })}</span>` : ''}${st.unpaid && !notStarted ? `<span class="pill warn">${ic('alert-circle')}${tf('pot_unpaid', { a: st.unpaid })}</span>` : ''}</div></div>
-    <div class="side"><a class="btn mint" href="#payments">${ic('grid')}${t('pot_payments')}</a><button class="btn gold" id="potRemind" ${st.unpaid || st.partial ? '' : 'disabled'}>${ic('whatsapp')}${t('pot_remind')}</button></div>`;
-  $('#potRemind').onclick = () => reminderModal(c, i);
-  requestAnimationFrame(() => { $('#potRing').style.strokeDashoffset = C * (1 - st.progress); countUp($('#potAmt'), st.collected); countUp($('#potPct'), st.progress * 100, { fmt: v => Math.round(v) + '%' }); });
-}
-
-// ---------- views ----------
-const view = $('#view');
-let selMonth = null;
-const emptyView = () => { view.innerHTML = `<div class="card"><div class="empty">${ic('piggy')}<p class="txt">${t('pot_empty')}</p><button class="btn" id="evNew">${ic('plus')}${t('newC')}</button></div></div>`; $('#evNew').onclick = () => committeeForm(); };
-const cnicMask = m => m.cnic4 ? `•••••-•••••••-${esc(m.cnic4)}` : '—';
-const turnsOf = (c, id) => c.order.map((x, k) => (x === id ? k : -1)).filter(k => k >= 0);
-const slotLabel = (c, id, k) => (memberById(c, id)?.slots || 1) > 1 ? ` <small>· ${tf('mem_slot_n', { a: c.order.slice(0, k + 1).filter(x => x === id).length })}</small>` : '';
-
-function renderOverview() {
-  const c = active(); if (!c) return emptyView();
-  const n = c.order.length, i = currentCycle(c), st = monthStats(c, i), slots = totalSlots(c), done = Object.keys(c.payouts).length;
-  const dd = daysBetween(today, dueDate(c, i));
-  const dueIdx = [...Array(n).keys()].filter(k => monthOf(c, k) <= curMonth);
-  const labels = dueIdx.map(k => monthLabel(monthOf(c, k)));
-  const rates = dueIdx.map(k => Math.round(monthStats(c, k).progress * 100));
-  let cumIn = 0, cumOut = 0; const inS = [], outS = [];
-  dueIdx.forEach(k => { const s = monthStats(c, k); cumIn += s.collected + s.fees; cumOut += c.payouts[k] ? c.payouts[k].amt : 0; inS.push(cumIn); outS.push(cumOut); });
-  const ontime = c.members.map(m => { let due = 0, ok = 0; for (const k of dueIdx) { if (dueDate(c, k) > today) continue; const p = cell(c, k, m.id); if (p && p.s === 'waived') continue; due++; if (p && p.s === 'paid' && (!p.date || fromIso(p.date) <= dueDate(c, k))) ok++; } return { label: m.name, value: due ? ok / due : 0, text: due ? `${ok}/${due}` : '—', cls: due && ok / due < .6 ? 'gold' : '' }; }).sort((a, b) => b.value - a.value);
-  const alerts = c.members.filter(m => { const p = cell(c, i, m.id); return !p || p.s === 'unpaid' || p.s === 'partial'; });
-  const kpi = (cls, icon, k, v, s) => `<div class="kpi ${cls}"><div class="icw">${ic(icon)}</div><div style="min-width:0"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div></div>`;
-  view.innerHTML = `<div class="grid g4 stagger" style="margin-bottom:14px">
-      ${kpi('', 'coins', t('kpi_collected'), `<span data-count="${st.collected}">0</span>`, tf('kpi_ofpot', { a: rs(st.expected) }))}
-      ${kpi(st.pending && dd < 0 ? 'bad' : 'gold', 'clock', t('kpi_pending'), `<span data-count="${st.pending}">0</span>`, st.unpaid && dd < 0 ? tf('kpi_overdue', { a: st.unpaid }) : t('kpi_onTrack'))}
-      ${kpi('', 'users', t('kpi_members'), c.members.length, tf('kpi_slots', { a: slots }))}
-      ${kpi('', 'calendar', t('kpi_cycles'), `${done}/${n}`, tf('kpi_total', { a: rs(c.contribution * slots * n) }))}
-    </div>
-    <div class="grid g21 stagger" style="margin-bottom:14px">
-      <div class="card"><h2>${ic('trending-up')}${t('ch_rate')}</h2><p class="lead txt">${t('ch_rate_s')}</p>${dueIdx.length ? '<div class="chart" id="chRate"></div>' : `<div class="empty">${ic('calendar')}<p>${t('ch_nodata')}</p></div>`}</div>
-      <div class="card"><h2>${ic('bar-chart')}${t('ch_ontime')}</h2><p class="lead txt">${t('ch_ontime_s')}</p>${ontime.length ? hbars(ontime) : `<div class="empty">${ic('users')}<p>${t('mem_empty')}</p></div>`}</div>
-    </div>
-    <div class="grid g21 stagger">
-      <div class="card"><h2>${ic('pie-chart')}${t('ch_cum')}</h2><p class="lead txt">${t('ch_cum_s')}</p>${dueIdx.length ? '<div class="chart" id="chCum"></div>' : `<div class="empty">${ic('calendar')}<p>${t('ch_nodata')}</p></div>`}</div>
-      <div style="display:grid;gap:14px;align-content:start">
-        <div class="card"><h2>${ic('alert-circle')}${t('ov_alerts')}</h2><p class="lead txt">${t('ov_alerts_s')}</p>
-          ${alerts.length ? `<div class="list">${alerts.map(m => { const p = cell(c, i, m.id); const owed = expectedFor(c, m) - (p?.amt || 0); return `<div class="rowi"><div class="who"><div class="avatar">${esc(initials(m.name))}</div><div><div class="n">${esc(m.name)}</div><div class="p">${stBadge(p?.s, dd < 0)} <span class="amt">${rs(owed)}</span></div></div></div><a class="btn sm mint" target="_blank" rel="noopener" href="${waLink(m.phone, reminderText(c, i, m))}" aria-label="WhatsApp ${esc(m.name)}">${ic('whatsapp')}</a></div>`; }).join('')}</div>` : `<div class="note">${ic('check-circle')} ${t('ov_allgood')}</div>`}</div>
-        <div class="card"><h2>${ic('settings')}${t('ov_terms')}<span class="spacer"></span><button class="btn sm ghost" id="ovEdit">${ic('edit')}${t('ov_edit')}</button><button class="btn sm danger" id="ovDel" aria-label="${t('ov_delete')}">${ic('trash')}</button></h2>
-          <div class="cols small" style="gap:8px 14px">
-            <div><b class="muted">${t('ov_contrib')}</b><div class="amt">${rs(c.contribution)}</div></div><div><b class="muted">${t('ov_pot')}</b><div class="amt">${rs(c.contribution * slots)}</div></div>
-            <div><b class="muted">${t('ov_cycles')}</b><div class="amt">${n} ${t('months')}</div></div><div><b class="muted">${t('ov_start')}</b><div>${monthLabel(c.startMonth, true)}</div></div>
-            <div><b class="muted">${t('ov_day')}</b><div class="amt">${c.collectionDay}</div></div><div><b class="muted">${t('ov_method')}</b><div>${methodName(c.method)}</div></div>
-            <div><b class="muted">${t('ov_late')}</b><div>${lateRuleName(c.lateFee)}</div></div><div><b class="muted">${t('ov_org')}</b><div>${esc(c.organizer?.name || '—')} <span class="amt muted small">${esc(c.organizer?.phone || '')}</span></div></div>
-          </div>${c.notes ? `<p class="small muted txt" style="margin:10px 0 0">${ic('sticky-note')} ${esc(c.notes)}</p>` : ''}</div>
-      </div>
-    </div>`;
-  if (dueIdx.length) {
-    lineChart($('#chRate'), [{ name: t('ch_rate'), color: 'var(--forest)', values: rates, area: true }], labels, { fmt: v => Math.round(v) + '%', max: 100 });
-    lineChart($('#chCum'), [{ name: t('ch_in'), color: 'var(--forest)', values: inS }, { name: t('ch_out'), color: 'var(--gold)', values: outS }], labels, { fmt: v => v >= 1000 ? Math.round(v / 1000) + 'k' : String(Math.round(v)) });
-  }
-  $$('[data-count]', view).forEach(el => countUp(el, +el.dataset.count));
-  animBars(view);
-  $('#ovEdit').onclick = () => committeeForm(c);
-  $('#ovDel').onclick = async () => { if (await confirmDlg(tf('del_c', { a: c.name }), t('del_ok'))) { DB.committees = DB.committees.filter(x => x.id !== c.id); DB.activeId = DB.committees[0]?.id || null; save(); toast(t('deleted'), 'ok'); renderAll(); } };
-}
-
-function renderMembers() {
-  const c = active(); if (!c) return emptyView();
-  const n = c.order.length, i = currentCycle(c), dd = daysBetween(today, dueDate(c, i));
-  const rows = c.members.map(m => { const p = cell(c, i, m.id), turns = turnsOf(c, m.id); return `<tr>
-      <td><div class="who"><div class="avatar">${esc(initials(m.name))}</div><div><div class="n">${esc(m.name)}</div><div class="p">${esc(m.phone)}${m.cnic4 ? ' · ' + cnicMask(m) : ''}</div></div></div></td>
-      <td class="num">${m.slots || 1}</td>
-      <td>${turns.length ? turns.map(k => `<span class="badge ${cycleState(c, k) === 'done' ? 'muted' : cycleState(c, k) === 'current' ? 'gold' : 'mint'}">#${k + 1} · ${monthLabel(monthOf(c, k))}</span>`).join(' ') : `<span class="badge muted">${t('ord_unassigned')}</span>`}</td>
-      <td>${trustRing(trustScore(m.phone))}</td><td>${stBadge(p?.s, dd < 0)}</td>
-      <td><div class="acts"><button class="btn sm ghost" data-stm="${m.id}" aria-label="${t('mem_statement')}">${ic('file')}</button><button class="btn sm ghost" data-edit="${m.id}" aria-label="${t('mem_edit')}">${ic('edit')}</button><button class="btn sm danger" data-del="${m.id}" aria-label="${t('mem_delete')}">${ic('trash')}</button></div></td></tr>`; }).join('');
-  const filled = c.order.filter(Boolean).length;
-  const items = c.order.map((id, k) => { const done = cycleState(c, k) === 'done', cur = cycleState(c, k) === 'current', m = id ? memberById(c, id) : null; return `<div class="oitem ${done ? 'done' : ''} ${cur ? 'cur' : ''}" data-k="${k}" draggable="${done ? 'false' : 'true'}">
-      <span class="pos">${k + 1}</span><span class="grip" aria-hidden="true">${done ? ic('lock') : ic('menu')}</span>
-      <span class="nm">${m ? esc(m.name) + slotLabel(c, id, k) : `<span class="muted">${t('ord_unassigned')}</span>`}<small>${monthLabel(monthOf(c, k))}${done ? ' · ' + t('ord_locked') : ''}</small></span>
-      <span class="ud"><button class="btn sm ghost icon" data-up="${k}" aria-label="Move up" ${done || k === 0 || cycleState(c, k - 1) === 'done' ? 'disabled' : ''}>${ic('arrow-up')}</button><button class="btn sm ghost icon" data-down="${k}" aria-label="Move down" ${done || k === n - 1 ? 'disabled' : ''}>${ic('arrow-down')}</button></span></div>`; }).join('');
-  view.innerHTML = `<div class="grid g21 stagger">
-    <div class="card"><h2>${ic('users')}${t('mem_title')} <span class="badge mint">${c.members.length}</span><span class="spacer"></span><button class="btn sm" id="addMem">${ic('plus')}${t('mem_add')}</button></h2>
-      <p class="lead txt">${t('trust_s')}</p>
-      ${c.members.length ? `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('mem_name')}</th><th class="num">${t('mem_slots')}</th><th>${t('mem_turn')}</th><th>${t('mem_trust')}</th><th>${t('mem_month')}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty">${ic('users')}<p>${t('mem_empty')}</p></div>`}</div>
-    <div class="card"><h2>${ic('sort')}${t('ord_title')}<span class="spacer"></span><button class="btn sm ${c.method === 'lottery' ? 'gold' : 'ghost'}" id="drawBtn">${ic('dice')}${t('ord_draw')}</button></h2>
-      <p class="lead txt">${t('ord_s')} <span class="badge muted">${tf('ord_count', { a: filled, b: n })}</span></p>
-      <div class="orderlist" id="orderList">${items}</div></div></div>`;
-  animRings(view);
-  $('#addMem').onclick = () => memberForm(c);
-  $('#drawBtn').onclick = () => lotteryModal(c);
-  $$('[data-stm]', view).forEach(b => b.onclick = () => statementModal(c, memberById(c, b.dataset.stm)));
-  $$('[data-edit]', view).forEach(b => b.onclick = () => memberForm(c, memberById(c, b.dataset.edit)));
-  $$('[data-del]', view).forEach(b => b.onclick = async () => { const m = memberById(c, b.dataset.del); if (await confirmDlg(tf('del_m', { a: m.name }), t('del_ok'))) { c.members = c.members.filter(x => x.id !== m.id); Object.keys(c.payments).forEach(k => { if (k.endsWith(':' + m.id)) delete c.payments[k]; }); syncOrder(c); save(); toast(t('deleted'), 'ok'); refresh(); } });
-  const move = (from, to) => { if (to < 0 || to >= n || cycleState(c, to) === 'done' || cycleState(c, from) === 'done') return; const o = c.order, [x] = o.splice(from, 1); o.splice(to, 0, x); save(); refresh(); };
-  $$('[data-up]', view).forEach(b => b.onclick = () => move(+b.dataset.up, +b.dataset.up - 1));
-  $$('[data-down]', view).forEach(b => b.onclick = () => move(+b.dataset.down, +b.dataset.down + 1));
-  let dragK = null;
-  $$('.oitem', view).forEach(el => {
-    el.addEventListener('dragstart', e => { dragK = +el.dataset.k; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-    el.addEventListener('dragend', () => { el.classList.remove('dragging'); $$('.oitem.over', view).forEach(x => x.classList.remove('over')); });
-    el.addEventListener('dragover', e => { if (dragK == null || el.classList.contains('done')) return; e.preventDefault(); el.classList.add('over'); });
-    el.addEventListener('dragleave', () => el.classList.remove('over'));
-    el.addEventListener('drop', e => { e.preventDefault(); if (dragK == null) return; const to = +el.dataset.k; if (to !== dragK) move(dragK, to); dragK = null; });
-  });
-}
-
-const STATES = ['unpaid', 'paid', 'late', 'partial', 'waived'];
-function setStatus(c, i, mid, s, extra = {}) {
-  const m = memberById(c, mid), exp = expectedFor(c, m), key = `${i}:${mid}`;
-  if (s === 'unpaid') delete c.payments[key];
-  else { const p = c.payments[key] || {}; const amt = extra.amt ?? (s === 'partial' ? (p.s === 'partial' && p.amt ? p.amt : Math.round(exp / 2)) : s === 'waived' ? 0 : exp); c.payments[key] = { s, amt, date: extra.date ?? (s === 'waived' ? '' : (p.date || iso(today))), note: extra.note ?? p.note ?? '' }; }
-  save(); refresh();
-}
-function reminderText(c, i, m) { const p = cell(c, i, m.id), owed = expectedFor(c, m) - (p?.amt || 0); return tf(p?.s === 'partial' ? 'wa_text_partial' : 'wa_text', { name: m.name.split(' ')[0], c: c.name, amt: rs(owed), m: monthLabel(monthOf(c, i), true), d: dateLabel(iso(dueDate(c, i)), true), org: c.organizer?.name || '' }); }
-
-function renderPayments() {
-  const c = active(); if (!c) return emptyView();
-  const n = c.order.length, cur = currentCycle(c); if (selMonth == null || selMonth >= n) selMonth = cur;
-  const st = monthStats(c, selMonth), scroll = $('.matrixwrap') ? { l: $('.matrixwrap').scrollLeft, t: $('.matrixwrap').scrollTop } : null;
-  const head = c.order.map((_, k) => `<th class="${k === cur ? 'cur' : ''} ${k === selMonth ? 'sel' : ''}" data-col="${k}">${monthLabel(monthOf(c, k))}<br><small style="font-weight:400">${cycleState(c, k) === 'done' ? t('sch_done') : cycleState(c, k) === 'current' ? t('sch_current') : cycleState(c, k) === 'pending' ? t('sch_pending') : t('sch_upcoming')}</small></th>`).join('');
-  const body = c.members.map(m => `<tr><td class="name">${esc(m.name)}<small>${esc(m.phone)}${(m.slots || 1) > 1 ? ` · ${m.slots} ${t('mem_slots').toLowerCase()}` : ''}</small></td>${c.order.map((rid, k) => {
-    const p = cell(c, k, m.id), due = dueDate(c, k), s = p?.s || 'unpaid', over = s === 'unpaid' && due < today, future = s === 'unpaid' && due > today && monthOf(c, k) > curMonth;
-    const label = future ? '—' : t(over ? 'st_overdue' : 'st_' + s), icn = s === 'paid' ? 'check' : s === 'late' ? 'clock' : s === 'partial' ? 'pie-chart' : s === 'waived' ? 'hand' : over ? 'alert' : '';
-    return `<td><button class="cell ${s} ${over ? 'over' : ''} ${future ? 'future' : ''} ${rid === m.id ? 'me' : ''}" data-i="${k}" data-m="${m.id}" aria-label="${esc(m.name)} · ${monthLabel(monthOf(c, k), true)} · ${label}${p?.amt ? ' · ' + rs(p.amt) : ''}"><span class="st">${icn ? ic(icn) : ''}${label}</span>${p && s !== 'waived' ? `<span>${nf.format(p.amt || 0)}</span>` : ''}${p?.date ? `<span class="d">${dateLabel(p.date)}</span>` : ''}</button></td>`; }).join('')}</tr>`).join('');
-  const stats = c.order.map((_, k) => monthStats(c, k));
-  const foot = `<tr><td class="name">${t('pay_collected')}</td>${stats.map(s => `<td class="amt">${nf.format(s.collected)}</td>`).join('')}</tr>
-    <tr><td class="name">${t('pay_progress')}</td>${stats.map(s => `<td><span class="bar ${s.progress >= 1 ? '' : 'gold'}"><i data-w="${Math.round(s.progress * 100)}%"></i></span></td>`).join('')}</tr>
-    <tr><td class="name">${t('pay_recip_row')}</td>${stats.map((s, k) => `<td style="font-family:var(--font);font-weight:600;color:var(--gold-deep)">${s.recipient ? esc(s.recipient.name) : '—'}</td>`).join('')}</tr>`;
-  const leg = ['paid', 'late', 'partial', 'waived', 'over'].map(k => `<span><i style="background:var(--${k === 'paid' ? 'ok' : k === 'late' ? 'late' : k === 'partial' ? 'part' : k === 'waived' ? 'waive' : 'bad'}-soft);border:1px solid var(--${k === 'paid' ? 'ok' : k === 'late' ? 'late' : k === 'partial' ? 'part' : k === 'waived' ? 'waive' : 'bad'})"></i>${t(k === 'over' ? 'st_overdue' : 'st_' + k)}</span>`).join('');
-  view.innerHTML = `<div class="card enter" style="margin-bottom:14px">
-      <div class="toolbar"><label class="sr" for="mSel">${t('pay_month')}</label><select id="mSel" style="width:auto;min-width:190px">${c.order.map((_, k) => `<option value="${k}" ${k === selMonth ? 'selected' : ''}>${monthLabel(monthOf(c, k), true)}${k === cur ? ' · ' + t('sch_current') : ''}</option>`).join('')}</select>
-        <button class="btn" id="markAll" ${st.unpaid || st.partial ? '' : 'disabled'}>${ic('check-circle')}${t('pay_markall')}</button><button class="btn gold" id="remind" ${st.unpaid || st.partial ? '' : 'disabled'}>${ic('whatsapp')}${t('pay_remind')}</button><button class="btn ghost" id="csv">${ic('download')}${t('pay_csv')}</button></div>
-      <div class="mstats">
-        <div class="mstat"><div class="k">${t('pay_expected')}</div><div class="v">${rs(st.expected)}</div></div><div class="mstat"><div class="k">${t('pay_collected')}</div><div class="v" style="color:var(--ok)">${rs(st.collected)}</div></div>
-        <div class="mstat"><div class="k">${t('pay_pending')}</div><div class="v" style="color:${st.pending ? 'var(--bad)' : 'inherit'}">${rs(st.pending)}</div></div><div class="mstat"><div class="k">${t('pay_fees')}</div><div class="v" style="color:var(--late)">${rs(st.fees)}</div></div>
-        <div class="mstat gold"><div class="k">${t('pay_recipient')}</div><div class="v" title="${esc(st.recipient?.name || '')}">${st.recipient ? esc(st.recipient.name) : '—'}</div></div></div>
-      <div class="bar" style="margin-top:12px;height:10px"><i data-w="${Math.round(st.progress * 100)}%"></i></div></div>
-    <div class="card enter"><h2>${ic('grid')}${t('pay_title')}<span class="spacer"></span><span class="legend">${leg}</span></h2>
-      <div class="matrixwrap"><table class="matrix"><thead><tr><th class="name">${t('mem_name')}</th>${head}</tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
-      <p class="small muted txt" style="margin:10px 0 0">${ic('info')} ${t('pay_hint')}</p></div>`;
-  animBars(view);
-  if (scroll) { $('.matrixwrap').scrollLeft = scroll.l; $('.matrixwrap').scrollTop = scroll.t; }
-  $('#mSel').onchange = e => { selMonth = +e.target.value; refresh(); };
-  $('#csv').onclick = () => exportCsv(c);
-  $('#remind').onclick = () => reminderModal(c, selMonth);
-  $('#markAll').onclick = () => { let k = 0; for (const m of c.members) { const p = cell(c, selMonth, m.id); if (!p || p.s === 'unpaid' || p.s === 'partial') { c.payments[`${selMonth}:${m.id}`] = { s: 'paid', amt: expectedFor(c, m), date: iso(today), note: p?.note || '' }; k++; } } save(); toast(k ? tf('pay_marked', { a: k }) : t('pay_none_unpaid'), 'ok'); refresh(); };
-  $$('th[data-col]', view).forEach(th => th.onclick = () => { selMonth = +th.dataset.col; refresh(); });
-  let pressTimer = null, suppress = false;
-  $$('.cell', view).forEach(b => {
-    const i = +b.dataset.i, mid = b.dataset.m;
-    b.addEventListener('click', () => { if (suppress) { suppress = false; return; } const p = cell(c, i, mid); setStatus(c, i, mid, STATES[(STATES.indexOf(p?.s || 'unpaid') + 1) % STATES.length]); });
-    b.addEventListener('contextmenu', e => { e.preventDefault(); cellEditor(c, i, mid, b); });
-    b.addEventListener('pointerdown', e => { if (e.button !== 0) return; pressTimer = setTimeout(() => { suppress = true; cellEditor(c, i, mid, b); }, 500); });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => clearTimeout(pressTimer)));
-  });
-}
-// TODO(student): payment integration. Generate a Raast / JazzCash / Easypaisa payment request per member per cycle, receive the gateway
-// callback on your backend and call setStatus(c, i, mid, 'paid', { amt, date }) automatically — true auto-reconciliation.
-function reconcile(/* gatewayEvent */) {}
-function exportCsv(c) {
-  const n = c.order.length, cols = [...Array(n).keys()];
-  const rows = [['Member', 'Phone', 'Slots', ...cols.map(k => monthOf(c, k))], ...c.members.map(m => [m.name, m.phone, m.slots || 1, ...cols.map(k => { const p = cell(c, k, m.id); return p ? `${p.s} ${p.amt}${p.date ? ' ' + p.date : ''}` : 'unpaid'; })]),
-    ['Collected', '', '', ...cols.map(k => monthStats(c, k).collected)], ['Late fees', '', '', ...cols.map(k => monthStats(c, k).fees)], ['Recipient', '', '', ...cols.map(k => monthStats(c, k).recipient?.name || '')]];
-  download(`${c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-payments.csv`, rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv');
-}
-
-function renderSchedule() {
-  const c = active(); if (!c) return emptyView();
-  const n = c.order.length, nextI = [...Array(n).keys()].find(k => !c.payouts[k] && monthOf(c, k) >= curMonth);
-  let cd = `<div class="note">${ic('check-circle')} ${t('sch_complete')}</div>`;
-  if (nextI != null) { const d = daysBetween(today, dueDate(c, nextI)), s = monthStats(c, nextI); cd = `<div class="countdown"><span class="n" data-count="${Math.abs(d)}">0</span><div><div style="font-weight:600">${d === 0 ? t('sch_today') : d > 0 ? `${t('sch_days')} · ${monthLabel(monthOf(c, nextI), true)}` : `${t('sch_days')} ${t('sch_ago')} · ${t('sch_pending')}`}</div><div class="muted small">${dateLabel(iso(dueDate(c, nextI)), true)} ${t('sch_to')} <b>${s.recipient ? esc(s.recipient.name) : t('ord_unassigned')}</b> · <span class="amt">${rs(s.expected)}</span> ${t('sch_expected')}</div></div></div>`; }
-  const tl = c.order.map((id, k) => { const stt = cycleState(c, k), s = monthStats(c, k), m = id ? memberById(c, id) : null, badge = stt === 'done' ? `<span class="badge ok">${ic('check')}${t('sch_done')}</span>` : stt === 'current' ? `<span class="badge gold">${ic('zap')}${t('sch_current')}</span>` : stt === 'pending' ? `<span class="badge late">${ic('clock')}${t('sch_pending')}</span>` : `<span class="badge muted">${ic('calendar')}${t('sch_upcoming')}</span>`;
-    const amount = stt === 'done' ? `<div class="amt" style="color:var(--gold-deep)">${rs(c.payouts[k].amt)}</div><div class="small muted">${tf('sch_on', { a: dateLabel(c.payouts[k].date) })}</div>` : stt === 'upcoming' ? `<div class="amt">${rs(s.expected)}</div><div class="small muted">${t('sch_expected')}</div>` : `<div class="amt">${rs(s.payout)}</div><div class="small muted">${t('sch_payout')} · ${rs(s.expected)} ${t('sch_expected')}${s.fees ? ' · ' + tf('sch_fees', { a: rs(s.fees) }) : ''}</div>`;
-    return `<div class="tl ${stt}"><div><div class="m">#${k + 1} · ${monthLabel(monthOf(c, k), true)} ${badge}</div><div class="r">${ic('award')} ${m ? esc(m.name) + slotLabel(c, id, k) : t('ord_unassigned')} · ${dateLabel(iso(dueDate(c, k)))}</div></div><div class="amt">${amount}</div>
-      ${stt === 'current' || stt === 'pending' ? `<div class="bot"><div class="bar" style="flex:1;max-width:220px"><i data-w="${Math.round(s.progress * 100)}%"></i></div><span class="small muted amt">${pctf(s.progress)}</span><button class="btn sm gold" data-pay="${k}">${ic('coins')}${t('sch_record')}</button></div>` : stt === 'done' ? `<div class="bot"><button class="btn sm ghost" data-undo="${k}">${ic('refresh')}${t('sch_undo')}</button></div>` : ''}</div>`; }).join('');
-  view.innerHTML = `<div class="grid g21 stagger">
-    <div><div class="card" style="margin-bottom:14px"><h2>${ic('timer')}${t('sch_next')}</h2>${cd}</div>
-      <div class="card"><h2>${ic('calendar')}${t('sch_title')}</h2><div class="timeline stagger">${tl}</div></div></div>
-    <div class="card" style="align-self:start"><h2>${ic('calculator')}${t('sim_title')}</h2><p class="lead txt">${t('sim_s')}</p>
-      <label class="f" for="simSel">${t('sim_pick')}</label><select id="simSel"><option value="">—</option>${c.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select><div id="simOut" style="margin-top:12px"></div></div></div>`;
-  $$('[data-count]', view).forEach(el => countUp(el, +el.dataset.count));
-  animBars(view);
-  $$('[data-pay]', view).forEach(b => b.onclick = () => { const k = +b.dataset.pay; c.payouts[k] = { date: iso(today), amt: monthStats(c, k).payout }; save(); toast(t('sch_recorded'), 'ok'); refresh(); });
-  $$('[data-undo]', view).forEach(b => b.onclick = () => { delete c.payouts[b.dataset.undo]; save(); refresh(); });
-  $('#simSel').onchange = e => simulate(c, e.target.value);
-}
-function simulate(c, mid) {
-  const out = $('#simOut'), m = memberById(c, mid); if (!m) { out.innerHTML = ''; return; }
-  const n = c.order.length, remaining = [...Array(n).keys()].filter(k => !c.payouts[k] && monthOf(c, k) >= curMonth);
-  if (!remaining.length) { out.innerHTML = `<div class="note">${t('sim_none')}</div>`; return; }
-  const rows = remaining.map(k => { const p = cell(c, k, m.id), paid = p && p.s !== 'waived' ? p.amt || 0 : 0, short = Math.max(0, expectedFor(c, m) - paid), s = monthStats(c, k); return { k, short, after: s.expected - short }; });
-  const total = rows.reduce((a, r) => a + r.short, 0), others = Math.max(1, c.members.length - 1), perOther = Math.ceil(expectedFor(c, m) / others);
-  const turns = turnsOf(c, m.id), received = turns.filter(k => c.payouts[k]), upcoming = turns.filter(k => !c.payouts[k]);
-  out.innerHTML = `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('sim_month')}</th><th class="num">${t('sim_short')}</th><th class="num">${t('sim_pot')}</th></tr></thead><tbody>${rows.map(r => `<tr><td>${monthLabel(monthOf(c, r.k), true)}${turns.includes(r.k) ? ` <span class="badge gold">${ic('award')}${t('mem_turn')}</span>` : ''}</td><td class="num" style="color:var(--bad)">${rs(r.short)}</td><td class="num">${rs(r.after)}</td></tr>`).join('')}</tbody></table></div>
-    <p style="margin:12px 0 0;font-weight:600" class="txt">${tf('sim_total', { a: rows.length })}: <span class="amt" style="color:var(--bad)">${rs(total)}</span></p>
-    <div class="optgrid">
-      <div class="opt"><h4>${ic('users')}${t('sim_split')}</h4><div class="v">+${rs(perOther)}</div><div class="small muted txt">${t('sim_split_s')}</div></div>
-      <div class="opt"><h4>${ic('shield')}${t('sim_org')}</h4><div class="v">${rs(total)}</div><div class="small muted txt">${t('sim_org_s')}</div></div>
-      <div class="opt"><h4>${ic('shuffle')}${t('sim_swap')}</h4>${upcoming.length ? `<div class="v">#${upcoming.map(k => k + 1).join(', #')} → #${n}</div><div class="small muted txt">${t('sim_swap_s')}</div><button class="btn sm ghost" id="swapBtn" style="margin-top:8px">${ic('arrow-right')}${t('sim_swap')}</button>` : `<div class="small txt" style="color:var(--bad)">${received.map(k => tf('sim_swap_done', { a: rs(c.payouts[k].amt), b: monthLabel(monthOf(c, k), true) })).join(' ')}</div>`}</div>
-    </div>`;
-  const sb = $('#swapBtn'); if (sb) sb.onclick = () => { const o = c.order; upcoming.sort((a, b) => b - a).forEach(k => { o.splice(k, 1); }); upcoming.forEach(() => o.push(m.id)); save(); toast(t('lot_applied'), 'ok'); refresh(); $('#simSel').value = m.id; simulate(c, m.id); };
-}
-
-function agreementHTML(c) {
-  const slots = totalSlots(c), n = c.order.length, pot = c.contribution * slots, en = L.en, ur = L.ur;
-  const method = { fixed: ['a fixed order agreed by all members', 'تمام ممبران کی متفقہ مقررہ ترتیب'], lottery: ['a lottery draw witnessed by the members', 'ممبران کی موجودگی میں قرعہ اندازی'], organizer: ['the organizer\'s decision', 'منتظم کے فیصلے'] }[c.method] || ['a fixed order', 'مقررہ ترتیب'];
-  const lf = c.lateFee || { type: 'none' }, lateEn = lf.type === 'none' ? 'No late fee applies' : lf.type === 'flat' ? `A late fee of Rs ${nf.format(lf.value)} applies to every payment made after the collection day` : `A late fee of ${lf.value}% of the contribution applies for every week (or part) of delay`, lateUr = lf.type === 'none' ? 'کوئی تاخیری جرمانہ نہیں' : lf.type === 'flat' ? `وصولی کی تاریخ کے بعد ہر ادائیگی پر ${nf.format(lf.value)} روپے جرمانہ ہوگا` : `تاخیر کے ہر ہفتے (یا اس کے حصے) پر قسط کا ${lf.value}% جرمانہ ہوگا`;
-  const orderRows = c.order.map((id, k) => `<tr><td class="num">${k + 1}</td><td>${monthLabel(monthOf(c, k), true)}</td><td>${id ? esc(memberById(c, id).name) + ((memberById(c, id).slots || 1) > 1 ? ` (slot ${c.order.slice(0, k + 1).filter(x => x === id).length})` : '') : '—'}</td><td class="amt">${rs(pot)}</td></tr>`).join('');
-  const sigs = [`<div class="sig"><b>${esc(c.organizer?.name || '')}</b><span>Organizer / منتظم · ${esc(c.organizer?.phone || '')}</span></div>`, ...c.members.map(m => `<div class="sig"><b>${esc(m.name)}</b><span>${esc(m.phone)}${m.cnic4 ? ' · CNIC ' + cnicMask(m) : ''}</span></div>`)].join('');
-  const startEn = fromIso(c.startMonth + '-01').toLocaleDateString('en-PK', { month: 'long', year: 'numeric' }), startUr = fromIso(c.startMonth + '-01').toLocaleDateString('ur-PK-u-nu-latn', { month: 'long', year: 'numeric' }), dEn = today.toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' }), dUr = today.toLocaleDateString('ur-PK-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' });
-  return `<div class="doc"><h3>Committee (Kameti) Agreement</h3><div class="sub">"${esc(c.name)}" · ${dEn}</div>
-    <p>This agreement is made between the organizer <b>${esc(c.organizer?.name || '—')}</b> (${esc(c.organizer?.phone || '')}) and the members listed below for the rotating savings committee named <b>"${esc(c.name)}"</b>.</p>
-    <div class="terms"><div><b>Monthly contribution</b><span class="amt">${rs(c.contribution)}</span> per slot</div><div><b>Pot per cycle</b><span class="amt">${rs(pot)}</span></div><div><b>Cycles</b><span class="amt">${n}</span> months from ${startEn}</div><div><b>Collection day</b>${c.collectionDay} of every month</div><div><b>Payout order</b>${esc(method[0])}</div><div><b>Late fee</b>${esc(lateRuleNameEn(lf))}</div></div>
-    <ol>
-      <li><b>Contribution.</b> Each member shall pay ${rs(c.contribution)} per slot held, on or before day ${c.collectionDay} of every month, starting ${startEn}, for ${n} consecutive months.</li>
-      <li><b>Pot and payout.</b> The monthly pot of ${rs(pot)} shall be handed to the member whose turn it is, according to the payout order below, on the collection day or within three days of full collection. Late fees collected in a month are added to that month's payout.</li>
-      <li><b>Payout order.</b> The order was decided by ${esc(method[0])}. Once fixed, it may only be changed with the consent of every affected member, recorded in this register.</li>
-      <li><b>Late payment.</b> ${esc(lateEn)}.</li>
-      <li><b>Default.</b> A member who fails to pay for a month must settle within seven days. Failing that, the remaining members and the organizer may agree to (a) split the shortfall equally, (b) have the organizer advance it, or (c) move the defaulter's turn to the last cycle; a member who has already received the pot remains liable for all remaining contributions.</li>
-      <li><b>Records.</b> The organizer shall maintain this register, record every payment with its date, and share the monthly statement with every member.</li>
-      <li><b>Disputes.</b> Any dispute shall first be resolved by discussion among the members; failing that, by two neutral persons agreed upon by the parties. The members acknowledge that this is an informal mutual arrangement without statutory protection, entered into on trust.</li>
-    </ol>
-    <table class="tbl" style="margin:10px 0"><thead><tr><th>#</th><th>Month</th><th>Recipient</th><th>Pot</th></tr></thead><tbody>${orderRows}</tbody></table>
-    <div class="ur" lang="ur"><h3>کمیٹی معاہدہ</h3><div class="sub">"${esc(c.name)}" · ${dUr}</div>
-      <p>یہ معاہدہ منتظم <b>${esc(c.organizer?.name || '—')}</b> (${esc(c.organizer?.phone || '')}) اور ذیل میں درج ممبران کے درمیان <b>"${esc(c.name)}"</b> نامی بچت کمیٹی کے لیے طے پایا۔</p>
-      <ol>
-        <li><b>قسط:</b> ہر ممبر ${startUr} سے ${n} ماہ تک ہر مہینے کی ${c.collectionDay} تاریخ تک فی حصہ ${nf.format(c.contribution)} روپے ادا کرے گا۔</li>
-        <li><b>رقم اور ادائیگی:</b> ہر ماہ ${nf.format(pot)} روپے کی رقم درج ذیل ترتیب کے مطابق باری والے ممبر کو وصولی کے دن یا مکمل وصولی کے تین دن کے اندر دی جائے گی۔ اس مہینے کا تاخیری جرمانہ اسی ادائیگی میں شامل ہوگا۔</li>
-        <li><b>ادائیگی کی ترتیب:</b> ترتیب ${esc(method[1])} سے طے ہوئی۔ ایک بار مقرر ہونے کے بعد صرف متاثرہ ممبران کی رضامندی سے، اس رجسٹر میں درج کر کے، بدلی جا سکتی ہے۔</li>
-        <li><b>تاخیر:</b> ${esc(lateUr)}۔</li>
-        <li><b>نادہندگی:</b> جو ممبر کسی مہینے کی قسط ادا نہ کرے وہ سات دن کے اندر ادا کرے گا۔ بصورت دیگر باقی ممبران اور منتظم (الف) کمی برابر تقسیم کرنے، (ب) منتظم کے پیشگی ادا کرنے، یا (ج) نادہندہ کی باری آخری سائیکل میں کرنے پر متفق ہو سکتے ہیں؛ جو ممبر رقم وصول کر چکا ہو وہ باقی تمام قسطوں کا ذمہ دار رہے گا۔</li>
-        <li><b>ریکارڈ:</b> منتظم یہ رجسٹر برقرار رکھے گا، ہر ادائیگی تاریخ کے ساتھ درج کرے گا اور ہر ممبر کو ماہانہ گوشوارہ دے گا۔</li>
-        <li><b>تنازعات:</b> کوئی بھی تنازعہ پہلے ممبران کی باہمی گفتگو سے حل ہوگا؛ بصورت دیگر فریقین کی رضامندی سے دو غیر جانبدار افراد فیصلہ کریں گے۔ ممبران تسلیم کرتے ہیں کہ یہ اعتماد پر مبنی غیر رسمی باہمی انتظام ہے جسے قانونی تحفظ حاصل نہیں۔</li>
-      </ol></div>
-    <h4 style="margin-top:18px;font-size:.9rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Signatures · دستخط</h4><div class="sigs">${sigs}</div></div>`;
-}
-const lateRuleNameEn = lf => !lf || lf.type === 'none' ? L.en.lf_none : lf.type === 'flat' ? L.en.lf_flat.replace('{a}', nf.format(lf.value || 0)) : L.en.lf_pct.replace('{a}', lf.value || 0);
-// TODO(student): e-signatures. Hash the agreement text (SubtleCrypto SHA-256), let each member sign on a canvas or via OTP, and store
-// {memberId, hash, signatureImage, signedAt} so a changed agreement is detectable.
-function signAgreement() { toast(t('not_built'), 'gold', 'pen-tool'); }
-function renderAgreement() {
-  const c = active(); if (!c) return emptyView();
-  view.innerHTML = `<div class="card enter" style="margin-bottom:14px"><div class="toolbar" style="margin:0"><div style="flex:1;min-width:200px"><h2 style="margin:0">${ic('file')}${t('ag_title')}</h2><p class="lead txt" style="margin:4px 0 0">${t('ag_s')}</p></div><button class="btn" id="agPrint">${ic('printer')}${t('ag_print')}</button><button class="btn ghost" id="agSign">${ic('pen-tool')}${t('ag_sign')}</button></div></div>
-    <div class="grid g21 stagger"><div id="agDoc">${agreementHTML(c)}</div>
-      <div style="align-self:start"><div class="note bad txt" style="margin-bottom:12px">${ic('alert')} ${t('ag_risk')}</div><div class="card"><h2>${ic('help')}${t('ag_faq')}</h2><div class="faq">${t('faq').map(([q, a]) => `<details><summary>${ic('chevron-right')}<span>${esc(q)}</span></summary><p>${esc(a)}</p></details>`).join('')}</div></div></div></div>`;
-  $('#agPrint').onclick = () => printEl($('#agDoc').innerHTML);
-  $('#agSign').onclick = signAgreement;
-}
-
-const TODOS = [
-  ['Multi-device sync + member logins', '★★★', 'Push every store.set() to a backend (Supabase / Firebase / own API) and pull on start; each member logs in and sees their own statement.', 'syncToBackend()'],
-  ['OTP-confirmed payment acknowledgements', '★★', 'When the organizer records a payment, the member confirms it with a one-time code so the register is two-sided.', 'requestAck()'],
-  ['Raast / JazzCash / Easypaisa integration', '★★★', 'Payment links per member per cycle; gateway callbacks auto-fill the matrix (auto-reconciliation).', 'reconcile()'],
-  ['E-signatures on the agreement', '★★', 'Hash the agreement, sign on canvas or via OTP, store signature + hash per member.', 'signAgreement()'],
-  ['Dispute log with evidence uploads', '★★', 'Raise a dispute on any cell, attach receipt photos, organizer resolves; full history kept.', 'openDispute()'],
-  ['Portable trust score', '★★★', 'Signed outcome history that travels with a member across organizers and devices.', 'trustScore()'],
-  ['SMS reminders', '★', 'A server-side scheduler sends SMS on the collection day via an SMS gateway.', 'sendSms()']
-];
-function renderAbout() {
-  view.innerHTML = `<div class="grid g21 stagger"><div>
-    <div class="card" style="margin-bottom:14px"><h2>${ic('info')}${t('ab_title')}</h2>
-      <h3 class="txt" style="margin:12px 0 4px;font-size:.95rem">${t('ab_problem')}</h3><p class="muted txt" style="margin:0">${t('ab_problem_t')}</p>
-      <h3 class="txt" style="margin:14px 0 4px;font-size:.95rem">${t('ab_how')}</h3><p class="muted txt" style="margin:0">${t('ab_how_t')}</p><p class="muted small txt">${t('ab_stack')}</p>
-      <div class="note bad txt" style="margin-top:10px">${ic('alert')} ${t('ag_risk')}</div></div>
-    <div class="card"><h2>${ic('save')}${t('ab_data')}</h2><p class="lead txt">${t('ab_data_t')}</p>
-      <div class="toolbar" style="margin:0"><button class="btn" id="expJson">${ic('download')}${t('ab_export')}</button><label class="btn ghost" for="impFile">${ic('upload')}${t('ab_import')}</label><input type="file" id="impFile" accept="application/json,.json" class="hidden"><button class="btn ghost" id="expCsv">${ic('file')}${t('pay_csv')}</button><button class="btn danger" id="resetDemo">${ic('refresh')}${t('ab_reset')}</button></div></div></div>
-    <div><h3 style="margin:0 0 10px;display:flex;align-items:center;gap:8px">${ic('git-branch')}${t('ab_todo')}</h3><div class="list stagger">${TODOS.map(([h, s, b, fn]) => `<div class="todo"><h4>${esc(h)} <span class="stars">${s}</span><span class="tag">${esc(fn)}</span></h4><div class="muted small">${esc(b)}</div></div>`).join('')}</div></div></div>`;
-  $('#expJson').onclick = () => download(`kameti-backup-${iso(today)}.json`, JSON.stringify({ app: 'kameti', exported: new Date().toISOString(), ...DB }, null, 2));
-  $('#expCsv').onclick = () => { const c = active(); if (c) exportCsv(c); };
-  $('#impFile').onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (!Array.isArray(d.committees)) throw 0; DB = { committees: d.committees, activeId: d.activeId || d.committees[0]?.id || null }; DB.committees.forEach(syncOrder); save(); toast(tf('ab_imported', { a: DB.committees.length }), 'ok'); renderAll(); } catch { toast(t('ab_import_err'), 'bad'); } }; r.readAsText(f); e.target.value = ''; };
-  $('#resetDemo').onclick = async () => { if (await confirmDlg(t('ab_reset_q'), t('ab_reset'))) { DB = demoData(); selMonth = null; save(); toast(t('ab_reset_ok'), 'ok'); renderAll(); } };
-}
-
-// ---------- modals & popover ----------
-const modalHead = (title, icon) => `<header><h2>${ic(icon)}${title}</h2><button class="close" aria-label="${t('close')}">${ic('x')}</button></header>`;
-function openModal(html, wide = false) { const sh = $('#sheet'); sh.className = 'sheet' + (wide ? ' wide' : ''); sh.innerHTML = html; document.body.classList.add('modal-open'); $$('.close', sh).forEach(b => b.onclick = closeModal); const f = $('input:not([type=hidden]),select,textarea', sh); setTimeout(() => f && f.focus(), 60); }
-function closeModal() { document.body.classList.remove('modal-open'); $('#sheet').innerHTML = ''; }
-function closePop() { const p = $('#pop'); p.classList.remove('open'); p.innerHTML = ''; }
-$('#scrim').onclick = () => { closeModal(); closePop(); };
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closePop(); } });
-document.addEventListener('pointerdown', e => { const p = $('#pop'); if (p.classList.contains('open') && !p.contains(e.target) && !e.target.closest('.cell')) closePop(); });
-const confirmDlg = (msg, ok = t('confirm'), danger = true) => new Promise(res => { openModal(`${modalHead(t('confirm'), 'alert')}<div class="body txt">${esc(msg)}</div><div class="foot"><button class="btn ghost" id="cNo">${t('cancel')}</button><button class="btn ${danger ? 'danger' : ''}" id="cYes">${esc(ok)}</button></div>`); $('#cNo').onclick = () => { closeModal(); res(false); }; $('#cYes').onclick = () => { closeModal(); res(true); }; });
-const field = (id, label, input, err = true) => `<label class="f" for="${id}">${label}</label>${input}${err ? `<div class="err" id="${id}Err"></div>` : ''}`;
-const setErr = (id, msg) => { const i = $('#' + id), e = $('#' + id + 'Err'); if (i) i.classList.toggle('bad', !!msg); if (e) e.textContent = msg || ''; return !msg; };
-function printEl(html) { const root = $('#printRoot'); root.innerHTML = html; document.body.classList.add('printing'); const done = () => { document.body.classList.remove('printing'); root.innerHTML = ''; window.removeEventListener('afterprint', done); }; window.addEventListener('afterprint', done); setTimeout(() => window.print(), 60); }
-
-function committeeForm(c = null) {
-  const v = c || { name: '', contribution: 5000, planned: 10, startMonth: addMonths(curMonth, 1), collectionDay: 5, method: 'lottery', lateFee: { type: 'none', value: 0 }, organizer: { name: '', phone: '' }, notes: '' };
-  openModal(`${modalHead(c ? t('f_edit') : t('f_create'), c ? 'edit' : 'plus')}<div class="body"><form id="cForm" novalidate>
-      ${field('fName', t('f_name'), `<input id="fName" type="text" value="${esc(v.name)}" maxlength="60" required>`)}
-      <div class="cols">${field('fContrib', t('f_contrib'), `<input id="fContrib" class="mono" type="number" min="100" step="100" value="${v.contribution}">`)}${field('fPlanned', t('f_planned'), `<input id="fPlanned" class="mono" type="number" min="2" max="60" value="${v.planned}">`)}</div>
-      <div class="cols">${field('fStart', t('f_start'), `<input id="fStart" type="month" value="${v.startMonth}">`)}${field('fDay', t('f_day'), `<input id="fDay" class="mono" type="number" min="1" max="28" value="${v.collectionDay}">`)}</div>
-      <div class="cols">${field('fMethod', t('f_method'), `<select id="fMethod">${['fixed', 'lottery', 'organizer'].map(m => `<option value="${m}" ${v.method === m ? 'selected' : ''}>${methodName(m)}</option>`).join('')}</select>`, false)}
-        ${field('fLate', t('f_late'), `<select id="fLate">${['none', 'flat', 'pct'].map(x => `<option value="${x}" ${v.lateFee.type === x ? 'selected' : ''}>${x === 'none' ? t('lf_none') : x === 'flat' ? t('lf_flat').replace('{a} ', '').replace(' {a}', '') : t('lf_pct').replace('{a}', '')}</option>`).join('')}</select>`, false)}
-        ${field('fLateVal', t('f_lateval'), `<input id="fLateVal" class="mono" type="number" min="0" step="1" value="${v.lateFee.value || 0}" ${v.lateFee.type === 'none' ? 'disabled' : ''}>`)}</div>
-      <div class="cols">${field('fOrg', t('f_org'), `<input id="fOrg" type="text" value="${esc(v.organizer.name)}" maxlength="60">`)}${field('fOrgPhone', t('f_orgphone'), `<input id="fOrgPhone" class="mono" type="tel" placeholder="03xx-xxxxxxx" value="${esc(v.organizer.phone)}">`)}</div>
-      ${field('fNotes', t('f_notes'), `<textarea id="fNotes" maxlength="400">${esc(v.notes)}</textarea>`, false)}
-    </form></div><div class="foot">${c ? `<button class="btn danger left" id="fDel">${ic('trash')}${t('f_delete')}</button>` : ''}<button class="btn ghost" id="fCancel">${t('f_cancel')}</button><button class="btn" id="fSave">${ic('save')}${t('f_save')}</button></div>`);
-  $('#fLate').onchange = e => $('#fLateVal').disabled = e.target.value === 'none';
-  $('#fCancel').onclick = closeModal;
-  if (c) $('#fDel').onclick = async () => { closeModal(); if (await confirmDlg(tf('del_c', { a: c.name }), t('del_ok'))) { DB.committees = DB.committees.filter(x => x.id !== c.id); DB.activeId = DB.committees[0]?.id || null; save(); toast(t('deleted'), 'ok'); renderAll(); } };
-  const submit = () => {
-    const name = $('#fName').value.trim(), contrib = +$('#fContrib').value, planned = +$('#fPlanned').value, start = $('#fStart').value, day = +$('#fDay').value, phone = $('#fOrgPhone').value.trim(), lateT = $('#fLate').value, lateV = +$('#fLateVal').value;
-    let ok = setErr('fName', name ? '' : t('f_required'));
-    ok = setErr('fContrib', contrib >= 100 ? '' : t('f_num_err')) && ok; ok = setErr('fPlanned', planned >= 2 && planned <= 60 ? '' : t('f_num_err')) && ok;
-    ok = setErr('fStart', /^\d{4}-\d{2}$/.test(start) ? '' : t('f_required')) && ok; ok = setErr('fDay', day >= 1 && day <= 28 ? '' : t('f_day_err')) && ok;
-    ok = setErr('fOrgPhone', !phone || PHONE_RE.test(phone) ? '' : t('f_phone_err')) && ok; ok = setErr('fLateVal', lateT === 'none' || lateV >= 0 ? '' : t('f_num_err')) && ok;
-    if (!ok) return;
-    const data = { name, contribution: contrib, planned, startMonth: start, collectionDay: day, method: $('#fMethod').value, lateFee: { type: lateT, value: lateT === 'none' ? 0 : lateV }, organizer: { name: $('#fOrg').value.trim(), phone }, notes: $('#fNotes').value.trim() };
-    if (c) Object.assign(c, data); else { const nc = { id: 'c-' + uid(), ...data, members: [], order: [], payments: {}, payouts: {}, created: iso(today) }; DB.committees.push(nc); DB.activeId = nc.id; }
-    syncOrder(c || active()); selMonth = null; save(); closeModal(); toast(t('saved'), 'ok');
-    if (!c) location.hash = '#members'; renderAll();
-  };
-  $('#fSave').onclick = submit; $('#cForm').onsubmit = e => { e.preventDefault(); submit(); };
-}
-
-function memberForm(c, m = null) {
-  const v = m || { name: '', phone: '', cnic4: '', slots: 1 }, firstTurn = m ? turnsOf(c, m.id)[0] : undefined;
-  const free = c.order.map((id, k) => ({ id, k })).filter(x => cycleState(c, x.k) !== 'done' && (x.id === null || (m && x.id === m.id)));
-  const posOpts = `<option value="">${t('mf_pos_any')}</option>` + c.order.map((id, k) => `<option value="${k}" ${firstTurn === k ? 'selected' : ''} ${cycleState(c, k) === 'done' && firstTurn !== k ? 'disabled' : ''}>#${k + 1} · ${monthLabel(monthOf(c, k), true)}${id && id !== m?.id ? ' · ' + esc(memberById(c, id).name) : ''}</option>`).join('');
-  openModal(`${modalHead(m ? t('mf_edit') : t('mf_add'), 'user')}<div class="body"><form id="mForm" novalidate>
-      ${field('mName', t('mf_name'), `<input id="mName" type="text" value="${esc(v.name)}" maxlength="60">`)}
-      <div class="cols">${field('mPhone', t('mf_phone'), `<input id="mPhone" class="mono" type="tel" placeholder="0300-1234567" value="${esc(v.phone)}">`)}${field('mSlots', t('mf_slots'), `<input id="mSlots" class="mono" type="number" min="1" max="4" value="${v.slots || 1}">`)}</div>
-      ${field('mCnic', t('mf_cnic'), `<input id="mCnic" class="mono" type="text" placeholder="${v.cnic4 ? '•••••-•••••••-' + esc(v.cnic4) : '35202-1234567-1'}" maxlength="15">`)}
-      ${field('mPos', tf('mf_pos', { a: 1 }), `<select id="mPos">${posOpts}</select>`, false)}
-      <p class="small muted txt" style="margin:8px 0 0">${ic('lock')} ${tf('mf_cnic_hint', { a: '1234' })}</p>
-    </form></div><div class="foot"><button class="btn ghost" id="mCancel">${t('f_cancel')}</button><button class="btn" id="mSave">${ic('save')}${t('f_save')}</button></div>`);
-  $('#mCancel').onclick = closeModal;
-  const submit = () => {
-    const name = $('#mName').value.trim(), phone = $('#mPhone').value.trim(), cnic = $('#mCnic').value.trim(), slots = +$('#mSlots').value, pos = $('#mPos').value;
-    let ok = setErr('mName', name ? '' : t('f_required'));
-    ok = setErr('mPhone', PHONE_RE.test(phone) ? '' : t('f_phone_err')) && ok; ok = setErr('mSlots', slots >= 1 && slots <= 4 ? '' : t('f_num_err')) && ok;
-    ok = setErr('mCnic', !cnic || CNIC_RE.test(cnic) ? '' : t('f_cnic_err')) && ok;
-    if (!ok) return;
-    let mem = m; if (mem) Object.assign(mem, { name, phone, slots }); else { mem = { id: 'm-' + uid(), name, phone, slots, cnic4: '' }; c.members.push(mem); }
-    if (cnic) mem.cnic4 = cnic.slice(-4);           // only the last four digits are ever stored
-    syncOrder(c);
-    if (pos !== '') { const k = +pos, cur = c.order.indexOf(mem.id); if (cur >= 0 && cur !== k && cycleState(c, k) !== 'done') { const other = c.order[k]; c.order[k] = mem.id; c.order[cur] = other; } }
-    save(); closeModal(); toast(m ? t('saved') : t('added'), 'ok'); refresh();
-  };
-  $('#mSave').onclick = submit; $('#mForm').onsubmit = e => { e.preventDefault(); submit(); };
-}
-
-function lotteryModal(c) {
-  if (c.members.length < 2) return toast(t('lot_need'), 'bad');
-  const entries = c.order.map((id, k) => ({ id, k, locked: cycleState(c, k) === 'done', name: id ? memberById(c, id).name : t('ord_unassigned'), sl: id && (memberById(c, id).slots || 1) > 1 ? c.order.slice(0, k + 1).filter(x => x === id).length : 0 }));
-  const H = 50, free = entries.filter(e => !e.locked).map(e => e.k);
-  let slotOf = entries.map(e => e.k), timer = null, finalOrder = null;
-  openModal(`${modalHead(t('lot_title'), 'dice')}<div class="body"><p class="lead txt">${t('lot_s')}</p><div class="lotto" id="lotto" style="--h:${entries.length * H}px">${entries.map((e, idx) => `<div class="litem ${e.locked ? 'final' : ''}" data-idx="${idx}" style="top:${e.k * H}px"><span class="pos">${e.k + 1}</span>${e.locked ? ic('lock') : ic('user')}<span>${esc(e.name)}${e.sl ? ` <small class="muted">· ${tf('mem_slot_n', { a: e.sl })}</small>` : ''}</span></div>`).join('')}</div></div>
-    <div class="foot"><button class="btn ghost" id="lCancel">${t('cancel')}</button><button class="btn gold" id="lDraw">${ic('shuffle')}${t('lot_draw')}</button><button class="btn" id="lApply" disabled>${ic('check')}${t('lot_apply')}</button></div>`);
-  const items = $$('.litem', $('#lotto'));
-  const place = () => items.forEach((el, idx) => { el.style.top = slotOf[idx] * H + 'px'; $('.pos', el).textContent = slotOf[idx] + 1; });
-  const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const draw = () => {
-    clearTimeout(timer); $('#lApply').disabled = true; $('#lDraw').disabled = true; finalOrder = null;
-    items.forEach(el => { if (!entries[+el.dataset.idx].locked) { el.classList.remove('final'); el.classList.add('spin'); } });
-    let tick = 0; const total = 14;
-    const step = () => { const perm = shuffle(free); entries.forEach((e, idx) => { if (!e.locked) slotOf[idx] = perm[free.indexOf(e.k) >= 0 ? entries.filter(x => !x.locked).indexOf(e) : 0]; }); place(); tick++;
-      if (tick < total) timer = setTimeout(step, 90 + tick * tick * 2.2);
-      else { finalOrder = slotOf.slice(); items.forEach((el, idx) => { el.classList.remove('spin'); setTimeout(() => el.classList.add('final'), slotOf[idx] * 60); }); $('#lApply').disabled = false; $('#lDraw').disabled = false; $('#lDraw').innerHTML = ic('shuffle') + t('lot_again'); } };
-    step();
-  };
-  $('#lDraw').onclick = draw; $('#lCancel').onclick = () => { clearTimeout(timer); closeModal(); };
-  $('#lApply').onclick = () => { if (!finalOrder) return; const o = new Array(c.order.length).fill(null); entries.forEach((e, idx) => o[finalOrder[idx]] = e.id); c.order = o; save(); closeModal(); toast(t('lot_applied'), 'ok'); refresh(); };
-}
-
-// TODO(student): dispute log. Let a member open a dispute on a specific cell with a note + receipt photo (resize to ~800px, store as
-// a data URL or upload), notify the organizer, and keep an append-only history of status changes.
-function openDispute() { toast(t('not_built'), 'gold', 'flag'); }
-function statementHTML(c, m) {
-  const n = c.order.length, turns = turnsOf(c, m.id); let paid = 0, fees = 0, due = 0, ok = 0, received = 0;
-  const rows = c.order.map((id, k) => { const p = cell(c, k, m.id), d = dueDate(c, k), s = p?.s || 'unpaid', over = s === 'unpaid' && d < today; if (p && s !== 'waived') paid += p.amt || 0; fees += lateFeeFor(c, k, m, p); if (d <= today && s !== 'waived') { due++; if (s === 'paid' && (!p.date || fromIso(p.date) <= d)) ok++; } if (id === m.id && c.payouts[k]) received += c.payouts[k].amt;
-    return `<tr><td>${monthLabel(monthOf(c, k), true)}${id === m.id ? ` <span class="badge gold">${ic('award')}${t('mem_turn')}${c.payouts[k] ? ' · ' + rs(c.payouts[k].amt) : ''}</span>` : ''}</td><td class="amt small">${dateLabel(iso(d))}</td><td>${d > today && s === 'unpaid' ? `<span class="badge muted">${t('pay_future')}</span>` : stBadge(s, over)}</td><td class="num">${p && s !== 'waived' ? rs(p.amt) : '—'}</td><td class="amt small">${p?.date ? dateLabel(p.date) : '—'}</td><td class="small muted">${esc(p?.note || '')}</td></tr>`; }).join('');
-  return `<div class="statement"><div class="who" style="margin-bottom:6px"><div class="avatar">${esc(initials(m.name))}</div><div><div class="n" style="font-size:1.05rem">${esc(m.name)}</div><div class="p">${esc(m.phone)} · ${cnicMask(m)}</div></div><span class="spacer"></span>${trustRing(trustScore(m.phone))}</div>
-    <div class="muted small">${esc(c.name)} · ${tf('stm_s', { a: rs(c.contribution) + ' × ' + (m.slots || 1), b: m.slots || 1, c: turns.length ? turns.map(k => '#' + (k + 1)).join(', ') : '—' })}</div>
-    <div class="tot"><div><b>${t('stm_paid')}</b><span class="amt">${rs(paid)}</span></div><div><b>${t('stm_fees')}</b><span class="amt">${rs(fees)}</span></div><div><b>${t('stm_received')}</b><span class="amt">${rs(received)}</span></div><div><b>${t('stm_ontime')}</b><span class="amt">${ok}/${due}</span></div></div>
-    <div class="tblwrap"><table class="tbl"><thead><tr><th>${t('pay_month')}</th><th>${t('ce_date')}</th><th>${t('mem_month')}</th><th class="num">${t('ce_amount')}</th><th>${t('ce_date')}</th><th>${t('ce_note')}</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
-}
-function statementModal(c, m) {
-  openModal(`${modalHead(t('stm_title'), 'file')}<div class="body" id="stmBody">${statementHTML(c, m)}</div><div class="foot"><button class="btn ghost left" id="stmDispute">${ic('flag')}${t('stm_dispute')}</button><button class="btn ghost" id="stmClose">${t('close')}</button><button class="btn" id="stmPrint">${ic('printer')}${t('stm_print')}</button></div>`, true);
-  animRings($('#sheet'));
-  $('#stmClose').onclick = closeModal; $('#stmDispute').onclick = openDispute;
-  $('#stmPrint').onclick = () => printEl(`<div class="doc"><h3>${esc(c.name)} — ${t('stm_title')}</h3><div class="sub">${dateLabel(iso(today), true)}</div>${statementHTML(c, m)}</div>`);
-}
-
-// TODO(student): OTP acknowledgements. Send a one-time code to the member (SMS/WhatsApp API); when they reply with it, mark the cell
-// as acknowledged ({ ack: true, ackAt }) so both sides agree the payment happened.
-function requestAck() { toast(t('not_built'), 'gold', 'shield-check'); }
-function cellEditor(c, i, mid, anchor) {
-  const m = memberById(c, mid), p = cell(c, i, mid) || { s: 'unpaid', amt: expectedFor(c, m), date: iso(today), note: '' };
-  const html = `<h4>${ic('edit')}${t('ce_title')}</h4><div class="small muted" style="margin-bottom:8px">${esc(m.name)} · ${monthLabel(monthOf(c, i), true)} · ${tf('ce_expected', { a: rs(expectedFor(c, m)) })}</div>
-    <div class="stbtns" id="ceSt">${STATES.map(s => `<button type="button" class="${s} ${p.s === s ? 'on' : ''}" data-s="${s}">${t('st_' + s)}</button>`).join('')}</div>
-    <label class="f" for="ceAmt">${t('ce_amount')}</label><input id="ceAmt" class="mono" type="number" min="0" step="100" value="${p.amt || 0}">
-    <label class="f" for="ceDate">${t('ce_date')}</label><input id="ceDate" class="mono" type="date" value="${p.date || ''}">
-    <label class="f" for="ceNote">${t('ce_note')}</label><input id="ceNote" type="text" maxlength="120" value="${esc(p.note || '')}">
-    <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap"><button type="button" class="btn sm ghost" id="ceAck">${ic('shield-check')}${t('ce_ack')}</button><span class="spacer"></span><button type="button" class="btn sm ghost" id="ceCancel">${t('cancel')}</button><button type="button" class="btn sm" id="ceSave">${ic('save')}${t('f_save')}</button></div>`;
-  const small = window.innerWidth < 760, pop = $('#pop');
-  if (small) openModal(`${modalHead(t('ce_title'), 'edit')}<div class="body">${html.replace(/<h4>.*?<\/h4>/, '')}</div>`);
-  else { closeModal(); pop.innerHTML = html; pop.classList.add('open'); const r = anchor.getBoundingClientRect(), ph = pop.offsetHeight, pw = pop.offsetWidth; pop.style.left = Math.max(8, Math.min(window.innerWidth - pw - 8, r.left)) + 'px'; pop.style.top = (r.bottom + 6 + ph > window.innerHeight ? Math.max(8, r.top - ph - 6) : r.bottom + 6) + 'px'; }
-  let s = p.s;
-  $$('#ceSt button').forEach(b => b.onclick = () => { s = b.dataset.s; $$('#ceSt button').forEach(x => x.classList.toggle('on', x === b)); if (s === 'paid' || s === 'late') $('#ceAmt').value = expectedFor(c, m); if (s === 'waived') $('#ceAmt').value = 0; });
-  const done = () => { closePop(); closeModal(); };
-  $('#ceCancel').onclick = done; $('#ceAck').onclick = requestAck;
-  $('#ceSave').onclick = () => { const amt = Math.max(0, +$('#ceAmt').value || 0), date = $('#ceDate').value, note = $('#ceNote').value.trim(); done(); setStatus(c, i, mid, s, { amt, date, note }); };
-}
-
-// TODO(student): SMS reminders. Replace this stub with a backend call to an SMS gateway and a daily scheduler that runs on the
-// collection day for every unpaid member.
-function sendSms() { toast(t('not_built'), 'gold', 'message'); }
-function reminderModal(c, i) {
-  const list = c.members.filter(m => { const p = cell(c, i, m.id); return !p || p.s === 'unpaid' || p.s === 'partial'; });
-  const texts = list.map(m => reminderText(c, i, m));
-  openModal(`${modalHead(t('wa_title'), 'whatsapp')}<div class="body"><p class="lead txt">${t('wa_s')}</p>${list.length ? `<div class="list">${list.map((m, k) => `<div class="rowi" style="align-items:flex-start"><div style="min-width:0;flex:1"><div class="who"><div class="avatar">${esc(initials(m.name))}</div><div><div class="n">${esc(m.name)}</div><div class="p">${esc(m.phone)}</div></div></div><p class="small muted txt" style="margin:8px 0 0">${esc(texts[k])}</p></div><div style="display:flex;flex-direction:column;gap:6px"><a class="btn sm" target="_blank" rel="noopener" href="${waLink(m.phone, texts[k])}">${ic('whatsapp')}${t('wa_send')}</a><button class="btn sm ghost" data-sms>${ic('message')}${t('wa_sms')}</button></div></div>`).join('')}</div>` : `<div class="note">${ic('check-circle')} ${t('pay_none_unpaid')}</div>`}</div>
-    <div class="foot"><button class="btn ghost" id="waCopy" ${list.length ? '' : 'disabled'}>${ic('copy')}${t('wa_copy')}</button><button class="btn" id="waClose">${t('close')}</button></div>`);
-  $('#waClose').onclick = closeModal; $$('[data-sms]').forEach(b => b.onclick = sendSms);
-  $('#waCopy').onclick = async () => { try { await navigator.clipboard.writeText(texts.join('\n\n')); toast(t('wa_copied'), 'ok'); } catch { toast(t('ab_import_err'), 'bad'); } };
-}
-
-// ---------- router & init ----------
-const ROUTES = ['overview', 'members', 'payments', 'schedule', 'agreement', 'about'];
-const ICONS = { overview: 'pie-chart', members: 'users', payments: 'grid', schedule: 'calendar', agreement: 'file', about: 'info' };
-const currentPage = () => { const h = location.hash.replace('#', ''); return ROUTES.includes(h) ? h : 'overview'; };
-function renderTabs() { const page = currentPage(); $('#tabs').innerHTML = ROUTES.map(r => `<a href="#${r}" class="${r === page ? 'active' : ''}">${ic(ICONS[r])}<span>${t('nav_' + r)}</span></a>`).join('') + '<span class="ink"></span>'; moveInk(); }
-function moveInk() { const tabs = $('#tabs'), a = $('a.active', tabs), ink = $('.ink', tabs); if (!a || !ink) return; ink.style.width = a.offsetWidth + 'px'; ink.style.transform = `translateX(${a.offsetLeft}px)`; if (a.offsetLeft + a.offsetWidth > tabs.scrollLeft + tabs.clientWidth || a.offsetLeft < tabs.scrollLeft) tabs.scrollLeft = Math.max(0, a.offsetLeft - 16); }
-function route(animate = true) {
-  const page = currentPage(); document.body.dataset.page = page; renderTabs(); closePop();
-  view.classList.toggle('noanim', !animate);
-  ({ overview: renderOverview, members: renderMembers, payments: renderPayments, schedule: renderSchedule, agreement: renderAgreement, about: renderAbout })[page]();
-  if (animate) { animateIn(view); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-}
-function renderSwitcher() { const sel = $('#cSel'); sel.innerHTML = DB.committees.map(c => `<option value="${c.id}" ${c.id === DB.activeId ? 'selected' : ''}>${esc(c.name)}</option>`).join('') || `<option>${t('noC')}</option>`; sel.disabled = !DB.committees.length; }
-const refresh = () => { renderSwitcher(); renderPot(); route(false); };
-const renderAll = () => { renderSwitcher(); renderPot(); route(true); };
-function applyLang() { document.documentElement.lang = lang; store.set('lang', lang); document.title = t('title'); $('#appTitle').textContent = t('title'); $('#appTag').textContent = t('tag'); $('#newLbl').textContent = t('newC'); $('#langBtn span').textContent = lang === 'en' ? 'اردو' : 'English'; renderAll(); }
-$('#cSel').onchange = e => { DB.activeId = e.target.value; selMonth = null; save(); renderAll(); };
-$('#newBtn').onclick = () => committeeForm();
-$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
-window.addEventListener('hashchange', () => route(true));
-window.addEventListener('resize', moveInk);
-applyLang();
-</script>
-</body>
-</html>

@@ -58,16 +58,18 @@ html[lang=ur] h1,html[lang=ur] h2,html[lang=ur] h3,html[lang=ur] .btn,html[lang=
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 /* paper-textured clay tile panels */
-.paper{background-color:var(--clay);background-image:radial-gradient(rgba(122,82,48,.07) 1px,transparent 1.3px),radial-gradient(rgba(122,82,48,.05) 1px,transparent 1.3px),linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 60%);background-size:9px 9px,13px 13px,100% 100%;background-position:0 0,4px 6px,0 0;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.paper{min-width:0;background-color:var(--clay);background-image:radial-gradient(rgba(122,82,48,.07) 1px,transparent 1.3px),radial-gradient(rgba(122,82,48,.05) 1px,transparent 1.3px),linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 60%);background-size:9px 9px,13px 13px,100% 100%;background-position:0 0,4px 6px,0 0;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 
 /* ---------- Top bar ---------- */
 .topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:8px 18px;background:linear-gradient(180deg,var(--olive-deep),var(--olive));color:#f4f7e8;box-shadow:0 4px 20px -8px rgba(0,0,0,.45)}
 .brand{display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;color:inherit}
 .brand .logo{width:40px;height:40px;border-radius:12px;background:var(--field);color:var(--olive-deep);display:grid;place-items:center;flex:none}
 .brand h1{font-size:1.1rem;color:#fff;white-space:nowrap}
-.brand small{display:block;font-size:.72rem;opacity:.85;font-family:var(--font)}
-.topnav{display:flex;gap:2px;margin-left:8px;flex-wrap:wrap}
-.topnav a{color:#eef3dc;text-decoration:none;padding:8px 11px;border-radius:10px;font-weight:700;font-size:.88rem;opacity:.85;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.brand small{display:block;font-size:.72rem;opacity:.85;font-family:var(--font);white-space:nowrap}
+@media (max-width:1500px){.topnav a.sec span{display:none} .topnav a.sec{padding:8px 8px}}
+@media (max-width:1240px){.brand small{display:none} #saveTop span{display:none}}
+.topnav{display:flex;gap:1px;margin-left:6px;flex-wrap:nowrap;min-width:0}
+.topnav a{color:#eef3dc;text-decoration:none;padding:8px 9px;border-radius:10px;font-weight:700;font-size:.84rem;white-space:nowrap;opacity:.85;display:inline-flex;align-items:center;gap:6px;min-height:40px}
 .topnav a:hover{background:rgba(255,255,255,.1);opacity:1}
 .topnav a.active{background:var(--field);color:var(--olive-deep);opacity:1}
 .spacer{flex:1}
@@ -114,7 +116,8 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .chart .tip{position:absolute;pointer-events:none;background:var(--soil-deep);color:#fff;border-radius:8px;padding:5px 8px;font-size:.76rem;transform:translate(-50%,-115%);white-space:nowrap;display:none;z-index:2}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;margin:8px 2px 0}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
-.list{display:flex;flex-direction:column;gap:10px}
+.list{display:flex;flex-direction:column;gap:10px;min-width:0}
+.list>*{min-width:0}
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:rgba(255,255,255,.55)}
 .todo{border:1px dashed var(--soil);border-radius:12px;padding:12px 14px;background:rgba(255,255,255,.4)}
 .todo h4{margin:0 0 6px;font-size:.95rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -128,7 +131,7 @@ td.num,th.num{text-align:right;white-space:nowrap}
 
 /* ---------- Game layout ---------- */
 .game{display:grid;grid-template-columns:minmax(0,1fr) 352px;grid-template-rows:auto minmax(0,1fr) auto;gap:14px;max-width:1360px;margin:0 auto;padding:12px 18px 20px;min-height:calc(100vh - 58px)}
-.hud{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px}
+.hud{grid-column:1/-1;min-width:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px}
 .hchip{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 6px;border-radius:12px;background:rgba(255,255,255,.6);border:1px solid var(--line);min-height:46px}
 .hchip .ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--field-soft);color:var(--olive-deep);flex:none}
 .hchip .k{font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800;line-height:1.1}
@@ -208,7 +211,7 @@ body.modal-open .scrim,body.modal-open .modal{opacity:1;pointer-events:auto} bod
 .mobilebar{display:none} .fabs{display:none}
 @media (max-width:980px){
   .topnav{display:none} .brand small{display:none}
-  .game{grid-template-columns:1fr;grid-template-rows:auto auto auto;padding:10px 12px 120px;min-height:0;gap:10px}
+  .game{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;padding:10px 12px 120px;min-height:0;gap:10px}
   .hud{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;padding:8px 10px} .hud::-webkit-scrollbar{display:none} .turnbar{flex:0 0 130px}
   .farm{grid-column:1;grid-row:2;min-height:0;padding:4px} .farm svg{max-height:330px}
   .ticker{grid-column:1;grid-row:3;max-height:230px}
@@ -222,7 +225,7 @@ body.modal-open .scrim,body.modal-open .modal{opacity:1;pointer-events:auto} bod
   .mobilebar a.active{color:var(--olive-deep);background:var(--field-soft)}
   .fabs{display:flex;position:fixed;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:44;gap:8px}
   .fabs .btn{box-shadow:0 10px 24px -10px rgba(0,0,0,.5)}
-  .two{grid-template-columns:1fr}
+  .two{grid-template-columns:minmax(0,1fr)}
   .wrap{padding:12px 12px 110px}
   #events{top:62px}
   .actions{grid-template-columns:1fr 1fr}
@@ -440,7 +443,9 @@ function toast(msg, type = '', icon = 'info') {
   const iconName = type === 'ok' ? 'check-circle' : type === 'bad' ? 'alert-circle' : icon;
   el.innerHTML = ic(iconName) + '<span></span>';
   el.lastChild.textContent = msg;
-  $('#toasts').append(el);
+  const host = $('#toasts');
+  while (host.children.length >= 3) host.firstChild.remove();
+  host.append(el);
   setTimeout(() => el.remove(), 3300);
 }
 
@@ -575,8 +580,8 @@ const L = {
     ach_legume: 'Soil feeder', ach_legume_d: 'Sowed green manure or chickpea on at least six plots',
     // new game
     n_title: 'Start a new farm', n_lead: '16 acres near a canal distributary in Punjab. Sixty monthly turns: sow, water, protect, harvest, sell — and keep the soil alive.',
-    n_name: 'Farm name', n_diff: 'Difficulty', d_easy: 'Easy', d_easy_d: 'generous canal, calm prices, Rs 8 lac', d_normal: 'Normal', d_normal_d: 'typical warabandi, Rs 6 lac',
-    d_hard: 'Hard', d_hard_d: 'water scarcity, volatile prices, Rs 3 lac arhti debt', n_seed: 'Seed', n_seed_d: 'same seed = same weather and prices (for fair classroom runs)',
+    n_name: 'Farm name', n_diff: 'Difficulty', d_easy: 'Easy', d_easy_d: 'generous canal, calm prices, Rs 11 lac', d_normal: 'Normal', d_normal_d: 'typical warabandi, Rs 8 lac',
+    d_hard: 'Hard', d_hard_d: 'water scarcity, volatile prices, Rs 6 lac minus Rs 3 lac arhti debt', n_seed: 'Seed', n_seed_d: 'same seed = same weather and prices (for fair classroom runs)',
     n_random: 'Random', n_start: 'Start farming', n_continue: 'Continue current game', n_load: 'Saved games', n_tut: 'Show first-year tutorial tips', n_how: 'How to play',
     n_how_t: 'Each turn is one month. Tap a plot to sow, irrigate, fertilise, spray or harvest; sell at the Market; borrow at the Bank. Watch the water chip: canal share versus crop need. End the month to advance. After 60 months you get a grade for net worth and sustainability.',
     n_hall: 'Hall of fame', n_hall_empty: 'No completed runs yet. Finish five years to enter the hall.',
@@ -713,8 +718,8 @@ const L = {
     ach_diverse: 'بارہ فصلوں والا کسان', ach_diverse_d: 'کم از کم آٹھ مختلف فصلیں بوئیں',
     ach_legume: 'زمین کا پالنہار', ach_legume_d: 'کم از کم چھ قطعوں پر سبز کھاد یا چنا بویا',
     n_title: 'نیا فارم شروع کریں', n_lead: 'پنجاب میں نہری راجباہ کے قریب 16 ایکڑ۔ ساٹھ ماہانہ باریاں: بوئیں، پانی دیں، حفاظت کریں، کاٹیں، بیچیں — اور زمین کو زندہ رکھیں۔',
-    n_name: 'فارم کا نام', n_diff: 'دشواری', d_easy: 'آسان', d_easy_d: 'فراخ نہر، پرسکون قیمتیں، 8 لاکھ روپے', d_normal: 'معمول', d_normal_d: 'عام وارہ بندی، 6 لاکھ روپے',
-    d_hard: 'مشکل', d_hard_d: 'پانی کی قلت، اتار چڑھاؤ والی قیمتیں، 3 لاکھ آڑھتی قرض', n_seed: 'سیڈ', n_seed_d: 'ایک ہی سیڈ = ایک ہی موسم اور قیمتیں (کلاس روم مقابلے کے لیے)',
+    n_name: 'فارم کا نام', n_diff: 'دشواری', d_easy: 'آسان', d_easy_d: 'فراخ نہر، پرسکون قیمتیں، 11 لاکھ روپے', d_normal: 'معمول', d_normal_d: 'عام وارہ بندی، 8 لاکھ روپے',
+    d_hard: 'مشکل', d_hard_d: 'پانی کی قلت، اتار چڑھاؤ والی قیمتیں، 6 لاکھ روپے جن میں 3 لاکھ آڑھتی قرض', n_seed: 'سیڈ', n_seed_d: 'ایک ہی سیڈ = ایک ہی موسم اور قیمتیں (کلاس روم مقابلے کے لیے)',
     n_random: 'بے ترتیب', n_start: 'کھیتی شروع کریں', n_continue: 'موجودہ کھیل جاری رکھیں', n_load: 'محفوظ کھیل', n_tut: 'پہلے سال کے سبق دکھائیں', n_how: 'کیسے کھیلیں',
     n_how_t: 'ہر باری ایک مہینہ ہے۔ قطعے پر ٹیپ کر کے بوئیں، پانی دیں، کھاد ڈالیں، سپرے کریں یا کاٹیں؛ منڈی میں بیچیں؛ بینک سے قرض لیں۔ پانی کا نشان دیکھیں: نہری باری بمقابلہ فصل کی ضرورت۔ آگے بڑھنے کے لیے مہینہ ختم کریں۔ 60 ماہ بعد کل مالیت اور پائیداری پر گریڈ ملے گا۔',
     n_hall: 'ہال آف فیم', n_hall_empty: 'ابھی کوئی مکمل کھیل نہیں۔ پانچ سال مکمل کر کے ہال میں جگہ بنائیں۔',
@@ -932,9 +937,9 @@ const PESTS = {
 
 // ---------- constants ----------
 const DIFF = {
-  easy: { water: 1.15, vol: .7, debt: 0, ev: .7, cash: 800000 },
-  normal: { water: 1, vol: 1, debt: 0, ev: 1, cash: 600000 },
-  hard: { water: .8, vol: 1.4, debt: 300000, ev: 1.3, cash: 450000 }
+  easy: { water: 1.15, vol: .7, debt: 0, ev: .7, cash: 1100000 },
+  normal: { water: 1, vol: 1, debt: 0, ev: 1, cash: 800000 },
+  hard: { water: .8, vol: 1.4, debt: 300000, ev: 1.3, cash: 600000 }
 };
 const CANAL = [45, 50, 60, 75, 85, 95, 110, 110, 90, 70, 55, 45];   // whole-farm warabandi share per month (acre-inches)
 const RAIN = [.7, .8, .6, .3, .2, .5, 3, 3, 1.5, .2, .1, .3];       // rainfall per acre per month (acre-inches)
@@ -1480,7 +1485,6 @@ function spray(i) {
   if (p.pest) {
     const pd = PESTS[p.pest.id];
     const cost = Math.round(pd.spray * modMult('input'));
-    if (g.cash < cost) return fail(t('not_enough'));
     pay(cost, 'inputs');
     log('bug', { en: `Sprayed ${p.name} against ${pd.en} (${rs(cost)}).`, ur: `${p.name} پر ${pd.ur} کے خلاف سپرے (${rs(cost)})۔` }, 'ok');
     p.pest = null;
@@ -1502,7 +1506,6 @@ function harvest(i) {
   if (!p || !c || g.over) return false;
   if (!p.ready) return fail(t('not_ready'));
   const cost = harvestCost(p.crop);
-  if (g.cash < cost) return fail(t('not_enough'));
   pay(cost, g.combine && c.machine ? 'machinery' : 'labour');
 
   if (c.green) {
@@ -3187,7 +3190,7 @@ function cropCard(c) {
   return `<article class="card paper panelbox" data-search="${esc((cr.en + ' ' + cr.ur + ' ' + cr.note.en + ' ' + cr.note.ur).toLowerCase())}">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:16px;height:16px;border-radius:5px;background:${cr.color};border:1px solid rgba(0,0,0,.15);flex:none"></span><h3 style="margin:0">${tx(cr)}</h3><span class="tag soil" style="margin-left:auto">${cr.cat}</span></div>
     <svg viewBox="0 0 140 56" width="140" height="56" aria-hidden="true" style="display:block;margin:0 auto 6px">${cropSprite({ crop: c, stage: cr.dur, dur: cr.dur, age: 40, ready: true, over: 0, soil: 70, i: 0 }, 70, 48)}</svg>
-    <div class="stat"><span>${t('al_sow')}</span><b>${monthRange(cr.sow)}</b></div>
+    <div class="stat"><span>${t('al_sow')}</span><b style="white-space:normal;text-align:right">${monthRange(cr.sow)}</b></div>
     <div class="stat"><span>${t('al_dur')}</span><b class="num">${cr.dur} ${t('months')}</b></div>
     <div class="stat"><span>${t('al_water')}</span><b class="num">${cr.water} ${t('acre_in')}${t('per_mo')}</b></div>
     <div class="stat"><span>${t('al_inputs')}</span><b class="num">${rs(inputs)}</b></div>
@@ -3757,8 +3760,9 @@ function renderNav() {
   const cur = currentPage();
   const unread = unreadCount();
   const badge = unread ? ` <span class="tag bad">${unread}</span>` : '';
-  $('#topnav').innerHTML = NAV.map(([id, key, icon]) => `<a href="#${id}" class="${cur === id ? 'active' : ''}">${ic(icon)} ${t(key)}${id === 'inbox' ? badge : ''}</a>`).join('') +
-    `<a href="#new" class="${cur === 'new' ? 'active' : ''}">${ic('plus')} ${t('nav_new')}</a>`;
+  const secondary = ['almanac', 'challenges', 'settings', 'about'];
+  $('#topnav').innerHTML = NAV.map(([id, key, icon]) => `<a href="#${id}" class="${cur === id ? 'active' : ''} ${secondary.includes(id) ? 'sec' : ''}" title="${t(key)}">${ic(icon)} <span>${t(key)}</span>${id === 'inbox' ? badge : ''}</a>`).join('') +
+    `<a href="#new" class="${cur === 'new' ? 'active' : ''}">${ic('plus')} <span>${t('nav_new')}</span></a>`;
   $('#mobilebar').innerHTML = MOBILE_NAV.map(id => {
     const [, key, icon] = NAV.find(n => n[0] === id);
     return `<a href="#${id}" class="${cur === id ? 'active' : ''}">${ic(icon)}${t(key)}${id === 'inbox' && unread ? ` <span class="tag bad">${unread}</span>` : ''}</a>`;
