@@ -2253,3 +2253,1034 @@ function selectStation(id) {
   MapCtl.focus(st.lat, st.lng, 8);
   view.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// =====================================================================
+// 9. plan (evacuation planner)
+// =====================================================================
+const PLAN_DEFAULT = () => ({
+  adults: 2, children: 2, infants: 0, elderly: 1, pregnant: 0, disabled: 0, livestock: 4, vehicle: false,
+  docs: { cnic: true, bform: false, land: true, bank: true, med: false },
+  meet: '', contacts: [{ name: '', phone: '' }, { name: '', phone: '' }], loc: null,
+  routeCamp: null, routeMode: 'foot'
+});
+const getPlan = () => Object.assign(PLAN_DEFAULT(), store.get('plan', {}));
+const headcount = p => p.adults + p.children + p.infants + p.elderly;
+const vulnerable = p => p.infants + p.elderly + p.pregnant + p.disabled;
+
+// Travel modes for the route estimate: km/h on flood-affected roads
+const MODES = [
+  ['foot', 'footprints', 'p_mode_foot', 4],
+  ['tractor', 'tractor', 'p_mode_tractor', 15],
+  ['car', 'car', 'p_mode_car', 40],
+  ['boat', 'boat', 'p_mode_boat', 6]
+];
+const ROAD_FACTOR = 1.3;
+
+/** Prioritised checklist: pr 1 = now, 2 = soon, 3 = later; shifted by the district alert level. */
+function buildChecklist(p, lv) {
+  const n = headcount(p);
+  const items = [];
+  const add = (pr, icon, en, ur, cond = true) => { if (cond) items.push({ pr, icon, en, ur }); };
+  const docsMissing = Object.values(p.docs).some(v => !v);
+  const urgentLevel = lv === 'warning' || lv === 'severe';
+
+  add(1, 'file', 'Documents in a sealed waterproof bag: CNICs, B-forms, land papers', 'دستاویزات پانی سے محفوظ بند تھیلے میں: شناختی کارڈ، ب فارم، زمین کے کاغذات');
+  add(2, 'camera', 'Photograph the documents you do not hold and save to your phone / WhatsApp', 'جو دستاویزات موجود نہیں ان کی تصویر لے کر فون / واٹس ایپ میں محفوظ کریں', docsMissing);
+  add(vulnerable(p) ? 1 : 2, 'pill', 'Regular medicines for 2 weeks, ORS, paracetamol, first-aid kit', 'دو ہفتے کی روزمرہ دوائیں، او آر ایس، پیراسیٹامول، فرسٹ ایڈ کٹ');
+  add(1, 'bottle', `Water and dry food for 3 days: about ${n * 12} litres of water for ${n} people`, `تین دن کا پانی اور خشک خوراک: ${n} افراد کے لیے تقریباً ${n * 12} لیٹر پانی`);
+  add(1, 'battery', 'Phones charged, power bank full, helpline numbers saved and written on paper', 'فون چارج، پاور بینک بھرا، ہیلپ لائن نمبر محفوظ اور کاغذ پر لکھے ہوئے');
+  add(2, 'wallet', 'Cash in small notes; bank / BISP card in the documents bag', 'چھوٹے نوٹوں میں نقد؛ بینک / بی آئی ایس پی کارڈ دستاویزات کے تھیلے میں');
+  add(urgentLevel ? 1 : 2, 'livestock', `Livestock plan: move ${p.livestock} animals to high ground, store fodder; untie them if you must leave fast`, `مویشیوں کا منصوبہ: ${p.livestock} جانوروں کو اونچی جگہ لے جائیں، چارہ رکھیں؛ جلدی نکلنا پڑے تو کھول دیں`, p.livestock > 0);
+  add(1, 'zap', 'Switch off gas and electricity at the mains before leaving', 'نکلنے سے پہلے مین سے گیس اور بجلی بند کریں');
+  add(1, 'map-pin', p.meet ? `Family meeting point agreed: ${p.meet}` : 'Agree a family meeting point (set it below)', p.meet ? `خاندان کے ملنے کی جگہ طے: ${p.meet}` : 'خاندان کے ملنے کی جگہ طے کریں (نیچے درج کریں)');
+  add(1, 'heart', 'Pregnant women: mother card, clean delivery kit, nearest working BHU / RHC and ambulance number', 'حاملہ خواتین: ماں کارڈ، صاف ڈلیوری کٹ، قریبی فعال بی ایچ یو / آر ایچ سی اور ایمبولینس نمبر', p.pregnant > 0);
+  add(1, 'hand', 'Assign one helper to each person with a disability; mobility aid and medicines ready', 'ہر معذور فرد کے لیے ایک مددگار مقرر کریں؛ سہارا اور دوائیں تیار', p.disabled > 0);
+  add(1, 'baby', 'Infants: formula, clean bottles, extra water, warm wrap', 'شیر خوار: دودھ، صاف بوتلیں، اضافی پانی، گرم کپڑا', p.infants > 0);
+  add(1, 'user', 'Elderly: medicines, glasses, a chair or charpai to carry if needed', 'بزرگ: دوائیں، عینک، ضرورت پر اٹھانے کے لیے کرسی یا چارپائی', p.elderly > 0);
+  if (p.vehicle) add(2, 'car', 'Fuel the vehicle, park it facing the exit road, keys in the go-bag', 'گاڑی میں تیل بھریں، نکلنے کے راستے کی طرف کھڑی کریں، چابی بیگ میں');
+  else add(2, 'car', 'Arrange transport with neighbours (tractor-trolley / pickup) and agree the pickup point', 'محلے داروں سے سواری (ٹریکٹر ٹرالی / پک اپ) طے کریں اور اٹھانے کی جگہ مقرر کریں');
+  add(2, 'users', "Write your phone number on each child's arm with a marker", 'ہر بچے کے بازو پر مارکر سے اپنا فون نمبر لکھیں', p.children + p.infants > 0);
+  add(3, 'home', 'Raise grain, bedding and valuables onto high shelves; sandbag the doorway', 'اناج، بستر اور قیمتی سامان اونچی جگہ رکھیں؛ دروازے پر ریت کی بوریاں لگائیں');
+  add(3, 'share', 'Share the printed plan card with relatives in another district', 'پرنٹ شدہ منصوبہ کارڈ دوسرے ضلع کے رشتہ داروں کو دیں');
+
+  const shift = lv === 'severe' ? -1 : lv === 'normal' ? 1 : 0;
+  return items
+    .map(i => ({ ...i, pr: clamp(i.pr + shift, 1, 3) }))
+    .sort((a, b) => a.pr - b.pr);
+}
+
+function leaveRule(p, lv) {
+  if (lv === 'severe') return { key: 'p_leave_severe', c: LEVELS.severe.c, icon: 'siren' };
+  if (lv === 'warning') {
+    const key = vulnerable(p) > 0 || p.livestock > 0 ? 'p_leave_warning_v' : 'p_leave_warning';
+    return { key, c: LEVELS.warning.c, icon: 'alert' };
+  }
+  if (lv === 'watch') return { key: 'p_leave_watch', c: LEVELS.watch.c, icon: 'clock' };
+  return { key: 'p_leave_normal', c: LEVELS.normal.c, icon: 'shield-check' };
+}
+
+/** Route estimate from the household location (district centroid) to a camp. */
+function routeEstimate(p, from) {
+  const near = nearestCamps(from, 5);
+  const chosen = near.find(n => n.c.id === p.routeCamp) || near[0];
+  const km = chosen.km * ROAD_FACTOR;
+  const mode = MODES.find(m => m[0] === p.routeMode) || MODES[0];
+  const hours = km / mode[3];
+  return { near, chosen, km, mode, hours };
+}
+
+function fmtHours(hours) {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (h === 0) return `${m} ${t('minutes')}`;
+  return `${h} ${t('hours')} ${m} ${t('minutes')}`;
+}
+
+// ---- plan sub-views ----
+function planLeaveCard(d, r, rule) {
+  return `<div class="leave" style="--c:${rule.c}">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3>${ic(rule.icon)} ${t('p_leave')}</h3><span class="badge" style="background:rgba(255,255,255,.22);color:#fff">${esc(name(d))} · ${t('lv_' + r.lv)} ${r.score}</span></div>
+    <p class="txt">${t(rule.key)}</p>
+  </div>`;
+}
+
+function planHousehold(p) {
+  const stepper = (key, label) => `<div><label class="f">${label}</label><div class="stepper" data-k="${key}"><button type="button" aria-label="−">${ic('minus')}</button><output>${p[key]}</output><button type="button" aria-label="+">${ic('plus')}</button></div></div>`;
+  const docChip = key => `<button type="button" class="chip ${p.docs[key] ? 'on' : ''}" data-doc="${key}">${p.docs[key] ? ic('check') : ''}${t('p_doc_' + key)}</button>`;
+  const contactRow = (c, i) => `<div class="cols2" style="margin-bottom:6px"><input type="text" data-cn="${i}" value="${esc(c.name)}" placeholder="${esc(t('p_cname'))}" aria-label="${esc(t('p_cname'))} ${i + 1}"><input type="tel" data-cp="${i}" value="${esc(c.phone)}" placeholder="${esc(t('p_cphone'))}" aria-label="${esc(t('p_cphone'))} ${i + 1}"></div>`;
+
+  return `<div class="card flat" id="household">
+    <h3>${ic('users')}${t('p_family')} <span class="badge">${headcount(p)} ${t('p_members')}</span></h3>
+    <div class="cols2">
+      ${stepper('adults', t('p_adults'))}${stepper('children', t('p_children'))}${stepper('infants', t('p_infants'))}${stepper('elderly', t('p_elderly'))}
+      ${stepper('pregnant', t('p_pregnant'))}${stepper('disabled', t('p_disabled'))}${stepper('livestock', t('p_livestock'))}
+      <div><label class="f">&nbsp;</label><label class="toggle"><input type="checkbox" id="pVeh" ${p.vehicle ? 'checked' : ''}> ${ic('car')} ${t('p_vehicle')}</label></div>
+    </div>
+    <label class="f">${t('p_docs')}</label><div class="chips">${['cnic', 'bform', 'land', 'bank', 'med'].map(docChip).join('')}</div>
+    <label class="f" for="pMeet">${t('p_meet')}</label><input id="pMeet" type="text" value="${esc(p.meet)}" placeholder="${esc(t('p_meet_ph'))}" maxlength="80">
+    <label class="f">${t('p_contacts')}</label>${p.contacts.map(contactRow).join('')}
+    <div class="actions"><button class="btn" id="pSave">${ic('check')}${t('p_save')}</button></div>
+  </div>`;
+}
+
+function planChecklist(list) {
+  const colorFor = pr => (pr === 1 ? LEVELS.severe.c : pr === 2 ? LEVELS.warning.c : LEVELS.watch.c);
+  const labelFor = pr => t(pr === 1 ? 'p_now' : pr === 2 ? 'p_soon' : 'p_later');
+  const rows = list.map(i => `<li style="--c:${colorFor(i.pr)}"><span class="p" title="${labelFor(i.pr)}">${i.pr}</span>${ic(i.icon)}<span>${esc(bi(i.en, i.ur))}</span></li>`);
+  return `<div class="card flat"><h3>${ic('list')}${t('p_checklist')}</h3><ul class="cl stagger" style="margin-top:8px">${rows.join('')}</ul><div class="small muted" style="margin-top:8px">1 = ${t('p_now')} · 2 = ${t('p_soon')} · 3 = ${t('p_later')}</div></div>`;
+}
+
+function planGoBag(items, bag) {
+  const done = items.filter(g => bag[g[0]]).length;
+  const rows = items.map(g => `<label class="check ${bag[g[0]] ? 'done' : ''}"><input type="checkbox" data-bag="${g[0]}" ${bag[g[0]] ? 'checked' : ''}>${ic(g[1])}<span>${esc(bi(g[2], g[3]))}</span></label>`);
+  return `<div class="card flat">
+    <div class="ringwrap">
+      <svg class="ring" viewBox="0 0 72 72" aria-hidden="true"><circle class="trk" cx="36" cy="36" r="30"/><circle class="val" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5" id="ringVal"/><text x="36" y="36" id="ringTxt">0%</text></svg>
+      <div style="flex:1"><h3>${ic('bag')}${t('p_gobag')}</h3><div class="small muted"><span id="bagCount">${done}</span>/${items.length} · <button class="btn sm ghost" id="bagReset" style="min-height:28px;padding:2px 8px">${t('p_reset_bag')}</button></div></div>
+    </div>
+    <div class="list stagger" style="margin-top:10px;gap:6px">${rows.join('')}</div>
+  </div>`;
+}
+
+function planRoute(p, est) {
+  const options = est.near.map(({ c, km }) => `<option value="${c.id}" ${c.id === est.chosen.c.id ? 'selected' : ''}>${esc(c.en)} · ${km.toFixed(0)} ${t('p_km')}</option>`);
+  const modeBtns = MODES.map(([id, icon, key, kmh]) => {
+    const hours = est.km / kmh;
+    return `<button type="button" class="${id === est.mode[0] ? 'on' : ''}" data-mode="${id}">${ic(icon)}<span>${t(key)}</span><b>${fmtHours(hours)}</b></button>`;
+  });
+  const leaveBy = new Date(Date.now() + est.hours * 3600000 * -1 + 6 * 3600000);
+  return `<div class="card flat">
+    <h3>${ic('navigation')}${t('p_route')}</h3><p class="lead txt small">${t('p_route_lead')}</p>
+    <label class="f" for="routeCamp">${t('p_dest')}</label><select id="routeCamp">${options.join('')}</select>
+    <div class="eta">${modeBtns.join('')}</div>
+    <div class="note txt" style="margin-top:10px"><b>${est.km.toFixed(0)} ${t('p_km')}</b> · ${t('p_eta')} <b>${fmtHours(est.hours)}</b> · ${t('p_leave_by')} <b>${leaveBy.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}</b></div>
+    <div class="small muted txt" style="margin-top:6px">${ic('info')} ${t('p_route_note')}</div>
+  </div>`;
+}
+
+function renderPlan() {
+  const p = getPlan();
+  const d = DM[myDistrict];
+  const r = R(d);
+  const bag = store.get('gobag', {});
+  const rule = leaveRule(p, r.lv);
+  const items = GOBAG.filter(g => !g[4] || g[4](p));
+  const from = p.loc || d;
+  const est = routeEstimate(p, from);
+  const list = buildChecklist(p, r.lv);
+
+  setHead('bag', t('p_title'), `<button class="btn sm ghost" id="printBtn">${ic('printer')}<span class="lbl">${t('p_print')}</span></button>`);
+  view.innerHTML = `<p class="lead txt">${t('p_lead')}</p>
+    ${planLeaveCard(d, r, rule)}
+    ${planHousehold(p)}
+    ${planChecklist(list)}
+    ${planGoBag(items, bag)}
+    ${planRoute(p, est)}
+    <div class="card flat"><h3>${ic('tent')}${t('p_nearest')}</h3><div class="list stagger" style="margin-top:8px">${est.near.slice(0, 3).map(({ c, km }) => campRow(c, km)).join('')}</div></div>`;
+
+  bindPlan(p, items);
+  bindCampRows(view);
+  drawPlanMap(d, r, est);
+}
+
+function updateRing(items) {
+  const bag = store.get('gobag', {});
+  const done = items.filter(g => bag[g[0]]).length;
+  const pct = items.length ? Math.round(done / items.length * 100) : 0;
+  $('#ringVal').style.strokeDashoffset = 188.5 * (1 - pct / 100);
+  $('#ringTxt').textContent = pct + '%';
+  $('#bagCount').textContent = done;
+  return pct;
+}
+
+function savePlanFromForm(quiet) {
+  const np = getPlan();
+  $$('.stepper', view).forEach(s => { np[s.dataset.k] = +$('output', s).textContent; });
+  np.vehicle = $('#pVeh').checked;
+  ['cnic', 'bform', 'land', 'bank', 'med'].forEach(k => { np.docs[k] = $(`[data-doc="${k}"]`).classList.contains('on'); });
+  np.meet = $('#pMeet').value.trim();
+  np.contacts = [0, 1].map(i => ({ name: $(`[data-cn="${i}"]`).value.trim(), phone: $(`[data-cp="${i}"]`).value.trim() }));
+  store.set('plan', np);
+  if (quiet) return;
+  logActivity('act_plan', `${headcount(np)} ${t('p_members')}`, 'bag');
+  toast(t('p_saved'), 'ok', 'check-circle');
+  renderPlan();
+}
+
+function bindPlan(p, items) {
+  requestAnimationFrame(() => {
+    const pct = updateRing(items);
+    countUp($('#ringTxt'), pct, { fmt: v => Math.round(v) + '%' });
+  });
+
+  $$('.stepper', view).forEach(s => {
+    $$('button', s).forEach((b, i) => {
+      b.onclick = () => {
+        const out = $('output', s);
+        out.textContent = clamp(+out.textContent + (i ? 1 : -1), 0, 99);
+        savePlanFromForm(true);
+      };
+    });
+  });
+  $$('[data-doc]', view).forEach(b => {
+    b.onclick = () => {
+      b.classList.toggle('on');
+      b.innerHTML = (b.classList.contains('on') ? ic('check') : '') + t('p_doc_' + b.dataset.doc);
+      savePlanFromForm(true);
+    };
+  });
+  $('#pVeh').onchange = () => savePlanFromForm(true);
+  $('#pSave').onclick = () => savePlanFromForm(false);
+
+  $$('[data-bag]', view).forEach(cb => {
+    cb.onchange = () => {
+      const bag = store.get('gobag', {});
+      if (cb.checked) bag[cb.dataset.bag] = true;
+      else delete bag[cb.dataset.bag];
+      store.set('gobag', bag);
+      cb.closest('.check').classList.toggle('done', cb.checked);
+      const pct = updateRing(items);
+      if (cb.checked) logActivity('act_bag', bi(GOBAG.find(g => g[0] === cb.dataset.bag)[2], GOBAG.find(g => g[0] === cb.dataset.bag)[3]), 'bag');
+      if (pct === 100) toast(t('p_gobag') + ' ✓', 'ok', 'check-circle');
+    };
+  });
+  $('#bagReset').onclick = () => { store.set('gobag', {}); renderPlan(); };
+  $('#printBtn').onclick = () => printReport('plan');
+
+  $('#routeCamp').onchange = e => {
+    const np = getPlan();
+    np.routeCamp = e.target.value;
+    store.set('plan', np);
+    renderPlan();
+  };
+  $$('[data-mode]', view).forEach(b => {
+    b.onclick = () => {
+      const np = getPlan();
+      np.routeMode = b.dataset.mode;
+      store.set('plan', np);
+      renderPlan();
+    };
+  });
+}
+
+function drawPlanMap(d, r, est) {
+  MapCtl.legend([[r.c, t('al_mine')], ['#1e3a5f', t('lg_camp'), 'sq'], ['#1e3a5f', t('lg_route'), 'ln']]);
+  const home = { id: d.id, lat: d.lat, lng: d.lng, r: 11, color: r.c, pulse: r.lv !== 'normal', sel: true, title: name(d), onClick: () => openDistrict(d.id) };
+  const camps = est.near.slice(0, 3).map(({ c, km }) => ({
+    id: c.id, lat: c.lat, lng: c.lng, r: 8, shape: 'sq',
+    color: c.id === est.chosen.c.id ? '#1e3a5f' : '#6b8cae',
+    sel: c.id === est.chosen.c.id,
+    title: `${c.en} · ${km.toFixed(0)} ${t('p_km')}`,
+    onClick: () => { location.hash = 'camps/' + c.id; }
+  }));
+  const markers = [home, ...camps];
+  MapCtl.setMarkers(markers);
+  MapCtl.setRoute({ from: d, to: est.chosen.c, color: '#1e3a5f' });
+  MapCtl.fit(markers);
+}
+
+// =====================================================================
+// 10. camps
+// =====================================================================
+function campRow(c, km) {
+  const pct = Math.min(100, Math.round(c.occ / c.cap * 100));
+  const col = occColor(c);
+  const d = DM[c.d];
+  const regs = getRegistrations().filter(reg => reg.camp === c.id).length;
+  const facilities = [['w', 'droplet', 'c_water'], ['l', 'home', 'c_latrines'], ['m', 'stethoscope', 'c_medical'], ['f', 'box', 'c_food']];
+  const facHtml = facilities.map(([k, icon, key]) => `<span class="${c.fac.includes(k) ? '' : 'no'}">${ic(icon)}${t(key)}</span>`).join('');
+  const needsHtml = c.needs.length
+    ? `<div class="chips" style="margin-top:8px"><span class="small muted" style="align-self:center">${t('c_needs')}:</span>${c.needs.map(n => `<span class="chip need">${ic('alert-circle')}${esc(n.trim())}</span>`).join('')}</div>`
+    : '';
+  const kmHtml = km != null ? ` · <b>${km.toFixed(0)} ${t('p_km')}</b>` : '';
+  const regHtml = regs ? ` · ${regs} ${t('c_reg_count')}` : '';
+
+  return `<article class="card camp" data-c="${c.id}" tabindex="0">
+    <div class="top">
+      <div class="ico">${ic(CAMP_TYPE_ICON[c.type])}</div>
+      <div style="flex:1;min-width:0"><div class="nm">${esc(c.en)}</div><div class="sub">${t('c_type_' + c.type)} · ${esc(name(d))}, ${t(d.prov)}${kmHtml}${regHtml}</div></div>
+      ${pct >= 95 ? `<span class="badge solid" style="--c:${col}">${t('c_full')}</span>` : ''}
+    </div>
+    <div class="occ"><span class="num"><b>${nf.format(c.occ)}</b> / ${nf.format(c.cap)} ${t('c_people')}</span><div class="bar" style="--c:${col}"><i data-w="${pct}"></i></div><b class="num" style="color:${col}">${pct}%</b></div>
+    <div class="fac">${facHtml}</div>
+    ${needsHtml}
+    <div class="actions">
+      <a class="btn sm ghost" href="tel:${esc(c.phone)}">${ic('phone')}${esc(c.phone)}</a>
+      <a class="btn sm river" href="${mapsLink(c.lat, c.lng)}" target="_blank" rel="noopener">${ic('navigation')}${t('c_directions')}</a>
+      <button class="btn sm ghost" data-upd="${c.id}">${ic('edit')}${t('c_update')}</button>
+      <button class="btn sm ghost" data-reg="${c.id}">${ic('clipboard')}${t('c_register')}</button>
+      <button class="btn sm ghost" data-focus="${c.id}" aria-label="${t('al_focus')}">${ic('map-pin')}</button>
+    </div>
+  </article>`;
+}
+
+function bindCampRows(root) {
+  $$('[data-upd]', root).forEach(b => {
+    b.onclick = e => { e.stopPropagation(); openCampUpdate(b.dataset.upd); };
+  });
+  $$('[data-reg]', root).forEach(b => {
+    b.onclick = e => { e.stopPropagation(); openRegistration(b.dataset.reg); };
+  });
+  $$('[data-focus]', root).forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
+      const c = CM[b.dataset.focus];
+      if (page !== 'camps') { location.hash = 'camps/' + c.id; return; }
+      state.selCamp = c.id;
+      MapCtl.focus(c.lat, c.lng, 11);
+      renderCampMarkers();
+    };
+  });
+}
+
+function openCampUpdate(id) {
+  const c = campData(CM[id]);
+  modal(t('c_update_title'), `<div class="small muted" style="margin-bottom:6px">${esc(c.en)}</div>
+    <label class="f" for="uOcc">${t('c_occ_now')}</label><input id="uOcc" type="number" min="0" max="${c.cap * 2}" value="${c.occ}">
+    <label class="f" for="uNeeds">${t('c_needs_in')}</label><input id="uNeeds" type="text" value="${esc(c.needs.join(', '))}" placeholder="food, tents, medicines">
+    <div class="actions"><button class="btn" id="uSave">${ic('check')}${t('save')}</button><button class="btn ghost" id="uCancel">${t('cancel')}</button></div>`,
+  box => {
+    $('#uCancel', box).onclick = closeModal;
+    $('#uSave', box).onclick = () => {
+      const needs = $('#uNeeds', box).value.split(',').map(s => s.trim()).filter(Boolean);
+      saveCampUpdate(c.id, +$('#uOcc', box).value || 0, needs);
+    };
+  });
+}
+
+function saveCampUpdate(id, occ, needs) {
+  const updates = store.get('campUpdates', {});
+  updates[id] = { occ, needs, ts: Date.now() };
+  store.set('campUpdates', updates);
+  logActivity('act_camp', CM[id].en, 'tent');
+  closeModal();
+  toast(t('c_updated'), 'ok', 'check-circle');
+  route(false);
+}
+
+function openRegistration(campId) {
+  const c = CM[campId];
+  const options = DISTRICTS.map(d => `<option value="${d.id}" ${d.id === myDistrict ? 'selected' : ''}>${esc(name(d))}</option>`).join('');
+  modal(t('c_reg_title'), `<div class="small muted" style="margin-bottom:6px">${esc(c.en)}</div>
+    <label class="f" for="rHead">${t('c_reg_head')}</label><input id="rHead" type="text" maxlength="60">
+    <div class="cols2"><div><label class="f" for="rMembers">${t('c_reg_members')}</label><input id="rMembers" type="number" min="1" max="30" value="5"></div><div><label class="f" for="rPhone">${t('c_reg_phone')}</label><input id="rPhone" type="tel" placeholder="03xx-xxxxxxx"></div></div>
+    <label class="f" for="rOrigin">${t('c_reg_origin')}</label><select id="rOrigin">${options}</select>
+    <label class="f" for="rNeeds">${t('c_reg_needs')}</label><input id="rNeeds" type="text" maxlength="120">
+    <div class="actions"><button class="btn" id="rSave">${ic('check')}${t('save')}</button><button class="btn ghost" id="rCancel">${t('cancel')}</button></div>`,
+  box => {
+    $('#rCancel', box).onclick = closeModal;
+    $('#rSave', box).onclick = () => {
+      const head = $('#rHead', box).value.trim();
+      const members = +$('#rMembers', box).value || 0;
+      if (!head || !members) { toast(t('m_valid'), 'bad', 'alert'); return; }
+      const regs = getRegistrations();
+      regs.unshift({ id: uid(), camp: campId, head, members, origin: $('#rOrigin', box).value, phone: $('#rPhone', box).value.trim(), needs: $('#rNeeds', box).value.trim(), ts: Date.now() });
+      store.set('registrations', regs);
+      logActivity('act_reg', c.en, 'clipboard');
+      closeModal();
+      toast(t('c_reg_saved'), 'ok', 'check-circle');
+      route(false);
+    };
+  });
+}
+
+function visibleCamps() {
+  const q = state.campQ.trim().toLowerCase();
+  const from = DM[myDistrict];
+  return CAMPS
+    .map(c => ({ c: campData(c), km: haversine(from, c) }))
+    .filter(({ c }) => state.campProv === 'all' || DM[c.d].prov === state.campProv)
+    .filter(({ c }) => !q || c.en.toLowerCase().includes(q) || DM[c.d].en.toLowerCase().includes(q) || DM[c.d].ur.includes(q))
+    .sort((a, b) => a.km - b.km);
+}
+
+function renderCampMarkers() {
+  const ids = new Set(visibleCamps().map(row => row.c.id));
+  const d = DM[myDistrict];
+  const home = { id: 'mine', lat: d.lat, lng: d.lng, r: 9, color: R(d).c, title: `${t('al_mine')}: ${name(d)}`, onClick: () => openDistrict(d.id) };
+  const camps = CAMPS.map(campData).map(c => ({
+    id: c.id,
+    lat: c.lat,
+    lng: c.lng,
+    r: 7 + Math.min(4, c.cap / 600),
+    shape: 'sq',
+    color: occColor(c),
+    dim: !ids.has(c.id),
+    sel: state.selCamp === c.id,
+    pulse: c.occ / c.cap >= .95,
+    title: `${c.en} · ${Math.round(c.occ / c.cap * 100)}%`,
+    onClick: it => {
+      state.selCamp = it.id;
+      renderCampMarkers();
+      scrollToCard(`.camp[data-c="${it.id}"]`, true);
+    }
+  }));
+  const markers = [home, ...camps];
+  MapCtl.setMarkers(markers);
+  return markers;
+}
+
+function renderCamps(param) {
+  if (param && CM[param]) state.selCamp = param;
+  const rows = visibleCamps();
+  const emptyHtml = `<div class="empty">${ic('tent')}${t('c_none')}</div>`;
+
+  setHead('tent', t('c_title'), `<button class="btn sm ghost" id="campPrint">${ic('printer')}<span class="lbl">${t('c_print')}</span></button><span class="badge" id="campCount">${rows.length} / ${CAMPS.length}</span>`);
+  view.innerHTML = `<p class="lead txt">${t('c_lead')}</p>
+    <div class="toolbar"><div class="search">${ic('search')}<input id="campQ" type="search" value="${esc(state.campQ)}" placeholder="${esc(t('c_search'))}" aria-label="${esc(t('c_search'))}"></div><span class="badge">${ic('navigation')}${t('c_near')}: ${esc(name(DM[myDistrict]))}</span></div>
+    ${provChips(state.campProv)}
+    <div class="list stagger" id="clist">${rows.map(({ c, km }) => campRow(c, km)).join('') || emptyHtml}</div>`;
+
+  animateBars(view);
+  bindCampRows(view);
+  $('#campPrint').onclick = () => printReport('camps');
+  $('#campQ').oninput = e => {
+    state.campQ = e.target.value;
+    const list = $('#clist');
+    const filtered = visibleCamps();
+    list.innerHTML = filtered.map(({ c, km }) => campRow(c, km)).join('') || emptyHtml;
+    animateBars(list);
+    bindCampRows(list);
+    $('#campCount').textContent = `${filtered.length} / ${CAMPS.length}`;
+    renderCampMarkers();
+  };
+  $$('[data-prov] .chip', view).forEach(b => {
+    b.onclick = () => { state.campProv = b.dataset.p; saveUI(); renderCamps(); };
+  });
+
+  MapCtl.legend([[LEVELS.normal.c, '< 70%', 'sq'], [LEVELS.warning.c, '70–95%', 'sq'], [LEVELS.severe.c, t('c_full'), 'sq'], [R(DM[myDistrict]).c, t('al_mine')]]);
+  MapCtl.setRoute(null);
+  const markers = renderCampMarkers();
+  if (state.selCamp && CM[state.selCamp]) {
+    const c = CM[state.selCamp];
+    MapCtl.focus(c.lat, c.lng, 10);
+    setTimeout(() => scrollToCard(`.camp[data-c="${c.id}"]`), 300);
+  } else {
+    MapCtl.fit(markers.filter(m => !m.dim));
+  }
+}
+
+// =====================================================================
+// 11. supplies & volunteers
+// =====================================================================
+const getVolunteers = () => store.get('volunteers', null) || VOLUNTEERS_SEED();
+const saveVolunteers = list => store.set('volunteers', list);
+const getStockLog = () => store.get('stockLog', []);
+
+function supplyCamp() {
+  if (state.supplyCamp && CM[state.supplyCamp]) return campData(CM[state.supplyCamp]);
+  return nearestCamps(DM[myDistrict], 1)[0].c;
+}
+
+function daysCell(st) {
+  if (st.days != null) {
+    const cls = st.bad ? 'bad' : st.warn ? 'warn' : 'ok';
+    return `<span class="days ${cls}">${st.days.toFixed(1)}</span>`;
+  }
+  const cls = st.bad ? 'bad' : st.warn ? 'warn' : 'ok';
+  return `<span class="days ${cls}">${Math.round(st.coverage * 100)}%</span>`;
+}
+
+function inventoryTable(c) {
+  const stock = stockOf(c.id);
+  const rows = ITEMS.map(it => {
+    const st = supplyStatus(c, it, stock[it.id]);
+    const col = st.bad ? LEVELS.severe.c : st.warn ? LEVELS.warning.c : LEVELS.normal.c;
+    const rateTxt = it.kind === 'daily' ? `${it.rate} ${bi(it.unitEn, it.unitUr)} ${t('s_per_day')}` : `${it.rate} ${t('s_per_people')}`;
+    return `<div class="nm">${ic(it.icon)}<span title="${rateTxt}">${esc(bi(it.en, it.ur))}</span></div>
+      <div class="q"><b>${nf.format(stock[it.id])}</b> <span class="small muted">${esc(bi(it.unitEn, it.unitUr))}</span><div class="bar" style="--c:${col};margin-top:3px"><i data-w="${Math.round(st.ratio * 100)}"></i></div></div>
+      ${daysCell(st)}`;
+  });
+  return `<div class="inv"><div class="h">${t('s_item')}</div><div class="h" style="text-align:right">${t('s_stock')}</div><div class="h" style="text-align:right">${t('s_days')} / ${t('s_coverage')}</div>${rows.join('')}</div>`;
+}
+
+function supplyKpis() {
+  const camps = CAMPS.map(campData);
+  const count = (itemId, pred) => camps.filter(c => pred(supplyStatus(c, IM[itemId], stockOf(c.id)[itemId]))).length;
+  const water = count('water', st => st.days < 2);
+  const food = count('food', st => st.days < 2);
+  const tents = count('tents', st => st.coverage < .6);
+  const vols = getVolunteers().filter(v => v.camp).length;
+  const tile = (key, value, color, icon) => `<div class="kpi static" style="--c:${color}"><div class="k">${t(key)}</div><div class="v num" data-n="${value}">0</div><div class="s">${ic(icon)}</div></div>`;
+  return `<div class="kpis stagger">${tile('s_k_water', water, LEVELS.severe.c, 'droplet')}${tile('s_k_food', food, LEVELS.warning.c, 'box')}${tile('s_k_tents', tents, LEVELS.watch.c, 'tent')}${tile('s_k_vols', vols, LEVELS.normal.c, 'users')}</div>`;
+}
+
+function shortageList() {
+  const rows = shortages().slice(0, 10);
+  if (!rows.length) return `<div class="ok txt">${t('s_short_none')}</div>`;
+  return `<div class="list" style="gap:6px">${rows.map(({ c, it, qty, st }) => `<button class="row" data-sc="${c.id}" style="cursor:pointer;text-align:left"><span style="min-width:0"><b>${esc(c.en)}</b><br><span class="small muted">${ic(it.icon)} ${esc(bi(it.en, it.ur))} · ${nf.format(qty)} ${esc(bi(it.unitEn, it.unitUr))}</span></span>${daysCell(st)}</button>`).join('')}</div>`;
+}
+
+function stockLogList(campId) {
+  const rows = getStockLog().filter(l => l.camp === campId).slice(0, 8);
+  if (!rows.length) return `<div class="small muted">${t('s_log_none')}</div>`;
+  return rows.map(l => `<div class="act">${ic(l.qty > 0 ? 'download' : 'truck')}<span><b>${l.qty > 0 ? '+' : ''}${nf.format(l.qty)}</b> ${esc(bi(IM[l.item].en, IM[l.item].ur))}${l.note ? ` · <span class="muted">${esc(l.note)}</span>` : ''}</span><span class="when">${timeAgo(l.ts)}</span></div>`).join('');
+}
+
+function volunteerRows() {
+  const vols = getVolunteers();
+  const options = c => `<option value="">${t('s_unassigned')}</option>` + CAMPS.map(x => `<option value="${x.id}" ${x.id === c ? 'selected' : ''}>${esc(x.en)}</option>`).join('');
+  return vols.map(v => `<div class="row vol" data-v="${v.id}">
+    <div class="av">${esc(v.nm.split(' ').map(w => w[0]).join('').slice(0, 2))}</div>
+    <div style="flex:1;min-width:0"><b>${esc(v.nm)}</b> <span class="chip skill">${t('sk_' + v.skill)}</span><div class="small muted">${ic('phone')} ${esc(v.phone)}</div></div>
+    <select data-assign="${v.id}" aria-label="${t('s_vol_camp')}">${options(v.camp)}</select>
+  </div>`).join('');
+}
+
+function renderSupplies(param) {
+  if (param && CM[param]) state.supplyCamp = param;
+  const c = supplyCamp();
+  const options = CAMPS.map(campData).sort((a, b) => a.en.localeCompare(b.en)).map(x => `<option value="${x.id}" ${x.id === c.id ? 'selected' : ''}>${esc(x.en)} (${Math.round(x.occ / x.cap * 100)}%)</option>`).join('');
+
+  setHead('box', t('s_title'), `<button class="btn sm ghost" id="shortPrint">${ic('printer')}<span class="lbl">${t('s_print')}</span></button>`);
+  view.innerHTML = `<p class="lead txt">${t('s_lead')}</p>
+    ${supplyKpis()}
+    <div class="card flat">
+      <label class="f" for="supCamp">${t('s_camp')}</label><select id="supCamp">${options}</select>
+      <div class="small muted" style="margin:6px 0 10px">${nf.format(c.occ)} ${t('c_people')} · ${esc(name(DM[c.d]))} · <a href="#camps/${c.id}">${t('nav_camps')} ${ic('arrow-right')}</a></div>
+      ${inventoryTable(c)}
+      <div class="actions"><button class="btn sm green" id="recvBtn">${ic('download')}${t('s_receive')}</button><button class="btn sm ghost" id="dispBtn">${ic('truck')}${t('s_dispatch')}</button><button class="btn sm ghost" id="regPrint">${ic('printer')}${t('r_register')}</button></div>
+      <h3 style="margin-top:14px;font-size:.9rem">${ic('history')}${t('s_log')}</h3>
+      <div id="stockLog">${stockLogList(c.id)}</div>
+    </div>
+    <div class="card flat"><h3>${ic('alert')}${t('s_short')}</h3><div style="margin-top:8px">${shortageList()}</div></div>
+    <div class="card flat"><h3>${ic('users')}${t('s_vols')} <span class="badge">${getVolunteers().length}</span></h3><div class="list stagger" style="margin-top:8px;gap:6px">${volunteerRows()}</div><div class="actions"><button class="btn sm" id="addVol">${ic('plus')}${t('s_add_vol')}</button></div></div>`;
+
+  $$('.kpi .v', view).forEach(el => countUp(el, +el.dataset.n, { dur: 600 }));
+  animateBars(view);
+  bindSupplies(c);
+  drawSupplyMap(c);
+}
+
+function bindSupplies(c) {
+  $('#supCamp').onchange = e => { state.supplyCamp = e.target.value; saveUI(); renderSupplies(); };
+  $('#recvBtn').onclick = () => openStockMove(c.id, 1);
+  $('#dispBtn').onclick = () => openStockMove(c.id, -1);
+  $('#shortPrint').onclick = () => printReport('supplies');
+  $('#regPrint').onclick = () => printReport('register', c.id);
+  $$('[data-sc]', view).forEach(b => {
+    b.onclick = () => { state.supplyCamp = b.dataset.sc; saveUI(); renderSupplies(); view.scrollTo({ top: 0, behavior: 'smooth' }); };
+  });
+  $$('[data-assign]', view).forEach(sel => {
+    sel.onchange = () => {
+      const vols = getVolunteers();
+      const v = vols.find(x => x.id === sel.dataset.assign);
+      v.camp = sel.value || null;
+      saveVolunteers(vols);
+      toast(t('s_vol_assigned'), 'ok', 'check');
+      updateSupplyKpis();
+    };
+  });
+  $('#addVol').onclick = openVolunteerForm;
+}
+
+function updateSupplyKpis() {
+  const kpis = $('.kpis', view);
+  if (!kpis) return;
+  kpis.outerHTML = supplyKpis();
+  $$('.kpi .v', view).forEach(el => { el.textContent = el.dataset.n; });
+  staggerChildren(view);
+}
+
+function openStockMove(campId, sign) {
+  const options = ITEMS.map(it => `<option value="${it.id}">${esc(bi(it.en, it.ur))} (${esc(bi(it.unitEn, it.unitUr))})</option>`).join('');
+  modal(t(sign > 0 ? 's_receive' : 's_dispatch'), `<div class="small muted" style="margin-bottom:6px">${esc(CM[campId].en)}</div>
+    <label class="f" for="mItem">${t('s_item')}</label><select id="mItem">${options}</select>
+    <label class="f" for="mQty">${t('s_qty')}</label><input id="mQty" type="number" min="1" value="100">
+    <label class="f" for="mNote">${t('s_note')}</label><input id="mNote" type="text" maxlength="80" placeholder="${sign > 0 ? 'PDMA truck / NGO' : 'Govt High School Johi'}">
+    <div class="actions"><button class="btn" id="mSave">${ic('check')}${t('save')}</button><button class="btn ghost" id="mCancel">${t('cancel')}</button></div>`,
+  box => {
+    $('#mCancel', box).onclick = closeModal;
+    $('#mSave', box).onclick = () => {
+      const qty = (+$('#mQty', box).value || 0) * sign;
+      if (!qty) return;
+      applyStockMove(campId, $('#mItem', box).value, qty, $('#mNote', box).value.trim());
+    };
+  });
+}
+
+function applyStockMove(campId, itemId, qty, note) {
+  const inventory = store.get('inventory', {});
+  const current = stockOf(campId);
+  inventory[campId] = Object.assign({}, inventory[campId], { [itemId]: Math.max(0, current[itemId] + qty) });
+  store.set('inventory', inventory);
+  const log = getStockLog();
+  log.unshift({ id: uid(), ts: Date.now(), camp: campId, item: itemId, qty, note });
+  store.set('stockLog', log.slice(0, 300));
+  logActivity('act_stock', `${CM[campId].en} (${qty > 0 ? '+' : ''}${qty} ${bi(IM[itemId].en, IM[itemId].ur)})`, 'box');
+  closeModal();
+  toast(t('s_saved'), 'ok', 'check-circle');
+  renderSupplies();
+}
+
+function openVolunteerForm() {
+  const skills = SKILLS.map(s => `<option value="${s}">${t('sk_' + s)}</option>`).join('');
+  const camps = `<option value="">${t('s_unassigned')}</option>` + CAMPS.map(x => `<option value="${x.id}">${esc(x.en)}</option>`).join('');
+  modal(t('s_add_vol'), `<label class="f" for="vName">${t('s_vol_name')}</label><input id="vName" type="text" maxlength="60">
+    <div class="cols2"><div><label class="f" for="vSkill">${t('s_vol_skill')}</label><select id="vSkill">${skills}</select></div><div><label class="f" for="vPhone">${t('s_vol_phone')}</label><input id="vPhone" type="tel" placeholder="03xx-xxxxxxx"></div></div>
+    <label class="f" for="vCamp">${t('s_vol_camp')}</label><select id="vCamp">${camps}</select>
+    <div class="actions"><button class="btn" id="vSave">${ic('check')}${t('save')}</button><button class="btn ghost" id="vCancel">${t('cancel')}</button></div>`,
+  box => {
+    $('#vCancel', box).onclick = closeModal;
+    $('#vSave', box).onclick = () => {
+      const nm = $('#vName', box).value.trim();
+      if (!nm) { toast(t('m_valid'), 'bad', 'alert'); return; }
+      const vols = getVolunteers();
+      vols.unshift({ id: uid(), nm, skill: $('#vSkill', box).value, phone: $('#vPhone', box).value.trim(), camp: $('#vCamp', box).value || null });
+      saveVolunteers(vols);
+      logActivity('act_vol', nm, 'users');
+      closeModal();
+      toast(t('s_vol_saved'), 'ok', 'check-circle');
+      renderSupplies();
+    };
+  });
+}
+
+function drawSupplyMap(selected) {
+  MapCtl.legend([[LEVELS.normal.c, '≥ 2 ' + t('s_days'), 'sq'], [LEVELS.warning.c, '1–2 ' + t('s_days'), 'sq'], [LEVELS.severe.c, '< 1 ' + t('s_days'), 'sq']]);
+  MapCtl.setRoute(null);
+  const markers = CAMPS.map(campData).map(c => {
+    const water = supplyStatus(c, IM.water, stockOf(c.id).water);
+    const color = water.bad ? LEVELS.severe.c : water.warn ? LEVELS.warning.c : LEVELS.normal.c;
+    return {
+      id: c.id, lat: c.lat, lng: c.lng, r: 8, shape: 'sq', color,
+      sel: c.id === selected.id, pulse: water.bad,
+      title: `${c.en} · ${t('c_water')} ${water.days.toFixed(1)} ${t('s_days')}`,
+      onClick: it => { state.supplyCamp = it.id; saveUI(); renderSupplies(); sheetUp(); }
+    };
+  });
+  MapCtl.setMarkers(markers);
+  MapCtl.focus(selected.lat, selected.lng, 8);
+}
+
+// =====================================================================
+// 12. missing (reunification board)
+// =====================================================================
+const getPosts = () => store.get('missing', null) || MISSING_SEED();
+const savePosts = posts => store.set('missing', posts);
+const STATUS_C = { missing: LEVELS.severe.c, found: LEVELS.watch.c, reunited: LEVELS.normal.c };
+
+// TODO(student): verified reunification backend. Sync posts to a server with OTP-verified contacts, moderation, face-embedding photo matching
+// (e.g. a small on-device model) and cross-camp search; purge reunited posts after 30 days for privacy.
+async function syncMissing() {
+  throw new Error('syncMissing() is not implemented — student extension');
+}
+
+const norm = s => String(s || '').toLowerCase().replace(/[^a-z؀-ۿ0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+
+/** Dice coefficient over character bigrams of each word — tolerant to spelling variants (Ghulam / Gulam). */
+function dice(a, b) {
+  const bigrams = text => {
+    const bag = new Map();
+    text.split(' ').forEach(word => {
+      for (let i = 0; i < word.length - 1; i++) {
+        const key = word.slice(i, i + 2);
+        bag.set(key, (bag.get(key) || 0) + 1);
+      }
+    });
+    return bag;
+  };
+  const A = bigrams(norm(a));
+  const B = bigrams(norm(b));
+  let hit = 0;
+  let nA = 0;
+  let nB = 0;
+  A.forEach((v, k) => {
+    nA += v;
+    if (B.has(k)) hit += Math.min(v, B.get(k));
+  });
+  B.forEach(v => { nB += v; });
+  return nA + nB ? 2 * hit / (nA + nB) : 0;
+}
+
+/** Match suggestions: opposite status, name bigram similarity (50%), age proximity (30%), location (20%). */
+function matches(p, all) {
+  const want = p.status === 'missing' ? 'found' : p.status === 'found' ? 'missing' : null;
+  if (!want) return [];
+  return all
+    .filter(o => o.status === want && o.id !== p.id)
+    .map(o => {
+      const nameScore = dice(p.name, o.name);
+      const ageScore = clamp(1 - Math.abs(p.age - o.age) / 8, 0, 1);
+      const locScore = o.d === p.d ? 1 : DM[o.d].prov === DM[p.d].prov ? .4 : 0;
+      let s = .5 * nameScore + .3 * ageScore + .2 * locScore;
+      if (p.gender !== 'o' && o.gender !== 'o' && p.gender !== o.gender) s *= .5;
+      return { o, s };
+    })
+    .filter(m => m.s >= .45)
+    .sort((a, b) => b.s - a.s)
+    .slice(0, 3);
+}
+
+function shareText(p) {
+  const d = DM[p.d];
+  const head = p.status === 'missing' ? 'MISSING / گمشدہ' : 'FOUND / ملا';
+  const where = p.status === 'missing' ? 'Last seen' : 'Found at';
+  const sex = p.gender === 'm' ? 'M' : p.gender === 'f' ? 'F' : '';
+  return `${head}: ${p.name}, ${p.age} ${sex}\n${where}: ${p.place}, ${d.en} (${d.ur})\n${p.note ? p.note + '\n' : ''}Contact: ${p.contact}\n— Sailab reunification board`;
+}
+
+function postCard(p, all) {
+  const d = DM[p.d];
+  const found = p.status === 'reunited' ? [] : matches(p, all);
+  const photo = p.photo ? `<img class="photo" src="${p.photo}" alt="">` : `<div class="photo">${ic('user')}</div>`;
+  const genderKey = p.gender === 'm' ? 'm_male' : p.gender === 'f' ? 'm_female' : 'm_other';
+  const matchHtml = found.map(m => `<div class="match">${ic('sparkles')} <b>${t('m_matches')}</b> <b class="sc">${Math.round(m.s * 100)}%</b> — ${esc(m.o.name)}, ${m.o.age} ${t('m_age_short')}, ${esc(m.o.place)} · <a href="tel:${esc(m.o.contact)}">${esc(m.o.contact)}</a> <button class="btn sm green" data-reunite="${p.id}" data-with="${m.o.id}" style="margin-left:6px">${ic('heart')}${t('m_mark')}</button></div>`).join('');
+  const reuniteBtn = p.status !== 'reunited' ? `<button class="btn sm green" data-reunite="${p.id}">${ic('heart')}${t('m_mark')}</button>` : '';
+
+  return `<article class="card post" data-m="${p.id}" style="--c:${STATUS_C[p.status]}">
+    ${photo}
+    <div class="body">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div class="nm">${esc(p.name)}</div><span class="badge solid" style="--c:${STATUS_C[p.status]}">${t('m_' + p.status)}</span></div>
+      <div class="info">${p.age} ${t('m_age_short')} · ${t(genderKey)} · ${timeAgo(p.ts)}</div>
+      <div class="info">${ic('map-pin')} ${t(p.status === 'found' ? 'm_foundat' : 'm_lastseen')}: ${esc(p.place)}, ${esc(name(d))}</div>
+      ${p.note ? `<div class="info">${ic('info')} ${esc(p.note)}</div>` : ''}
+      <div class="info">${ic('phone')} <a href="tel:${esc(p.contact)}">${esc(p.contact)}</a></div>
+      ${matchHtml}
+      <div class="actions">
+        <a class="btn sm ghost" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(shareText(p))}">${ic('message')}${t('m_share')}</a>
+        ${reuniteBtn}
+        <button class="btn sm danger" data-del="${p.id}" aria-label="${t('delete')}">${ic('trash')}</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderMissing() {
+  const all = getPosts();
+  const q = norm(state.mQ);
+  const list = all
+    .filter(p => state.mStatus === 'all' || p.status === state.mStatus)
+    .filter(p => !q || norm(p.name).includes(q) || norm(p.place).includes(q) || norm(name(DM[p.d])).includes(q))
+    .sort((a, b) => b.ts - a.ts);
+  const counts = {};
+  ['missing', 'found', 'reunited'].forEach(s => { counts[s] = all.filter(p => p.status === s).length; });
+  const segBtn = s => `<button class="${state.mStatus === s ? 'on' : ''}" data-st="${s}">${t('m_' + s)}${s !== 'all' ? ` <span class="badge" style="background:rgba(0,0,0,.08);color:inherit">${counts[s]}</span>` : ''}</button>`;
+
+  setHead('users', t('m_title'), `<button class="btn sm amber" id="mPost">${ic('plus')}${t('m_post')}</button>`);
+  view.innerHTML = `<p class="lead txt">${t('m_lead')}</p>
+    <div class="toolbar"><div class="search">${ic('search')}<input id="mQ" type="search" value="${esc(state.mQ)}" placeholder="${esc(t('m_search'))}" aria-label="${esc(t('m_search'))}"></div></div>
+    <div class="seg wide">${['all', 'missing', 'found', 'reunited'].map(segBtn).join('')}</div>
+    <div class="list stagger" id="mlist">${list.map(p => postCard(p, all)).join('') || `<div class="empty">${ic('users')}${t('m_none')}</div>`}</div>`;
+
+  bindMissing();
+  MapCtl.legend([[STATUS_C.missing, t('m_missing')], [STATUS_C.found, t('m_found')], [STATUS_C.reunited, t('m_reunited')]]);
+  MapCtl.setRoute(null);
+  const markers = list.map(p => {
+    const d = DM[p.d];
+    const jitter = rng(hash(p.id));
+    return {
+      id: p.id, lat: d.lat + (jitter() - .5) * .12, lng: d.lng + (jitter() - .5) * .12, r: 7,
+      color: STATUS_C[p.status], pulse: p.status === 'missing',
+      title: `${p.name} · ${t('m_' + p.status)}`,
+      onClick: it => scrollToCard(`.post[data-m="${it.id}"]`, true)
+    };
+  });
+  MapCtl.setMarkers(markers);
+  MapCtl.fit(markers.length ? markers : [DM[myDistrict]]);
+}
+
+function bindMissing() {
+  $('#mQ').oninput = e => {
+    state.mQ = e.target.value;
+    renderMissing();
+    setTimeout(() => {
+      const input = $('#mQ');
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }, 0);
+  };
+  $$('[data-st]', view).forEach(b => {
+    b.onclick = () => { state.mStatus = b.dataset.st; saveUI(); renderMissing(); };
+  });
+  $('#mPost').onclick = openPostForm;
+  $$('[data-reunite]', view).forEach(b => {
+    b.onclick = () => markReunited([b.dataset.reunite, b.dataset.with].filter(Boolean));
+  });
+  $$('[data-del]', view).forEach(b => {
+    b.onclick = () => {
+      savePosts(getPosts().filter(p => p.id !== b.dataset.del));
+      toast(t('m_removed'), '', 'trash');
+      renderMissing();
+    };
+  });
+}
+
+function markReunited(ids) {
+  const posts = getPosts();
+  ids.forEach(id => {
+    const p = posts.find(x => x.id === id);
+    if (p) { p.status = 'reunited'; p.ts = Date.now(); }
+  });
+  savePosts(posts);
+  logActivity('act_reunite', ids.map(id => posts.find(x => x.id === id)?.name).filter(Boolean).join(' + '), 'heart');
+  celebrate();
+  toast(t('m_reunited_toast'), 'ok', 'heart');
+  updateInboxBadge();
+  renderMissing();
+}
+
+function resizePhoto(file, done) {
+  const img = new Image();
+  img.onload = () => {
+    const k = 240 / Math.max(img.width, img.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * k);
+    canvas.height = Math.round(img.height * k);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(img.src);
+    done(canvas.toDataURL('image/jpeg', .8));
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+function openPostForm() {
+  let photo = null;
+  let status = 'missing';
+  const districtOptions = DISTRICTS.map(d => `<option value="${d.id}" ${d.id === myDistrict ? 'selected' : ''}>${esc(name(d))}</option>`).join('');
+  modal(t('m_post'), `<div class="seg wide"><button class="on" data-fs="missing">${ic('search')}${t('m_missing')}</button><button data-fs="found">${ic('check-circle')}${t('m_found')}</button></div>
+    <label class="f" for="fName">${t('m_name')}</label><input id="fName" type="text" maxlength="60">
+    <div class="cols2"><div><label class="f" for="fAge">${t('m_age')}</label><input id="fAge" type="number" min="0" max="110"></div><div><label class="f" for="fGender">${t('m_gender')}</label><select id="fGender"><option value="m">${t('m_male')}</option><option value="f">${t('m_female')}</option><option value="o">${t('m_other')}</option></select></div></div>
+    <label class="f" for="fPlace" id="fPlaceL">${t('m_where_missing')}</label><input id="fPlace" type="text" maxlength="90">
+    <label class="f" for="fDist">${t('m_district')}</label><select id="fDist">${districtOptions}</select>
+    <label class="f" for="fContact">${t('m_contact')}</label><input id="fContact" type="tel" placeholder="03xx-xxxxxxx">
+    <label class="f">${t('m_photo')}</label><div class="photo-pick"><img id="fPrev" alt="" class="hidden"><label class="btn ghost sm" for="fPhoto">${ic('camera')}${t('m_photo').split(' (')[0]}</label><input id="fPhoto" type="file" accept="image/*" class="sr"></div>
+    <label class="f" for="fNote">${t('m_note')}</label><textarea id="fNote" maxlength="200"></textarea>
+    <div class="actions"><button class="btn" id="fSubmit">${ic('send')}${t('m_submit')}</button><button class="btn ghost" id="fCancel">${t('cancel')}</button></div>`,
+  box => {
+    $$('[data-fs]', box).forEach(b => {
+      b.onclick = () => {
+        status = b.dataset.fs;
+        $$('[data-fs]', box).forEach(x => x.classList.toggle('on', x === b));
+        $('#fPlaceL', box).textContent = t(status === 'found' ? 'm_where_found' : 'm_where_missing');
+      };
+    });
+    $('#fPhoto', box).onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      resizePhoto(file, dataUrl => {
+        photo = dataUrl;
+        const preview = $('#fPrev', box);
+        preview.src = photo;
+        preview.classList.remove('hidden');
+      });
+    };
+    $('#fCancel', box).onclick = closeModal;
+    $('#fSubmit', box).onclick = () => {
+      const nm = $('#fName', box).value.trim();
+      const age = +$('#fAge', box).value;
+      const place = $('#fPlace', box).value.trim();
+      if (!nm || !age || !place) { toast(t('m_valid'), 'bad', 'alert'); return; }
+      const posts = getPosts();
+      posts.unshift({ id: uid(), status, name: nm, age, gender: $('#fGender', box).value, place, d: $('#fDist', box).value, contact: $('#fContact', box).value.trim(), note: $('#fNote', box).value.trim(), photo, ts: Date.now() });
+      savePosts(posts);
+      logActivity('act_post', `${t('m_' + status)}: ${nm}`, 'users');
+      closeModal();
+      toast(t('m_posted'), 'ok', 'check-circle');
+      state.mStatus = 'all';
+      updateInboxBadge();
+      renderMissing();
+    };
+  });
+}
+
+// =====================================================================
+// 13. guide
+// =====================================================================
+let sos = { landmark: '', needs: ['evac'], gps: null };
+const NEEDS = [['evac', 'gd_need_evac', 'navigation'], ['boat', 'gd_need_boat', 'boat'], ['medical', 'gd_need_medical', 'stethoscope'], ['food', 'gd_need_food', 'box']];
+
+function sosText() {
+  const d = DM[myDistrict];
+  const p = getPlan();
+  const n = headcount(p);
+  const v = vulnerable(p);
+  const needLabels = { evac: 'evacuation / انخلا', boat: 'boat / کشتی', medical: 'medical help / طبی مدد', food: 'food & water / خوراک اور پانی' };
+  const needs = sos.needs.map(k => needLabels[k]).join(', ');
+  const gps = sos.gps
+    ? `GPS: ${sos.gps.lat.toFixed(5)}, ${sos.gps.lng.toFixed(5)} https://maps.google.com/?q=${sos.gps.lat.toFixed(5)},${sos.gps.lng.toFixed(5)}`
+    : 'GPS: not available';
+  const livestock = p.livestock ? `, ${p.livestock} livestock` : '';
+  const landmark = sos.landmark ? `\nLandmark: ${sos.landmark}` : '';
+  const landmarkUr = sos.landmark ? '، ' + sos.landmark : '';
+  const time = new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
+  return `SOS — FLOOD EMERGENCY / سیلاب — مدد درکار\n${n} people (${v} vulnerable: elderly/pregnant/infants/disabled)${livestock}\nDistrict: ${d.en} (${d.ur})${landmark}\n${gps}\nNeed: ${needs}\n${n} افراد، ضلع ${d.ur}${landmarkUr}۔ فوری مدد چاہیے۔\nSent via Sailab ${time}`;
+}
+
+// TODO(student): SMS / USSD access for feature phones. Expose district alerts and this SOS flow through an SMS keyword service
+// (e.g. "SAILAB DADU" → current level + nearest camp) so households without smartphones are covered.
+function sosViaSms() {
+  return 'sms:?body=' + encodeURIComponent(sosText());
+}
+
+function guideCards(tab) {
+  const color = tab === 'before' ? LEVELS.watch.c : tab === 'during' ? LEVELS.severe.c : LEVELS.normal.c;
+  return GUIDE[tab].map(g => `<article class="card gcard flat" style="--c:${color}"><h3>${ic(g[0])}${esc(bi(g[1], g[3]))}</h3><p class="txt">${esc(bi(g[2], g[4]))}</p></article>`).join('');
+}
+
+function helplineRows(list) {
+  return list.map(h => `<div class="help" data-h="${h.id}">
+    <div style="flex:1;min-width:0"><input type="text" value="${esc(bi(h.en, h.ur || h.en))}" data-hn aria-label="${t('gd_name')}" style="margin-bottom:4px"><input type="tel" value="${esc(h.num)}" data-hnum aria-label="${t('gd_number')}"></div>
+    <a class="btn sm river" href="tel:${esc(h.num)}">${ic('phone')}${t('call')}</a>
+    <button class="btn sm danger" data-hdel aria-label="${t('delete')}">${ic('trash')}</button>
+  </div>`).join('');
+}
+
+function sosBlock() {
+  const chips = NEEDS.map(([k, key, icon]) => {
+    const on = sos.needs.includes(k);
+    const style = on ? 'background:var(--amber);border-color:var(--amber);color:var(--slate-deep)' : 'background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff';
+    return `<button class="chip" data-need="${k}" style="${style}">${ic(icon)}${t(key)}</button>`;
+  });
+  return `<div class="sos" id="sos">
+    <h3>${ic('siren')}${t('gd_sos')}</h3><p class="small txt" style="opacity:.9;margin:6px 0 0">${t('gd_sos_lead')}</p>
+    <label class="f" for="sosLm">${t('gd_landmark')}</label><input id="sosLm" type="text" value="${esc(sos.landmark)}" maxlength="80">
+    <label class="f">${t('gd_need')}</label><div class="chips">${chips.join('')}</div>
+    <div class="actions"><button class="btn ghost sm" id="sosGps">${ic('target')}${sos.gps ? t('gd_gps_ok') : t('gd_gps')}</button></div>
+    <textarea id="sosTxt" readonly aria-label="SOS" style="margin-top:10px">${esc(sosText())}</textarea>
+    <div class="actions"><button class="btn amber" id="sosCopy">${ic('copy')}${t('gd_copy')}</button><a class="btn green" id="sosWa" target="_blank" rel="noopener">${ic('message')}WhatsApp</a><a class="btn ghost" id="sosSms">${ic('send')}${t('gd_sms')}</a></div>
+  </div>`;
+}
+
+function renderGuide(param) {
+  const helplines = store.get('helplines', HELPLINES_SEED);
+  const tab = state.guideTab;
+  const tabIcon = { before: 'clock', during: 'waves', after: 'shield-check' };
+  const tabs = ['before', 'during', 'after'].map(k => `<button class="tab ${tab === k ? 'on' : ''}" data-tab="${k}">${ic(tabIcon[k])}${t('gd_' + k)}</button>`);
+
+  setHead('book', t('gd_title'), `<a class="btn sm danger" href="#guide/sos">${ic('siren')}SOS</a>`);
+  view.innerHTML = `<p class="lead txt">${t('gd_lead')}</p>
+    <div class="tabs">${tabs.join('')}</div>
+    <div class="list stagger" id="gcards">${guideCards(tab)}</div>
+    <div class="card flat"><h3>${ic('phone')}${t('gd_help')}</h3><p class="lead txt small">${t('gd_help_lead')}</p><div class="list" id="hlist" style="margin-top:8px">${helplineRows(helplines)}</div><div class="actions"><button class="btn ghost sm" id="hAdd">${ic('plus')}${t('gd_add_help')}</button></div></div>
+    ${sosBlock()}`;
+
+  bindGuide();
+  if (param === 'sos') setTimeout(() => scrollToCard('#sos'), 100);
+  drawGuideMap();
+}
+
+function bindGuide() {
+  const refreshSos = () => {
+    const text = sosText();
+    $('#sosTxt').value = text;
+    $('#sosWa').href = 'https://wa.me/?text=' + encodeURIComponent(text);
+    $('#sosSms').href = sosViaSms();
+  };
+  refreshSos();
+
+  $$('[data-tab]', view).forEach(b => {
+    b.onclick = () => { state.guideTab = b.dataset.tab; saveUI(); renderGuide(); };
+  });
+
+  const saveHelplines = () => {
+    const rows = $$('.help', view).map(el => ({ id: el.dataset.h, en: $('[data-hn]', el).value.trim(), ur: $('[data-hn]', el).value.trim(), num: $('[data-hnum]', el).value.trim() }));
+    store.set('helplines', rows);
+  };
+  $$('.help input', view).forEach(input => {
+    input.onchange = () => {
+      saveHelplines();
+      const row = input.closest('.help');
+      $('a.btn', row).href = 'tel:' + $('[data-hnum]', row).value.trim();
+    };
+  });
+  $$('[data-hdel]', view).forEach(b => {
+    b.onclick = () => { b.closest('.help').remove(); saveHelplines(); };
+  });
+  $('#hAdd').onclick = () => {
+    const list = store.get('helplines', HELPLINES_SEED);
+    list.push({ id: uid(), en: '', ur: '', num: '' });
+    store.set('helplines', list);
+    renderGuide();
+    setTimeout(() => { const last = $$('.help [data-hn]').pop(); if (last) last.focus(); }, 50);
+  };
+
+  $('#sosLm').oninput = e => { sos.landmark = e.target.value; refreshSos(); };
+  $$('[data-need]', view).forEach(b => {
+    b.onclick = () => {
+      const k = b.dataset.need;
+      sos.needs = sos.needs.includes(k) ? sos.needs.filter(x => x !== k) : [...sos.needs, k];
+      renderGuide('sos');
+    };
+  });
+  $('#sosGps').onclick = () => requestGps(refreshSos);
+  $('#sosCopy').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText($('#sosTxt').value);
+    } catch {
+      $('#sosTxt').select();
+      if (document.execCommand) document.execCommand('copy');
+    }
+    logActivity('act_sos', name(DM[myDistrict]), 'siren');
+    toast(t('gd_copied'), 'ok', 'copy');
+  };
+}
+
+function requestGps(onDone) {
+  const b = $('#sosGps');
+  b.innerHTML = ic('target') + t('gd_gps_wait');
+  if (!navigator.geolocation) {
+    b.innerHTML = ic('target') + t('gd_gps_fail');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos => {
+    sos.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    b.innerHTML = ic('check') + t('gd_gps_ok');
+    onDone();
+    toast(t('gd_gps_ok'), 'ok', 'target');
+  }, () => {
+    b.innerHTML = ic('target') + t('gd_gps_fail');
+    toast(t('gd_gps_fail'), 'amber', 'alert');
+  }, { timeout: 8000 });
+}
+
+function drawGuideMap() {
+  const d = DM[myDistrict];
+  MapCtl.legend([[R(d).c, t('al_mine')], ['#1e3a5f', t('lg_camp'), 'sq']]);
+  MapCtl.setRoute(null);
+  const home = { id: d.id, lat: d.lat, lng: d.lng, r: 11, color: R(d).c, sel: true, pulse: true, title: name(d), onClick: () => openDistrict(d.id) };
+  const camps = nearestCamps(d).map(({ c, km }) => ({ id: c.id, lat: c.lat, lng: c.lng, r: 8, shape: 'sq', color: '#1e3a5f', title: `${c.en} · ${km.toFixed(0)} km`, onClick: () => { location.hash = 'camps/' + c.id; } }));
+  const markers = [home, ...camps];
+  MapCtl.setMarkers(markers);
+  MapCtl.fit(markers);
+}

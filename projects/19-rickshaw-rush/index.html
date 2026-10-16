@@ -103,7 +103,7 @@ code { font-size: .88em; background: var(--panel-2); padding: 1px 5px; border-ra
 .hud .combo .mult.bump { animation: pulse .3s var(--ease); }
 .hud .near { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); color: var(--cyan); font-size: 1.4rem; opacity: 0; transition: opacity .2s; }
 .hud .near.on { opacity: 1; }
-.hud .mode { position: absolute; left: 50%; top: 58px; transform: translateX(-50%); font: 700 .7rem var(--font); letter-spacing: .16em; text-transform: uppercase; color: var(--cyan); background: rgba(27, 13, 48, .8); border: 1.5px solid var(--cyan); border-radius: 999px; padding: 3px 10px; }
+.hud .mode { position: absolute; left: 12px; top: 92px; font: 700 .7rem var(--font); letter-spacing: .16em; text-transform: uppercase; color: var(--cyan); background: rgba(27, 13, 48, .8); border: 1.5px solid var(--cyan); border-radius: 999px; padding: 3px 10px; }
 .hud .mode.practice { color: var(--green); border-color: var(--green); }
 .hint { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); background: rgba(27, 13, 48, .85); border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 14px; font: 500 .85rem var(--font); color: var(--cream); text-align: center; white-space: nowrap; transition: opacity .5s; pointer-events: none; }
 .hint .ic { color: var(--yellow); }
@@ -353,6 +353,7 @@ kbd { display: inline-block; min-width: 26px; text-align: center; padding: 2px 7
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
 <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
@@ -983,6 +984,7 @@ const PW = .5;                        // player width in lane units
 const PLEN = 3;                       // player length in metres
 
 // Size the canvas to the viewport, letterboxing ultra-wide or ultra-tall screens.
+// TODO(student): low-end Android profiling — add a quality setting that caps dpr at 1 and skips rain/lights when frames run long.
 function resize() {
   const vw = innerWidth;
   const vh = innerHeight;
@@ -1097,6 +1099,7 @@ const covers = (o, laneIndex) => Math.abs(LANE_X[laneIndex] - o.x) < (o.w + PW) 
 // ===================================================================
 // 5. engine — spawning
 // ===================================================================
+// TODO(student): more cities as biomes — pick a biome (Lahore, Islamabad, Peshawar) and vary palette, CITY generator and scenery kinds.
 function spawnScenery(z) {
   const r = G.rw;
   const u = r();
@@ -1169,6 +1172,8 @@ function pickType(diff, r) {
 }
 
 // One wave of traffic: block one or two lanes (never three), then place hazards and pickups in a free lane.
+// TODO(student): level / mission mode — drive this spawner from a scripted route table instead of the endless gap timer.
+// TODO(student): difficulty tuning dashboard — expose nextGap, traffic speeds and fuel drain as live sliders.
 function spawnWave() {
   const r = G.rs;
   const diff = clamp(G.dist / 5000, 0, 1);
@@ -1284,6 +1289,7 @@ function collect(o) {
         float(o, t('fullPax'), '#c9b7e4');
         return;
       }
+      // TODO(student): Urdu voice lines — play a short recorded/synthesised clip for the boarding passenger here.
       G.pax.push({ name: o.name, dest: o.dest, at: G.dist + lerp(250, 520, G.rm()), fare: Math.round(lerp(6, 16, G.rm())) * 10 });
       G.combo++;
       float(o, `${o.name} → ${o.dest}`, '#2ed3f0');
@@ -1992,7 +1998,8 @@ function drawShelter(p, out) {
 }
 
 function drawScenery(s) {
-  if (s.z < -PD + 3) return;
+  const nearCull = s.kind === 'board' || s.kind === 'shop' ? 8 : 3;   // big roadside shapes vanish before they fill the camera
+  if (s.z < -PD + nearCull) return;
   const p = proj(s.z, s.x);
   const out = Math.sign(s.x);
   switch (s.kind) {
@@ -2371,6 +2378,7 @@ function drawBarrier(o, p) {
   if (on) light(x, y - h * 1.1, k * .09, '#ffd23f', .8);
 }
 
+// TODO(student): sprite/art pipeline — swap these vector routines for atlas sprites, keeping proj() for placement and scale.
 function drawObj(o) {
   if (o.z < -PD + 2 || o.z > FAR) return;
   const p = proj(o.z, o.x);
@@ -3839,7 +3847,7 @@ function renderReport() {
   const list = visibleRows(RUNS);
   const st = goalsState();
   const name = store.get('ini', 'YOU');
-  const goals = st.ids.map((id, i) => `<li>${st.done[i] ? '☑' : '☐'} ${t('g_' + id)} — ${goalProgressText(goalDef(id), st.prog[i])}</li>`).join('');
+  const goals = st.ids.map((id, i) => `<li>${st.done[i] ? ic('check-circle') : ic('circle')} ${t('g_' + id)} — ${goalProgressText(goalDef(id), st.prog[i])}</li>`).join('');
   const achList = ACH.map(a => `<div class="ach ${P.ach.includes(a[0]) ? 'on' : ''}"><div class="aic">${ic(a[4])}</div><div><b>${lang === 'ur' ? a[2] : a[1]}</b><span class="muted">${a[3]}</span></div></div>`).join('');
   const printBtn = `<button class="btn sm no-print" id="btnPrint">${ic('printer')}${t('print')}</button>`;
   $('#reportBody').innerHTML = `${head(t('reportTitle'), printBtn)}
@@ -3862,6 +3870,7 @@ function loadGhost() {
   return g && g.date === todayStr() ? g : null;
 }
 
+// TODO(student): online leaderboard & friends' ghosts — POST { date, score, dist, samples } to a server and load friends' ghosts here.
 function saveGhostIfBest(score) {
   const current = loadGhost();
   if (current && current.score >= score) return;

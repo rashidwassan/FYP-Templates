@@ -278,12 +278,13 @@ body.touring{overflow:hidden}
   .export{margin-top:0}
   .film{min-height:0} .film .side{display:none}
   .topbar .pill span{display:none} .topbar .pill{padding:8px} .brand small{display:none} .topbar .btn span{display:none} .topbar .btn{padding:8px 10px}
-  .topbar .actions{gap:6px}
+  .topbar{flex-wrap:nowrap;gap:8px;padding:0 12px} .topbar .actions{gap:6px;flex:none} .topbar .iconbtn{width:36px;height:36px} .topbar .btn{min-height:36px}
+  .brand{flex:1;min-width:0} .brand h1{overflow:hidden;text-overflow:ellipsis}
   .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
   #toasts{bottom:20px}
   .setrow{flex-wrap:wrap} .setrow select,.setrow input[type=text]{width:100%}
 }
-@media (max-width:480px){.fmtgrid{grid-template-columns:1fr 1fr} .drop{padding:34px 16px} .drop h2{font-size:1.35rem} .topbar #shortcutsBtn{display:none}}
+@media (max-width:480px){.fmtgrid{grid-template-columns:1fr 1fr} .drop{padding:34px 16px} .drop h2{font-size:1.35rem} .topbar #shortcutsBtn,.topbar .pill{display:none} .brand .logo{width:32px;height:32px}}
 @media print{
   .topbar,.rail,.props,.film,.stagebar,#toasts,.drawer,.scrim,.peek,.tour-shade,.tour-card,.report .noprint{display:none!important}
   body{background:#fff;color:#000}
@@ -431,7 +432,7 @@ body.touring{overflow:hidden}
   </section>
 
   <!-- Printable session report (route #report) -->
-  <section class="report hidden" id="report"></section>
+  <section class="report hidden" id="reportView"></section>
   <div id="printSheet" class="hidden" aria-hidden="true"></div>
 </main>
 
@@ -3978,7 +3979,7 @@ function reportActivityHtml() {
 }
 
 async function renderReport() {
-  const host = $('#report');
+  const host = $('#reportView');
   const req = allReqs().find(r => r.id === S.reqId);
   const total = S.images.reduce((sum, img) => sum + img.size, 0);
   host.innerHTML = `<div class="rhead"><div><h2>${ic('printer')} Image Toolkit — session report</h2><p>${new Date().toLocaleString('en-PK')} · generated on this device · nothing was uploaded</p></div>
@@ -4434,12 +4435,13 @@ function route() {
     document.body.classList.add('report-mode');
     $('#empty').classList.add('hidden');
     $('#ws').classList.add('hidden');
-    $('#report').classList.remove('hidden');
+    $('#reportView').classList.remove('hidden');
+    window.scrollTo(0, 0);
     renderReport();
     return;
   }
   document.body.classList.remove('report-mode');
-  $('#report').classList.add('hidden');
+  $('#reportView').classList.add('hidden');
   if (!TOOLS.some(t => t[0] === hash)) {
     location.replace('#' + S.tool);
     return;

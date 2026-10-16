@@ -276,7 +276,7 @@ kbd{font-family:var(--mono);font-size:.76rem;background:var(--field);border:1px 
 .step-row .no{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:.78rem}
 .step-row code{display:block;overflow-wrap:anywhere;margin-top:2px;color:var(--muted)}
 .bitdiff{display:flex;flex-wrap:wrap;gap:2px;margin-top:8px} .bitdiff i{width:6px;height:6px;border-radius:1px;background:var(--line-2)} .bitdiff i.on{background:var(--accent)}
-.report table{width:100%;border-collapse:collapse;font-size:.86rem}
+.report table{width:100%;min-width:640px;border-collapse:collapse;font-size:.86rem}
 .report th,.report td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 .report th{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 .report .rhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
@@ -1846,7 +1846,11 @@ function positionTour() {
   const vh = window.innerHeight;
   let left = r.right + 16;
   let top = r.top;
-  if (left + cardW > vw - 12) {
+  if (r.height > vh * 0.5 || vw <= 900) {
+    // tall targets (the rail) or phones: pin the card to the bottom so the spotlight stays visible
+    left = clamp((vw - cardW) / 2, 12, vw - cardW - 12);
+    top = vh - cardH - 12;
+  } else if (left + cardW > vw - 12) {
     left = clamp(r.left, 12, vw - cardW - 12);
     top = r.bottom + 14;
     if (top + cardH > vh - 12) top = Math.max(12, r.top - cardH - 14);
