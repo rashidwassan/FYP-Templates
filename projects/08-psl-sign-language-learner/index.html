@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ishara — PSL Learner</title>
+<meta name="description" content="Learn Pakistan Sign Language (PSL) with animated sign schematics, lessons, spaced-repetition quizzes, a bilingual dictionary and webcam handshape practice powered by TensorFlow.js.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f9fb;--surface:#fff;--surface-2:#e3f2f6;--ink:#0f2a33;--muted:#5a7883;--line:#cfe5ec;
+  --teal:#0e7490;--teal-deep:#155e75;--teal-soft:#cff5fb;--sun:#f5b301;--sun-soft:#fff3c4;--coral:#f26b5b;--coral-soft:#fde3df;--mint:#1aa37a;--mint-soft:#dcf5ea;--violet:#6b5bd2;--violet-soft:#e9e6fb;
+  --radius:20px;--radius-sm:12px;--shadow:0 18px 40px -28px rgba(15,42,51,.35);
+  --font:"Rubik",system-ui,sans-serif;--display:"Fredoka","Rubik",sans-serif;--font-ur:"Noto Nastaliq Urdu",serif;
+  --ease:cubic-bezier(.2,.8,.2,1);--dur:.35s;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15.5px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.15;font-family:var(--display);font-weight:600}
+.ur{font-family:var(--font-ur);line-height:1.9;direction:rtl}
+.muted{color:var(--muted)} .hidden{display:none!important}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+/* motion */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+@keyframes confetti{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(140px) rotate(540deg);opacity:0}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(14,116,144,.35)}50%{box-shadow:0 0 0 12px rgba(14,116,144,0)}}
+.enter{animation:fadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*40ms)}
+/* top bar */
+.top{position:sticky;top:0;z-index:30;background:rgba(240,249,251,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1200px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--teal),var(--teal-deep));display:grid;place-items:center;color:#fff;box-shadow:0 8px 20px -10px var(--teal)}
+.brand h1{font-size:1.2rem;white-space:nowrap} .brand small{display:block;font-size:.72rem;color:var(--muted);font-family:var(--font)}
+.tabs{display:flex;gap:2px;margin-left:6px}
+.tabs button{border:0;background:none;padding:9px 13px;border-radius:12px;font-weight:600;color:var(--muted);cursor:pointer;display:inline-flex;gap:7px;align-items:center;transition:background .2s,color .2s}
+.tabs button:hover{background:var(--surface-2);color:var(--ink)} .tabs button.on{background:var(--teal);color:#fff}
+.spacer{flex:1}
+.xp{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;background:var(--sun-soft);color:#7a5a00;border-radius:999px;padding:6px 12px;font-weight:700;font-size:.88rem}
+.streak{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;background:var(--coral-soft);color:#9a2f22;border-radius:999px;padding:6px 12px;font-weight:700;font-size:.88rem}
+.lang{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 12px;font-weight:700;cursor:pointer}
+main{max-width:1200px;margin:0 auto;padding:22px 18px 90px}
+section[data-page]{display:none} section[data-page].on{display:block}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.pagehead h2{font-size:1.7rem} .pagehead p{margin:4px 0 0;color:var(--muted);max-width:640px}
+/* components */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
+.card h3{font-size:1.1rem;margin-bottom:8px}
+.btn{border:0;border-radius:14px;padding:11px 18px;font-weight:600;cursor:pointer;background:var(--teal);color:#fff;display:inline-flex;align-items:center;gap:8px;transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .2s;box-shadow:0 8px 18px -12px var(--teal)}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.btn.sun{background:var(--sun);color:#3b2d00;box-shadow:0 8px 18px -12px var(--sun)} .btn.coral{background:var(--coral);box-shadow:0 8px 18px -12px var(--coral)} .btn.mint{background:var(--mint)} .btn.ghost{background:var(--surface-2);color:var(--ink);box-shadow:none} .btn.outline{background:transparent;border:2px solid var(--line);color:var(--ink);box-shadow:none}
+.btn.sm{padding:7px 12px;font-size:.86rem;border-radius:10px} .btn.lg{padding:14px 22px;font-size:1.05rem} .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:.86rem;font-weight:600;cursor:pointer;transition:all .15s}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;font-size:.74rem;font-weight:700;background:var(--surface-2);color:var(--muted)}
+.pill.teal{background:var(--teal-soft);color:var(--teal-deep)} .pill.sun{background:var(--sun-soft);color:#7a5a00} .pill.coral{background:var(--coral-soft);color:#9a2f22} .pill.mint{background:var(--mint-soft);color:#0e6b4e} .pill.violet{background:var(--violet-soft);color:var(--violet)}
+input[type=text],input[type=url],select,textarea{width:100%;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;outline:0;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
+.search{display:flex;align-items:center;gap:8px;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:4px 12px;max-width:380px}
+.search input{border:0;box-shadow:none;padding:8px 4px}
+.search input:focus{box-shadow:none}
+/* sign schematic */
+.sign-svg{width:100%;height:auto;display:block}
+.sign-svg .body{fill:var(--surface-2);stroke:var(--line);stroke-width:2}
+.sign-svg .hand{fill:var(--teal);stroke:var(--teal-deep);stroke-width:1.5}
+.sign-svg .hand.other{fill:#8fc9d6;stroke:var(--teal-deep)}
+.sign-svg .mv{transform-box:fill-box;transform-origin:center}
+@keyframes mvForward{0%,100%{transform:scale(1)}50%{transform:scale(1.14) translateY(5px)}}
+@keyframes mvDown{0%,100%{transform:translateY(0)}50%{transform:translateY(14px)}}
+@keyframes mvUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes mvSide{0%,100%{transform:translateX(-9px)}50%{transform:translateX(9px)}}
+@keyframes mvCircle{0%{transform:translate(0,0)}25%{transform:translate(8px,-6px)}50%{transform:translate(0,-12px)}75%{transform:translate(-8px,-6px)}100%{transform:translate(0,0)}}
+@keyframes mvTap{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(7px)}}
+@keyframes mvWave{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(16deg)}}
+@keyframes mvTwist{0%,100%{transform:rotate(-28deg)}50%{transform:rotate(28deg)}}
+@keyframes mvToward{0%,100%{transform:scale(1.08) translateY(-5px)}50%{transform:scale(.94) translateY(3px)}}
+@keyframes mvApartL{0%,100%{transform:translateX(0)}50%{transform:translateX(-14px)}} @keyframes mvApartR{0%,100%{transform:translateX(0)}50%{transform:translateX(14px)}}
+@keyframes mvTogL{0%,100%{transform:translateX(-14px)}50%{transform:translateX(0)}} @keyframes mvTogR{0%,100%{transform:translateX(14px)}50%{transform:translateX(0)}}
+.mv-forward{animation:mvForward 1.6s ease-in-out infinite} .mv-down{animation:mvDown 1.6s ease-in-out infinite} .mv-up{animation:mvUp 1.6s ease-in-out infinite} .mv-side{animation:mvSide 1.4s ease-in-out infinite} .mv-circle{animation:mvCircle 1.8s linear infinite} .mv-tap{animation:mvTap 1.1s ease-in-out infinite} .mv-wave{animation:mvWave 1.2s ease-in-out infinite} .mv-twist{animation:mvTwist 1.4s ease-in-out infinite} .mv-toward{animation:mvToward 1.6s ease-in-out infinite}
+.mv-apart-l{animation:mvApartL 1.8s ease-in-out infinite} .mv-apart-r{animation:mvApartR 1.8s ease-in-out infinite} .mv-together-l{animation:mvTogL 1.8s ease-in-out infinite} .mv-together-r{animation:mvTogR 1.8s ease-in-out infinite}
+.sign-svg.still .mv{animation:none}
+/* learn */
+.path{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.lesson{position:relative;overflow:hidden;cursor:pointer}
+.lesson:hover{transform:translateY(-3px)}
+.lesson .num{position:absolute;right:14px;top:12px;font-family:var(--display);font-size:2.4rem;color:var(--surface-2);font-weight:700;line-height:1}
+.lesson .ring{width:54px;height:54px}
+.lesson.locked{opacity:.55}
+.lessonbar{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.prog{flex:1;height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--mint));border-radius:999px;transition:width .5s var(--ease)}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:center}
+.stage .figure{background:var(--surface);border:1px solid var(--line);border-radius:28px;padding:16px;box-shadow:var(--shadow);max-width:420px;margin:0 auto}
+.word{font-family:var(--display);font-size:2.2rem;font-weight:700;letter-spacing:-.01em}
+.word-ur{font-size:1.9rem;color:var(--teal-deep);display:flex;gap:10px;align-items:center;direction:rtl;justify-content:flex-end}
+.shapes{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.shape{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:12px;padding:6px 10px 6px 6px;font-size:.84rem;font-weight:600}
+.shape svg{width:34px;height:40px}
+.desc{background:var(--surface-2);border-radius:14px;padding:12px 14px;font-size:.95rem}
+.desc .ur{margin-top:6px;color:var(--ink)}
+/* dictionary */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.sc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px;cursor:pointer;text-align:center;transition:transform .2s var(--ease),border-color .2s,box-shadow .2s}
+.sc:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:var(--shadow)}
+.sc .sign-svg{max-width:120px;margin:0 auto}
+.sc b{display:block;font-family:var(--display);font-size:1.05rem;margin-top:4px} .sc .ur{font-size:1.1rem;color:var(--teal-deep);line-height:1.6}
+.dots{display:flex;gap:3px;justify-content:center;margin-top:6px} .dots i{width:7px;height:7px;border-radius:50%;background:var(--surface-2)} .dots i.on{background:var(--mint)}
+/* quiz */
+.quiz{max-width:760px;margin:0 auto}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.opt{border:2px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;cursor:pointer;font-weight:600;text-align:center;transition:all .15s var(--ease)}
+.opt:hover{border-color:var(--teal);transform:translateY(-2px)}
+.opt.right{border-color:var(--mint);background:var(--mint-soft)} .opt.wrong{border-color:var(--coral);background:var(--coral-soft)}
+.opt .sign-svg{max-width:120px;margin:0 auto 6px}
+.qbar{display:flex;gap:6px;margin-bottom:14px} .qbar i{flex:1;height:6px;border-radius:3px;background:var(--surface-2)} .qbar i.ok{background:var(--mint)} .qbar i.bad{background:var(--coral)} .qbar i.cur{background:var(--teal)}
+/* practice */
+.prac{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,.8fr);gap:20px;align-items:start}
+.cam{position:relative;background:#0b2a33;border-radius:24px;aspect-ratio:4/3;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 60px -40px rgba(0,0,0,.7)}
+.cam video,.cam canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam .msg{position:absolute;inset:0;display:grid;place-items:center;color:#cfe5ec;text-align:center;padding:24px}
+.cam .msg b{display:block;color:#fff;font-size:1.15rem;margin-bottom:6px;font-family:var(--display)}
+.cam.ok{animation:pulse 1.2s infinite}
+.fingers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}
+.finger{border-radius:12px;padding:8px 4px;text-align:center;font-size:.72rem;font-weight:700;background:var(--surface-2);color:var(--muted);transition:all .2s}
+.finger.ok{background:var(--mint-soft);color:#0e6b4e} .finger.bad{background:var(--coral-soft);color:#9a2f22}
+.hold{height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin-top:10px} .hold i{display:block;height:100%;background:var(--mint);width:0;transition:width .1s linear}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:70}
+.confetti i{position:absolute;width:10px;height:14px;border-radius:2px;animation:confetti 1.2s ease-in forwards}
+/* progress */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center}
+.kpi .icw{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none}
+.kpi .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700} .kpi .v{font-family:var(--display);font-size:1.6rem;font-weight:700;line-height:1.1}
+.rings{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.ringc{text-align:center} .ringc svg{width:90px;height:90px} .ringc b{display:block;font-size:.86rem}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.badge{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--surface);font-size:.84rem;font-weight:600}
+.badge.locked{opacity:.4;filter:grayscale(1)} .badge .icw{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--sun-soft);color:#7a5a00;flex:none}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+.todo{border:1px dashed var(--teal);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.todo h4{font-size:.98rem;display:flex;gap:8px;align-items:center;margin-bottom:4px;font-family:var(--font)} .tag{font-size:.68rem;background:var(--teal);color:#fff;border-radius:6px;padding:2px 6px;font-weight:700}
+.list{display:grid;gap:10px}
+.note{background:var(--sun-soft);border-left:4px solid var(--sun);border-radius:10px;padding:10px 12px;font-size:.88rem}
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(15,42,51,.5);z-index:50;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
+.scrim.on{display:flex} .scrim.on .modal{animation:pop .25s var(--ease)}
+.modal{background:var(--surface);border-radius:26px;max-width:860px;width:100%;max-height:92vh;overflow:auto;padding:22px}
+.close{border:1px solid var(--line);background:var(--surface-2);border-radius:12px;width:38px;height:38px;cursor:pointer;display:grid;place-items:center}
+#toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:grid;gap:8px;z-index:60}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:14px;font-weight:600;animation:fadeUp .25s var(--ease);display:flex;gap:8px;align-items:center}
+.toast.ok{background:var(--mint)} .toast.bad{background:var(--coral)}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:35;padding:6px 2px env(safe-area-inset-bottom)}
+.bottomnav button{flex:1;border:0;background:none;color:var(--muted);font-size:.66rem;font-weight:700;padding:6px 1px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bottomnav button .ic{width:1.4em;height:1.4em} .bottomnav button.on{color:var(--teal);background:var(--teal-soft)}
+@media (max-width:900px){.tabs{display:none}.bottomnav{display:flex}.top .in{flex-wrap:wrap;row-gap:6px}.xp,.streak{font-size:.78rem;padding:5px 9px}.brand h1 span{display:none}.lang{padding:6px 10px}.stage,.prac{grid-template-columns:minmax(0,1fr)}.opts{grid-template-columns:1fr 1fr}.brand small{display:none}.top .in{gap:8px}main{padding:16px 14px 90px}.pagehead h2{font-size:1.4rem}}
+@media print{.top,.bottomnav,#toasts{display:none}}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+<symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-3"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/></symbol>
+<symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.5 13 17 22l-5-3-5 3 1.5-9"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.2-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.2-2.4 1-3.5.5 1.5 1.5 3 2.5 3z"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16M10 14.7V17c0 .5-.5 1-1 1.3-1 .6-1 2.7-1 2.7h8s0-2.1-1-2.7c-.5-.3-1-.8-1-1.3v-2.3"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-video" viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-languages" viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.8-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></symbol>
+</svg>
+
+<header class="top"><div class="in">
+  <div class="brand"><div class="logo"><svg class="ic" style="width:24px;height:24px"><use href="#i-hand"/></svg></div><div><h1>Ishara <span style="font-weight:500;color:var(--muted);font-size:.9rem;font-family:var(--font)">· PSL</span></h1><small data-i18n="tagline">Learn Pakistan Sign Language</small></div></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="spacer"></div>
+  <span class="streak" id="streakChip" title="Day streak"></span>
+  <span class="xp" id="xpChip"></span>
+  <button class="lang" id="langBtn">اردو</button>
+</div></header>
+
+<main>
+<section data-page="learn" class="on">
+  <div class="pagehead"><div><h2 data-i18n="l_title">Lessons</h2><p data-i18n="l_lead">Eight short lessons from greetings to numbers. Each sign is shown as an animated schematic: handshape, place and movement.</p></div><button class="btn sun" id="continueBtn"></button></div>
+  <div id="learnBody"></div>
+</section>
+<section data-page="practice">
+  <div class="pagehead"><div><h2 data-i18n="p_title">Practice with your camera</h2><p data-i18n="p_lead">The camera finds your hand, reads which fingers are extended and checks them against the target handshape. Hold the shape for a second to pass.</p></div></div>
+  <div class="prac"><div><div class="cam" id="cam"><video id="video" playsinline muted></video><canvas id="overlay"></canvas><div class="msg" id="camMsg"></div></div>
+    <div class="fingers" id="fingers"></div><div class="hold"><i id="holdBar"></i></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="camStart"></button><button class="btn ghost" id="camNext"></button><button class="btn outline" id="selfPass"></button><label class="chip" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="leftHand"> <span data-i18n="p_left">Left-handed</span></label></div>
+    <p class="muted" style="font-size:.82rem;margin:10px 0 0" data-i18n="p_note">Finger-state matching checks the handshape only, not location or movement. A full sign-recognition model is a student extension.</p></div>
+    <aside class="card" id="pracTarget"></aside></div>
+</section>
+<section data-page="quiz">
+  <div class="pagehead"><div><h2 data-i18n="q_title">Quiz</h2><p data-i18n="q_lead">Spaced repetition: signs you miss come back sooner, signs you know come back later.</p></div></div>
+  <div class="quiz" id="quizBody"></div>
+</section>
+<section data-page="dictionary">
+  <div class="pagehead"><div><h2 data-i18n="d_title">Dictionary</h2><p data-i18n="d_lead">Search in English or Urdu. Tap a sign to see the full description, practise it or suggest a correction.</p></div></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px"><div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="dq" type="text" placeholder="Search… / تلاش" autocomplete="off"></div><div class="chips" id="dcats"></div></div>
+  <div class="grid stagger" id="dgrid"></div>
+</section>
+<section data-page="progress">
+  <div class="pagehead"><div><h2 data-i18n="g_title">Progress</h2><p data-i18n="g_lead">XP, streaks, mastery per category and badges.</p></div><div style="display:flex;gap:8px"><button class="btn ghost sm" id="exportBtn"><svg class="ic"><use href="#i-download"/></svg> JSON</button><button class="btn outline sm" id="resetBtn"><svg class="ic"><use href="#i-trash"/></svg> <span data-i18n="reset">Reset</span></button></div></div>
+  <div id="progBody"></div>
+</section>
+<section data-page="about"><div class="pagehead"><div><h2 data-i18n="a_title">About this project</h2></div></div><div class="two" id="about"></div></section>
+</main>
+
+<nav class="bottomnav" id="bottomnav"></nav>
+<div class="scrim" id="scrim"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Ishara — PSL Learner (single file)
+   utils · i18n · sign model (handshape/location/movement) · schematic renderer ·
+   lessons · SRS quiz · dictionary · webcam practice (TF.js hand-pose, lazy) · progress · about
+   Student hooks: TODO(student)
+   ===================================================================== */
+const NS = 'psl:';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = { get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } } };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const toast = (m, type = '', icon = '') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = (icon ? ic(icon) : '') + esc(m); $('#toasts').append(t); setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = 0; setTimeout(() => t.remove(), 300); }, 2600); };
+const DAY = 864e5, now = () => Date.now(), todayKey = () => new Date().toISOString().slice(0, 10);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const countUp = (el, to, fmt = v => Math.round(v).toLocaleString()) => { const t0 = performance.now(), dur = 700; const step = t => { const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', Math.min(i, 14)))); };
+function confetti() { const c = document.createElement('div'); c.className = 'confetti'; const cols = ['#0e7490', '#f5b301', '#f26b5b', '#1aa37a', '#6b5bd2']; for (let i = 0; i < 40; i++) { const p = document.createElement('i'); p.style.left = (20 + Math.random() * 60) + '%'; p.style.top = (20 + Math.random() * 30) + '%'; p.style.background = cols[i % cols.length]; p.style.animationDelay = (Math.random() * .3) + 's'; c.append(p); } document.body.append(c); setTimeout(() => c.remove(), 1700); }
+
+// ---------- i18n ----------
+const TXT = {
+  en: { tagline: 'Learn Pakistan Sign Language', nav_learn: 'Learn', nav_practice: 'Practice', nav_quiz: 'Quiz', nav_dictionary: 'Dictionary', nav_progress: 'Progress', nav_about: 'About',
+    l_title: 'Lessons', l_lead: 'Eight short lessons from greetings to numbers. Each sign is shown as an animated schematic: handshape, place and movement.', cont: 'Continue', start: 'Start', signs: 'signs', lesson: 'Lesson', gotit: 'Got it', next: 'Next', back: 'Back', finish: 'Finish lesson', practiceThis: 'Practise with camera', complete: 'Lesson complete!', earned: 'XP earned', backToPath: 'Back to lessons', locked: 'Finish the previous lesson to unlock',
+    p_title: 'Practice with your camera', p_lead: 'The camera finds your hand, reads which fingers are extended and checks them against the target handshape. Hold the shape for a second to pass.', p_left: 'Left-handed', p_note: 'Finger-state matching checks the handshape only, not location or movement. A full sign-recognition model is a student extension.', p_start: 'Start camera', p_stop: 'Stop camera', p_next: 'Next sign', p_self: 'I did it (no camera)', p_loading: 'Loading hand-tracking model…', p_ready: 'Show your hand to the camera', p_nohand: 'No hand detected — bring it closer, palm facing the camera', p_fail: 'Hand-tracking could not load (offline?). Use “I did it” to self-check.', p_pass: 'Handshape matched!', p_target: 'Target sign', p_shape: 'Handshape', p_match: 'Match',
+    f_thumb: 'Thumb', f_index: 'Index', f_middle: 'Middle', f_ring: 'Ring', f_pinky: 'Pinky', s_ext: 'extended', s_curl: 'folded', s_curve: 'curved',
+    q_title: 'Quiz', q_lead: 'Spaced repetition: signs you miss come back sooner, signs you know come back later.', q_start: 'Start a 10-question round', q_due: 'due for review', q_which: 'Which sign is this?', q_pick: 'Pick the sign for', q_shapeq: 'Which handshape does this sign use?', q_score: 'Round complete', q_correct: 'correct', q_again: 'Another round', q_none: 'Learn a lesson first to unlock the quiz.',
+    d_title: 'Dictionary', d_lead: 'Search in English or Urdu. Tap a sign to see the full description, practise it or suggest a correction.', all: 'All', mastery: 'Mastery', verified: 'Community-verified', unverified: 'Needs verification', how: 'How to sign it', video: 'Video (student extension)', addVideo: 'Paste a video URL recorded with a Deaf signer', suggest: 'Suggest a correction', saveSugg: 'Save suggestion', suggSaved: 'Suggestion saved on this device', markLearned: 'Mark as learned', listen: 'Listen (Urdu)',
+    g_title: 'Progress', g_lead: 'XP, streaks, mastery per category and badges.', reset: 'Reset', k_xp: 'Total XP', k_level: 'Level', k_streak: 'Day streak', k_learned: 'Signs learned', k_quiz: 'Quiz accuracy', byCat: 'Mastery by category', badges: 'Badges', recent: 'Recent activity', noact: 'No activity yet — start a lesson.',
+    b1: 'First Sign', b2: '10 Signs', b3: 'Half Way', b4: 'All Signs', b5: '3-Day Streak', b6: 'Quiz Ace', b7: 'Camera Pro', b8: 'Level 5', b1d: 'learn one sign', b2d: 'learn 10 signs', b3d: 'learn half the dictionary', b4d: 'learn every sign', b5d: 'practise 3 days in a row', b6d: '10/10 in a quiz round', b7d: 'pass 10 camera checks', b8d: 'reach level 5',
+    a_title: 'About this project', a_todo: 'Left for students to build',
+    cat_greetings: 'Greetings', cat_basics: 'Everyday basics', cat_family: 'Family', cat_questions: 'Questions', cat_people: 'People & places', cat_feelings: 'Feelings', cat_time: 'Time', cat_numbers: 'Numbers',
+    sh_flat: 'Flat hand', sh_open: 'Open hand', sh_fist: 'Fist', sh_index: 'Index finger', sh_V: 'Two fingers (V)', sh_three: 'Three fingers', sh_four: 'Four fingers', sh_thumb: 'Thumb up', sh_L: 'L-hand', sh_Y: 'Y-hand', sh_O: 'Pinch / O', sh_C: 'Cupped C', sh_hook: 'Hooked index',
+    loc_forehead: 'forehead', loc_temple: 'temple', loc_eye: 'eye', loc_nose: 'nose', loc_mouth: 'mouth', loc_chin: 'chin', loc_cheek: 'cheek', loc_ear: 'ear', loc_neck: 'neck', loc_shoulder: 'shoulder', loc_chest: 'chest', loc_heart: 'heart', loc_stomach: 'stomach', loc_neutral: 'in front of the body', loc_wrist: 'on the other hand', loc_side: 'to the side',
+    mv_none: 'hold still', mv_forward: 'move forward', mv_down: 'move down', mv_up: 'move up', mv_side: 'move side to side', mv_circle: 'circle', mv_tap: 'tap twice', mv_wave: 'wave', mv_twist: 'twist', mv_toward: 'move toward the body', mv_apart: 'move apart', mv_together: 'bring together' },
+  ur: { tagline: 'پاکستانی اشاروں کی زبان سیکھیں', nav_learn: 'سیکھیں', nav_practice: 'مشق', nav_quiz: 'کوئز', nav_dictionary: 'لغت', nav_progress: 'پیش رفت', nav_about: 'تعارف',
+    l_title: 'اسباق', l_lead: 'سلام سے گنتی تک آٹھ مختصر اسباق۔ ہر اشارہ متحرک خاکے میں: ہاتھ کی شکل، جگہ اور حرکت۔', cont: 'جاری رکھیں', start: 'شروع', signs: 'اشارے', lesson: 'سبق', gotit: 'سمجھ گیا', next: 'اگلا', back: 'پیچھے', finish: 'سبق مکمل', practiceThis: 'کیمرے سے مشق', complete: 'سبق مکمل ہوا!', earned: 'XP حاصل', backToPath: 'اسباق پر واپس', locked: 'پچھلا سبق مکمل کریں',
+    p_title: 'کیمرے سے مشق', p_lead: 'کیمرہ آپ کا ہاتھ پہچانتا ہے، انگلیوں کی حالت پڑھتا ہے اور ہدف شکل سے ملاتا ہے۔ ایک سیکنڈ تک شکل برقرار رکھیں۔', p_left: 'بائیں ہاتھ', p_note: 'یہ صرف ہاتھ کی شکل جانچتا ہے، جگہ اور حرکت نہیں۔ مکمل اشارہ شناسی طلبہ کا کام ہے۔', p_start: 'کیمرہ شروع', p_stop: 'کیمرہ بند', p_next: 'اگلا اشارہ', p_self: 'میں نے کر لیا (بغیر کیمرہ)', p_loading: 'ماڈل لوڈ ہو رہا ہے…', p_ready: 'اپنا ہاتھ کیمرے کو دکھائیں', p_nohand: 'ہاتھ نظر نہیں آیا — قریب لائیں، ہتھیلی کیمرے کی طرف', p_fail: 'ماڈل لوڈ نہیں ہوا (آف لائن؟)۔ "میں نے کر لیا" استعمال کریں۔', p_pass: 'شکل مل گئی!', p_target: 'ہدف اشارہ', p_shape: 'ہاتھ کی شکل', p_match: 'مماثلت',
+    f_thumb: 'انگوٹھا', f_index: 'شہادت', f_middle: 'درمیانی', f_ring: 'انگوٹھی', f_pinky: 'چھنگلی', s_ext: 'کھلی', s_curl: 'بند', s_curve: 'مڑی',
+    q_title: 'کوئز', q_lead: 'جو اشارے بھولیں وہ جلد واپس آتے ہیں، جو یاد ہوں وہ دیر سے۔', q_start: '10 سوالوں کا راؤنڈ شروع کریں', q_due: 'دہرائی کے لیے', q_which: 'یہ کون سا اشارہ ہے؟', q_pick: 'اشارہ چنیں:', q_shapeq: 'اس اشارے میں ہاتھ کی کون سی شکل ہے؟', q_score: 'راؤنڈ مکمل', q_correct: 'درست', q_again: 'ایک اور راؤنڈ', q_none: 'کوئز کے لیے پہلے ایک سبق سیکھیں۔',
+    d_title: 'لغت', d_lead: 'انگریزی یا اردو میں تلاش کریں۔ تفصیل، مشق یا تصحیح کے لیے اشارے پر کلک کریں۔', all: 'تمام', mastery: 'مہارت', verified: 'تصدیق شدہ', unverified: 'تصدیق درکار', how: 'اشارہ کیسے کریں', video: 'ویڈیو (طلبہ کا کام)', addVideo: 'بہرے اشارہ کار کی ویڈیو کا لنک', suggest: 'تصحیح تجویز کریں', saveSugg: 'تجویز محفوظ', suggSaved: 'تجویز محفوظ ہو گئی', markLearned: 'سیکھ لیا', listen: 'سنیں (اردو)',
+    g_title: 'پیش رفت', g_lead: 'XP، سلسلہ، زمرہ وار مہارت اور اعزازات۔', reset: 'ری سیٹ', k_xp: 'کل XP', k_level: 'لیول', k_streak: 'دن کا سلسلہ', k_learned: 'سیکھے اشارے', k_quiz: 'کوئز درستگی', byCat: 'زمرہ وار مہارت', badges: 'اعزازات', recent: 'حالیہ سرگرمی', noact: 'ابھی کوئی سرگرمی نہیں۔',
+    b1: 'پہلا اشارہ', b2: '10 اشارے', b3: 'آدھا سفر', b4: 'تمام اشارے', b5: '3 دن کا سلسلہ', b6: 'کوئز ماسٹر', b7: 'کیمرہ پرو', b8: 'لیول 5', b1d: 'ایک اشارہ سیکھیں', b2d: '10 اشارے سیکھیں', b3d: 'آدھی لغت', b4d: 'پوری لغت', b5d: 'لگاتار 3 دن', b6d: 'کوئز میں 10/10', b7d: '10 کیمرہ چیک', b8d: 'لیول 5',
+    a_title: 'اس پروجیکٹ کا تعارف', a_todo: 'طلبہ کے لیے باقی کام',
+    cat_greetings: 'سلام دعا', cat_basics: 'روزمرہ', cat_family: 'خاندان', cat_questions: 'سوالات', cat_people: 'لوگ اور جگہیں', cat_feelings: 'جذبات', cat_time: 'وقت', cat_numbers: 'گنتی',
+    sh_flat: 'سیدھا ہاتھ', sh_open: 'کھلا ہاتھ', sh_fist: 'مٹھی', sh_index: 'شہادت کی انگلی', sh_V: 'دو انگلیاں', sh_three: 'تین انگلیاں', sh_four: 'چار انگلیاں', sh_thumb: 'انگوٹھا اوپر', sh_L: 'L شکل', sh_Y: 'Y شکل', sh_O: 'چٹکی / O', sh_C: 'پیالہ C', sh_hook: 'مڑی شہادت',
+    loc_forehead: 'ماتھا', loc_temple: 'کنپٹی', loc_eye: 'آنکھ', loc_nose: 'ناک', loc_mouth: 'منہ', loc_chin: 'ٹھوڑی', loc_cheek: 'گال', loc_ear: 'کان', loc_neck: 'گردن', loc_shoulder: 'کندھا', loc_chest: 'سینہ', loc_heart: 'دل', loc_stomach: 'پیٹ', loc_neutral: 'جسم کے سامنے', loc_wrist: 'دوسرے ہاتھ پر', loc_side: 'ایک طرف',
+    mv_none: 'ساکن', mv_forward: 'آگے', mv_down: 'نیچے', mv_up: 'اوپر', mv_side: 'دائیں بائیں', mv_circle: 'گول', mv_tap: 'دو بار تھپکی', mv_wave: 'ہلائیں', mv_twist: 'گھمائیں', mv_toward: 'جسم کی طرف', mv_apart: 'الگ', mv_together: 'ملائیں' }
+};
+let lang = store.get('lang', 'en');
+const t = k => TXT[lang][k] ?? TXT.en[k] ?? k;
+
+// ---------- sign model ----------
+// handshape → finger states [thumb,index,middle,ring,pinky]: 1 extended, 0 folded, .5 curved
+const SHAPES = { flat: [0, 1, 1, 1, 1], open: [1, 1, 1, 1, 1], fist: [0, 0, 0, 0, 0], index: [0, 1, 0, 0, 0], V: [0, 1, 1, 0, 0], three: [0, 1, 1, 1, 0], four: [0, 1, 1, 1, 1], thumb: [1, 0, 0, 0, 0], L: [1, 1, 0, 0, 0], Y: [1, 0, 0, 0, 1], O: [.5, .5, 0, 0, 0], C: [.5, .5, .5, .5, .5], hook: [0, .5, 0, 0, 0] };
+const LOC = { forehead: [100, 42], temple: [128, 48], eye: [86, 56], nose: [100, 68], mouth: [100, 84], chin: [100, 100], cheek: [122, 78], ear: [134, 62], neck: [100, 122], shoulder: [62, 136], chest: [100, 160], heart: [84, 158], stomach: [100, 198], neutral: [100, 182], wrist: [100, 190], side: [158, 168] };
+const CATS = ['greetings', 'basics', 'family', 'questions', 'people', 'feelings', 'time', 'numbers'];
+// [id, en, ur, cat, shape, shape2|null, loc, move, desc_en, desc_ur]
+const RAW = [
+  ['hello', 'Hello / Salam', 'السلام علیکم', 'greetings', 'open', null, 'temple', 'forward', 'Open hand near the temple moves forward and slightly out, like a relaxed salute.', 'کھلا ہاتھ کنپٹی کے قریب سے آگے اور تھوڑا باہر جائے، جیسے ہلکا سلیوٹ۔'],
+  ['thankyou', 'Thank you', 'شکریہ', 'greetings', 'flat', null, 'chin', 'forward', 'Fingertips of a flat hand touch the chin, then the hand moves forward and down toward the person.', 'سیدھے ہاتھ کی انگلیاں ٹھوڑی کو چھوئیں، پھر ہاتھ آگے نیچے سامنے والے کی طرف جائے۔'],
+  ['please', 'Please', 'مہربانی', 'greetings', 'flat', null, 'chest', 'circle', 'Flat hand on the chest makes a small circle.', 'سیدھا ہاتھ سینے پر چھوٹا دائرہ بنائے۔'],
+  ['sorry', 'Sorry', 'معاف کیجیے', 'greetings', 'fist', null, 'chest', 'circle', 'A fist on the chest moves in a slow circle.', 'سینے پر مٹھی آہستہ دائرے میں گھومے۔'],
+  ['welcome', 'Welcome', 'خوش آمدید', 'greetings', 'open', 'open', 'neutral', 'toward', 'Both open hands, palms up, sweep in toward the body.', 'دونوں کھلے ہاتھ، ہتھیلیاں اوپر، جسم کی طرف آئیں۔'],
+  ['goodbye', 'Goodbye', 'خدا حافظ', 'greetings', 'open', null, 'side', 'wave', 'Open hand at shoulder height waves side to side.', 'کندھے کی اونچائی پر کھلا ہاتھ دائیں بائیں ہلائیں۔'],
+  ['yes', 'Yes', 'ہاں', 'greetings', 'fist', null, 'neutral', 'tap', 'A fist nods up and down like a head nodding.', 'مٹھی سر ہلانے کی طرح اوپر نیچے ہو۔'],
+  ['no', 'No', 'نہیں', 'greetings', 'index', null, 'neutral', 'side', 'Index finger pointing up wags side to side.', 'اوپر اٹھی شہادت کی انگلی دائیں بائیں ہلے۔'],
+  ['water', 'Water', 'پانی', 'basics', 'C', null, 'mouth', 'toward', 'A cupped hand tilts toward the mouth as if drinking from a glass.', 'پیالہ نما ہاتھ منہ کی طرف جھکے جیسے گلاس سے پانی پی رہے ہوں۔'],
+  ['eat', 'Eat / Food', 'کھانا', 'basics', 'O', null, 'mouth', 'tap', 'Pinched fingertips tap the mouth twice.', 'چٹکی بنی انگلیاں منہ پر دو بار لگیں۔'],
+  ['sleep', 'Sleep', 'سونا', 'basics', 'flat', null, 'cheek', 'none', 'Flat hand rests against the cheek with the head tilted.', 'سیدھا ہاتھ گال پر رکھیں اور سر جھکائیں۔'],
+  ['home', 'Home', 'گھر', 'basics', 'flat', 'flat', 'forehead', 'apart', 'Fingertips of both flat hands meet to form a roof, then move apart and down.', 'دونوں سیدھے ہاتھوں کی انگلیاں مل کر چھت بنائیں، پھر الگ ہو کر نیچے آئیں۔'],
+  ['school', 'School', 'اسکول', 'basics', 'flat', 'flat', 'neutral', 'tap', 'Dominant flat hand claps twice on the upturned other palm.', 'سیدھا ہاتھ دوسری ہتھیلی پر دو بار تالی کی طرح لگے۔'],
+  ['work', 'Work', 'کام', 'basics', 'fist', 'fist', 'neutral', 'tap', 'Dominant fist taps twice on the back of the other fist.', 'ایک مٹھی دوسری مٹھی کی پشت پر دو بار لگے۔'],
+  ['help', 'Help', 'مدد', 'basics', 'fist', 'flat', 'neutral', 'up', 'A fist rests on the flat other palm; both lift together.', 'مٹھی دوسری ہتھیلی پر رکھیں؛ دونوں ایک ساتھ اوپر اٹھیں۔'],
+  ['money', 'Money', 'پیسے', 'basics', 'O', 'flat', 'neutral', 'tap', 'Pinched fingers tap the upturned palm, like counting notes.', 'چٹکی بنی انگلیاں کھلی ہتھیلی پر لگیں، جیسے نوٹ گن رہے ہوں۔'],
+  ['good', 'Good', 'اچھا', 'basics', 'thumb', null, 'neutral', 'forward', 'Thumb up moves slightly forward.', 'انگوٹھا اوپر، تھوڑا آگے جائے۔'],
+  ['bad', 'Bad', 'برا', 'basics', 'flat', null, 'chin', 'down', 'Flat hand at the chin flips down and away.', 'ٹھوڑی پر سیدھا ہاتھ نیچے کی طرف پلٹے۔'],
+  ['stop', 'Stop', 'رکو', 'basics', 'flat', 'flat', 'neutral', 'down', 'Edge of one flat hand chops down onto the other palm.', 'ایک سیدھے ہاتھ کا کنارہ دوسری ہتھیلی پر نیچے لگے۔'],
+  ['come', 'Come', 'آؤ', 'basics', 'index', null, 'neutral', 'toward', 'Index finger beckons toward the body.', 'شہادت کی انگلی جسم کی طرف بلائے۔'],
+  ['go', 'Go', 'جاؤ', 'basics', 'index', null, 'neutral', 'forward', 'Index finger points and moves away from the body.', 'شہادت کی انگلی جسم سے دور اشارہ کرے۔'],
+  ['wait', 'Wait', 'انتظار', 'basics', 'open', 'open', 'neutral', 'wave', 'Both open hands, palms up, wiggle the fingers.', 'دونوں کھلے ہاتھ، ہتھیلیاں اوپر، انگلیاں ہلائیں۔'],
+  ['mother', 'Mother', 'ماں', 'family', 'index', null, 'nose', 'none', 'Index finger touches the side of the nose.', 'شہادت کی انگلی ناک کے پہلو کو چھوئے۔'],
+  ['father', 'Father', 'باپ', 'family', 'index', null, 'forehead', 'none', 'Index finger touches the forehead.', 'شہادت کی انگلی ماتھے کو چھوئے۔'],
+  ['brother', 'Brother', 'بھائی', 'family', 'index', 'index', 'neutral', 'together', 'Both index fingers come together side by side.', 'دونوں شہادت کی انگلیاں ساتھ ساتھ مل جائیں۔'],
+  ['sister', 'Sister', 'بہن', 'family', 'index', null, 'cheek', 'down', 'Index finger strokes down the cheek.', 'شہادت کی انگلی گال پر نیچے کی طرف پھیرے۔'],
+  ['child', 'Child', 'بچہ', 'family', 'flat', null, 'stomach', 'down', 'Flat hand, palm down, pats downward at child height.', 'سیدھا ہاتھ ہتھیلی نیچے، بچے کی اونچائی پر تھپکے۔'],
+  ['family', 'Family', 'خاندان', 'family', 'C', 'C', 'neutral', 'circle', 'Both C-hands trace a circle outward and back together.', 'دونوں C ہاتھ باہر کی طرف دائرہ بنا کر واپس ملیں۔'],
+  ['friend', 'Friend', 'دوست', 'family', 'hook', 'hook', 'neutral', 'together', 'Two hooked index fingers link together.', 'دو مڑی شہادت کی انگلیاں آپس میں پھنسیں۔'],
+  ['what', 'What?', 'کیا؟', 'questions', 'open', 'open', 'neutral', 'side', 'Open hands, palms up, shake slightly side to side with raised eyebrows.', 'کھلے ہاتھ، ہتھیلیاں اوپر، ہلکا دائیں بائیں ہلیں، ابرو اٹھے۔'],
+  ['where', 'Where?', 'کہاں؟', 'questions', 'index', null, 'neutral', 'side', 'Index finger pointing up moves side to side.', 'اوپر اٹھی شہادت کی انگلی دائیں بائیں جائے۔'],
+  ['when', 'When?', 'کب؟', 'questions', 'index', 'index', 'neutral', 'circle', 'Dominant index circles around the other index finger.', 'ایک شہادت کی انگلی دوسری کے گرد دائرہ بنائے۔'],
+  ['who', 'Who?', 'کون؟', 'questions', 'index', null, 'chin', 'circle', 'Index finger circles in front of the mouth and chin.', 'شہادت کی انگلی منہ اور ٹھوڑی کے سامنے گھومے۔'],
+  ['why', 'Why?', 'کیوں؟', 'questions', 'Y', null, 'forehead', 'down', 'Hand touches the forehead and moves down into a Y-hand.', 'ہاتھ ماتھے کو چھو کر نیچے آئے اور Y شکل بنے۔'],
+  ['how', 'How?', 'کیسے؟', 'questions', 'flat', 'flat', 'neutral', 'twist', 'Both hands, knuckles together, roll forward to palms up.', 'دونوں ہاتھ پوروں سے ملے، آگے گھوم کر ہتھیلیاں اوپر ہوں۔'],
+  ['howmuch', 'How much?', 'کتنا؟', 'questions', 'open', null, 'neutral', 'up', 'A closed hand opens upward as it rises.', 'بند ہاتھ اوپر اٹھتے ہوئے کھلے۔'],
+  ['doctor', 'Doctor', 'ڈاکٹر', 'people', 'V', 'flat', 'wrist', 'tap', 'Two fingers tap the pulse point on the other wrist.', 'دو انگلیاں دوسرے ہاتھ کی کلائی پر نبض کی جگہ لگیں۔'],
+  ['teacher', 'Teacher', 'استاد', 'people', 'open', 'open', 'temple', 'forward', 'Both open hands at the temples move forward as if giving knowledge.', 'دونوں کھلے ہاتھ کنپٹیوں سے آگے جائیں، جیسے علم دے رہے ہوں۔'],
+  ['police', 'Police', 'پولیس', 'people', 'C', null, 'shoulder', 'tap', 'C-hand taps the shoulder where a badge sits.', 'C ہاتھ کندھے پر بیج کی جگہ لگے۔'],
+  ['hospital', 'Hospital', 'ہسپتال', 'people', 'index', null, 'shoulder', 'down', 'Index finger draws a cross on the upper arm.', 'شہادت کی انگلی بازو پر صلیب کا نشان بنائے۔'],
+  ['mosque', 'Mosque', 'مسجد', 'people', 'flat', 'flat', 'forehead', 'down', 'Palms together at the forehead move down, like prayer.', 'ماتھے پر جڑی ہتھیلیاں نیچے آئیں، جیسے دعا۔'],
+  ['market', 'Market / Bazaar', 'بازار', 'people', 'O', null, 'neutral', 'side', 'Pinched hand moves side to side as if handling goods.', 'چٹکی بنا ہاتھ دائیں بائیں جائے جیسے سودا دیکھ رہے ہوں۔'],
+  ['happy', 'Happy', 'خوش', 'feelings', 'flat', 'flat', 'chest', 'up', 'Both flat hands brush upward on the chest.', 'دونوں سیدھے ہاتھ سینے پر اوپر کی طرف پھریں۔'],
+  ['sad', 'Sad', 'اداس', 'feelings', 'open', 'open', 'eye', 'down', 'Open hands in front of the face move down.', 'چہرے کے سامنے کھلے ہاتھ نیچے آئیں۔'],
+  ['angry', 'Angry', 'غصہ', 'feelings', 'C', null, 'chest', 'toward', 'Clawed hand pulls up from the stomach toward the chest.', 'پنجہ نما ہاتھ پیٹ سے سینے کی طرف اوپر کھنچے۔'],
+  ['tired', 'Tired', 'تھکا ہوا', 'feelings', 'flat', 'flat', 'shoulder', 'down', 'Fingertips on the shoulders drop downward.', 'کندھوں پر انگلیاں نیچے گریں۔'],
+  ['love', 'Love', 'محبت', 'feelings', 'fist', 'fist', 'heart', 'none', 'Both fists cross over the heart.', 'دونوں مٹھیاں دل پر کراس ہوں۔'],
+  ['pain', 'Pain', 'درد', 'feelings', 'index', 'index', 'neutral', 'together', 'Two index fingers tap their tips together, near the painful area.', 'دو شہادت کی انگلیوں کے سرے درد کی جگہ کے قریب ملیں۔'],
+  ['today', 'Today', 'آج', 'time', 'flat', 'flat', 'neutral', 'down', 'Both flat hands, palms up, drop down once.', 'دونوں سیدھے ہاتھ، ہتھیلیاں اوپر، ایک بار نیچے گریں۔'],
+  ['tomorrow', 'Tomorrow', 'کل (آنے والا)', 'time', 'thumb', null, 'cheek', 'forward', 'Thumb at the cheek arcs forward.', 'گال پر انگوٹھا آگے کی طرف قوس بنائے۔'],
+  ['yesterday', 'Yesterday', 'کل (گزرا ہوا)', 'time', 'thumb', null, 'cheek', 'toward', 'Thumb at the chin arcs back toward the ear.', 'ٹھوڑی پر انگوٹھا پیچھے کان کی طرف جائے۔'],
+  ['now', 'Now', 'ابھی', 'time', 'Y', 'Y', 'neutral', 'down', 'Both Y-hands drop down sharply.', 'دونوں Y ہاتھ تیزی سے نیچے گریں۔'],
+  ['n1', 'One', 'ایک', 'numbers', 'index', null, 'neutral', 'none', 'Index finger up.', 'شہادت کی انگلی اوپر۔'],
+  ['n2', 'Two', 'دو', 'numbers', 'V', null, 'neutral', 'none', 'Index and middle fingers up.', 'شہادت اور درمیانی انگلی اوپر۔'],
+  ['n3', 'Three', 'تین', 'numbers', 'three', null, 'neutral', 'none', 'Index, middle and ring fingers up.', 'تین انگلیاں اوپر۔'],
+  ['n4', 'Four', 'چار', 'numbers', 'four', null, 'neutral', 'none', 'Four fingers up, thumb folded.', 'چار انگلیاں اوپر، انگوٹھا بند۔'],
+  ['n5', 'Five', 'پانچ', 'numbers', 'open', null, 'neutral', 'none', 'All five fingers spread.', 'پانچوں انگلیاں کھلی۔'],
+  ['n6', 'Six', 'چھ', 'numbers', 'index', 'open', 'neutral', 'none', 'Open hand (5) plus one finger on the other hand.', 'ایک ہاتھ کھلا (5) اور دوسرے پر ایک انگلی۔'],
+  ['n7', 'Seven', 'سات', 'numbers', 'V', 'open', 'neutral', 'none', 'Open hand plus two fingers.', 'کھلا ہاتھ اور دو انگلیاں۔'],
+  ['n8', 'Eight', 'آٹھ', 'numbers', 'three', 'open', 'neutral', 'none', 'Open hand plus three fingers.', 'کھلا ہاتھ اور تین انگلیاں۔'],
+  ['n9', 'Nine', 'نو', 'numbers', 'four', 'open', 'neutral', 'none', 'Open hand plus four fingers.', 'کھلا ہاتھ اور چار انگلیاں۔'],
+  ['n10', 'Ten', 'دس', 'numbers', 'open', 'open', 'neutral', 'none', 'Both hands open.', 'دونوں ہاتھ کھلے۔'],
+];
+const SIGNS = RAW.map(([id, en, ur, cat, shape, shape2, loc, move, den, dur]) => ({ id, en, ur, cat, shape, shape2, loc, move, den, dur }));
+const S = Object.fromEntries(SIGNS.map(s => [s.id, s]));
+// Community corrections (stored locally) override seed descriptions. TODO(student): sync suggestions to a backend with Deaf-community reviewers.
+const edits = () => store.get('edits', {});
+const descOf = s => { const e = edits()[s.id]; return { en: e?.en || s.den, ur: e?.ur || s.dur, video: e?.video || '' }; };
+
+// ---------- schematic renderer ----------
+function handGlyph(shape, mirror = false, cls = '') {
+  const f = SHAPES[shape] || SHAPES.flat; const xs = [-10.5, -3.5, 3.5, 10.5], len = [24, 27, 24, 19];
+  let g = `<g class="hand ${cls}" ${mirror ? 'transform="scale(-1,1)"' : ''}><rect x="-14" y="-30" width="28" height="30" rx="7"/>`;
+  for (let i = 0; i < 4; i++) { const st = f[i + 1], L = st === 1 ? len[i] : st === .5 ? len[i] * .55 : 7; g += `<rect x="${xs[i] - 3}" y="${-30 - L}" width="6" height="${L + 6}" rx="3" ${st === .5 ? `transform="rotate(${-10 - i * 2} ${xs[i]} -30)"` : ''}/>`; }
+  const th = f[0]; g += th === 1 ? `<rect x="-17" y="-24" width="6" height="20" rx="3" transform="rotate(38 -14 -8)"/>` : th === .5 ? `<rect x="-19" y="-22" width="6" height="15" rx="3" transform="rotate(10 -16 -14)"/>` : `<rect x="-14" y="-18" width="12" height="6" rx="3"/>`;
+  return g + '</g>';
+}
+function signSvg(s, { still = false, size = '' } = {}) {
+  const [x, y] = LOC[s.loc] || LOC.neutral; const two = !!s.shape2; const dx = two ? 22 : 0;
+  const mv = m => m === 'none' ? '' : (m === 'apart' || m === 'together') ? '' : 'mv-' + m;
+  const handR = `<g transform="translate(${x + dx},${y + 22}) scale(.95)"><g class="mv ${mv(s.move)} ${s.move === 'apart' ? 'mv-apart-r' : s.move === 'together' ? 'mv-together-r' : ''}">${handGlyph(s.shape)}</g></g>`;
+  const handL = two ? `<g transform="translate(${x - dx},${y + 22 + (s.loc === 'wrist' ? 10 : 0)}) scale(.95)"><g class="mv ${s.loc === 'wrist' ? '' : mv(s.move)} ${s.move === 'apart' ? 'mv-apart-l' : s.move === 'together' ? 'mv-together-l' : ''}">${handGlyph(s.shape2, true, 'other')}</g></g>` : '';
+  return `<svg class="sign-svg ${still ? 'still' : ''}" viewBox="0 0 200 240" ${size ? `style="max-width:${size}"` : ''} aria-label="${esc(s.en)}"><path class="body" d="M40 240V150q0-30 30-40l12-4h36l12 4q30 10 30 40v90Z"/><rect class="body" x="88" y="92" width="24" height="26" rx="8"/><circle class="body" cx="100" cy="60" r="30"/>${handL}${handR}</svg>`;
+}
+const shapeChip = (shape, mirror = false) => `<span class="shape"><svg viewBox="-24 -62 48 70">${handGlyph(shape, mirror).replace('class="hand', 'class="hand" style="fill:var(--teal);stroke:var(--teal-deep)" data-x="')}</svg>${t('sh_' + shape)}</span>`;
+
+// ---------- progress model ----------
+const P = Object.assign({ xp: 0, learned: {}, srs: {}, quiz: { asked: 0, correct: 0, perfect: 0 }, cam: 0, days: [], log: [], lesson: 0 }, store.get('progress', {}));
+const save = () => store.set('progress', P);
+const level = () => Math.floor(Math.sqrt(P.xp / 50)) + 1;
+const levelPct = () => { const l = level(); const a = 50 * (l - 1) ** 2, b = 50 * l ** 2; return (P.xp - a) / (b - a); };
+function touchDay() { const k = todayKey(); if (!P.days.includes(k)) { P.days.push(k); P.days.sort(); } }
+function streak() { let n = 0; const d = new Date(); for (; ;) { const k = d.toISOString().slice(0, 10); if (P.days.includes(k)) { n++; d.setDate(d.getDate() - 1); } else if (n === 0 && k === todayKey()) { d.setDate(d.getDate() - 1); } else break; } return n; }
+function addXP(n, why) { P.xp += n; touchDay(); P.log.unshift({ ts: now(), xp: n, why }); P.log = P.log.slice(0, 40); save(); renderChips(); }
+function learn(id) { if (!P.learned[id]) { P.learned[id] = now(); P.srs[id] = P.srs[id] || { m: 1, due: now() + DAY, n: 0 }; addXP(10, 'learn:' + id); } }
+function rate(id, correct) { const r = P.srs[id] || { m: 0, due: 0, n: 0 }; r.n++; if (correct) { r.m = Math.min(5, r.m + 1); r.due = now() + [1, 1, 3, 7, 14, 30][r.m] * DAY; } else { r.m = Math.max(0, r.m - 1); r.due = now() + DAY * .5; } P.srs[id] = r; P.quiz.asked++; if (correct) P.quiz.correct++; save(); }
+const mastery = id => P.srs[id]?.m || 0;
+const LESSONS = CATS.map((c, i) => ({ i, cat: c, ids: SIGNS.filter(s => s.cat === c).map(s => s.id) }));
+const lessonDone = L => L.ids.every(id => P.learned[id]);
+const lessonPct = L => L.ids.filter(id => P.learned[id]).length / L.ids.length;
+function renderChips() { $('#xpChip').innerHTML = `${ic('zap')} ${P.xp} XP · L${level()}`; $('#streakChip').innerHTML = `${ic('flame')} ${streak()}`; }
+function ring(pct, color, size = 90, label = '') { const r = size * .4, c = 2 * Math.PI * r; return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="${size * .1}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${color}" stroke-width="${size * .1}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}" transform="rotate(-90 ${size / 2} ${size / 2})" style="transition:stroke-dashoffset .8s var(--ease)"/><text x="50%" y="54%" text-anchor="middle" font-size="${size * .22}" font-weight="700" fill="var(--ink)" font-family="Fredoka">${label}</text></svg>`; }
+
+// ---------- learn ----------
+let cur = { lesson: null, idx: 0 };
+function renderLearn() {
+  const body = $('#learnBody');
+  if (cur.lesson == null) {
+    const nextL = LESSONS.find(L => !lessonDone(L)) || LESSONS[0];
+    $('#continueBtn').innerHTML = `${ic('play')} ${P.xp ? t('cont') : t('start')}: ${t('cat_' + nextL.cat)}`;
+    $('#continueBtn').onclick = () => openLesson(nextL.i);
+    body.innerHTML = `<div class="path stagger">${LESSONS.map((L, i) => { const locked = i > 0 && !lessonDone(LESSONS[i - 1]) && lessonPct(L) === 0; const pct = lessonPct(L); return `<div class="card lesson ${locked ? 'locked' : ''}" data-l="${i}" style="--i:${i}"><div class="num">${String(i + 1).padStart(2, '0')}</div><div style="display:flex;gap:12px;align-items:center">${ring(pct, pct === 1 ? 'var(--mint)' : 'var(--teal)', 54, pct === 1 ? '✓' : Math.round(pct * 100) + '%')}<div><h3 style="margin:0">${t('cat_' + L.cat)}</h3><div class="muted" style="font-size:.84rem">${L.ids.length} ${t('signs')}</div></div></div><div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">${L.ids.slice(0, 6).map(id => `<span class="pill ${P.learned[id] ? 'mint' : ''}">${esc(S[id].en.split(' /')[0])}</span>`).join('')}${L.ids.length > 6 ? `<span class="pill">+${L.ids.length - 6}</span>` : ''}</div>${locked ? `<div class="muted" style="font-size:.8rem;margin-top:10px;display:flex;gap:6px;align-items:center">${ic('lock')} ${t('locked')}</div>` : ''}</div>`; }).join('')}</div>`;
+    $$('.lesson').forEach(el => el.onclick = () => { if (!el.classList.contains('locked')) openLesson(+el.dataset.l); else toast(t('locked'), '', 'lock'); });
+    animateIn(body); return;
+  }
+  const L = LESSONS[cur.lesson]; const id = L.ids[cur.idx]; const s = S[id]; const d = descOf(s);
+  $('#continueBtn').innerHTML = `${ic('chevron-left')} ${t('backToPath')}`; $('#continueBtn').onclick = () => { cur.lesson = null; renderLearn(); };
+  body.innerHTML = `<div class="lessonbar"><span class="pill teal">${t('lesson')} ${cur.lesson + 1} · ${t('cat_' + L.cat)}</span><div class="prog"><i style="width:${cur.idx / L.ids.length * 100}%"></i></div><span class="muted" style="font-size:.85rem">${cur.idx + 1}/${L.ids.length}</span></div>
+    <div class="stage"><div class="figure">${signSvg(s)}</div>
+    <div><div class="word">${esc(s.en)}</div><div class="word-ur ur">${esc(s.ur)} <button class="btn ghost sm" id="sayBtn" aria-label="${t('listen')}">${ic('volume')}</button></div>
+      <div class="shapes">${shapeChip(s.shape)}${s.shape2 ? shapeChip(s.shape2, true) : ''}<span class="shape">${ic('target')} ${t('loc_' + s.loc)}</span><span class="shape">${ic('shuffle')} ${t('mv_' + s.move)}</span></div>
+      <div class="desc"><b>${t('how')}</b><div>${esc(d.en)}</div><div class="ur">${esc(d.ur)}</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn ghost" id="prevBtn" ${cur.idx === 0 ? 'disabled' : ''}>${ic('chevron-left')} ${t('back')}</button><button class="btn sun lg" id="gotBtn">${ic('check')} ${cur.idx === L.ids.length - 1 ? t('finish') : t('gotit')}</button><button class="btn outline" id="pracBtn">${ic('camera')} ${t('practiceThis')}</button></div>
+      <div class="muted" style="font-size:.8rem;margin-top:12px;display:flex;gap:6px;align-items:center">${ic('alert')} ${t('unverified')} — ${lang === 'ur' ? 'خاکے PSL لغت سے تصدیق کے بعد درست کیے جائیں' : 'schematics are approximations until verified against the PSL dictionary'}</div></div></div>`;
+  $('#sayBtn').onclick = () => speak(s.ur);
+  $('#prevBtn').onclick = () => { cur.idx--; renderLearn(); };
+  $('#pracBtn').onclick = () => { pracQueue = [id]; go('practice'); };
+  $('#gotBtn').onclick = () => { learn(id); if (cur.idx < L.ids.length - 1) { cur.idx++; renderLearn(); } else { confetti(); body.innerHTML = `<div class="card enter" style="text-align:center;max-width:520px;margin:30px auto"><div style="display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:var(--sun-soft);color:#7a5a00;margin:0 auto 10px">${ic('trophy', '')}</div><h2>${t('complete')}</h2><p class="muted">${t('cat_' + L.cat)} · ${L.ids.length} ${t('signs')} · +${L.ids.length * 10} ${t('earned')}</p><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" id="toQuiz">${ic('target')} ${t('nav_quiz')}</button><button class="btn ghost" id="toPath">${t('backToPath')}</button></div></div>`; $('#toQuiz').onclick = () => go('quiz'); $('#toPath').onclick = () => { cur.lesson = null; renderLearn(); }; } };
+  animateIn(body);
+}
+function openLesson(i) { cur = { lesson: i, idx: Math.max(0, LESSONS[i].ids.findIndex(id => !P.learned[id])) }; if (cur.idx < 0) cur.idx = 0; renderLearn(); }
+function speak(text) { if (!('speechSynthesis' in window)) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'ur-PK'; const v = speechSynthesis.getVoices().find(v => /^ur/i.test(v.lang)) || speechSynthesis.getVoices().find(v => /^hi/i.test(v.lang)); if (v) u.voice = v; speechSynthesis.speak(u); }
+
+// ---------- quiz (SRS) ----------
+let quiz = null;
+function renderQuiz() {
+  const body = $('#quizBody'); const pool = SIGNS.filter(s => P.learned[s.id]);
+  if (!quiz) {
+    const due = pool.filter(s => (P.srs[s.id]?.due || 0) <= now()).length;
+    body.innerHTML = pool.length < 4 ? `<div class="card" style="text-align:center"><p class="muted">${t('q_none')}</p><button class="btn" onclick="go('learn')">${ic('book')} ${t('nav_learn')}</button></div>` : `<div class="card enter" style="text-align:center"><div style="display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:var(--violet-soft);color:var(--violet);margin:0 auto 10px">${ic('target')}</div><h3>${pool.length} ${t('signs')} · <span style="color:var(--coral)">${due}</span> ${t('q_due')}</h3><p class="muted">${P.quiz.asked ? `${Math.round(P.quiz.correct / P.quiz.asked * 100)}% ${t('q_correct')} · ${P.quiz.asked} Q` : ''}</p><button class="btn lg" id="qStart">${ic('play')} ${t('q_start')}</button></div>`;
+    const b = $('#qStart'); if (b) b.onclick = startQuiz; animateIn(body); return;
+  }
+  const q = quiz.qs[quiz.i];
+  if (!q) { const score = quiz.results.filter(Boolean).length; if (score === quiz.qs.length) P.quiz.perfect++; addXP(score * 5, 'quiz'); if (score === quiz.qs.length) confetti(); body.innerHTML = `<div class="card enter" style="text-align:center"><h2>${t('q_score')}</h2><div class="word" style="color:${score >= 8 ? 'var(--mint)' : score >= 5 ? 'var(--sun)' : 'var(--coral)'}">${score}/${quiz.qs.length}</div><p class="muted">+${score * 5} XP</p><div class="qbar" style="max-width:360px;margin:0 auto 14px">${quiz.results.map(r => `<i class="${r ? 'ok' : 'bad'}"></i>`).join('')}</div><button class="btn" id="qAgain">${ic('refresh')} ${t('q_again')}</button></div>`; $('#qAgain').onclick = startQuiz; quiz = null; return; }
+  const s = S[q.id];
+  let html = `<div class="qbar">${quiz.qs.map((_, i) => `<i class="${i < quiz.i ? (quiz.results[i] ? 'ok' : 'bad') : i === quiz.i ? 'cur' : ''}"></i>`).join('')}</div><div class="card enter">`;
+  if (q.type === 'sign2word') html += `<div style="display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:center"><div class="figure" style="padding:8px">${signSvg(s)}</div><div><h3>${t('q_which')}</h3><div class="opts" style="grid-template-columns:1fr">${q.opts.map(o => `<button class="opt" data-o="${o}">${esc(S[o].en)} <span class="ur" style="display:block;font-size:1.05rem;color:var(--teal-deep)">${esc(S[o].ur)}</span></button>`).join('')}</div></div></div>`;
+  else if (q.type === 'word2sign') html += `<h3>${t('q_pick')} <span style="color:var(--teal)">${esc(s.en)}</span> <span class="ur" style="font-size:1.2rem">${esc(s.ur)}</span></h3><div class="opts">${q.opts.map(o => `<button class="opt" data-o="${o}">${signSvg(S[o], { still: false })}</button>`).join('')}</div>`;
+  else html += `<h3>${t('q_shapeq')} <span style="color:var(--teal)">${esc(s.en)}</span></h3><div class="muted">${esc(descOf(s).en)}</div><div class="opts">${q.opts.map(o => `<button class="opt" data-o="${o}" style="display:flex;justify-content:center">${shapeChip(o)}</button>`).join('')}</div>`;
+  body.innerHTML = html + '</div>';
+  $$('.opt').forEach(b => b.onclick = () => { const ok = b.dataset.o === q.answer; b.classList.add(ok ? 'right' : 'wrong'); if (!ok) $$('.opt').find(x => x.dataset.o === q.answer)?.classList.add('right'); $$('.opt').forEach(x => x.disabled = true); rate(q.id, ok); quiz.results.push(ok); setTimeout(() => { quiz.i++; renderQuiz(); }, ok ? 650 : 1400); });
+  animateIn(body);
+}
+function startQuiz() {
+  const pool = SIGNS.filter(s => P.learned[s.id]); const due = pool.filter(s => (P.srs[s.id]?.due || 0) <= now());
+  const pick = shuffle([...due]).concat(shuffle(pool.filter(s => !due.includes(s)))).slice(0, 10);
+  quiz = { i: 0, results: [], qs: pick.map(s => { const type = ['sign2word', 'word2sign', 'shape'][Math.floor(Math.random() * 3)]; if (type === 'shape') { const others = shuffle(Object.keys(SHAPES).filter(k => k !== s.shape)).slice(0, 3); return { id: s.id, type, answer: s.shape, opts: shuffle([s.shape, ...others]) }; } const others = shuffle(SIGNS.filter(x => x.id !== s.id && x.cat === s.cat)).slice(0, 2).concat(shuffle(SIGNS.filter(x => x.id !== s.id && x.cat !== s.cat)).slice(0, 3)).slice(0, 3); return { id: s.id, type, answer: s.id, opts: shuffle([s.id, ...others.map(o => o.id)]) }; }) };
+  renderQuiz();
+}
+
+// ---------- dictionary ----------
+let dcat = 'all';
+function renderDict() {
+  $('#dcats').innerHTML = `<button class="chip ${dcat === 'all' ? 'on' : ''}" data-c="all">${t('all')}</button>` + CATS.map(c => `<button class="chip ${dcat === c ? 'on' : ''}" data-c="${c}">${t('cat_' + c)}</button>`).join('');
+  $$('#dcats .chip').forEach(b => b.onclick = () => { dcat = b.dataset.c; renderDict(); });
+  const q = $('#dq').value.trim().toLowerCase();
+  const list = SIGNS.filter(s => (dcat === 'all' || s.cat === dcat) && (!q || s.en.toLowerCase().includes(q) || s.ur.includes(q) || descOf(s).en.toLowerCase().includes(q)));
+  $('#dgrid').innerHTML = list.map((s, i) => `<div class="sc" data-id="${s.id}" style="--i:${Math.min(i, 14)}">${signSvg(s, { still: true })}<b>${esc(s.en)}</b><div class="ur">${esc(s.ur)}</div><div class="dots">${[1, 2, 3, 4, 5].map(n => `<i class="${mastery(s.id) >= n ? 'on' : ''}"></i>`).join('')}</div></div>`).join('') || `<p class="muted">—</p>`;
+  $$('.sc').forEach(el => el.onclick = () => openSign(el.dataset.id));
+  animateIn($('section[data-page=dictionary]'));
+}
+$('#dq').addEventListener('input', renderDict);
+function openSign(id) {
+  const s = S[id], d = descOf(s), e = edits()[id] || {};
+  $('#modal').innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start"><div><span class="pill teal">${t('cat_' + s.cat)}</span> <span class="pill ${e.verified ? 'mint' : 'sun'}">${e.verified ? t('verified') : t('unverified')}</span><h2 style="font-size:1.8rem;margin-top:6px">${esc(s.en)}</h2><div class="word-ur ur" style="font-size:1.5rem">${esc(s.ur)} <button class="btn ghost sm" id="mSay" aria-label="${t('listen')}">${ic('volume')}</button></div></div><span class="spacer"></span><button class="close" id="mClose" aria-label="Close">${ic('x')}</button></div>
+    <div class="stage" style="margin-top:14px"><div class="figure">${signSvg(s)}</div><div>
+      <div class="shapes">${shapeChip(s.shape)}${s.shape2 ? shapeChip(s.shape2, true) : ''}<span class="shape">${ic('target')} ${t('loc_' + s.loc)}</span><span class="shape">${ic('shuffle')} ${t('mv_' + s.move)}</span></div>
+      <div class="desc"><b>${t('how')}</b><div>${esc(d.en)}</div><div class="ur">${esc(d.ur)}</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="mPrac">${ic('camera')} ${t('practiceThis')}</button>${P.learned[id] ? `<span class="pill mint" style="align-self:center">${ic('check-circle')} ${t('mastery')} ${mastery(id)}/5</span>` : `<button class="btn sun" id="mLearn">${ic('check')} ${t('markLearned')}</button>`}</div>
+      <div style="margin-top:16px"><b style="display:flex;gap:6px;align-items:center">${ic('video')} ${t('video')}</b>${d.video ? `<video src="${esc(d.video)}" controls style="width:100%;border-radius:12px;margin-top:6px"></video>` : ''}<input type="url" id="mVideo" placeholder="${t('addVideo')}" value="${esc(d.video)}" style="margin-top:6px"></div>
+      <details style="margin-top:12px"><summary style="cursor:pointer;font-weight:600;display:flex;gap:6px;align-items:center">${ic('edit')} ${t('suggest')}</summary><textarea id="mEn" rows="2" style="margin-top:8px">${esc(d.en)}</textarea><textarea id="mUr" rows="2" class="ur" style="margin-top:8px">${esc(d.ur)}</textarea><label class="chip" style="display:inline-flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="mVer" ${e.verified ? 'checked' : ''}> ${t('verified')}</label><div style="margin-top:8px"><button class="btn sm" id="mSave">${ic('check')} ${t('saveSugg')}</button></div></details>
+    </div></div>`;
+  $('#scrim').classList.add('on');
+  $('#mClose').onclick = closeModal; $('#mSay').onclick = () => speak(s.ur);
+  $('#mPrac').onclick = () => { closeModal(); pracQueue = [id]; go('practice'); };
+  const ml = $('#mLearn'); if (ml) ml.onclick = () => { learn(id); toast('+10 XP', 'ok', 'zap'); openSign(id); renderDict(); };
+  $('#mSave').onclick = () => { const all = edits(); all[id] = { en: $('#mEn').value.trim(), ur: $('#mUr').value.trim(), video: $('#mVideo').value.trim(), verified: $('#mVer').checked, ts: now() }; store.set('edits', all); toast(t('suggSaved'), 'ok', 'check'); openSign(id); };
+}
+function closeModal() { $('#scrim').classList.remove('on'); }
+$('#scrim').onclick = e => { if (e.target === e.currentTarget) closeModal(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ---------- practice: webcam + hand pose ----------
+// TODO(student): replace handshape-only matching with full sign recognition (sequence model over landmarks: location + movement), trained on PSL videos.
+const CDN = ['https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js', 'https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js'];
+const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(src)); document.head.append(s); });
+let pracQueue = [], detector = null, stream = null, rafId = 0, holdMs = 0, lastT = 0, passed = false;
+const video = $('#video'), overlay = $('#overlay');
+function pracTarget() { if (!pracQueue.length) pracQueue = shuffle(SIGNS.filter(s => P.learned[s.id])).slice(0, 5).map(s => s.id); if (!pracQueue.length) pracQueue = ['n1', 'n2', 'n5', 'thumb' in S ? 'thumb' : 'good', 'no']; return S[pracQueue[0]]; }
+function renderPractice() {
+  const s = pracTarget(); passed = false; holdMs = 0; $('#holdBar').style.width = '0';
+  $('#pracTarget').innerHTML = `<div class="muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700">${t('p_target')}</div><div class="word" style="font-size:1.6rem">${esc(s.en)}</div><div class="word-ur ur" style="font-size:1.3rem">${esc(s.ur)}</div><div class="figure" style="max-width:240px;margin:8px auto;padding:8px">${signSvg(s)}</div><div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700">${t('p_shape')}</div><div class="shapes">${shapeChip(s.shape)}</div><div class="desc" style="font-size:.88rem">${esc(descOf(s).en)}</div>`;
+  $('#fingers').innerHTML = ['thumb', 'index', 'middle', 'ring', 'pinky'].map((f, i) => `<div class="finger" id="f${i}">${t('f_' + f)}<br><span class="muted">${stateLabel(SHAPES[s.shape][i])}</span></div>`).join('');
+  $('#camStart').innerHTML = `${ic(stream ? 'pause' : 'camera')} ${stream ? t('p_stop') : t('p_start')}`; $('#camNext').innerHTML = `${ic('arrow-right')} ${t('p_next')}`; $('#selfPass').innerHTML = `${ic('check')} ${t('p_self')}`;
+  if (!stream) $('#camMsg').innerHTML = `<div><b>${t('p_title')}</b>${t('p_lead')}</div>`;
+}
+const stateLabel = v => v === 1 ? t('s_ext') : v === .5 ? t('s_curve') : t('s_curl');
+async function toggleCam() {
+  if (stream) { stopCam(); renderPractice(); return; }
+  try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 960 } }, audio: false }); video.srcObject = stream; await video.play(); $('#camMsg').innerHTML = `<div><b>${t('p_loading')}</b></div>`; $('#camStart').innerHTML = `${ic('pause')} ${t('p_stop')}`; }
+  catch (e) { toast('Camera unavailable: ' + e.message, 'bad', 'alert'); return; }
+  try { if (!detector) { for (const u of CDN) await loadScript(u); detector = await handPoseDetection.createDetector(handPoseDetection.SupportedModels.MediaPipeHands, { runtime: 'tfjs', modelType: 'lite', maxHands: 1 }); } $('#camMsg').innerHTML = ''; lastT = performance.now(); loop(); }
+  catch (e) { $('#camMsg').innerHTML = `<div><b>${t('p_fail')}</b></div>`; }
+}
+function stopCam() { if (stream) stream.getTracks().forEach(tr => tr.stop()); stream = null; cancelAnimationFrame(rafId); overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height); $('#cam').classList.remove('ok'); }
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+/** finger states from 21 MediaPipe landmarks → [thumb,index,middle,ring,pinky] in {0,.5,1} */
+function fingerStates(k) {
+  const w = k[0]; const st = [];
+  st.push(dist(k[4], k[17]) > dist(k[2], k[17]) * 1.15 ? 1 : 0);
+  [[5, 6, 8], [9, 10, 12], [13, 14, 16], [17, 18, 20]].forEach(([mcp, pip, tip]) => { const r = dist(k[tip], w) / dist(k[mcp], w); st.push(r > 1.65 ? 1 : r > 1.3 ? .5 : 0); });
+  return st;
+}
+async function loop() {
+  if (!stream) return; rafId = requestAnimationFrame(loop);
+  const t1 = performance.now(), dt = t1 - lastT; lastT = t1;
+  let hands = []; try { hands = await detector.estimateHands(video, { flipHorizontal: false }); } catch { return; }
+  overlay.width = video.videoWidth || 640; overlay.height = video.videoHeight || 480; const ctx = overlay.getContext('2d'); ctx.clearRect(0, 0, overlay.width, overlay.height);
+  const s = pracTarget(), target = SHAPES[s.shape];
+  if (!hands.length) { $('#camMsg').innerHTML = `<div><b>${t('p_nohand')}</b></div>`; holdMs = Math.max(0, holdMs - dt * 2); $('#holdBar').style.width = (holdMs / 1200 * 100) + '%'; $('#cam').classList.remove('ok'); return; }
+  $('#camMsg').innerHTML = '';
+  const k = hands[0].keypoints; const st = fingerStates(k);
+  // draw skeleton
+  ctx.strokeStyle = '#cff5fb'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  [[0, 1, 2, 3, 4], [0, 5, 6, 7, 8], [0, 9, 10, 11, 12], [0, 13, 14, 15, 16], [0, 17, 18, 19, 20], [5, 9, 13, 17]].forEach(ch => { ctx.beginPath(); ch.forEach((i, j) => j ? ctx.lineTo(k[i].x, k[i].y) : ctx.moveTo(k[i].x, k[i].y)); ctx.stroke(); });
+  k.forEach((p, i) => { ctx.fillStyle = [4, 8, 12, 16, 20].includes(i) ? (st[[4, 8, 12, 16, 20].indexOf(i)] === target[[4, 8, 12, 16, 20].indexOf(i)] ? '#1aa37a' : '#f26b5b') : '#f5b301'; ctx.beginPath(); ctx.arc(p.x, p.y, i % 4 === 0 ? 7 : 5, 0, 7); ctx.fill(); });
+  let ok = 0; st.forEach((v, i) => { const good = v === target[i] || (target[i] === .5 && v !== (target[i] === .5 ? 2 : -1) && v !== 0 && v !== 1) || (target[i] === .5 && v === .5); const el = $('#f' + i); el.className = 'finger ' + (good ? 'ok' : 'bad'); if (good) ok++; });
+  const match = ok / 5; $('#cam').classList.toggle('ok', match >= .8);
+  if (match >= .8 && !passed) { holdMs += dt; if (holdMs >= 1200) { passed = true; P.cam++; addXP(20, 'cam:' + s.id); learn(s.id); confetti(); toast(t('p_pass') + ' +20 XP', 'ok', 'check'); setTimeout(() => { pracQueue.shift(); renderPractice(); }, 900); } }
+  else holdMs = Math.max(0, holdMs - dt * .6);
+  $('#holdBar').style.width = Math.min(100, holdMs / 1200 * 100) + '%';
+}
+$('#camStart').onclick = toggleCam;
+$('#camNext').onclick = () => { pracQueue.shift(); renderPractice(); };
+$('#selfPass').onclick = () => { const s = pracTarget(); learn(s.id); addXP(5, 'self:' + s.id); toast('+5 XP', 'ok', 'zap'); pracQueue.shift(); renderPractice(); };
+
+// ---------- progress ----------
+const BADGES = [['b1', () => Object.keys(P.learned).length >= 1, 'star'], ['b2', () => Object.keys(P.learned).length >= 10, 'award'], ['b3', () => Object.keys(P.learned).length >= SIGNS.length / 2, 'layers'], ['b4', () => Object.keys(P.learned).length >= SIGNS.length, 'trophy'], ['b5', () => streak() >= 3, 'flame'], ['b6', () => P.quiz.perfect >= 1, 'target'], ['b7', () => P.cam >= 10, 'camera'], ['b8', () => level() >= 5, 'zap']];
+function renderProgress() {
+  const learned = Object.keys(P.learned).length, acc = P.quiz.asked ? Math.round(P.quiz.correct / P.quiz.asked * 100) : 0;
+  const kpi = (k, v, icon, col, soft, id) => `<div class="kpi"><div class="icw" style="background:${soft};color:${col}">${ic(icon)}</div><div><div class="k">${t(k)}</div><div class="v" id="${id}">${v}</div></div></div>`;
+  $('#progBody').innerHTML = `<div class="kpis stagger">${kpi('k_xp', 0, 'zap', '#7a5a00', 'var(--sun-soft)', 'kXp')}${kpi('k_level', level(), 'sparkles', 'var(--violet)', 'var(--violet-soft)', 'kLv')}${kpi('k_streak', streak(), 'flame', '#9a2f22', 'var(--coral-soft)', 'kSt')}${kpi('k_learned', learned + '/' + SIGNS.length, 'book', 'var(--teal-deep)', 'var(--teal-soft)', 'kLe')}${kpi('k_quiz', acc + '%', 'target', '#0e6b4e', 'var(--mint-soft)', 'kQz')}</div>
+    <div class="two"><div class="card"><h3>${t('byCat')}</h3><div class="rings">${CATS.map(c => { const ids = SIGNS.filter(s => s.cat === c).map(s => s.id); const pct = ids.reduce((a, id) => a + mastery(id), 0) / (ids.length * 5); return `<div class="ringc">${ring(pct, pct >= .8 ? 'var(--mint)' : 'var(--teal)', 90, Math.round(pct * 100) + '%')}<b>${t('cat_' + c)}</b></div>`; }).join('')}</div></div>
+    <div><div class="card"><h3>${t('badges')}</h3><div class="badges">${BADGES.map(([k, fn, icon]) => `<div class="badge ${fn() ? '' : 'locked'}"><div class="icw">${ic(icon)}</div><div>${t(k)}<div class="muted" style="font-weight:500;font-size:.76rem">${t(k + 'd')}</div></div></div>`).join('')}</div></div>
+    <div class="card" style="margin-top:14px"><h3>${t('recent')}</h3>${P.log.length ? `<div class="list">${P.log.slice(0, 8).map(l => `<div style="display:flex;justify-content:space-between;font-size:.88rem;border-bottom:1px solid var(--line);padding:5px 0"><span>${l.why.startsWith('learn') ? ic('book') : l.why.startsWith('cam') ? ic('camera') : l.why.startsWith('quiz') ? ic('target') : ic('check')} ${esc(l.why.split(':')[1] ? S[l.why.split(':')[1]]?.en || l.why : l.why)}</span><span class="pill sun">+${l.xp} XP</span></div>`).join('')}</div>` : `<p class="muted" style="margin:0">${t('noact')}</p>`}</div></div></div>`;
+  countUp($('#kXp'), P.xp); animateIn($('#progBody'));
+}
+$('#exportBtn').onclick = () => { const blob = new Blob([JSON.stringify({ progress: P, edits: edits() }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ishara-progress.json'; a.click(); };
+$('#resetBtn').onclick = () => { if (confirm('Reset all progress?')) { localStorage.removeItem(NS + 'progress'); location.reload(); } };
+
+// ---------- about ----------
+const TODOS = [
+  ['Real PSL video dataset', 'Record every sign with Deaf signers (consent, multiple angles, left/right-handed), store as short clips and show them next to the schematic. This verification work is the heart of the FYP.', 'data'],
+  ['Full sign recognition', 'Train a sequence model (landmarks over time → sign) so Practice checks location and movement, not only the handshape.', 'ML'],
+  ['Urdu fingerspelling', 'Add the PSL alphabet for Urdu letters with a spelling game and name-spelling practice.', 'content'],
+  ['Sentence builder', 'Teach PSL grammar (topic-comment order, non-manual markers) with drag-to-order sentence exercises.', 'content'],
+  ['Verification workflow', 'Backend where Deaf community reviewers approve or correct community suggestions; show verified badges from the server.', 'backend'],
+  ['Accounts & classrooms', 'Teacher dashboards, class leaderboards, assignments and progress export for special-education schools.', 'product'],
+  ['Offline PWA', 'Cache the app and model weights so it works in schools without reliable internet.', 'platform'],
+];
+function renderAbout() { $('#about').innerHTML = `<div class="card"><h3>${t('a_title')}</h3><p class="muted">Pakistan has an estimated one million deaf people and very few hearing family members, teachers or doctors who sign. Ishara makes the first 60 PSL signs approachable: every sign is modelled as handshape + location + movement and drawn procedurally as an animated schematic, so content is data, not video files.</p><p class="muted">Lessons unlock in order, the quiz uses spaced repetition (intervals 1 → 3 → 7 → 14 → 30 days, shortened on a miss), and Practice uses MediaPipe Hands via TensorFlow.js to read finger states from 21 landmarks and match them to the target handshape.</p><div class="note" style="margin-top:10px">The seeded sign descriptions are approximations written for this template and are flagged “needs verification”. They must be checked against an authoritative PSL dictionary with Deaf community members before classroom use.</div><p class="muted" style="font-size:.85rem;margin-top:10px">Stack: one HTML file, vanilla JS, procedural SVG, localStorage; TF.js + hand-pose-detection loaded lazily on the Practice page.</p></div><div><h3 style="margin:0 0 10px">${t('a_todo')}</h3><div class="list stagger">${TODOS.map(([h, b, tag]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div></div>`).join('')}</div></div>`; animateIn($('#about')); }
+
+// ---------- nav / boot ----------
+const PAGES = [['learn', 'book'], ['practice', 'camera'], ['quiz', 'target'], ['dictionary', 'search'], ['progress', 'bar-chart'], ['about', 'info']];
+function go(page) {
+  if (!PAGES.some(p => p[0] === page)) page = 'learn';
+  if (page !== 'practice' && stream) stopCam();
+  $$('section[data-page]').forEach(s => s.classList.toggle('on', s.dataset.page === page));
+  $$('#tabs button,#bottomnav button').forEach(b => b.classList.toggle('on', b.dataset.p === page));
+  ({ learn: renderLearn, practice: renderPractice, quiz: renderQuiz, dictionary: renderDict, progress: renderProgress, about: renderAbout })[page]();
+  if (location.hash !== '#' + page) history.replaceState(null, '', '#' + page);
+  window.scrollTo({ top: 0 });
+}
+window.go = go;
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English';
+  $('#tabs').innerHTML = PAGES.map(([p, i]) => `<button data-p="${p}">${ic(i)} ${t('nav_' + p)}</button>`).join('');
+  $('#bottomnav').innerHTML = PAGES.map(([p, i]) => `<button data-p="${p}">${ic(i)}${t('nav_' + p)}</button>`).join('');
+  $$('#tabs button,#bottomnav button').forEach(b => b.onclick = () => go(b.dataset.p));
+  renderChips(); go((location.hash || '#learn').slice(1));
+}
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+applyLang();
+</script>
+</body>
+</html>
