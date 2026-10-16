@@ -3828,7 +3828,7 @@ if (!lastSync || dayKey(new Date(lastSync.ts)) !== dayKey(today)) store.set('las
 applyLang();
 checkAlertsOnLoad();
 syncNotifications();
-if (!store.get('tourDone')) setTimeout(startTour, 900);
+if (!store.get('tourDone') && currentPage() === 'rates') setTimeout(startTour, 900);
 </script>
 </body>
 </html>
