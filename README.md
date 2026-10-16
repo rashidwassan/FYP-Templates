@@ -1,6 +1,10 @@
-# FYP Templates
+# FYP Templates: Final Year Project Ideas with Source Code
 
-Single-file HTML/CSS/JS project templates for Final Year Projects by Pakistani university students. Each project solves a real local (or globally useful) problem, works offline from `file://`, ships with proper SVG iconography and fluid motion, and deliberately leaves a documented set of features for the student to build.
+![FYP Templates: final year project ideas with full source code](assets/social-preview.png)
+
+Free **final year project (FYP) templates with full source code** for computer science, software engineering and IT students in Pakistan. Each project is a complete web app in a single HTML file: open it in a browser and it runs, with no setup, no build step and offline support. Every app solves a real local (or globally useful) problem, ships with an English and Urdu interface, and deliberately leaves a documented set of features for you to build and defend in your viva.
+
+**Live site:** [https://rashidwassan.github.io/FYP-Templates/](https://rashidwassan.github.io/FYP-Templates/) · **Project ideas:** [`IDEAS.md`](IDEAS.md) (90 FYP ideas) · **Student guide:** [funding, competitions, careers](#for-students-money-competitions-careers-tools)
 
 Start with [`IDEAS.md`](IDEAS.md) for the full backlog of 90 ideas, or open [`index.html`](index.html) for a visual hub with a guided tour of the repository. Projects are numbered in build order; the idea number from the backlog is shown alongside.
 
