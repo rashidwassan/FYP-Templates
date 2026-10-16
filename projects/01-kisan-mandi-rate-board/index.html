@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kisan Mandi Rate Board</title>
+<meta name="description" content="Daily crop rates across Pakistani mandis, a sell advisor that ranks mandis by net revenue, price alerts and community rate reports. Single-file FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: wheat, soil, leaf ---------- */
+:root{
+  --bg:#f6f1e7; --surface:#fffdf8; --surface-2:#f1eadb; --ink:#2b2118; --muted:#7a6a5a; --line:#e7dccb;
+  --wheat:#e0a526; --wheat-deep:#b8811a; --wheat-soft:#fbf0d6; --soil:#6b4226; --soil-deep:#4a2d19;
+  --leaf:#2f7d32; --leaf-soft:#e3f1e4; --rise:#1f7a3a; --rise-soft:#e4f3e8; --fall:#b23a2f; --fall-soft:#fbe6e3;
+  --radius:14px; --radius-sm:9px; --shadow:0 10px 30px -18px rgba(43,33,24,.35);
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --font-ur:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--soil)}
+h1,h2,h3{margin:0;line-height:1.2;letter-spacing:-.01em}
+.ur,[lang=ur]{font-family:var(--font-ur);line-height:1.9}
+html[lang=ur] .i18n{font-family:var(--font-ur);line-height:1.9}
+html[lang=ur] .card .name{font-size:1.15rem}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- Top bar ---------- */
+.topbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--soil-deep),var(--soil));color:#fff4e0;display:flex;align-items:center;gap:14px;padding:10px 18px;box-shadow:0 4px 20px -8px rgba(0,0,0,.45)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .logo{width:38px;height:38px;border-radius:11px;background:var(--wheat);display:grid;place-items:center;color:var(--soil-deep);flex:none}
+.brand h1{font-size:1.05rem;font-weight:800;white-space:nowrap}
+.brand small{display:block;font-size:.72rem;opacity:.8;font-weight:500}
+.topnav{display:flex;gap:4px;margin-left:12px}
+.topnav a{color:#fff4e0;text-decoration:none;padding:8px 12px;border-radius:9px;font-weight:600;font-size:.9rem;opacity:.85}
+.topnav a:hover{background:rgba(255,255,255,.08);opacity:1}
+.topnav a.active{background:var(--wheat);color:var(--soil-deep);opacity:1}
+.spacer{flex:1}
+.search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px 10px;min-width:0}
+.search input{background:none;border:0;outline:0;color:#fff;width:200px;max-width:40vw}
+.search input::placeholder{color:rgba(255,244,224,.7)}
+.lang{background:var(--wheat);color:var(--soil-deep);border:0;border-radius:9px;padding:7px 11px;font-weight:800;cursor:pointer}
+.datebadge{font-size:.78rem;opacity:.85;white-space:nowrap}
+.iconbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:9px;padding:7px 10px;cursor:pointer;display:none}
+
+/* ---------- Layout ---------- */
+.layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px;max-width:1360px;margin:0 auto;padding:22px 18px 90px}
+.sidebar{position:sticky;top:76px;align-self:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.sidebar h3{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 8px}
+.sidebar h3:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:5px 11px;font-size:.84rem;font-weight:600;cursor:pointer;color:var(--ink)}
+.chip.on{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.chip.wheat.on{background:var(--wheat);border-color:var(--wheat);color:var(--soil-deep)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:0;background:none;padding:7px 11px;cursor:pointer;font-weight:600;font-size:.85rem}
+.seg button.on{background:var(--soil);color:#fff}
+select,input[type=number],input[type=text],input[type=date],textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 11px;outline:0}
+select:focus,input:focus,textarea:focus{border-color:var(--wheat);box-shadow:0 0 0 3px var(--wheat-soft)}
+label.f{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin:10px 0 5px}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;background:var(--leaf);color:#fff;display:inline-flex;align-items:center;gap:8px}
+.btn.wheat{background:var(--wheat);color:var(--soil-deep)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--fall-soft);color:var(--fall)}
+.btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+body:not([data-page=rates]) .sidebar,body:not([data-page=rates]) #filterBtn{display:none}
+body:not([data-page=rates]) .layout{grid-template-columns:minmax(0,1fr)}
+
+/* ---------- KPI strip ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .k{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.kpi .v{font-size:1.25rem;font-weight:800;margin-top:4px}
+.kpi .s{font-size:.82rem;color:var(--muted)}
+.kpi.rise .v{color:var(--rise)} .kpi.fall .v{color:var(--fall)}
+
+/* ---------- Commodity cards ---------- */
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar .count{font-weight:700;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px 12px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s,border-color .15s;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-2px);border-color:var(--wheat)}
+.card::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--cat,var(--leaf))}
+.card .head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.card .name{font-weight:800;font-size:1.02rem}
+.card .sub{font-size:.8rem;color:var(--muted)}
+.card .price{font-size:1.45rem;font-weight:800;margin-top:8px;letter-spacing:-.02em}
+.card .unit{font-size:.78rem;color:var(--muted);font-weight:600}
+.card .foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px;gap:8px}
+.card .range{font-size:.78rem;color:var(--muted)}
+.card.off{opacity:.65;background:var(--surface-2)}
+.delta{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;border-radius:999px;padding:3px 8px;font-size:.78rem;font-weight:800}
+.delta.up{background:var(--rise-soft);color:var(--rise)} .delta.down{background:var(--fall-soft);color:var(--fall)} .delta.flat{background:var(--surface-2);color:var(--muted)}
+.spark{width:110px;height:34px;display:block}
+.badge{display:inline-block;border-radius:6px;padding:2px 7px;font-size:.72rem;font-weight:800;background:var(--wheat-soft);color:var(--wheat-deep)}
+
+/* ---------- Table ---------- */
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:.9rem;vertical-align:middle}
+th{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer} tbody tr.click:hover{background:var(--wheat-soft)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.best td{background:var(--leaf-soft)}
+.tablewrap{overflow:auto;border-radius:var(--radius)}
+
+/* ---------- Panels / forms ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.panel h2{font-size:1.2rem;margin-bottom:4px}
+.panel p.lead{margin:0 0 12px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:18px;align-items:start}
+.note{background:var(--wheat-soft);border-left:4px solid var(--wheat);padding:10px 12px;border-radius:8px;font-size:.88rem}
+.warn{background:var(--fall-soft);border-left:4px solid var(--fall);padding:10px 12px;border-radius:8px;font-size:.88rem}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.row.hit{border-color:var(--rise);background:var(--rise-soft)}
+.todo{border:1px dashed var(--soil);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
+.todo h4{margin:0 0 6px;font-size:.95rem;display:flex;align-items:center;gap:8px}
+.todo .tag{font-size:.7rem;background:var(--soil);color:#fff;border-radius:6px;padding:2px 6px;font-weight:800}
+.bigstat{font-size:2rem;font-weight:800;letter-spacing:-.02em}
+
+/* ---------- Drawer ---------- */
+.scrim{position:fixed;inset:0;background:rgba(43,33,24,.4);backdrop-filter:blur(2px);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--surface);z-index:50;transform:translateX(102%);transition:transform .25s cubic-bezier(.2,.8,.2,1);box-shadow:-20px 0 60px -30px rgba(0,0,0,.5);display:flex;flex-direction:column}
+body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{transform:none}
+.drawer header{display:flex;align-items:flex-start;gap:10px;padding:18px 20px 10px;border-bottom:1px solid var(--line)}
+.drawer header h2{font-size:1.3rem}
+.drawer .body{padding:16px 20px 30px;overflow:auto}
+.close{margin-left:auto;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;width:36px;height:36px;cursor:pointer}
+
+/* ---------- Chart ---------- */
+.chart{position:relative;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:8px}
+.chart svg{width:100%;height:240px;display:block;overflow:visible}
+.chart .tip{position:absolute;pointer-events:none;background:var(--soil-deep);color:#fff;border-radius:8px;padding:6px 9px;font-size:.78rem;transform:translate(-50%,-110%);white-space:nowrap;display:none;z-index:2}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;margin:8px 2px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+
+/* ---------- Toasts / bottom nav ---------- */
+#toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60}
+.toast{background:var(--soil-deep);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);animation:pop .25s}
+.toast.ok{background:var(--leaf)} .toast.bad{background:var(--fall)}
+@keyframes pop{from{transform:translateY(10px);opacity:0}}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:35;padding:6px 4px env(safe-area-inset-bottom)}
+.bottomnav a{flex:1;text-align:center;text-decoration:none;color:var(--muted);font-size:.72rem;font-weight:700;padding:6px 2px;border-radius:8px}
+.bottomnav a.active{color:var(--soil);background:var(--wheat-soft)}
+.bottomnav a span{display:block;font-size:1.15rem}
+
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr;padding-top:14px}
+  .sidebar{position:fixed;inset:auto 0 0 0;top:auto;max-height:80vh;overflow:auto;border-radius:18px 18px 0 0;transform:translateY(105%);transition:transform .25s;z-index:45}
+  body.filters-open .sidebar{transform:none}
+  .iconbtn{display:inline-block}
+  .topnav,.datebadge{display:none}
+  .bottomnav{display:flex}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .two{grid-template-columns:minmax(0,1fr)}
+  .topbar{flex-wrap:wrap;row-gap:8px}
+  .search{order:10;flex-basis:100%}
+  .search input{width:100%;max-width:none}
+  .brand h1{font-size:.95rem}
+  .brand small{display:none}
+}
+@media print{.topbar,.sidebar,.bottomnav,#toasts{display:none}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 21V9"/><path d="M12 13c-4 0-6-2.5-6-6 3 0 6 1.5 6 6Z"/><path d="M12 13c4 0 6-2.5 6-6-3 0-6 1.5-6 6Z"/><path d="M12 8c-3 0-4.5-2-4.5-5 2.5 0 4.5 1.5 4.5 5Z"/><path d="M12 8c3 0 4.5-2 4.5-5-2.5 0-4.5 1.5-4.5 5Z"/></svg></div>
+    <div><h1 class="i18n" data-i18n="title">Kisan Mandi Rate Board</h1><small class="i18n" data-i18n="tagline">Know the rate before the arhti does</small></div>
+  </div>
+  <nav class="topnav" id="topnav"></nav>
+  <div class="spacer"></div>
+  <div class="search" role="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" class="i18n" data-i18n-ph="search" placeholder="Search commodity…" autocomplete="off"></div>
+  <span class="datebadge" id="dateBadge"></span>
+  <button class="iconbtn i18n" id="filterBtn" data-i18n="filters">Filters</button>
+  <button class="lang" id="langBtn" title="Switch language">اردو</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <h3 class="i18n" data-i18n="category">Category</h3>
+    <div class="chips" id="catChips"></div>
+    <h3 class="i18n" data-i18n="region">Region</h3>
+    <div class="chips" id="regionChips"></div>
+    <h3 class="i18n" data-i18n="unit">Price unit</h3>
+    <div class="seg" id="unitSeg"></div>
+    <h3 class="i18n" data-i18n="sort">Sort by</h3>
+    <div class="seg" id="sortSeg"></div>
+    <h3 class="i18n" data-i18n="view">View</h3>
+    <div class="seg" id="viewSeg"></div>
+    <div style="margin-top:16px" class="note i18n" data-i18n="simNote">Rates are simulated from realistic seed data and refresh daily. Swap in a live source in <code>fetchLiveRates()</code>.</div>
+  </aside>
+  <main id="view" aria-live="polite"></main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <header><div id="drawerHead"></div><button class="close" id="drawerClose" aria-label="Close">✕</button></header>
+  <div class="body" id="drawerBody"></div>
+</aside>
+
+<nav class="bottomnav" id="bottomnav"></nav>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Kisan Mandi Rate Board — single-file app
+   Sections: utils · i18n · seed data · price engine · views · router
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+
+// ---------- utils ----------
+const NS = 'kmrb:';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const nf = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 });
+const nf1 = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 1 });
+const rs = n => 'Rs ' + nf.format(Math.round(n));
+const pct = n => (n > 0 ? '+' : '') + nf1.format(n) + '%';
+const toast = (msg, type = '') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg; $('#toasts').append(t); setTimeout(() => t.remove(), 3200); };
+function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const haversine = (a, b) => { const R = 6371, d = x => x * Math.PI / 180; const dLat = d(b.lat - a.lat), dLng = d(b.lng - a.lng); const h = Math.sin(dLat / 2) ** 2 + Math.cos(d(a.lat)) * Math.cos(d(b.lat)) * Math.sin(dLng / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+
+// ---------- i18n ----------
+const L = {
+  en: {
+    title: 'Kisan Mandi Rate Board', tagline: 'Know the rate before the arhti does', search: 'Search commodity…', filters: 'Filters',
+    nav_rates: 'Rates', nav_advisor: 'Sell Advisor', nav_alerts: 'Alerts', nav_contribute: 'Contribute', nav_about: 'About',
+    category: 'Category', region: 'Region', unit: 'Price unit', sort: 'Sort by', view: 'View',
+    cat_all: 'All', cat_grains: 'Grains', cat_cash: 'Cash crops', cat_pulses: 'Pulses', cat_vegetables: 'Vegetables', cat_fruits: 'Fruits',
+    region_all: 'All Pakistan', Punjab: 'Punjab', Sindh: 'Sindh', KP: 'Khyber Pakhtunkhwa', Balochistan: 'Balochistan',
+    u40: 'per 40 kg', u1: 'per kg', u100: 'per 100 kg', sort_name: 'Name', sort_price: 'Price', sort_change: 'Change', view_cards: 'Cards', view_table: 'Table',
+    kpi_gainer: 'Top gainer (7d)', kpi_loser: 'Top faller (7d)', kpi_volatile: 'Most volatile (30d)', kpi_updated: 'Rates updated', today: 'today',
+    avg: 'avg across mandis', range: 'Range', offseason: 'Off-season', mandis: 'mandis', commodities: 'commodities', noMatch: 'No commodities match your filters.',
+    col_commodity: 'Commodity', col_avg: 'Avg price', col_low: 'Lowest', col_high: 'Highest', col_d1: '1-day', col_d7: '7-day', col_mandi: 'Mandi', col_price: 'Price',
+    simNote: 'Rates are simulated from realistic seed data and refresh daily. Swap in a live source in fetchLiveRates().',
+    d_select: 'Pick up to 3 mandis to compare', d_history: '30-day price history', d_todays: "Today's rates by mandi", d_alert: 'Alert', d_community: 'Community reports', d_noReports: 'No farmer reports yet for this commodity. Be the first in Contribute.', d_reported: 'reported', d_forecast: 'Forecast (7d)', d_forecastNA: 'not implemented — student extension',
+    a_title: 'Where should I sell?', a_lead: 'Ranks every mandi by what actually reaches your pocket: gross value minus transport, arhti commission and mandi fees.',
+    a_commodity: 'Commodity', a_qty: 'Quantity (maund = 40 kg)', a_loc: 'My location (district)', a_vehicle: 'Vehicle', a_comm: 'Arhti commission %', a_fees: 'Mandi fee + loading (Rs / maund)', a_maxd: 'Max distance (km)', a_calc: 'Calculate',
+    a_best: 'Best option', a_net: 'Net to you', a_netPer: 'per maund', a_gross: 'Gross', a_transport: 'Transport', a_deduct: 'Commission + fees', a_dist: 'Distance', a_trips: 'trips', a_trend: '7-day trend', rising: 'Rising', falling: 'Falling', stable: 'Stable',
+    a_hint_rise: 'Prices are trending up this week. If you can store safely, waiting a few days may pay — but weigh spoilage risk.', a_hint_fall: 'Prices are trending down. Selling sooner is likely better than waiting.', a_hint_stable: 'Prices are stable; choose by net value and convenience.',
+    a_vsNearest: 'vs nearest mandi', a_none: 'No in-season mandi within that distance. Increase the max distance.', a_rank: '#',
+    al_title: 'Price alerts', al_lead: 'Save a target price. Alerts are checked every time you open the app; delivery by SMS or WhatsApp is a student extension.', al_when: 'Notify me when', al_above: 'goes above', al_below: 'falls below', al_any: 'Any mandi', al_add: 'Add alert', al_triggered: 'Triggered', al_waiting: 'Waiting', al_none: 'No alerts yet. Add one above.', delete: 'Delete', al_saved: 'Alert saved', al_hit: 'alert(s) triggered today', al_now: 'now',
+    c_title: 'Report a rate you saw', c_lead: 'Crowd-sourced rates keep the board honest. Reports are stored on this device; a shared backend with moderation is a student extension.', c_price: 'Price (Rs per 40 kg)', c_date: 'Date', c_note: 'Note (optional)', c_submit: 'Submit report', c_mine: 'My reports', c_none: 'You have not submitted any reports yet.', c_saved: 'Thank you! Report saved on this device.', c_outlier: 'This is far from today\'s modeled rate. Double-check before submitting.', c_invalid: 'Enter a valid price.',
+    ab_title: 'About this project', ab_problem: 'The problem', ab_problem_t: 'Farmers in Pakistan typically sell to the nearest arhti (commission agent) without knowing what the same crop fetched in other mandis that morning. Information asymmetry costs them a large share of their margin every season.', ab_how: 'How it works', ab_how_t: 'The app ships with a deterministic price engine: realistic base prices per commodity and per-mandi multipliers drive a seeded 30-day random walk that changes once a day. Everything else — filters, charts, the sell advisor, alerts and reports — works on top of that series, so replacing it with a live API changes one function.', ab_stack: 'Stack: one HTML file, vanilla JS, hand-drawn SVG charts, localStorage. No build step.', ab_todo: 'Left for students to build', ab_data: 'Data notes', ab_data_t: 'Base prices are indicative 2026 values in PKR per 40 kg and are for demonstration only. Distances use the haversine formula with a 1.25 road factor.',
+    save: 'Save', cancel: 'Cancel', close: 'Close', reset: 'Reset filters'
+  },
+  ur: {
+    title: 'کسان منڈی ریٹ بورڈ', tagline: 'آڑھتی سے پہلے ریٹ جانیں', search: 'فصل تلاش کریں…', filters: 'فلٹرز',
+    nav_rates: 'ریٹس', nav_advisor: 'فروخت مشیر', nav_alerts: 'الرٹس', nav_contribute: 'ریٹ بتائیں', nav_about: 'تعارف',
+    category: 'قسم', region: 'علاقہ', unit: 'قیمت کی اکائی', sort: 'ترتیب', view: 'انداز',
+    cat_all: 'تمام', cat_grains: 'اجناس', cat_cash: 'نقد آور فصلیں', cat_pulses: 'دالیں', cat_vegetables: 'سبزیاں', cat_fruits: 'پھل',
+    region_all: 'پورا پاکستان', Punjab: 'پنجاب', Sindh: 'سندھ', KP: 'خیبر پختونخوا', Balochistan: 'بلوچستان',
+    u40: 'فی 40 کلو (من)', u1: 'فی کلو', u100: 'فی 100 کلو', sort_name: 'نام', sort_price: 'قیمت', sort_change: 'تبدیلی', view_cards: 'کارڈ', view_table: 'جدول',
+    kpi_gainer: 'سب سے زیادہ اضافہ (7 دن)', kpi_loser: 'سب سے زیادہ کمی (7 دن)', kpi_volatile: 'سب سے غیر مستحکم (30 دن)', kpi_updated: 'ریٹ تازہ کیے گئے', today: 'آج',
+    avg: 'منڈیوں کی اوسط', range: 'حد', offseason: 'موسم نہیں', mandis: 'منڈیاں', commodities: 'فصلیں', noMatch: 'آپ کے فلٹر سے کوئی فصل نہیں ملی۔',
+    col_commodity: 'فصل', col_avg: 'اوسط قیمت', col_low: 'کم ترین', col_high: 'زیادہ ترین', col_d1: '1 دن', col_d7: '7 دن', col_mandi: 'منڈی', col_price: 'قیمت',
+    simNote: 'ریٹ حقیقت سے قریب نمونہ ڈیٹا سے بنائے گئے ہیں اور روزانہ بدلتے ہیں۔ لائیو ذریعہ fetchLiveRates() میں لگائیں۔',
+    d_select: 'موازنے کے لیے 3 منڈیاں چنیں', d_history: '30 دن کی قیمتیں', d_todays: 'آج کے ریٹ منڈی کے حساب سے', d_alert: 'الرٹ', d_community: 'کسانوں کی اطلاعات', d_noReports: 'اس فصل کی ابھی کوئی اطلاع نہیں۔ "ریٹ بتائیں" میں پہلے آپ بتائیں۔', d_reported: 'اطلاع', d_forecast: 'پیش گوئی (7 دن)', d_forecastNA: 'ابھی نہیں بنی — طلبہ کے لیے',
+    a_title: 'کہاں بیچوں؟', a_lead: 'ہر منڈی کو اس حساب سے ترتیب دیتا ہے کہ آپ کی جیب میں کیا پہنچے گا: کل رقم سے کرایہ، آڑھتی کمیشن اور منڈی فیس نکال کر۔',
+    a_commodity: 'فصل', a_qty: 'مقدار (من = 40 کلو)', a_loc: 'میرا علاقہ (ضلع)', a_vehicle: 'گاڑی', a_comm: 'آڑھتی کمیشن %', a_fees: 'منڈی فیس + لوڈنگ (روپے فی من)', a_maxd: 'زیادہ سے زیادہ فاصلہ (کلومیٹر)', a_calc: 'حساب لگائیں',
+    a_best: 'بہترین انتخاب', a_net: 'خالص آمدن', a_netPer: 'فی من', a_gross: 'کل رقم', a_transport: 'کرایہ', a_deduct: 'کمیشن + فیس', a_dist: 'فاصلہ', a_trips: 'چکر', a_trend: '7 دن کا رجحان', rising: 'بڑھ رہا', falling: 'گھٹ رہا', stable: 'مستحکم',
+    a_hint_rise: 'اس ہفتے قیمتیں بڑھ رہی ہیں۔ اگر محفوظ ذخیرہ ممکن ہو تو کچھ دن انتظار فائدہ دے سکتا ہے — مگر خرابی کا خطرہ بھی دیکھیں۔', a_hint_fall: 'قیمتیں گر رہی ہیں۔ جلدی بیچنا بہتر ہے۔', a_hint_stable: 'قیمتیں مستحکم ہیں؛ خالص آمدن اور سہولت کے حساب سے فیصلہ کریں۔',
+    a_vsNearest: 'قریبی منڈی کے مقابلے', a_none: 'اس فاصلے میں کوئی منڈی نہیں ملی۔ فاصلہ بڑھائیں۔', a_rank: 'نمبر',
+    al_title: 'قیمت الرٹس', al_lead: 'ہدف قیمت محفوظ کریں۔ ایپ کھولنے پر الرٹ چیک ہوتے ہیں؛ ایس ایم ایس یا واٹس ایپ پر بھیجنا طلبہ کا کام ہے۔', al_when: 'مجھے بتائیں جب', al_above: 'سے بڑھ جائے', al_below: 'سے گر جائے', al_any: 'کوئی بھی منڈی', al_add: 'الرٹ شامل کریں', al_triggered: 'پورا ہوا', al_waiting: 'انتظار', al_none: 'کوئی الرٹ نہیں۔ اوپر سے شامل کریں۔', delete: 'حذف', al_saved: 'الرٹ محفوظ ہو گیا', al_hit: 'الرٹ آج پورے ہوئے', al_now: 'اب',
+    c_title: 'جو ریٹ آپ نے دیکھا وہ بتائیں', c_lead: 'کسانوں کی اطلاعات بورڈ کو سچا رکھتی ہیں۔ اطلاعات اسی فون میں محفوظ ہوتی ہیں؛ مشترکہ سرور طلبہ کا کام ہے۔', c_price: 'قیمت (روپے فی 40 کلو)', c_date: 'تاریخ', c_note: 'نوٹ (اختیاری)', c_submit: 'اطلاع جمع کریں', c_mine: 'میری اطلاعات', c_none: 'آپ نے ابھی کوئی اطلاع نہیں دی۔', c_saved: 'شکریہ! اطلاع محفوظ ہو گئی۔', c_outlier: 'یہ آج کے ریٹ سے بہت مختلف ہے۔ جمع کرنے سے پہلے دوبارہ چیک کریں۔', c_invalid: 'درست قیمت درج کریں۔',
+    ab_title: 'اس پروجیکٹ کا تعارف', ab_problem: 'مسئلہ', ab_problem_t: 'پاکستان میں کسان عموماً قریبی آڑھتی کو فصل بیچتے ہیں اور نہیں جانتے کہ اسی صبح دوسری منڈیوں میں کیا ریٹ ملا۔ معلومات کی یہ کمی ہر سیزن ان کے منافع کا بڑا حصہ کھا جاتی ہے۔', ab_how: 'یہ کیسے کام کرتا ہے', ab_how_t: 'ایپ میں ایک قیمت انجن ہے: ہر فصل کی حقیقت سے قریب بنیادی قیمت اور ہر منڈی کا ضرب عدد مل کر 30 دن کی قیمتیں بناتے ہیں جو روز ایک بار بدلتی ہیں۔ باقی سب — فلٹر، چارٹ، فروخت مشیر، الرٹ اور اطلاعات — اسی پر چلتا ہے، اس لیے لائیو API لگانے کے لیے صرف ایک فنکشن بدلنا ہے۔', ab_stack: 'ٹیکنالوجی: ایک HTML فائل، سادہ جاوا اسکرپٹ، SVG چارٹ، localStorage۔', ab_todo: 'طلبہ کے لیے باقی کام', ab_data: 'ڈیٹا نوٹ', ab_data_t: 'بنیادی قیمتیں 2026 کی اندازاً قیمتیں ہیں (روپے فی 40 کلو) اور صرف مظاہرے کے لیے ہیں۔ فاصلے haversine فارمولے اور 1.25 سڑک فیکٹر سے نکالے گئے ہیں۔',
+    save: 'محفوظ', cancel: 'منسوخ', close: 'بند', reset: 'فلٹر صاف کریں'
+  }
+};
+let lang = store.get('lang', 'en');
+const t = k => (L[lang][k] ?? L.en[k] ?? k);
+const name = o => lang === 'ur' ? o.ur : o.en;
+
+// ---------- seed data ----------
+// Prices: indicative PKR per 40 kg (maund). vol = daily volatility. season = months (1-12) when traded; empty = year-round.
+const COMMODITIES = [
+  { id: 'wheat', en: 'Wheat', ur: 'گندم', cat: 'grains', base: 3200, vol: .012 },
+  { id: 'rice_basmati', en: 'Basmati Paddy', ur: 'باسمتی دھان', cat: 'grains', base: 4200, vol: .015 },
+  { id: 'rice_irri', en: 'IRRI-6 Paddy', ur: 'اری دھان', cat: 'grains', base: 2600, vol: .015 },
+  { id: 'maize', en: 'Maize', ur: 'مکئی', cat: 'grains', base: 2500, vol: .014 },
+  { id: 'cotton', en: 'Cotton (Phutti)', ur: 'کپاس (پھٹی)', cat: 'cash', base: 8600, vol: .02 },
+  { id: 'sugarcane', en: 'Sugarcane', ur: 'گنا', cat: 'cash', base: 450, vol: .01, season: [11, 12, 1, 2, 3, 4] },
+  { id: 'chana', en: 'Chickpea (Chana)', ur: 'چنا', cat: 'pulses', base: 10200, vol: .015 },
+  { id: 'moong', en: 'Moong', ur: 'مونگ', cat: 'pulses', base: 9400, vol: .015 },
+  { id: 'masoor', en: 'Masoor', ur: 'مسور', cat: 'pulses', base: 11000, vol: .012 },
+  { id: 'onion', en: 'Onion', ur: 'پیاز', cat: 'vegetables', base: 3000, vol: .045 },
+  { id: 'tomato', en: 'Tomato', ur: 'ٹماٹر', cat: 'vegetables', base: 3400, vol: .06 },
+  { id: 'potato', en: 'Potato', ur: 'آلو', cat: 'vegetables', base: 1900, vol: .035 },
+  { id: 'garlic', en: 'Garlic', ur: 'لہسن', cat: 'vegetables', base: 15500, vol: .03 },
+  { id: 'chilli', en: 'Green Chilli', ur: 'ہری مرچ', cat: 'vegetables', base: 5200, vol: .05 },
+  { id: 'apple', en: 'Apple (Kala Kulu)', ur: 'سیب (کالا کولو)', cat: 'fruits', base: 7000, vol: .03, season: [8, 9, 10, 11, 12] },
+  { id: 'banana', en: 'Banana', ur: 'کیلا', cat: 'fruits', base: 2800, vol: .03 },
+  { id: 'kinnow', en: 'Kinnow', ur: 'کینو', cat: 'fruits', base: 2600, vol: .03, season: [11, 12, 1, 2, 3] },
+  { id: 'mango', en: 'Mango (Chaunsa)', ur: 'آم (چونسا)', cat: 'fruits', base: 6000, vol: .04, season: [6, 7, 8] },
+];
+const CAT_COLORS = { grains: '#c9961a', cash: '#8a5a2b', pulses: '#b5651d', vegetables: '#2f7d32', fruits: '#c2412d' };
+// mult = general price level; over = commodity-specific overrides (producing regions sell cheaper, big cities dearer)
+const MANDIS = [
+  { id: 'lahore', en: 'Lahore (Badami Bagh)', ur: 'لاہور (بادامی باغ)', prov: 'Punjab', lat: 31.58, lng: 74.33, mult: 1.06 },
+  { id: 'multan', en: 'Multan', ur: 'ملتان', prov: 'Punjab', lat: 30.20, lng: 71.47, mult: .98, over: { mango: .88, cotton: .99 } },
+  { id: 'faisalabad', en: 'Faisalabad', ur: 'فیصل آباد', prov: 'Punjab', lat: 31.42, lng: 73.08, mult: 1.0 },
+  { id: 'sahiwal', en: 'Sahiwal', ur: 'ساہیوال', prov: 'Punjab', lat: 30.67, lng: 73.11, mult: .96, over: { potato: .9, maize: .94 } },
+  { id: 'okara', en: 'Okara', ur: 'اوکاڑہ', prov: 'Punjab', lat: 30.81, lng: 73.45, mult: .95, over: { potato: .88 } },
+  { id: 'bahawalpur', en: 'Bahawalpur', ur: 'بہاولپور', prov: 'Punjab', lat: 29.40, lng: 71.68, mult: .96, over: { cotton: .97 } },
+  { id: 'ryk', en: 'Rahim Yar Khan', ur: 'رحیم یار خان', prov: 'Punjab', lat: 28.42, lng: 70.30, mult: .95, over: { cotton: .96, sugarcane: .95 } },
+  { id: 'dgk', en: 'Dera Ghazi Khan', ur: 'ڈیرہ غازی خان', prov: 'Punjab', lat: 30.05, lng: 70.63, mult: .95 },
+  { id: 'rawalpindi', en: 'Rawalpindi', ur: 'راولپنڈی', prov: 'Punjab', lat: 33.60, lng: 73.04, mult: 1.08 },
+  { id: 'gujranwala', en: 'Gujranwala', ur: 'گوجرانوالہ', prov: 'Punjab', lat: 32.16, lng: 74.19, mult: 1.01, over: { rice_basmati: .95 } },
+  { id: 'sargodha', en: 'Sargodha', ur: 'سرگودھا', prov: 'Punjab', lat: 32.08, lng: 72.67, mult: .97, over: { kinnow: .85 } },
+  { id: 'karachi', en: 'Karachi (Super Highway)', ur: 'کراچی (سپر ہائی وے)', prov: 'Sindh', lat: 24.86, lng: 67.01, mult: 1.12 },
+  { id: 'hyderabad', en: 'Hyderabad', ur: 'حیدرآباد', prov: 'Sindh', lat: 25.40, lng: 68.37, mult: .98, over: { onion: .86, banana: .9, chilli: .9 } },
+  { id: 'sukkur', en: 'Sukkur', ur: 'سکھر', prov: 'Sindh', lat: 27.70, lng: 68.86, mult: .95, over: { rice_irri: .9, wheat: .97 } },
+  { id: 'nawabshah', en: 'Nawabshah', ur: 'نواب شاہ', prov: 'Sindh', lat: 26.25, lng: 68.41, mult: .94, over: { banana: .85, sugarcane: .95 } },
+  { id: 'peshawar', en: 'Peshawar', ur: 'پشاور', prov: 'KP', lat: 34.01, lng: 71.58, mult: 1.04, over: { tomato: .92 } },
+  { id: 'mardan', en: 'Mardan', ur: 'مردان', prov: 'KP', lat: 34.20, lng: 72.05, mult: .99, over: { sugarcane: .97, tomato: .9 } },
+  { id: 'quetta', en: 'Quetta', ur: 'کوئٹہ', prov: 'Balochistan', lat: 30.18, lng: 66.98, mult: 1.05, over: { apple: .82, onion: .95 } },
+];
+const DISTRICTS = [...MANDIS.map(m => ({ id: m.id, en: m.en.replace(/ \(.*\)/, ''), ur: m.ur.replace(/ \(.*\)/, ''), lat: m.lat, lng: m.lng })),
+  ...[['sheikhupura', 'Sheikhupura', 'شیخوپورہ', 31.71, 73.98], ['kasur', 'Kasur', 'قصور', 31.12, 74.45], ['vehari', 'Vehari', 'وہاڑی', 30.04, 72.35], ['khanewal', 'Khanewal', 'خانیوال', 30.30, 71.93], ['lodhran', 'Lodhran', 'لودھراں', 29.54, 71.63], ['muzaffargarh', 'Muzaffargarh', 'مظفرگڑھ', 30.07, 71.19], ['layyah', 'Layyah', 'لیہ', 30.96, 70.94], ['bhakkar', 'Bhakkar', 'بھکر', 31.63, 71.07], ['jhang', 'Jhang', 'جھنگ', 31.27, 72.32], ['tts', 'Toba Tek Singh', 'ٹوبہ ٹیک سنگھ', 30.97, 72.48], ['chiniot', 'Chiniot', 'چنیوٹ', 31.72, 72.98], ['hafizabad', 'Hafizabad', 'حافظ آباد', 32.07, 73.69], ['khushab', 'Khushab', 'خوشاب', 32.30, 72.35], ['mianwali', 'Mianwali', 'میانوالی', 32.58, 71.53], ['attock', 'Attock', 'اٹک', 33.77, 72.36], ['chakwal', 'Chakwal', 'چکوال', 32.93, 72.86], ['jhelum', 'Jhelum', 'جہلم', 32.94, 73.73], ['narowal', 'Narowal', 'نارووال', 32.10, 74.87], ['sialkot', 'Sialkot', 'سیالکوٹ', 32.49, 74.53], ['pakpattan', 'Pakpattan', 'پاکپتن', 30.34, 73.39], ['larkana', 'Larkana', 'لاڑکانہ', 27.56, 68.21], ['jacobabad', 'Jacobabad', 'جیکب آباد', 28.28, 68.44], ['dadu', 'Dadu', 'دادو', 26.73, 67.78], ['thatta', 'Thatta', 'ٹھٹھہ', 24.75, 67.92], ['badin', 'Badin', 'بدین', 24.65, 68.84], ['mirpurkhas', 'Mirpurkhas', 'میرپور خاص', 25.53, 69.01], ['sanghar', 'Sanghar', 'سانگھڑ', 26.05, 68.95], ['tando', 'Tando Allahyar', 'ٹنڈو الہیار', 25.46, 68.72], ['umerkot', 'Umerkot', 'عمرکوٹ', 25.36, 69.74], ['ghotki', 'Ghotki', 'گھوٹکی', 28.00, 69.32], ['khairpur', 'Khairpur', 'خیرپور', 27.53, 68.76], ['swabi', 'Swabi', 'صوابی', 34.12, 72.47], ['charsadda', 'Charsadda', 'چارسدہ', 34.15, 71.74], ['nowshera', 'Nowshera', 'نوشہرہ', 34.02, 71.98], ['swat', 'Swat', 'سوات', 35.22, 72.43], ['dikhan', 'Dera Ismail Khan', 'ڈیرہ اسماعیل خان', 31.83, 70.90], ['bannu', 'Bannu', 'بنوں', 32.99, 70.60], ['pishin', 'Pishin', 'پشین', 30.58, 67.00], ['loralai', 'Loralai', 'لورالائی', 30.37, 68.60], ['jaffarabad', 'Jaffarabad', 'جعفرآباد', 28.30, 68.20], ['lasbela', 'Lasbela', 'لسبیلہ', 25.87, 66.70]]
+    .map(([id, en, ur, lat, lng]) => ({ id, en, ur, lat, lng }))].sort((a, b) => a.en.localeCompare(b.en));
+const VEHICLES = [
+  { id: 'pickup', en: 'Shehzore / pickup (1.5 t)', ur: 'شہزور / پک اپ (1.5 ٹن)', cap: 1500, rate: 90 },
+  { id: 'trolley', en: 'Tractor trolley (3 t)', ur: 'ٹریکٹر ٹرالی (3 ٹن)', cap: 3000, rate: 120 },
+  { id: 'mazda', en: 'Mazda (4 t)', ur: 'مزدا (4 ٹن)', cap: 4000, rate: 160 },
+  { id: 'truck', en: 'Truck (10 t)', ur: 'ٹرک (10 ٹن)', cap: 10000, rate: 280 },
+];
+const CATS = ['all', 'grains', 'cash', 'pulses', 'vegetables', 'fruits'];
+const REGIONS = ['all', 'Punjab', 'Sindh', 'KP', 'Balochistan'];
+const UNITS = { u40: 1, u1: 1 / 40, u100: 2.5 };
+const CM = Object.fromEntries(COMMODITIES.map(c => [c.id, c]));
+const MM = Object.fromEntries(MANDIS.map(m => [m.id, m]));
+
+// ---------- price engine ----------
+const DAYS = 30;
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const dayKey = d => d.toISOString().slice(0, 10);
+const dateOf = i => { const d = new Date(today); d.setDate(d.getDate() - (DAYS - 1 - i)); return d; };
+const inSeason = c => !c.season || c.season.includes(today.getMonth() + 1);
+const cache = new Map();
+/** 30-day series for a commodity in a mandi. Deterministic for a given calendar day. */
+function series(cId, mId) {
+  const key = cId + '|' + mId;
+  if (cache.has(key)) return cache.get(key);
+  const c = CM[cId], m = MM[mId];
+  const target = c.base * m.mult * ((m.over || {})[cId] ?? 1);
+  const r = rng(hash(key + '|' + dayKey(today)));
+  let p = target * (.94 + r() * .12); const out = [];
+  for (let i = 0; i < DAYS; i++) {
+    const shock = (r() - .5) * 2 * c.vol, revert = (target - p) / target * .08;
+    p = p * (1 + shock + revert); out.push(Math.max(5, Math.round(p / 5) * 5));
+  }
+  cache.set(key, out); return out;
+}
+// TODO(student): replace the simulated series with live data (e.g. provincial AMIS feeds, a scraped daily bulletin, or your own backend).
+// Keep the same return shape ({[commodityId]: {[mandiId]: number[30]}}) and the rest of the app will not need to change.
+async function fetchLiveRates() { throw new Error('fetchLiveRates() is not implemented — student extension'); }
+// TODO(student): price forecasting. Return an array of 7 predicted prices or null. Try moving averages first, then ARIMA/Prophet exported from Python, or a tiny TF.js model.
+function forecast(/* series */) { return null; }
+
+const todayPrice = (c, m) => series(c, m)[DAYS - 1];
+const change = (arr, back) => (arr[DAYS - 1] - arr[DAYS - 1 - back]) / arr[DAYS - 1 - back] * 100;
+function mandisFor(region) { return MANDIS.filter(m => region === 'all' || m.prov === region); }
+function summary(c, region) {
+  const ms = mandisFor(region), rows = ms.map(m => ({ m, s: series(c.id, m.id) }));
+  const prices = rows.map(r => r.s[DAYS - 1]);
+  const avgSeries = Array.from({ length: DAYS }, (_, i) => rows.reduce((a, r) => a + r.s[i], 0) / rows.length);
+  const mean = avgSeries.reduce((a, b) => a + b, 0) / DAYS;
+  const sd = Math.sqrt(avgSeries.reduce((a, b) => a + (b - mean) ** 2, 0) / DAYS);
+  return { c, rows, avg: avgSeries[DAYS - 1], min: Math.min(...prices), max: Math.max(...prices), d1: change(avgSeries, 1), d7: change(avgSeries, 7), avgSeries, vol: sd / mean * 100,
+    low: rows.find(r => r.s[DAYS - 1] === Math.min(...prices)).m, high: rows.find(r => r.s[DAYS - 1] === Math.max(...prices)).m };
+}
+
+// ---------- state ----------
+const state = Object.assign({ cat: 'all', region: 'all', unit: 'u40', sort: 'name', view: 'cards', q: '' }, store.get('filters', {}));
+const saveFilters = () => store.set('filters', { cat: state.cat, region: state.region, unit: state.unit, sort: state.sort, view: state.view });
+const fmtP = p => rs(p * UNITS[state.unit]);
+const unitLabel = () => t(state.unit);
+
+// ---------- SVG charts ----------
+function sparkline(arr, color) {
+  const w = 110, h = 34, min = Math.min(...arr), max = Math.max(...arr), span = max - min || 1;
+  const pts = arr.map((v, i) => [i / (arr.length - 1) * w, h - 3 - (v - min) / span * (h - 6)]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d} L${w} ${h} L0 ${h}Z" fill="${color}" opacity=".12"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/></svg>`;
+}
+/** Multi-series line chart with hover tooltip. seriesList: [{label,color,data:number[]}] */
+function lineChart(el, seriesList, labels) {
+  const W = 600, H = 240, P = { l: 56, r: 12, t: 12, b: 28 };
+  const all = seriesList.flatMap(s => s.data); let min = Math.min(...all), max = Math.max(...all);
+  const pad = (max - min || max * .05) * .15; min -= pad; max += pad;
+  const x = i => P.l + i / (labels.length - 1) * (W - P.l - P.r), y = v => P.t + (1 - (v - min) / (max - min)) * (H - P.t - P.b);
+  const grid = Array.from({ length: 5 }, (_, i) => min + (max - min) * i / 4);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  grid.forEach(g => { svg += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="#e7dccb"/><text x="${P.l - 8}" y="${y(g) + 4}" font-size="11" text-anchor="end" fill="#7a6a5a">${nf.format(g * UNITS[state.unit])}</text>`; });
+  [0, Math.floor(labels.length / 2), labels.length - 1].forEach(i => { svg += `<text x="${x(i)}" y="${H - 8}" font-size="11" text-anchor="middle" fill="#7a6a5a">${labels[i]}</text>`; });
+  seriesList.forEach(s => { const d = s.data.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' '); svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>`; });
+  svg += `<line id="cursor" x1="0" x2="0" y1="${P.t}" y2="${H - P.b}" stroke="#6b4226" stroke-dasharray="3 3" style="display:none"/>`;
+  seriesList.forEach((s, k) => { svg += `<circle class="dot" data-k="${k}" r="4" fill="${s.color}" stroke="#fff" stroke-width="2" style="display:none"/>`; });
+  svg += '</svg><div class="tip"></div>';
+  el.innerHTML = svg;
+  const svgEl = $('svg', el), tip = $('.tip', el), cursor = $('#cursor', el), dots = $$('.dot', el);
+  const show = ev => {
+    const rect = svgEl.getBoundingClientRect(); const px = (ev.clientX - rect.left) / rect.width * W;
+    const i = Math.max(0, Math.min(labels.length - 1, Math.round((px - P.l) / (W - P.l - P.r) * (labels.length - 1))));
+    cursor.setAttribute('x1', x(i)); cursor.setAttribute('x2', x(i)); cursor.style.display = '';
+    dots.forEach((d, k) => { d.setAttribute('cx', x(i)); d.setAttribute('cy', y(seriesList[k].data[i])); d.style.display = ''; });
+    tip.style.display = 'block'; tip.style.left = (x(i) / W * rect.width) + 'px'; tip.style.top = (y(Math.max(...seriesList.map(s => s.data[i]))) / H * rect.height) + 'px';
+    tip.innerHTML = `<b>${labels[i]}</b><br>` + seriesList.map(s => `<span style="color:${s.color}">●</span> ${esc(s.label)}: ${fmtP(s.data[i])}`).join('<br>');
+  };
+  svgEl.addEventListener('mousemove', show); svgEl.addEventListener('touchmove', e => { show(e.touches[0]); e.preventDefault(); }, { passive: false });
+  svgEl.addEventListener('mouseleave', () => { tip.style.display = 'none'; cursor.style.display = 'none'; dots.forEach(d => d.style.display = 'none'); });
+}
+const deltaHtml = (v, digits = 1) => `<span class="delta ${v > .05 ? 'up' : v < -.05 ? 'down' : 'flat'}">${v > .05 ? '▲' : v < -.05 ? '▼' : '•'} ${(v > 0 ? '+' : '') + v.toFixed(digits)}%</span>`;
+const dLabel = d => d.toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', { day: 'numeric', month: 'short' });
+
+// ---------- views ----------
+const view = $('#view');
+const NAV = [['rates', 'nav_rates', '▦'], ['advisor', 'nav_advisor', '⇄'], ['alerts', 'nav_alerts', '🔔'], ['contribute', 'nav_contribute', '✎'], ['about', 'nav_about', 'ⓘ']];
+
+function visibleCommodities() {
+  const q = state.q.trim().toLowerCase();
+  let list = COMMODITIES.filter(c => (state.cat === 'all' || c.cat === state.cat) && (!q || c.en.toLowerCase().includes(q) || c.ur.includes(q) || c.id.includes(q)));
+  const sums = list.map(c => summary(c, state.region));
+  const key = { name: (a, b) => name(a.c).localeCompare(name(b.c)), price: (a, b) => b.avg - a.avg, change: (a, b) => b.d7 - a.d7 }[state.sort];
+  sums.sort((a, b) => (inSeason(b.c) - inSeason(a.c)) || key(a, b));
+  return sums;
+}
+
+function renderRates() {
+  const sums = visibleCommodities(), live = sums.filter(s => inSeason(s.c));
+  const gainer = [...live].sort((a, b) => b.d7 - a.d7)[0], loser = [...live].sort((a, b) => a.d7 - b.d7)[0], volat = [...live].sort((a, b) => b.vol - a.vol)[0];
+  const kpi = (cls, k, v, s) => `<div class="kpi ${cls}"><div class="k">${t(k)}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  let html = `<div class="kpis">
+    ${gainer ? kpi('rise', 'kpi_gainer', esc(name(gainer.c)), pct(gainer.d7) + ' · ' + fmtP(gainer.avg)) : ''}
+    ${loser ? kpi('fall', 'kpi_loser', esc(name(loser.c)), pct(loser.d7) + ' · ' + fmtP(loser.avg)) : ''}
+    ${volat ? kpi('', 'kpi_volatile', esc(name(volat.c)), '±' + nf1.format(volat.vol) + '% · 30d') : ''}
+    ${kpi('', 'kpi_updated', t('today'), today.toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', { weekday: 'long', day: 'numeric', month: 'long' }))}
+  </div>
+  <div class="toolbar"><span class="count">${sums.length} ${t('commodities')} · ${mandisFor(state.region).length} ${t('mandis')} · ${unitLabel()}</span><span class="spacer"></span>
+    <button class="btn ghost sm" id="resetBtn">${t('reset')}</button></div>`;
+  if (!sums.length) html += `<div class="panel">${t('noMatch')}</div>`;
+  else if (state.view === 'cards') {
+    html += '<div class="grid">' + sums.map(s => {
+      const off = !inSeason(s.c);
+      return `<article class="card ${off ? 'off' : ''}" data-c="${s.c.id}" style="--cat:${CAT_COLORS[s.c.cat]}" tabindex="0">
+        <div class="head"><div><div class="name">${esc(name(s.c))}</div><div class="sub">${t('cat_' + s.c.cat)}${off ? ` · <span class="badge">${t('offseason')}</span>` : ''}</div></div>${off ? '' : deltaHtml(s.d1)}</div>
+        ${off ? `<div class="price muted" style="font-size:1rem;margin-top:14px">${t('offseason')}</div>` : `<div class="price">${fmtP(s.avg)} <span class="unit">${unitLabel()}</span></div>
+        <div class="foot"><div class="range">${t('avg')}<br>${t('range')}: ${fmtP(s.min)} – ${fmtP(s.max)}</div>${sparkline(s.avgSeries, s.d7 >= 0 ? '#1f7a3a' : '#b23a2f')}</div>`}
+      </article>`; }).join('') + '</div>';
+  } else {
+    html += `<div class="tablewrap"><table><thead><tr><th>${t('col_commodity')}</th><th class="num">${t('col_avg')}</th><th class="num">${t('col_low')}</th><th class="num">${t('col_high')}</th><th class="num">${t('col_d1')}</th><th class="num">${t('col_d7')}</th><th></th></tr></thead><tbody>` +
+      sums.map(s => inSeason(s.c) ? `<tr class="click" data-c="${s.c.id}"><td><b>${esc(name(s.c))}</b><br><span class="muted" style="font-size:.78rem">${t('cat_' + s.c.cat)}</span></td><td class="num"><b>${fmtP(s.avg)}</b></td><td class="num">${fmtP(s.min)}<br><span class="muted" style="font-size:.75rem">${esc(name(s.low))}</span></td><td class="num">${fmtP(s.max)}<br><span class="muted" style="font-size:.75rem">${esc(name(s.high))}</span></td><td class="num">${deltaHtml(s.d1)}</td><td class="num">${deltaHtml(s.d7)}</td><td>${sparkline(s.avgSeries, s.d7 >= 0 ? '#1f7a3a' : '#b23a2f')}</td></tr>`
+        : `<tr class="click" data-c="${s.c.id}" style="opacity:.6"><td><b>${esc(name(s.c))}</b> <span class="badge">${t('offseason')}</span></td><td colspan="6" class="muted">—</td></tr>`).join('') + '</tbody></table></div>';
+  }
+  view.innerHTML = html;
+  $$('[data-c]', view).forEach(el => { el.onclick = () => openDrawer(el.dataset.c); el.onkeydown = e => { if (e.key === 'Enter') openDrawer(el.dataset.c); }; });
+  $('#resetBtn').onclick = () => { Object.assign(state, { cat: 'all', region: 'all', q: '' }); $('#q').value = ''; saveFilters(); renderSidebar(); renderRates(); };
+}
+
+// ----- drawer -----
+let drawerSel = [];
+function openDrawer(cId) {
+  const c = CM[cId]; const ms = mandisFor(state.region);
+  drawerSel = ms.slice(0, 3).map(m => m.id);
+  document.body.classList.add('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'false');
+  renderDrawer(cId);
+}
+function renderDrawer(cId) {
+  const c = CM[cId], ms = mandisFor(state.region), off = !inSeason(c);
+  const rows = ms.map(m => ({ m, s: series(cId, m.id) })).sort((a, b) => b.s[DAYS - 1] - a.s[DAYS - 1]);
+  $('#drawerHead').innerHTML = `<div class="sub muted" style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${t('cat_' + c.cat)}</div><h2 class="${lang === 'ur' ? 'ur' : ''}">${esc(name(c))}</h2>${off ? `<span class="badge">${t('offseason')}</span>` : `<div class="muted">${t('range')}: <b>${fmtP(rows[rows.length - 1].s[DAYS - 1])} – ${fmtP(rows[0].s[DAYS - 1])}</b> ${unitLabel()}</div>`}`;
+  const colors = ['#2f7d32', '#e0a526', '#b23a2f'];
+  const reports = store.get('reports', []).filter(r => r.c === cId).sort((a, b) => b.ts - a.ts);
+  $('#drawerBody').innerHTML = `
+    <div class="muted" style="font-size:.85rem;margin-bottom:6px">${t('d_select')}</div>
+    <div class="chips" id="mChips">${ms.map(m => `<button class="chip ${drawerSel.includes(m.id) ? 'on' : ''}" data-m="${m.id}">${esc(name(m))}</button>`).join('')}</div>
+    <h3 style="margin:16px 0 8px;font-size:1rem">${t('d_history')}</h3>
+    <div class="chart" id="chart"></div><div class="legend" id="legend"></div>
+    <div class="row" style="margin-top:12px;background:var(--surface-2)"><span><b>${t('d_forecast')}</b></span><span class="muted">${forecast(series(cId, drawerSel[0])) ? '' : t('d_forecastNA')}</span></div>
+    <h3 style="margin:18px 0 8px;font-size:1rem">${t('d_todays')}</h3>
+    <div class="tablewrap"><table><thead><tr><th>${t('col_mandi')}</th><th class="num">${t('col_price')}</th><th class="num">${t('col_d1')}</th><th class="num">${t('col_d7')}</th><th></th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td><b>${esc(name(r.m))}</b><br><span class="muted" style="font-size:.75rem">${t(r.m.prov)}</span></td><td class="num"><b>${fmtP(r.s[DAYS - 1])}</b></td><td class="num">${deltaHtml(change(r.s, 1))}</td><td class="num">${deltaHtml(change(r.s, 7))}</td><td><button class="btn ghost sm" data-alert="${r.m.id}">🔔 ${t('d_alert')}</button></td></tr>`).join('')}
+    </tbody></table></div>
+    <h3 style="margin:18px 0 8px;font-size:1rem">${t('d_community')}</h3>
+    ${reports.length ? `<div class="list">${reports.slice(0, 6).map(r => `<div class="row"><span><b>${esc(name(MM[r.m]))}</b> · ${r.date}${r.note ? ` · <span class="muted">${esc(r.note)}</span>` : ''}</span><b>${fmtP(r.price)}</b></div>`).join('')}</div>` : `<div class="note">${t('d_noReports')}</div>`}`;
+  const draw = () => {
+    const sel = drawerSel.map((id, i) => ({ label: name(MM[id]), color: colors[i], data: series(cId, id) }));
+    if (sel.length) lineChart($('#chart'), sel, Array.from({ length: DAYS }, (_, i) => dLabel(dateOf(i))));
+    else $('#chart').innerHTML = `<div class="muted" style="padding:40px;text-align:center">${t('d_select')}</div>`;
+    $('#legend').innerHTML = sel.map(s => `<span><i style="background:${s.color}"></i>${esc(s.label)}: <b>${fmtP(s.data[DAYS - 1])}</b></span>`).join('');
+  };
+  draw();
+  $$('#mChips .chip').forEach(ch => ch.onclick = () => {
+    const id = ch.dataset.m;
+    if (drawerSel.includes(id)) drawerSel = drawerSel.filter(x => x !== id); else { if (drawerSel.length >= 3) drawerSel.shift(); drawerSel.push(id); }
+    $$('#mChips .chip').forEach(x => x.classList.toggle('on', drawerSel.includes(x.dataset.m))); draw();
+  });
+  $$('[data-alert]').forEach(b => b.onclick = () => { closeDrawer(); location.hash = 'alerts'; setTimeout(() => { $('#alC').value = cId; $('#alM').value = b.dataset.alert; $('#alP').value = todayPrice(cId, b.dataset.alert); $('#alP').focus(); }, 50); });
+}
+function closeDrawer() { document.body.classList.remove('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'true'); }
+$('#drawerClose').onclick = closeDrawer; $('#scrim').onclick = closeDrawer;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDrawer(); document.body.classList.remove('filters-open'); } });
+
+// ----- sell advisor -----
+function renderAdvisor() {
+  const a = store.get('advisor', { c: 'wheat', qty: 100, loc: 'sahiwal', veh: 'mazda', comm: 3, fees: 25, maxd: 250 });
+  const opts = (arr, v) => arr.map(o => `<option value="${o.id}" ${o.id === v ? 'selected' : ''}>${esc(name(o))}</option>`).join('');
+  view.innerHTML = `<div class="two">
+    <div class="panel"><h2>${t('a_title')}</h2><p class="lead">${t('a_lead')}</p>
+      <label class="f">${t('a_commodity')}</label><select id="aC">${opts(COMMODITIES.filter(inSeason), a.c)}</select>
+      <div class="cols"><div><label class="f">${t('a_qty')}</label><input id="aQ" type="number" min="1" value="${a.qty}"></div><div><label class="f">${t('a_maxd')}</label><input id="aD" type="number" min="10" value="${a.maxd}"></div></div>
+      <label class="f">${t('a_loc')}</label><select id="aL">${opts(DISTRICTS, a.loc)}</select>
+      <label class="f">${t('a_vehicle')}</label><select id="aV">${VEHICLES.map(v => `<option value="${v.id}" ${v.id === a.veh ? 'selected' : ''}>${esc(name(v))} · Rs ${v.rate}/km</option>`).join('')}</select>
+      <div class="cols"><div><label class="f">${t('a_comm')}</label><input id="aCm" type="number" min="0" max="15" step=".5" value="${a.comm}"></div><div><label class="f">${t('a_fees')}</label><input id="aF" type="number" min="0" value="${a.fees}"></div></div>
+      <div style="margin-top:14px"><button class="btn wheat" id="aGo">${t('a_calc')}</button></div>
+      <!-- TODO(student): show the ranked mandis on a Leaflet map with the route distance, and let the farmer pick a GPS location instead of a district. -->
+    </div>
+    <div id="aOut"></div></div>`;
+  const run = () => {
+    const p = { c: $('#aC').value, qty: +$('#aQ').value || 1, loc: $('#aL').value, veh: $('#aV').value, comm: +$('#aCm').value || 0, fees: +$('#aF').value || 0, maxd: +$('#aD').value || 100 };
+    store.set('advisor', p);
+    const c = CM[p.c], from = DISTRICTS.find(d => d.id === p.loc), v = VEHICLES.find(x => x.id === p.veh), kg = p.qty * 40, trips = Math.ceil(kg / v.cap);
+    const rows = MANDIS.map(m => {
+      const km = haversine(from, m) * 1.25, s = series(c.id, m.id), price = s[DAYS - 1];
+      const gross = price * p.qty, transport = km < 8 ? 0 : trips * km * v.rate, deduct = gross * p.comm / 100 + p.fees * p.qty;
+      return { m, km, price, gross, transport, deduct, net: gross - transport - deduct, d7: change(s, 7) };
+    }).filter(r => r.km <= p.maxd).sort((a, b) => b.net - a.net);
+    const out = $('#aOut');
+    if (!rows.length) { out.innerHTML = `<div class="warn">${t('a_none')}</div>`; return; }
+    const best = rows[0], nearest = [...rows].sort((a, b) => a.km - b.km)[0];
+    const trend = best.d7 > 2 ? 'rising' : best.d7 < -2 ? 'falling' : 'stable';
+    out.innerHTML = `<div class="panel" style="border-color:var(--leaf);background:linear-gradient(135deg,var(--leaf-soft),var(--surface))">
+      <div class="muted" style="font-weight:800;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em">${t('a_best')}</div>
+      <h2 style="font-size:1.5rem;margin:4px 0">${esc(name(best.m))} <span class="muted" style="font-size:.9rem;font-weight:600">· ${nf.format(best.km)} km · ${trips} ${t('a_trips')}</span></h2>
+      <div class="bigstat" style="color:var(--leaf)">${rs(best.net)} <span class="muted" style="font-size:.95rem;font-weight:600">${t('a_net')} · ${rs(best.net / p.qty)} ${t('a_netPer')}</span></div>
+      <div class="cols" style="margin-top:10px"><div><div class="muted" style="font-size:.78rem">${t('a_gross')}</div><b>${rs(best.gross)}</b> <span class="muted">(${rs(best.price)}/40kg)</span></div><div><div class="muted" style="font-size:.78rem">${t('a_transport')}</div><b>− ${rs(best.transport)}</b></div><div><div class="muted" style="font-size:.78rem">${t('a_deduct')}</div><b>− ${rs(best.deduct)}</b></div><div><div class="muted" style="font-size:.78rem">${t('a_vsNearest')} (${esc(name(nearest.m))})</div><b style="color:${best.net - nearest.net > 0 ? 'var(--rise)' : 'var(--muted)'}">${best.net - nearest.net > 0 ? '+' : ''}${rs(best.net - nearest.net)}</b></div></div>
+      <div class="note" style="margin-top:12px"><b>${t('a_trend')}: ${t(trend)} (${pct(best.d7)})</b> — ${t('a_hint_' + (trend === 'rising' ? 'rise' : trend === 'falling' ? 'fall' : 'stable'))}</div>
+    </div>
+    <div class="tablewrap" style="margin-top:14px"><table><thead><tr><th>${t('a_rank')}</th><th>${t('col_mandi')}</th><th class="num">${t('a_dist')}</th><th class="num">${t('col_price')}</th><th class="num">${t('a_transport')}</th><th class="num">${t('a_deduct')}</th><th class="num">${t('a_net')}</th></tr></thead><tbody>
+      ${rows.map((r, i) => `<tr class="${i === 0 ? 'best' : ''}"><td>${i + 1}</td><td><b>${esc(name(r.m))}</b><br><span class="muted" style="font-size:.75rem">${t(r.m.prov)} · ${deltaHtml(r.d7)}</span></td><td class="num">${nf.format(r.km)} km</td><td class="num">${rs(r.price)}</td><td class="num">${rs(r.transport)}</td><td class="num">${rs(r.deduct)}</td><td class="num"><b>${rs(r.net)}</b><br><span class="muted" style="font-size:.75rem">${rs(r.net / p.qty)}/${t('a_netPer').replace(/^(per|فی) /, '')}</span></td></tr>`).join('')}
+    </tbody></table></div>`;
+  };
+  $('#aGo').onclick = run; $$('#aC,#aQ,#aL,#aV,#aCm,#aF,#aD').forEach(el => el.addEventListener('change', run)); run();
+}
+
+// ----- alerts -----
+function evalAlert(al) {
+  const c = CM[al.c]; if (!c || !inSeason(c)) return { hit: false, now: null };
+  const ms = al.m === 'any' ? MANDIS : [MM[al.m]].filter(Boolean);
+  const prices = ms.map(m => todayPrice(al.c, m.id));
+  const now = al.cond === 'above' ? Math.max(...prices) : Math.min(...prices);
+  return { hit: al.cond === 'above' ? now >= al.price : now <= al.price, now };
+}
+function checkAlertsOnLoad() {
+  const als = store.get('alerts', []); const hits = als.filter(a => evalAlert(a).hit).length;
+  if (hits) toast(`🔔 ${hits} ${t('al_hit')}`, 'ok');
+  // TODO(student): deliver alerts by SMS/WhatsApp/push. Requires a backend + a scheduler that evaluates alerts daily when the farmer is offline.
+}
+function renderAlerts() {
+  const als = store.get('alerts', []);
+  const opts = (arr, v) => arr.map(o => `<option value="${o.id}" ${o.id === v ? 'selected' : ''}>${esc(name(o))}</option>`).join('');
+  view.innerHTML = `<div class="two"><div class="panel"><h2>${t('al_title')}</h2><p class="lead">${t('al_lead')}</p>
+      <label class="f">${t('a_commodity')}</label><select id="alC">${opts(COMMODITIES, 'wheat')}</select>
+      <label class="f">${t('col_mandi')}</label><select id="alM"><option value="any">${t('al_any')}</option>${opts(MANDIS)}</select>
+      <label class="f">${t('al_when')}</label><div class="cols" style="grid-template-columns:1fr 1fr"><select id="alCond"><option value="above">${t('al_above')}</option><option value="below">${t('al_below')}</option></select><input id="alP" type="number" min="1" placeholder="Rs / 40 kg"></div>
+      <div style="margin-top:14px"><button class="btn wheat" id="alAdd">${t('al_add')}</button></div></div>
+    <div><div class="list" id="alList"></div></div></div>`;
+  const draw = () => {
+    const list = store.get('alerts', []);
+    $('#alList').innerHTML = list.length ? list.map(a => { const r = evalAlert(a); return `<div class="row ${r.hit ? 'hit' : ''}"><div><b>${esc(name(CM[a.c]))}</b> · ${a.m === 'any' ? t('al_any') : esc(name(MM[a.m]))}<br><span class="muted" style="font-size:.85rem">${t(a.cond === 'above' ? 'al_above' : 'al_below')} <b>${rs(a.price)}</b> · ${t('al_now')}: ${r.now == null ? t('offseason') : rs(r.now)}</span></div><div style="display:flex;gap:8px;align-items:center"><span class="delta ${r.hit ? 'up' : 'flat'}">${r.hit ? '✓ ' + t('al_triggered') : t('al_waiting')}</span><button class="btn danger sm" data-del="${a.id}">${t('delete')}</button></div></div>`; }).join('') : `<div class="panel muted">${t('al_none')}</div>`;
+    $$('[data-del]').forEach(b => b.onclick = () => { store.set('alerts', store.get('alerts', []).filter(x => x.id !== b.dataset.del)); draw(); });
+  };
+  $('#alAdd').onclick = () => { const price = +$('#alP').value; if (!price) { toast(t('c_invalid'), 'bad'); return; } const list = store.get('alerts', []); list.unshift({ id: uid(), c: $('#alC').value, m: $('#alM').value, cond: $('#alCond').value, price, created: Date.now() }); store.set('alerts', list); $('#alP').value = ''; toast(t('al_saved'), 'ok'); draw(); };
+  draw();
+}
+
+// ----- contribute -----
+function renderContribute() {
+  const opts = (arr, v) => arr.map(o => `<option value="${o.id}" ${o.id === v ? 'selected' : ''}>${esc(name(o))}</option>`).join('');
+  view.innerHTML = `<div class="two"><div class="panel"><h2>${t('c_title')}</h2><p class="lead">${t('c_lead')}</p>
+      <label class="f">${t('a_commodity')}</label><select id="cC">${opts(COMMODITIES, 'wheat')}</select>
+      <label class="f">${t('col_mandi')}</label><select id="cM">${opts(MANDIS, 'lahore')}</select>
+      <div class="cols"><div><label class="f">${t('c_price')}</label><input id="cP" type="number" min="1"></div><div><label class="f">${t('c_date')}</label><input id="cD" type="date" value="${dayKey(today)}" max="${dayKey(today)}"></div></div>
+      <label class="f">${t('c_note')}</label><input id="cN" type="text" maxlength="120">
+      <div id="cWarn" class="warn hidden" style="margin-top:10px">${t('c_outlier')}</div>
+      <div style="margin-top:14px"><button class="btn wheat" id="cGo">${t('c_submit')}</button></div>
+      <!-- TODO(student): attach a photo of the mandi slip, verify via OTP, and sync to a backend with moderation + outlier rejection. -->
+    </div><div><h3 style="margin:0 0 10px">${t('c_mine')}</h3><div class="list" id="cList"></div></div></div>`;
+  const draw = () => { const reps = store.get('reports', []).sort((a, b) => b.ts - a.ts); $('#cList').innerHTML = reps.length ? reps.map(r => `<div class="row"><div><b>${esc(name(CM[r.c]))}</b> · ${esc(name(MM[r.m]))}<br><span class="muted" style="font-size:.85rem">${r.date}${r.note ? ' · ' + esc(r.note) : ''}</span></div><div style="display:flex;gap:8px;align-items:center"><b>${rs(r.price)}</b><button class="btn danger sm" data-del="${r.id}">${t('delete')}</button></div></div>`).join('') : `<div class="panel muted">${t('c_none')}</div>`; $$('[data-del]').forEach(b => b.onclick = () => { store.set('reports', store.get('reports', []).filter(x => x.id !== b.dataset.del)); draw(); }); };
+  const check = () => { const p = +$('#cP').value, ref = todayPrice($('#cC').value, $('#cM').value); $('#cWarn').classList.toggle('hidden', !(p && Math.abs(p - ref) / ref > .35)); };
+  $$('#cP,#cC,#cM').forEach(el => el.addEventListener('input', check));
+  $('#cGo').onclick = () => { const price = +$('#cP').value; if (!price) { toast(t('c_invalid'), 'bad'); return; } const reps = store.get('reports', []); reps.push({ id: uid(), c: $('#cC').value, m: $('#cM').value, price, date: $('#cD').value, note: $('#cN').value.trim(), ts: Date.now() }); store.set('reports', reps); $('#cP').value = ''; $('#cN').value = ''; $('#cWarn').classList.add('hidden'); toast(t('c_saved'), 'ok'); draw(); };
+  draw();
+}
+
+// ----- about -----
+const TODOS = [
+  ['Live data source', 'Replace fetchLiveRates() with a real feed (provincial AMIS bulletins, scraping, or your own API) and add a “last synced” indicator with offline fallback to the cached series.', 'core'],
+  ['Price forecasting', 'Implement forecast(series): start with moving averages, then try ARIMA/Prophet (train in Python, export coefficients) or a small TF.js model. Show a dashed projection on the chart.', 'ML'],
+  ['Alert delivery', 'Alerts are evaluated only when the app opens. Build a backend scheduler that checks prices daily and sends SMS (e.g. local gateway) or WhatsApp messages.', 'backend'],
+  ['Community reports backend', 'Sync reports to a shared database, add OTP verification, photo of the mandi slip, moderation and outlier rejection (median absolute deviation).', 'backend'],
+  ['Mandi map', 'Add a Leaflet map to the Sell Advisor showing ranked mandis, a GPS “use my location” button, and real road distance via a routing API.', 'maps'],
+  ['Full Urdu RTL layout', 'The UI is bilingual but stays left-to-right. Implement a proper dir="rtl" mode with logical CSS properties and mirrored icons.', 'UX'],
+  ['Offline PWA', 'Add a manifest and service worker so the board installs on low-end Android phones and opens without network.', 'platform'],
+  ['Voice & SMS access', 'Many farmers use feature phones: expose rates over an IVR/USSD or SMS keyword service built on the same price engine.', 'stretch'],
+];
+function renderAbout() {
+  view.innerHTML = `<div class="two"><div>
+    <div class="panel"><h2>${t('ab_title')}</h2>
+      <h3 style="margin:14px 0 6px;font-size:1rem">${t('ab_problem')}</h3><p class="muted" style="margin:0">${t('ab_problem_t')}</p>
+      <h3 style="margin:14px 0 6px;font-size:1rem">${t('ab_how')}</h3><p class="muted" style="margin:0">${t('ab_how_t')}</p><p class="muted">${t('ab_stack')}</p>
+      <h3 style="margin:14px 0 6px;font-size:1rem">${t('ab_data')}</h3><p class="muted" style="margin:0">${t('ab_data_t')}</p>
+    </div></div>
+    <div><h3 style="margin:0 0 10px">${t('ab_todo')}</h3><div class="list">${TODOS.map(([h, b, tag]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div></div>`).join('')}</div></div></div>`;
+}
+
+// ---------- sidebar / nav / router ----------
+function renderSidebar() {
+  $('#catChips').innerHTML = CATS.map(c => `<button class="chip ${state.cat === c ? 'on' : ''}" data-cat="${c}">${t('cat_' + c)}</button>`).join('');
+  $('#regionChips').innerHTML = REGIONS.map(r => `<button class="chip wheat ${state.region === r ? 'on' : ''}" data-region="${r}">${r === 'all' ? t('region_all') : t(r)}</button>`).join('');
+  $('#unitSeg').innerHTML = Object.keys(UNITS).map(u => `<button class="${state.unit === u ? 'on' : ''}" data-unit="${u}">${t(u)}</button>`).join('');
+  $('#sortSeg').innerHTML = ['name', 'price', 'change'].map(s => `<button class="${state.sort === s ? 'on' : ''}" data-sort="${s}">${t('sort_' + s)}</button>`).join('');
+  $('#viewSeg').innerHTML = ['cards', 'table'].map(v => `<button class="${state.view === v ? 'on' : ''}" data-view="${v}">${t('view_' + v)}</button>`).join('');
+  $$('#sidebar [data-cat],[data-region],[data-unit],[data-sort],[data-view]').forEach(b => b.onclick = () => {
+    const [k, v] = Object.entries(b.dataset)[0]; state[k] = v; saveFilters(); renderSidebar(); route();
+    if (window.innerWidth <= 980 && (k === 'cat' || k === 'region')) document.body.classList.remove('filters-open');
+  });
+}
+function renderNav() {
+  const cur = (location.hash.slice(1) || 'rates').split('?')[0];
+  $('#topnav').innerHTML = NAV.map(([id, k]) => `<a href="#${id}" class="${cur === id ? 'active' : ''}">${t(k)}</a>`).join('');
+  $('#bottomnav').innerHTML = NAV.map(([id, k, ic]) => `<a href="#${id}" class="${cur === id ? 'active' : ''}"><span>${ic}</span>${t(k)}</a>`).join('');
+}
+function route() {
+  const page = (location.hash.slice(1) || 'rates').split('?')[0];
+  document.body.dataset.page = page;
+  renderNav();
+  ({ rates: renderRates, advisor: renderAdvisor, alerts: renderAlerts, contribute: renderContribute, about: renderAbout }[page] || renderRates)();
+  window.scrollTo({ top: 0 });
+}
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  $$('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English';
+  $('#dateBadge').textContent = today.toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  renderSidebar(); route();
+}
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+$('#filterBtn').onclick = () => document.body.classList.toggle('filters-open');
+$('#q').addEventListener('input', e => { state.q = e.target.value; if ((location.hash.slice(1) || 'rates') !== 'rates') location.hash = 'rates'; else renderRates(); });
+window.addEventListener('hashchange', route);
+applyLang();
+checkAlertsOnLoad();
+</script>
+</body>
+</html>
