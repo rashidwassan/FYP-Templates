@@ -335,7 +335,7 @@ mark{background:var(--amber-soft);color:var(--amber);border-radius:3px;padding:0
   .cal .d{min-height:46px;padding:4px;font-size:.72rem}
   .hbar{grid-template-columns:84px minmax(0,1fr) 40px}
   .pagehead h2{font-size:1.3rem}
-  .filters select,.filters input{min-width:0;flex:1}
+  .filters select,.filters input{min-width:0;flex:1 1 44%}
   .search{min-width:100%}
 }
 @media (max-width:420px){
@@ -463,7 +463,7 @@ html.still *,html.still *::before,html.still *::after{animation-duration:.01ms!i
   <!-- surveillance -->
   <section data-page="dash" class="on">
     <div class="pagehead">
-      <div><h2 data-i18n="d_title">Outbreak dashboard</h2><p id="dashSub"></p></div>
+      <div><h2 data-i18n="d_title">Outbreak dashboard</h2><p id="dashSub" dir="auto"></p></div>
       <span class="badge teal" data-i18n="simBadge">simulated surveillance data</span>
     </div>
     <div id="tourCard"></div>
@@ -784,6 +784,7 @@ function fmtDate(d, opts = { day: 'numeric', month: 'short' }) {
 function relTime(ts) {
   const diff = Math.max(0, Date.now() - ts);
   const mins = Math.round(diff / 6e4);
+  if (mins < 1) return `<1 ${t('u_min')}`;
   if (mins < 60) return `${mins} ${t('u_min')}`;
   const hrs = Math.round(mins / 60);
   if (hrs < 48) return `${hrs} ${t('u_hr')}`;
@@ -2705,7 +2706,15 @@ function renderVector() {
     <div class="card mt" style="padding:0;overflow:hidden">
       <div class="between" style="padding:14px 18px 6px"><h3 style="margin:0">${ic('bug')} ${t('v_latest')}</h3></div>
       <div class="tblwrap" style="border:0;border-radius:0"><table class="tbl"><thead><tr><th>${t('c_town')}</th><th>${t('v_date')}</th><th class="num">${t('v_houses')}</th><th class="num">HI %</th><th class="num">CI %</th><th class="num">BI</th><th>${t('v_level')}</th></tr></thead>
-      <tbody>${rows.length ? rows.map(r => `<tr><td><b>${esc(nm(r.tw))}</b></td><td>${fmtDate(parseDay(r.s.date))}</td><td class="num">${r.s.housesPos}/${r.s.houses}</td><td class="num">${r.HI.toFixed(1)}</td><td class="num">${r.CI.toFixed(1)}</td><td class="num">${r.BI.toFixed(0)}</td><td>${levelBadge(r.level)}</td></tr>`).join('') : `<tr><td colspan="7" class="muted" style="text-align:center;padding:24px">${t('v_none')}</td></tr>`}</tbody></table></div>
+      <tbody>${rows.length ? rows.map(r => `<tr>
+          <td><b>${esc(nm(r.tw))}</b></td>
+          <td>${fmtDate(parseDay(r.s.date))}</td>
+          <td class="num">${r.s.housesPos}/${r.s.houses}</td>
+          <td class="num">${r.HI.toFixed(1)}</td>
+          <td class="num">${r.CI.toFixed(1)}</td>
+          <td class="num">${r.BI.toFixed(0)}</td>
+          <td>${levelBadge(r.level)}</td>
+        </tr>`).join('') : `<tr><td colspan="7" class="muted" style="text-align:center;padding:24px">${t('v_none')}</td></tr>`}</tbody></table></div>
     </div>
     <div class="card mt"><h3>${ic('list')} ${t('v_recent')}</h3><div class="list" id="svList"></div></div>`;
 
@@ -4050,7 +4059,10 @@ function renderScores(el) {
     </div>
     <div class="two">
       <div class="card"><h3>${ic('bar-chart')} ${t('s_dist')}</h3>
-        <div class="row" style="align-items:flex-end;height:120px;gap:4px;flex-wrap:nowrap">${buckets.map((n, s) => `<div style="flex:1;text-align:center"><div style="height:${Math.max(4, (n / mx) * 96)}px;border-radius:4px 4px 0 0;background:${s >= 8 ? 'var(--teal)' : s >= 5 ? 'var(--amber)' : 'var(--surface-3)'}"></div><div class="muted" style="font-size:.66rem">${s}</div></div>`).join('')}</div></div>
+        <div class="row" style="align-items:flex-end;height:120px;gap:4px;flex-wrap:nowrap">${buckets.map((n, s) => {
+          const color = s >= 8 ? 'var(--teal)' : s >= 5 ? 'var(--amber)' : 'var(--surface-3)';
+          return `<div style="flex:1;text-align:center"><div style="height:${Math.max(4, (n / mx) * 96)}px;border-radius:4px 4px 0 0;background:${color}"></div><div class="muted" style="font-size:.66rem">${s}</div></div>`;
+        }).join('')}</div></div>
       <div class="card" style="padding:0;overflow:hidden"><div class="tblwrap" style="border:0;border-radius:0"><table class="tbl" style="min-width:0"><thead><tr><th>${t('s_student')}</th><th>${t('v_date')}</th><th class="num">${t('q_score')}</th><th class="noprint"></th></tr></thead>
         <tbody>${attempts.slice(0, 15).map((a, i) => `<tr><td>${esc(a.name)}</td><td>${fmtDate(a.ts, { day: 'numeric', month: 'short' })}</td><td class="num"><b>${a.score}</b>/${a.total}</td><td class="noprint"><button class="btn ghost sm icon" data-delq="${i}" aria-label="Delete">${ic('trash')}</button></td></tr>`).join('')}</tbody></table></div></div>
     </div>`;

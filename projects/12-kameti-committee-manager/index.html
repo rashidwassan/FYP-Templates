@@ -1016,10 +1016,10 @@ TXT.en = {
   pl_contrib: 'Monthly amount (PKR)', pl_months: 'Months (= members)', pl_turn: 'Your payout turn', pl_bank: 'Bank savings rate (annual %)', pl_infl: 'Inflation (annual %)',
   pl_kameti: 'Kameti payout', pl_kameti_s: 'nominal pot received in month {a}', pl_real: 'Real value today', pl_real_s: 'pot deflated by inflation to today',
   pl_bank_fv: 'Bank balance at end', pl_bank_s: 'monthly deposits compounding at {a}%', pl_gain: 'Real gain vs contributions', pl_gain_s: 'positive = kameti beat inflation for you',
-  pl_irr: 'Implied annual rate', pl_irr_s: 'rate at which your payments and the pot balance out',
+  pl_adv: 'Advantage vs bank', pl_adv_s: 'pot kept in the bank from month {a} to {b}, minus the bank-only path',
   pl_chart: 'Cumulative position by month', pl_chart_s: 'Kameti balance (contributions out, pot in) vs bank savings growing.',
   pl_turn_chart: 'Who benefits by turn', pl_turn_s: 'Real gain for every payout position: early turns borrow interest-free, late turns lend.',
-  pl_col_turn: 'Turn', pl_col_month: 'Month', pl_col_real: 'Real value', pl_col_gain: 'Real gain', pl_col_rate: 'Implied rate',
+  pl_col_turn: 'Turn', pl_col_month: 'Month', pl_col_real: 'Real value', pl_col_gain: 'Real gain', pl_col_adv: 'vs bank',
   pl_verdict_early: 'Turn {a} works like an interest-free loan: you receive {b} early and repay it through later contributions.',
   pl_verdict_late: 'Turn {a} means you are lending to the group. A bank account at {r}% would leave you with {b} instead of a pot worth {c} in real terms.',
   pl_bank_label: 'Bank savings', pl_kameti_label: 'Kameti', pl_from: 'Use active committee', pl_live: 'Live rates',
@@ -1196,10 +1196,10 @@ TXT.ur = {
   pl_contrib: 'ماہانہ رقم (روپے)', pl_months: 'مہینے (= ممبران)', pl_turn: 'آپ کی باری', pl_bank: 'بینک بچت کی شرح (سالانہ %)', pl_infl: 'مہنگائی (سالانہ %)',
   pl_kameti: 'کمیٹی کی رقم', pl_kameti_s: 'مہینہ {a} میں وصول شدہ رقم', pl_real: 'آج کی حقیقی قدر', pl_real_s: 'مہنگائی کے حساب سے آج کی قدر',
   pl_bank_fv: 'آخر میں بینک بیلنس', pl_bank_s: 'ماہانہ جمع {a}% پر بڑھتے ہوئے', pl_gain: 'قسطوں کے مقابلے حقیقی فائدہ', pl_gain_s: 'مثبت = کمیٹی نے مہنگائی کو مات دی',
-  pl_irr: 'مضمر سالانہ شرح', pl_irr_s: 'وہ شرح جس پر آپ کی قسطیں اور رقم برابر ہو جاتے ہیں',
+  pl_adv: 'بینک کے مقابلے فائدہ', pl_adv_s: 'مہینہ {a} سے {b} تک بینک میں رکھی رقم، منہا صرف بینک والا راستہ',
   pl_chart: 'ماہانہ مجموعی پوزیشن', pl_chart_s: 'کمیٹی بیلنس (قسطیں باہر، رقم اندر) بمقابلہ بڑھتی بینک بچت۔',
   pl_turn_chart: 'باری کے لحاظ سے فائدہ', pl_turn_s: 'ہر باری کا حقیقی فائدہ: پہلی باریاں بلا سود قرض لیتی ہیں، آخری باریاں قرض دیتی ہیں۔',
-  pl_col_turn: 'باری', pl_col_month: 'مہینہ', pl_col_real: 'حقیقی قدر', pl_col_gain: 'حقیقی فائدہ', pl_col_rate: 'مضمر شرح',
+  pl_col_turn: 'باری', pl_col_month: 'مہینہ', pl_col_real: 'حقیقی قدر', pl_col_gain: 'حقیقی فائدہ', pl_col_adv: 'بمقابلہ بینک',
   pl_verdict_early: 'باری {a} بلا سود قرض جیسی ہے: آپ {b} جلد وصول کرتے ہیں اور بعد کی قسطوں سے واپس کرتے ہیں۔',
   pl_verdict_late: 'باری {a} کا مطلب ہے کہ آپ گروپ کو قرض دے رہے ہیں۔ {r}% پر بینک اکاؤنٹ میں آپ کے پاس {b} ہوتے، جبکہ رقم کی حقیقی قدر {c} ہے۔',
   pl_bank_label: 'بینک بچت', pl_kameti_label: 'کمیٹی', pl_from: 'موجودہ کمیٹی سے لیں', pl_live: 'براہِ راست شرحیں',
@@ -2184,5 +2184,550 @@ async function deleteCommittee(c) {
   save();
   toast(t('deleted'), 'ok');
   renderAll();
+}
+
+/* --- Members: table, payout order, need requests --- */
+function renderMembers() {
+  const c = active();
+  if (!c) return emptyView();
+  const n = c.order.length;
+  const i = currentCycle(c);
+  const dd = daysBetween(today, dueDate(c, i));
+  const filled = c.order.filter(Boolean).length;
+  view.innerHTML = `<div class="grid g21 stagger">
+    <div class="card"><h2>${ic('users')}${t('mem_title')} <span class="badge mint">${c.members.length}</span><span class="spacer"></span><button class="btn sm" id="addMem">${ic('plus')}${t('mem_add')}</button></h2>
+      <p class="lead txt">${t('trust_s')}</p>
+      ${c.members.length ? `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('mem_name')}</th><th class="num">${t('mem_slots')}</th><th>${t('mem_turn')}</th><th>${t('mem_trust')}</th><th>${t('mem_month')}</th><th></th></tr></thead><tbody>${c.members.map(m => memberRow(c, m, i, dd)).join('')}</tbody></table></div>` : `<div class="empty">${ic('users')}<p>${t('mem_empty')}</p></div>`}</div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card"><h2>${ic('sort')}${t('ord_title')}<span class="spacer"></span><button class="btn sm ${c.method === 'lottery' ? 'gold' : 'ghost'}" id="drawBtn">${ic('dice')}${t('ord_draw')}</button></h2>
+        <p class="lead txt">${t('ord_s')} <span class="badge muted">${tf('ord_count', { a: filled, b: n })}</span></p>
+        <div class="orderlist" id="orderList">${c.order.map((id, k) => orderItem(c, id, k, n)).join('')}</div></div>
+      ${needsCard(c)}
+    </div></div>`;
+  animRings(view);
+  $('#addMem').onclick = () => memberForm(c);
+  $('#drawBtn').onclick = () => lotteryModal(c);
+  $$('[data-stm]', view).forEach(b => (b.onclick = () => statementModal(c, memberById(c, b.dataset.stm))));
+  $$('[data-prof]', view).forEach(b => (b.onclick = () => profileModal(digits(memberById(c, b.dataset.prof).phone))));
+  $$('[data-edit]', view).forEach(b => (b.onclick = () => memberForm(c, memberById(c, b.dataset.edit))));
+  $$('[data-del]', view).forEach(b => (b.onclick = () => deleteMember(c, memberById(c, b.dataset.del))));
+  wireOrderList(c, n);
+  wireNeeds(c);
+}
+function memberRow(c, m, i, dd) {
+  const p = cell(c, i, m.id);
+  const turns = turnsOf(c, m.id);
+  const turnBadges = turns.map(k => {
+    const s = cycleState(c, k);
+    return `<span class="badge ${s === 'done' ? 'muted' : s === 'current' ? 'gold' : 'mint'}">#${k + 1} · ${monthLabel(monthOf(c, k))}</span>`;
+  }).join(' ');
+  return `<tr>
+      <td><div class="who"><div class="avatar">${esc(initials(m.name))}</div><div><div class="n">${esc(m.name)}</div><div class="p">${esc(m.phone)}${m.cnic4 ? ' · ' + cnicMask(m) : ''}</div></div></div></td>
+      <td class="num">${m.slots || 1}</td>
+      <td>${turnBadges || `<span class="badge muted">${t('ord_unassigned')}</span>`}</td>
+      <td><button class="btn sm ghost icon" style="width:auto;padding:2px" data-prof="${m.id}" aria-label="${t('mem_profile')}">${trustRing(trustScore(m.phone))}</button></td>
+      <td>${stBadge(p?.s, dd < 0)}</td>
+      <td><div class="acts"><button class="btn sm ghost" data-stm="${m.id}" aria-label="${t('mem_statement')}">${ic('file')}</button><button class="btn sm ghost" data-edit="${m.id}" aria-label="${t('mem_edit')}">${ic('edit')}</button><button class="btn sm danger" data-del="${m.id}" aria-label="${t('mem_delete')}">${ic('trash')}</button></div></td></tr>`;
+}
+function orderItem(c, id, k, n) {
+  const done = cycleState(c, k) === 'done';
+  const cur = cycleState(c, k) === 'current';
+  const m = id ? memberById(c, id) : null;
+  const upDis = done || k === 0 || cycleState(c, k - 1) === 'done';
+  return `<div class="oitem ${done ? 'done' : ''} ${cur ? 'cur' : ''}" data-k="${k}" draggable="${done ? 'false' : 'true'}">
+      <span class="pos">${k + 1}</span><span class="grip" aria-hidden="true">${done ? ic('lock') : ic('menu')}</span>
+      <span class="nm">${m ? esc(m.name) + slotLabel(c, id, k) : `<span class="muted">${t('ord_unassigned')}</span>`}<small>${monthLabel(monthOf(c, k))}${done ? ' · ' + t('ord_locked') : ''}</small></span>
+      <span class="ud"><button class="btn sm ghost icon" data-up="${k}" aria-label="Move up" ${upDis ? 'disabled' : ''}>${ic('arrow-up')}</button><button class="btn sm ghost icon" data-down="${k}" aria-label="Move down" ${done || k === n - 1 ? 'disabled' : ''}>${ic('arrow-down')}</button></span></div>`;
+}
+function wireOrderList(c, n) {
+  const move = (from, to) => {
+    if (to < 0 || to >= n || cycleState(c, to) === 'done' || cycleState(c, from) === 'done') return;
+    const o = c.order;
+    const [x] = o.splice(from, 1);
+    o.splice(to, 0, x);
+    logEvent('lg_order', {}, c.id);
+    save();
+    refresh();
+  };
+  $$('[data-up]', view).forEach(b => (b.onclick = () => move(+b.dataset.up, +b.dataset.up - 1)));
+  $$('[data-down]', view).forEach(b => (b.onclick = () => move(+b.dataset.down, +b.dataset.down + 1)));
+  let dragK = null;
+  $$('.oitem', view).forEach(el => {
+    el.addEventListener('dragstart', e => {
+      dragK = +el.dataset.k;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      $$('.oitem.over', view).forEach(x => x.classList.remove('over'));
+    });
+    el.addEventListener('dragover', e => {
+      if (dragK == null || el.classList.contains('done')) return;
+      e.preventDefault();
+      el.classList.add('over');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragK == null) return;
+      const to = +el.dataset.k;
+      if (to !== dragK) move(dragK, to);
+      dragK = null;
+    });
+  });
+}
+async function deleteMember(c, m) {
+  if (!(await confirmDlg(tf('del_m', { a: m.name }), t('del_ok')))) return;
+  c.members = c.members.filter(x => x.id !== m.id);
+  Object.keys(c.payments).forEach(k => {
+    if (k.endsWith(':' + m.id)) delete c.payments[k];
+  });
+  c.needs = (c.needs || []).filter(nd => nd.memberId !== m.id);
+  syncOrder(c);
+  logEvent('lg_member_del', { who: m.name }, c.id);
+  save();
+  toast(t('deleted'), 'ok');
+  refresh();
+}
+const NEED_REASONS = ['medical', 'wedding', 'education', 'rent', 'business', 'debt', 'other'];
+const urgencyDots = u => `<span class="urg" title="${t('nd_urgency')} ${u}/5">${[1, 2, 3, 4, 5].map(k => `<i class="${k <= u ? 'on' : ''}"></i>`).join('')}</span>`;
+const needStatusBadge = s => `<span class="badge ${s === 'open' ? 'gold' : s === 'granted' ? 'ok' : 'muted'}">${t('nd_' + s)}</span>`;
+function needsCard(c) {
+  const needs = (c.needs || []).slice().sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1) || needScore(c, b) - needScore(c, a));
+  const rows = needs.map(nd => {
+    const m = memberById(c, nd.memberId);
+    const waited = Math.max(0, Math.round(daysBetween(fromIso(nd.created.slice(0, 10)), today) / 30));
+    return `<tr><td><div class="who"><div class="avatar">${esc(initials(m?.name || '?'))}</div><div><div class="n">${esc(m?.name || '—')}</div><div class="p">${t('nd_r_' + nd.reason)}${nd.byMonth ? ' · ' + monthLabel(nd.byMonth) : ''}</div></div></div></td>
+      <td>${urgencyDots(nd.urgency)}</td><td class="num">${needScore(c, nd)}</td><td>${needStatusBadge(nd.status)}<div class="small muted">${tf('nd_waiting', { a: waited })}</div></td>
+      <td><div class="acts">${nd.status === 'open' ? `<button class="btn sm ghost" data-ndok="${nd.id}" aria-label="${t('nd_granted')}">${ic('check')}</button><button class="btn sm ghost" data-ndno="${nd.id}" aria-label="${t('nd_declined')}">${ic('x')}</button>` : ''}<button class="btn sm danger" data-nddel="${nd.id}" aria-label="${t('del_ok')}">${ic('trash')}</button></div></td></tr>`;
+  }).join('');
+  return `<div class="card"><h2>${ic('hand')}${t('nd_title')}<span class="spacer"></span><button class="btn sm ghost" id="needAdd">${ic('plus')}${t('nd_add')}</button><button class="btn sm ${c.method === 'need' ? 'gold' : 'ghost'}" id="needRank">${ic('sort')}${t('nd_rank')}</button></h2>
+    <p class="lead txt">${t('nd_s')}</p>
+    ${needs.length ? `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('nd_member')}</th><th>${t('nd_urgency')}</th><th class="num">${t('nd_score')}</th><th>${t('nd_status')}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty small">${ic('hand')}<p>${t('nd_empty')}</p></div>`}
+    <p class="small muted txt" style="margin:10px 0 0">${ic('info')} ${t('nd_score_s')}</p></div>`;
+}
+function wireNeeds(c) {
+  $('#needAdd').onclick = () => needForm(c);
+  $('#needRank').onclick = () => needRankModal(c);
+  const setStatusOf = (id, status) => {
+    const nd = c.needs.find(x => x.id === id);
+    if (!nd) return;
+    nd.status = status;
+    save();
+    refresh();
+  };
+  $$('[data-ndok]', view).forEach(b => (b.onclick = () => setStatusOf(b.dataset.ndok, 'granted')));
+  $$('[data-ndno]', view).forEach(b => (b.onclick = () => setStatusOf(b.dataset.ndno, 'declined')));
+  $$('[data-nddel]', view).forEach(b => (b.onclick = () => {
+    c.needs = c.needs.filter(x => x.id !== b.dataset.nddel);
+    save();
+    refresh();
+  }));
+}
+
+/* --- Payments matrix --- */
+const STATES = ['unpaid', 'paid', 'late', 'partial', 'waived'];
+/* Single write path for a payment cell. Paying after the grace period is recorded as late automatically. */
+function setStatus(c, i, mid, s, extra = {}) {
+  const m = memberById(c, mid);
+  const exp = expectedFor(c, m);
+  const key = `${i}:${mid}`;
+  const prev = c.payments[key] || {};
+  if (s === 'unpaid') {
+    delete c.payments[key];
+  } else {
+    const date = extra.date ?? (s === 'waived' ? '' : prev.date || iso(today));
+    let status = s;
+    if (status === 'paid' && paidAfterGrace(c, i, date) && (c.lateFee?.type || 'none') !== 'none') {
+      status = 'late';
+      toast(tf('gr_auto', { a: c.graceDays || 0 }), 'gold', 'clock');
+    }
+    const defaultAmt = status === 'partial' ? (prev.s === 'partial' && prev.amt ? prev.amt : Math.round(exp / 2)) : status === 'waived' ? 0 : exp;
+    c.payments[key] = { s: status, amt: extra.amt ?? defaultAmt, date, note: extra.note ?? prev.note ?? '', rcpt: prev.rcpt };
+    s = status;
+  }
+  logEvent('lg_pay', { who: m.name, m: monthLabel(monthOf(c, i)), s: t('st_' + s) }, c.id);
+  save();
+  refresh();
+}
+function reminderText(c, i, m) {
+  const p = cell(c, i, m.id);
+  const owed = expectedFor(c, m) - (p?.amt || 0);
+  const key = p?.s === 'partial' ? 'wa_text_partial' : 'wa_text';
+  return tf(key, { name: m.name.split(' ')[0], c: c.name, amt: rsFull(owed), m: monthLabel(monthOf(c, i), true), d: dateLabel(iso(dueDate(c, i)), true), org: c.organizer?.name || '' });
+}
+function renderPayments() {
+  const c = active();
+  if (!c) return emptyView();
+  const n = c.order.length;
+  const cur = currentCycle(c);
+  if (selMonth == null || selMonth >= n) selMonth = cur;
+  const st = monthStats(c, selMonth);
+  const wrap = $('.matrixwrap');
+  const scroll = wrap ? { l: wrap.scrollLeft, t: wrap.scrollTop } : null;
+  const head = c.order.map((_, k) => `<th class="${k === cur ? 'cur' : ''} ${k === selMonth ? 'sel' : ''}" data-col="${k}">${monthLabel(monthOf(c, k))}<br><small style="font-weight:400">${cycleLabel(c, k)}</small></th>`).join('');
+  const body = c.members.map(m => matrixRow(c, m)).join('');
+  const stats = c.order.map((_, k) => monthStats(c, k));
+  const foot = `<tr><td class="name">${t('pay_collected')}</td>${stats.map(s => `<td class="amt">${nf.format(s.collected)}</td>`).join('')}</tr>
+    <tr><td class="name">${t('pay_progress')}</td>${stats.map(s => `<td><span class="bar ${s.progress >= 1 ? '' : 'gold'}"><i data-w="${Math.round(s.progress * 100)}%"></i></span></td>`).join('')}</tr>
+    <tr><td class="name">${t('pay_recip_row')}</td>${stats.map(s => `<td style="font-family:var(--font);font-weight:600;color:var(--gold-deep)">${s.recipient ? esc(s.recipient.name) : '—'}</td>`).join('')}</tr>`;
+  const legendItems = [['paid', 'ok'], ['late', 'late'], ['partial', 'part'], ['waived', 'waive'], ['over', 'bad']];
+  const leg = legendItems.map(([k, v]) => `<span><i style="background:var(--${v}-soft);border:1px solid var(--${v})"></i>${t(k === 'over' ? 'st_overdue' : 'st_' + k)}</span>`).join('');
+  const canAct = st.unpaid || st.partial;
+  view.innerHTML = `<div class="card enter" style="margin-bottom:14px">
+      <div class="toolbar"><label class="sr" for="mSel">${t('pay_month')}</label><select id="mSel" style="width:auto;min-width:190px">${c.order.map((_, k) => `<option value="${k}" ${k === selMonth ? 'selected' : ''}>${monthLabel(monthOf(c, k), true)}${k === cur ? ' · ' + t('sch_current') : ''}</option>`).join('')}</select>
+        <button class="btn" id="markAll" ${canAct ? '' : 'disabled'}>${ic('check-circle')}${t('pay_markall')}</button><button class="btn gold" id="remind" ${canAct ? '' : 'disabled'}>${ic('whatsapp')}${t('pay_remind')}</button><button class="btn ghost" id="csv">${ic('download')}${t('pay_csv')}</button></div>
+      <div class="mstats">
+        <div class="mstat"><div class="k">${t('pay_expected')}</div><div class="v">${rs(st.expected)}</div></div><div class="mstat"><div class="k">${t('pay_collected')}</div><div class="v" style="color:var(--ok)">${rs(st.collected)}</div></div>
+        <div class="mstat"><div class="k">${t('pay_pending')}</div><div class="v" style="color:${st.pending ? 'var(--bad)' : 'inherit'}">${rs(st.pending)}</div></div><div class="mstat"><div class="k">${t('pay_fees')}</div><div class="v" style="color:var(--late)">${rs(st.fees)}</div></div>
+        <div class="mstat gold"><div class="k">${t('pay_recipient')}</div><div class="v" title="${esc(st.recipient?.name || '')}">${st.recipient ? esc(st.recipient.name) : '—'}</div></div></div>
+      <div class="bar" style="margin-top:12px;height:10px"><i data-w="${Math.round(st.progress * 100)}%"></i></div></div>
+    <div class="card enter"><h2>${ic('grid')}${t('pay_title')}<span class="spacer"></span><span class="legend">${leg}</span></h2>
+      <div class="matrixwrap"><table class="matrix"><thead><tr><th class="name">${t('mem_name')}</th>${head}</tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
+      <p class="small muted txt" style="margin:10px 0 0">${ic('info')} ${t('pay_hint')}</p></div>`;
+  animBars(view);
+  if (scroll) {
+    $('.matrixwrap').scrollLeft = scroll.l;
+    $('.matrixwrap').scrollTop = scroll.t;
+  }
+  wirePayments(c);
+}
+function cycleLabel(c, k) {
+  const s = cycleState(c, k);
+  return t(s === 'done' ? 'sch_done' : s === 'current' ? 'sch_current' : s === 'pending' ? 'sch_pending' : 'sch_upcoming');
+}
+function matrixRow(c, m) {
+  const cells = c.order.map((rid, k) => {
+    const p = cell(c, k, m.id);
+    const due = dueDate(c, k);
+    const s = p?.s || 'unpaid';
+    const over = s === 'unpaid' && due < today;
+    const future = s === 'unpaid' && due > today && monthOf(c, k) > curMonth;
+    const label = future ? '—' : t(over ? 'st_overdue' : 'st_' + s);
+    const icn = ST_ICON[s] || (over ? 'alert' : '');
+    const amtLine = p && s !== 'waived' ? `<span>${s === 'partial' ? `${nf.format(p.amt || 0)}/${nf.format(expectedFor(c, m))}` : nf.format(p.amt || 0)}</span>` : '';
+    const disputed = disputesFor(c, k, m.id).length ? 'disputed' : '';
+    const aria = `${esc(m.name)} · ${monthLabel(monthOf(c, k), true)} · ${label}${p?.amt ? ' · ' + rsFull(p.amt) : ''}`;
+    return `<td><button class="cell ${s} ${over ? 'over' : ''} ${future ? 'future' : ''} ${rid === m.id ? 'me' : ''} ${disputed}" data-i="${k}" data-m="${m.id}" aria-label="${aria}"><span class="st">${icn ? ic(icn) : ''}${label}</span>${amtLine}${p?.date ? `<span class="d">${dateLabel(p.date)}</span>` : ''}</button></td>`;
+  }).join('');
+  const slotsNote = (m.slots || 1) > 1 ? ` · ${m.slots} ${t('mem_slots').toLowerCase()}` : '';
+  return `<tr><td class="name">${esc(m.name)}<small>${esc(m.phone)}${slotsNote}</small></td>${cells}</tr>`;
+}
+function wirePayments(c) {
+  $('#mSel').onchange = e => {
+    selMonth = +e.target.value;
+    refresh();
+  };
+  $('#csv').onclick = () => exportCsv(c);
+  $('#remind').onclick = () => reminderModal(c, selMonth);
+  $('#markAll').onclick = () => markAllPaid(c, selMonth);
+  $$('th[data-col]', view).forEach(th => (th.onclick = () => {
+    selMonth = +th.dataset.col;
+    refresh();
+  }));
+  let pressTimer = null;
+  let suppress = false;
+  $$('.cell', view).forEach(b => {
+    const i = +b.dataset.i;
+    const mid = b.dataset.m;
+    b.addEventListener('click', () => {
+      if (suppress) {
+        suppress = false;
+        return;
+      }
+      const p = cell(c, i, mid);
+      setStatus(c, i, mid, STATES[(STATES.indexOf(p?.s || 'unpaid') + 1) % STATES.length]);
+    });
+    b.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      cellEditor(c, i, mid, b);
+    });
+    b.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      pressTimer = setTimeout(() => {
+        suppress = true;
+        cellEditor(c, i, mid, b);
+      }, 500);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => clearTimeout(pressTimer)));
+  });
+}
+function markAllPaid(c, i) {
+  let k = 0;
+  for (const m of c.members) {
+    const p = cell(c, i, m.id);
+    if (!p || p.s === 'unpaid' || p.s === 'partial') {
+      const late = paidAfterGrace(c, i, iso(today)) && (c.lateFee?.type || 'none') !== 'none';
+      c.payments[`${i}:${m.id}`] = { s: late ? 'late' : 'paid', amt: expectedFor(c, m), date: iso(today), note: p?.note || '' };
+      k++;
+    }
+  }
+  if (k) logEvent('lg_markall', { a: k, m: monthLabel(monthOf(c, i)) }, c.id);
+  save();
+  toast(k ? tf('pay_marked', { a: k }) : t('pay_none_unpaid'), 'ok');
+  refresh();
+}
+// TODO(student): payment integration. Generate a Raast / JazzCash / Easypaisa payment request per member per cycle, receive the gateway
+// callback on your backend and call setStatus(c, i, mid, 'paid', { amt, date }) automatically — true auto-reconciliation.
+function reconcile(/* gatewayEvent */) {}
+function exportCsv(c) {
+  const cols = [...Array(c.order.length).keys()];
+  const cellText = (k, m) => {
+    const p = cell(c, k, m.id);
+    return p ? `${p.s} ${p.amt}${p.date ? ' ' + p.date : ''}` : 'unpaid';
+  };
+  const rows = [
+    ['Member', 'Phone', 'Slots', ...cols.map(k => monthOf(c, k))],
+    ...c.members.map(m => [m.name, m.phone, m.slots || 1, ...cols.map(k => cellText(k, m))]),
+    ['Collected', '', '', ...cols.map(k => monthStats(c, k).collected)],
+    ['Late fees', '', '', ...cols.map(k => monthStats(c, k).fees)],
+    ['Recipient', '', '', ...cols.map(k => monthStats(c, k).recipient?.name || '')]
+  ];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  download(`${slug(c.name)}-payments.csv`, csv, 'text/csv');
+}
+
+/* --- Schedule + default simulator --- */
+function renderSchedule() {
+  const c = active();
+  if (!c) return emptyView();
+  const n = c.order.length;
+  const nextI = [...Array(n).keys()].find(k => !c.payouts[k] && monthOf(c, k) >= curMonth);
+  const tl = c.order.map((id, k) => timelineItem(c, id, k)).join('');
+  view.innerHTML = `<div class="grid g21 stagger">
+    <div><div class="card" style="margin-bottom:14px"><h2>${ic('timer')}${t('sch_next')}</h2>${countdownHTML(c, nextI)}</div>
+      <div class="card"><h2>${ic('calendar')}${t('sch_title')}</h2><div class="timeline stagger">${tl}</div></div></div>
+    <div class="card" style="align-self:start"><h2>${ic('calculator')}${t('sim_title')}</h2><p class="lead txt">${t('sim_s')}</p>
+      <label class="f" for="simSel">${t('sim_pick')}</label><select id="simSel"><option value="">—</option>${c.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select><div id="simOut" style="margin-top:12px"></div></div></div>`;
+  countAll(view);
+  animBars(view);
+  $$('[data-pay]', view).forEach(b => (b.onclick = () => recordPayout(c, +b.dataset.pay)));
+  $$('[data-undo]', view).forEach(b => (b.onclick = () => {
+    const k = +b.dataset.undo;
+    delete c.payouts[k];
+    logEvent('lg_undo', { a: k + 1 }, c.id);
+    save();
+    refresh();
+  }));
+  $$('[data-rcpt]', view).forEach(b => (b.onclick = () => receiptModal(c, +b.dataset.rcpt, null)));
+  $('#simSel').onchange = e => simulate(c, e.target.value);
+}
+function countdownHTML(c, nextI) {
+  if (nextI == null) return `<div class="note">${ic('check-circle')} ${t('sch_complete')}</div>`;
+  const d = daysBetween(today, dueDate(c, nextI));
+  const s = monthStats(c, nextI);
+  const head = d === 0 ? t('sch_today') : d > 0 ? `${t('sch_days')} · ${monthLabel(monthOf(c, nextI), true)}` : `${t('sch_days')} ${t('sch_ago')} · ${t('sch_pending')}`;
+  return `<div class="countdown"><span class="n" data-count="${Math.abs(d)}">0</span><div><div style="font-weight:600">${head}</div><div class="muted small">${dateLabel(iso(dueDate(c, nextI)), true)} ${t('sch_to')} <b>${s.recipient ? esc(s.recipient.name) : t('ord_unassigned')}</b> · <span class="amt">${rs(s.expected)}</span> ${t('sch_expected')}</div></div></div>`;
+}
+function timelineItem(c, id, k) {
+  const stt = cycleState(c, k);
+  const s = monthStats(c, k);
+  const m = id ? memberById(c, id) : null;
+  const badges = { done: ['ok', 'check', 'sch_done'], current: ['gold', 'zap', 'sch_current'], pending: ['late', 'clock', 'sch_pending'], upcoming: ['muted', 'calendar', 'sch_upcoming'] }[stt];
+  const badge = `<span class="badge ${badges[0]}">${ic(badges[1])}${t(badges[2])}</span>`;
+  let amount;
+  if (stt === 'done') amount = `<div class="amt" style="color:var(--gold-deep)">${rs(c.payouts[k].amt)}</div><div class="small muted">${tf('sch_on', { a: dateLabel(c.payouts[k].date) })}</div>`;
+  else if (stt === 'upcoming') amount = `<div class="amt">${rs(s.expected)}</div><div class="small muted">${t('sch_expected')}</div>`;
+  else amount = `<div class="amt">${rs(s.payout)}</div><div class="small muted">${t('sch_payout')} · ${rs(s.expected)} ${t('sch_expected')}${s.fees ? ' · ' + tf('sch_fees', { a: rs(s.fees) }) : ''}</div>`;
+  let bottom = '';
+  if (stt === 'current' || stt === 'pending') bottom = `<div class="bot"><div class="bar" style="flex:1;max-width:220px"><i data-w="${Math.round(s.progress * 100)}%"></i></div><span class="small muted amt">${pctf(s.progress)}</span><button class="btn sm gold" data-pay="${k}">${ic('coins')}${t('sch_record')}</button></div>`;
+  if (stt === 'done') bottom = `<div class="bot"><button class="btn sm ghost" data-rcpt="${k}">${ic('file')}${t('sch_receipt')}</button><button class="btn sm ghost" data-undo="${k}">${ic('refresh')}${t('sch_undo')}</button></div>`;
+  return `<div class="tl ${stt}"><div><div class="m">#${k + 1} · ${monthLabel(monthOf(c, k), true)} ${badge}</div><div class="r">${ic('award')} ${m ? esc(m.name) + slotLabel(c, id, k) : t('ord_unassigned')} · ${dateLabel(iso(dueDate(c, k)))}</div></div><div class="amt">${amount}</div>${bottom}</div>`;
+}
+function recordPayout(c, k) {
+  const st = monthStats(c, k);
+  c.payouts[k] = { date: iso(today), amt: st.payout };
+  logEvent('lg_payout', { a: k + 1, who: st.recipient?.name || t('ord_unassigned'), amt: rsFull(st.payout) }, c.id);
+  save();
+  toast(t('sch_recorded'), 'ok');
+  refresh();
+}
+function simulate(c, mid) {
+  const out = $('#simOut');
+  const m = memberById(c, mid);
+  if (!m) {
+    out.innerHTML = '';
+    return;
+  }
+  const n = c.order.length;
+  const remaining = [...Array(n).keys()].filter(k => !c.payouts[k] && monthOf(c, k) >= curMonth);
+  if (!remaining.length) {
+    out.innerHTML = `<div class="note">${t('sim_none')}</div>`;
+    return;
+  }
+  const rows = remaining.map(k => {
+    const p = cell(c, k, m.id);
+    const paid = p && p.s !== 'waived' ? p.amt || 0 : 0;
+    const short = Math.max(0, expectedFor(c, m) - paid);
+    return { k, short, after: monthStats(c, k).expected - short };
+  });
+  const total = sum(rows.map(r => r.short));
+  const others = Math.max(1, c.members.length - 1);
+  const perOther = Math.ceil(expectedFor(c, m) / others);
+  const turns = turnsOf(c, m.id);
+  const received = turns.filter(k => c.payouts[k]);
+  const upcoming = turns.filter(k => !c.payouts[k]);
+  const swapBox = upcoming.length
+    ? `<div class="v">#${upcoming.map(k => k + 1).join(', #')} → #${n}</div><div class="small muted txt">${t('sim_swap_s')}</div><button class="btn sm ghost" id="swapBtn" style="margin-top:8px">${ic('arrow-right')}${t('sim_swap')}</button>`
+    : `<div class="small txt" style="color:var(--bad)">${received.map(k => tf('sim_swap_done', { a: rs(c.payouts[k].amt), b: monthLabel(monthOf(c, k), true) })).join(' ')}</div>`;
+  out.innerHTML = `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('sim_month')}</th><th class="num">${t('sim_short')}</th><th class="num">${t('sim_pot')}</th></tr></thead><tbody>${rows.map(r => `<tr><td>${monthLabel(monthOf(c, r.k), true)}${turns.includes(r.k) ? ` <span class="badge gold">${ic('award')}${t('mem_turn')}</span>` : ''}</td><td class="num" style="color:var(--bad)">${rs(r.short)}</td><td class="num">${rs(r.after)}</td></tr>`).join('')}</tbody></table></div>
+    <p style="margin:12px 0 0;font-weight:600" class="txt">${tf('sim_total', { a: rows.length })}: <span class="amt" style="color:var(--bad)">${rs(total)}</span></p>
+    <div class="optgrid">
+      <div class="opt"><h4>${ic('users')}${t('sim_split')}</h4><div class="v">+${rs(perOther)}</div><div class="small muted txt">${t('sim_split_s')}</div></div>
+      <div class="opt"><h4>${ic('shield')}${t('sim_org')}</h4><div class="v">${rs(total)}</div><div class="small muted txt">${t('sim_org_s')}</div></div>
+      <div class="opt"><h4>${ic('shuffle')}${t('sim_swap')}</h4>${swapBox}</div>
+    </div>`;
+  const sb = $('#swapBtn');
+  if (sb) sb.onclick = () => swapToEnd(c, m, upcoming);
+}
+function swapToEnd(c, m, upcoming) {
+  const o = c.order;
+  upcoming.slice().sort((a, b) => b - a).forEach(k => o.splice(k, 1));
+  upcoming.forEach(() => o.push(m.id));
+  logEvent('lg_order', {}, c.id);
+  save();
+  toast(t('lot_applied'), 'ok');
+  refresh();
+  $('#simSel').value = m.id;
+  simulate(c, m.id);
+}
+
+/* --- Disputes --- */
+const DISPUTE_TYPES = ['amount', 'missing', 'fee', 'payout', 'other'];
+const DISPUTE_STATES = ['open', 'review', 'resolved', 'rejected'];
+const dsBadge = s => `<span class="badge ${s === 'open' ? 'bad' : s === 'review' ? 'late' : s === 'resolved' ? 'ok' : 'muted'}">${ic(s === 'open' ? 'flag' : s === 'review' ? 'eye' : s === 'resolved' ? 'check' : 'x')}${t('ds_' + s)}</span>`;
+function renderDisputes() {
+  const c = active();
+  if (!c) return emptyView();
+  const all = (c.disputes || []).slice().sort((a, b) => b.created.localeCompare(a.created));
+  const list = disputeFilter === 'all' ? all : all.filter(d => d.status === disputeFilter);
+  const seg = ['all', ...DISPUTE_STATES].map(s => `<button class="${disputeFilter === s ? 'on' : ''}" data-f="${s}">${s === 'all' ? t('all') : t('ds_' + s)} <span class="badge muted">${s === 'all' ? all.length : all.filter(d => d.status === s).length}</span></button>`).join('');
+  const rows = list.map(d => {
+    const m = memberById(c, d.memberId);
+    const days = daysBetween(fromIso(d.created.slice(0, 10)), today);
+    return `<tr class="clickable" data-d="${d.id}"><td class="mono small">#${esc(d.id)}</td><td><div class="who"><div class="avatar">${esc(initials(m?.name || '?'))}</div><div><div class="n">${esc(m?.name || '—')}</div><div class="p">${monthLabel(monthOf(c, d.cycle), true)}</div></div></div></td>
+      <td>${t('ds_t_' + d.type)}</td><td>${dsBadge(d.status)}</td><td class="small muted">${dateLabel(d.created.slice(0, 10))}<br>${d.status === 'open' || d.status === 'review' ? tf('ds_days', { a: days }) : ''}</td></tr>`;
+  }).join('');
+  view.innerHTML = `<div class="card enter"><h2>${ic('flag')}${t('ds_title')}<span class="spacer"></span><button class="btn sm" id="dsNew">${ic('plus')}${t('ds_new')}</button></h2>
+    <p class="lead txt">${t('ds_s')}</p>
+    <div class="toolbar"><div class="seg" id="dsSeg">${seg}</div></div>
+    ${list.length ? `<div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>${t('ds_who')}</th><th>${t('ds_type')}</th><th>${t('ds_status')}</th><th>${t('ds_raised')}</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty">${ic('shield-check')}<p>${t('ds_empty')}</p></div>`}</div>`;
+  $('#dsNew').onclick = () => disputeForm(c);
+  $$('#dsSeg button').forEach(b => (b.onclick = () => {
+    disputeFilter = b.dataset.f;
+    refresh();
+  }));
+  $$('tr[data-d]', view).forEach(tr => (tr.onclick = () => disputeDetail(c, tr.dataset.d)));
+}
+
+/* --- People directory across committees --- */
+function renderPeople() {
+  const people = allPeople();
+  const q = peopleQuery.trim().toLowerCase();
+  const list = q ? people.filter(p => p.name.toLowerCase().includes(q) || digits(p.phone).includes(digits(q))) : people;
+  view.innerHTML = `<div class="card enter" style="margin-bottom:14px"><div class="toolbar" style="margin:0"><div style="flex:1;min-width:200px"><h2 style="margin:0">${ic('users')}${t('pp_title')} <span class="badge mint">${people.length}</span></h2><p class="lead txt" style="margin:4px 0 0">${t('pp_s')}</p></div>
+      <div class="search"><label class="sr" for="ppQ">${t('pp_search')}</label>${ic('search')}<input id="ppQ" type="search" placeholder="${t('pp_search')}" value="${esc(peopleQuery)}"></div></div></div>
+    <div class="grid g3 stagger">${list.map(personCard).join('') || `<div class="card"><div class="empty">${ic('users')}<p>${t('pp_empty')}</p></div></div>`}</div>`;
+  animRings(view);
+  const inp = $('#ppQ');
+  inp.oninput = () => {
+    peopleQuery = inp.value;
+    const grid = $('.grid.g3', view);
+    const filtered = inp.value.trim() ? people.filter(p => p.name.toLowerCase().includes(inp.value.trim().toLowerCase()) || digits(p.phone).includes(digits(inp.value))) : people;
+    grid.innerHTML = filtered.map(personCard).join('') || `<div class="card"><div class="empty">${ic('users')}<p>${t('pp_empty')}</p></div></div>`;
+    animRings(grid);
+    $$('[data-person]', grid).forEach(el => (el.onclick = () => profileModal(el.dataset.person)));
+  };
+  $$('[data-person]', view).forEach(el => (el.onclick = () => profileModal(el.dataset.person)));
+}
+const OUTCOME_COLOR = { ontime: 'var(--ok)', late: 'var(--late)', partial: 'var(--part)', missed: 'var(--bad)' };
+const outcomeStrip = list => `<span class="outc">${list.slice(-24).map(o => `<i style="background:${OUTCOME_COLOR[o.kind]}" title="${t('pp_' + o.kind)} · ${dateLabel(iso(o.due))}"></i>`).join('')}</span>`;
+function personCard(p) {
+  const trend = trustHistory(p.phone).map(h => h.score);
+  return `<div class="card pcard" data-person="${esc(p.key)}" role="button" tabindex="0"><div class="avatar">${esc(initials(p.name))}</div>
+    <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div class="who"><div><div class="n">${esc(p.name)}</div><div class="p">${esc(p.phone)}</div></div></div></div>${trustRing(p.trust)}</div>
+      <div class="meta"><span class="badge mint">${ic('layers')}${p.committees} ${t('pp_committees').toLowerCase()}</span><span class="badge muted">${p.slots} ${t('pp_slots').toLowerCase()}</span>${p.openDisputes ? `<span class="badge bad">${ic('flag')}${p.openDisputes}</span>` : ''}</div>
+      <div class="small muted" style="display:flex;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap"><span>${t('pp_paid')} <b class="amt">${rs(p.paid)}</b></span><span>${t('pp_received')} <b class="amt">${rs(p.received)}</b></span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">${outcomeStrip(p.outcomes)}${sparkline(trend)}</div></div></div>`;
+}
+
+/* --- Planner: kameti vs bank vs inflation --- */
+const PLAN_DEFAULT = { contrib: 10000, months: 12, turn: 6, bank: 12, infl: 9 };
+let PLAN = Object.assign({}, PLAN_DEFAULT, store.get('planner', {}));
+// TODO(student): live rates. Fetch the SBP policy / savings rate and PBS CPI inflation from an API (or a scheduled scraper on your
+// backend), cache with a last-synced stamp and fall back to these manual sliders when offline.
+function fetchInflation() {
+  return Promise.resolve(null);
+}
+function planMath(P) {
+  const n = Math.max(2, Math.round(P.months));
+  const k = clamp(Math.round(P.turn), 1, n);
+  const c = Math.max(0, +P.contrib);
+  const rb = P.bank / 100 / 12;
+  const ri = P.infl / 100 / 12;
+  const pot = c * n;
+  const deflate = (v, m) => v / Math.pow(1 + ri, m);
+  const bankFV = m => (rb ? c * ((Math.pow(1 + rb, m) - 1) / rb) : c * m);
+  const realCost = sum([...Array(n).keys()].map(j => deflate(c, j + 1)));
+  const perTurn = [...Array(n).keys()].map(j => {
+    const tk = j + 1;
+    const realPot = deflate(pot, tk);
+    return { turn: tk, realPot, gain: realPot - realCost, adv: pot * Math.pow(1 + rb, n - tk) - bankFV(n) };
+  });
+  const kam = [...Array(n).keys()].map(j => -c * (j + 1) + (j + 1 >= k ? pot : 0));
+  const bank = [...Array(n).keys()].map(j => bankFV(j + 1));
+  return { n, k, c, pot, bankFV: bankFV(n), realPot: deflate(pot, k), realCost, perTurn, kam, bank, me: perTurn[k - 1] };
+}
+function renderPlanner() {
+  const c = active();
+  const field2 = (id, label, type, val, attrs = '') => `<label class="f" for="${id}">${label}</label><input id="${id}" class="mono" type="${type}" value="${val}" ${attrs}>`;
+  view.innerHTML = `<div class="grid g12 stagger planner">
+    <div class="card" style="align-self:start"><h2>${ic('calculator')}${t('pl_title')}</h2><p class="lead txt">${t('pl_s')}</p>
+      ${field2('plC', t('pl_contrib'), 'number', PLAN.contrib, 'min="100" step="500"')}
+      ${field2('plN', t('pl_months'), 'number', PLAN.months, 'min="2" max="60"')}
+      <label class="f" for="plK">${t('pl_turn')}</label><input id="plK" type="range" min="1" max="${PLAN.months}" value="${clamp(PLAN.turn, 1, PLAN.months)}"><div class="rangeval"><span>1</span><b id="plKv">#${PLAN.turn}</b><span>${PLAN.months}</span></div>
+      ${field2('plB', t('pl_bank'), 'number', PLAN.bank, 'min="0" max="40" step="0.5"')}
+      ${field2('plI', t('pl_infl'), 'number', PLAN.infl, 'min="0" max="60" step="0.5"')}
+      <div class="toolbar" style="margin:14px 0 0">${c ? `<button class="btn ghost sm" id="plFrom">${ic('layers')}${t('pl_from')}</button>` : ''}<button class="btn ghost sm" id="plLive" disabled title="TODO(student)">${ic('refresh')}${t('pl_live')}</button></div></div>
+    <div style="display:grid;gap:14px;align-content:start"><div id="plRes"></div>
+      <div class="card"><h2>${ic('trending-up')}${t('pl_chart')}</h2><p class="lead txt">${t('pl_chart_s')}</p><div class="chart" id="plCum"></div></div>
+      <div class="card"><h2>${ic('bar-chart')}${t('pl_turn_chart')}</h2><p class="lead txt">${t('pl_turn_s')}</p><div class="chart" id="plTurns"></div><div id="plTbl" style="margin-top:12px"></div></div></div></div>`;
+  const read = () => {
+    PLAN = { contrib: +$('#plC').value || 0, months: clamp(+$('#plN').value || 2, 2, 60), turn: +$('#plK').value || 1, bank: +$('#plB').value || 0, infl: +$('#plI').value || 0 };
+    $('#plK').max = PLAN.months;
+    PLAN.turn = clamp(PLAN.turn, 1, PLAN.months);
+    $('#plK').value = PLAN.turn;
+    $('#plKv').textContent = '#' + PLAN.turn;
+    $('.rangeval span:last-child', view).textContent = PLAN.months;
+    store.set('planner', PLAN);
+    plannerResults(planMath(PLAN));
+  };
+  ['plC', 'plN', 'plK', 'plB', 'plI'].forEach(id => ($('#' + id).oninput = read));
+  if (c) $('#plFrom').onclick = () => {
+    $('#plC').value = c.contribution;
+    $('#plN').value = c.order.length || c.planned;
+    $('#plK').value = Math.min(c.order.length, currentCycle(c) + 1);
+    read();
+  };
+  plannerResults(planMath(PLAN));
+}
+function plannerResults(R) {
+  const tile = (k, v, s, cls = '') => `<div><b>${k}</b><div class="v ${cls}">${v}</div><div class="small muted">${s}</div></div>`;
+  const verdict = R.me.adv >= 0
+    ? tf('pl_verdict_early', { a: R.k, b: rsFull(R.pot), c: rsFull(R.c * R.n) })
+    : tf('pl_verdict_late', { a: R.k, r: PLAN.bank, b: rsFull(R.bankFV), c: rsFull(R.realPot) });
+  $('#plRes').innerHTML = `<div class="card"><div class="res">
+      ${tile(t('pl_kameti'), rsFull(R.pot), tf('pl_kameti_s', { a: R.k }))}
+      ${tile(t('pl_real'), rsFull(R.realPot), t('pl_real_s'))}
+      ${tile(t('pl_bank_fv'), rsFull(R.bankFV), tf('pl_bank_s', { a: PLAN.bank }))}
+      ${tile(t('pl_gain'), (R.me.gain >= 0 ? '+' : '−') + rsFull(Math.abs(R.me.gain)), t('pl_gain_s'), R.me.gain >= 0 ? 'pos' : 'neg')}
+      ${tile(t('pl_adv'), (R.me.adv >= 0 ? '+' : '−') + rsFull(Math.abs(R.me.adv)), tf('pl_adv_s', { a: R.k, b: R.n }), R.me.adv >= 0 ? 'pos' : 'neg')}
+    </div><div class="note ${R.me.adv >= 0 ? 'gold' : ''} txt">${ic('lightbulb')} ${verdict}</div></div>`;
+  const labels = [...Array(R.n).keys()].map(j => String(j + 1));
+  lineChart($('#plCum'), [{ name: t('pl_kameti_label'), color: 'var(--forest)', values: R.kam }, { name: t('pl_bank_label'), color: 'var(--gold)', values: R.bank, dash: true }], labels, { fmt: kfmt, h: 220 });
+  barChart($('#plTurns'), [{ name: t('pl_adv'), color: 'var(--forest)', neg: 'var(--gold)', values: R.perTurn.map(p => Math.round(p.adv)) }], labels, { fmt: kfmt, h: 200, hi: R.k - 1 });
+  $('#plTbl').innerHTML = `<div class="tblwrap" style="max-height:260px"><table class="tbl"><thead><tr><th>${t('pl_col_turn')}</th><th class="num">${t('pl_col_real')}</th><th class="num">${t('pl_col_gain')}</th><th class="num">${t('pl_col_adv')}</th></tr></thead><tbody>
+    ${R.perTurn.map(p => `<tr class="turnrow"><td class="${p.turn === R.k ? 'hi' : ''}">#${p.turn}</td><td class="num">${rs(p.realPot)}</td><td class="num" style="color:${p.gain >= 0 ? 'var(--ok)' : 'var(--bad)'}">${p.gain >= 0 ? '+' : '−'}${rs(Math.abs(p.gain))}</td><td class="num" style="color:${p.adv >= 0 ? 'var(--ok)' : 'var(--bad)'}">${p.adv >= 0 ? '+' : '−'}${rs(Math.abs(p.adv))}</td></tr>`).join('')}</tbody></table></div>`;
 }
 

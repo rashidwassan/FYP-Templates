@@ -2484,7 +2484,8 @@ function renderAdvisor() {
     countUp($('#aNet'), best.net, v => rs(v));
   };
   $('#aGo').onclick = run;
-  $$('#aC,#aQ,#aL,#aV,#aCm,#aF,#aD').forEach(el => el.addEventListener('change', run));
+  $$('#aC,#aL,#aV').forEach(el => el.addEventListener('change', run));
+  $$('#aQ,#aCm,#aF,#aD').forEach(el => el.addEventListener('input', run));
   run();
 }
 
@@ -3565,8 +3566,8 @@ function showTourStep() {
     showTourStep();
     return;
   }
-  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  setTimeout(() => positionTour(el, step), 260);
+  el.scrollIntoView({ block: 'center' });
+  setTimeout(() => positionTour(el, step), 80);
 }
 function positionTour(el, step) {
   const r = el.getBoundingClientRect();
@@ -3582,7 +3583,8 @@ function positionTour(el, step) {
   const cw = Math.min(340, window.innerWidth - 32);
   const ch = card.offsetHeight || 170;
   let top = r.bottom + 14;
-  if (top + ch > window.innerHeight - 16) top = Math.max(16, r.top - ch - 14);
+  if (top + ch > window.innerHeight - 16) top = r.top - ch - 14;
+  top = clamp(top, 16, Math.max(16, window.innerHeight - ch - 16));
   const left = clamp(r.left + r.width / 2 - cw / 2, 16, window.innerWidth - cw - 16);
   card.style.top = top + 'px';
   card.style.left = left + 'px';

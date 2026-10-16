@@ -219,7 +219,9 @@ body.modal-open .scrim,body.modal-open .modal{opacity:1;pointer-events:auto} bod
   .panel{position:fixed;inset:auto 0 0 0;top:auto;max-height:80vh;border-radius:20px 20px 0 0;transform:translateY(105%);transition:transform .3s var(--ease);z-index:62;grid-column:auto;grid-row:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
   .panel .close-sheet{display:inline-grid}
   body.sheet-open .panel{transform:none}
-  body.sheet-open .scrim{opacity:1;pointer-events:auto}
+  .panel::before{content:'';position:fixed;inset:0;background:rgba(42,36,25,.45);z-index:-1;opacity:0;pointer-events:none;transition:opacity .25s}
+  body.sheet-open .panel::before{opacity:1;pointer-events:auto}
+  body.sheet-open .fabs{display:none}
   .mobilebar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;gap:2px;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:var(--clay);border-top:1px solid var(--line)}
   .mobilebar a{flex:1;text-decoration:none;color:var(--muted);font-size:.68rem;font-weight:800;text-align:center;padding:6px 2px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:44px}
   .mobilebar a .ic{width:1.3em;height:1.3em}
@@ -323,6 +325,7 @@ html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion
 <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
 <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
 <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 13h6M7 17h10"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
 <symbol id="i-bug" viewBox="0 0 24 24"><path d="m8 2 1.9 1.9M16 2l-1.9 1.9"/><path d="M9 7.1V6a3 3 0 1 1 6 0v1.1"/><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M12 10v10M3 13h4M17 13h4M4.5 19l2.8-2M19.5 19l-2.8-2M4.5 7.5 7.3 9.5M19.5 7.5l-2.8 2"/></symbol>
 <symbol id="i-warehouse" viewBox="0 0 24 24"><path d="M22 8.4V21H2V8.4a2 2 0 0 1 1.2-1.8l8-3.6a2 2 0 0 1 1.6 0l8 3.6A2 2 0 0 1 22 8.4Z"/><path d="M6 21v-9h12v9M6 16h12"/></symbol>
 <symbol id="i-factory" viewBox="0 0 24 24"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V3H2Z"/><path d="M17 18h1M12 18h1M7 18h1"/></symbol>
@@ -455,6 +458,8 @@ function animateIn(root) {
   root.classList.remove('enter');
   void root.offsetWidth;
   root.classList.add('enter');
+  // drop the class once the animation ends so the route container stops being a stacking context
+  root.addEventListener('animationend', () => root.classList.remove('enter'), { once: true });
   $$('.stagger', root).forEach(group => {
     [...group.children].forEach((el, i) => el.style.setProperty('--i', i));
   });
@@ -2323,9 +2328,11 @@ function farmDecor() {
   s += `<polygon points="280,22 6,159 24,170 280,40" fill="#7fbbdd"/>`;
   s += `<path d="M40 150 q10 -4 20 0 M90 125 q10 -4 20 0 M150 95 q10 -4 20 0 M210 65 q10 -4 20 0" stroke="#dff2fb" stroke-width="1.5" fill="none"/>`;
   // farmhouse near the top-right
-  s += `<g transform="translate(458 30)"><polygon points="0,16 18,2 36,16" fill="#a3532b"/><rect x="4" y="16" width="28" height="18" fill="#f3e9d8" stroke="#b08a60"/><rect x="15" y="22" width="7" height="12" fill="#7a5230"/></g>`;
+  s += `<g transform="translate(458 30)"><polygon points="0,16 18,2 36,16" fill="#a3532b"/><rect x="4" y="16" width="28" height="18" fill="#f3e9d8" stroke="#b08a60"/>
+    <rect x="15" y="22" width="7" height="12" fill="#7a5230"/></g>`;
   if (g.solar) {
-    s += `<g transform="translate(60 44)"><rect x="0" y="0" width="30" height="14" fill="#1d4e89" stroke="#9fc3ea" transform="skewX(-20)"/><line x1="12" y1="14" x2="12" y2="26" stroke="#555" stroke-width="2"/></g>`;
+    s += `<g transform="translate(60 44)"><rect x="0" y="0" width="30" height="14" fill="#1d4e89" stroke="#9fc3ea" transform="skewX(-20)"/>
+      <line x1="12" y1="14" x2="12" y2="26" stroke="#555" stroke-width="2"/></g>`;
   }
   return s;
 }
@@ -2345,7 +2352,8 @@ function waterStatus() {
   return { need, share: g.canalNow, rain: RAIN[m] * activeAcres(), cls };
 }
 function hudChip(id, icon, cls, k, v, sub = '') {
-  return `<div class="hchip ${cls}" id="${id}"><div class="ico">${ic(icon)}</div><div><div class="k">${k}</div><div class="v num">${v}${sub ? ` <span class="muted small">${sub}</span>` : ''}</div></div></div>`;
+  return `<div class="hchip ${cls}" id="${id}"><div class="ico">${ic(icon)}</div><div><div class="k">${k}</div><div class="v num">${v}${sub ? ` 
+    <span class="muted small">${sub}</span>` : ''}</div></div></div>`;
 }
 function hudHTML() {
   const m = mOf(g.turn);
@@ -2373,7 +2381,8 @@ function soilBar(soil) {
 function tipCard() {
   const key = g.tut.queue[0];
   if (!key) return '';
-  return `<div class="tip enter"><h4>${ic('lightbulb')} ${t('tip')}</h4><div class="txt">${t('tip_' + key)}</div><button class="btn sm gold" data-tip="${key}">${ic('check')} ${t('got_it')}</button></div>`;
+  return `<div class="tip enter"><h4>${ic('lightbulb')} ${t('tip')}</h4><div class="txt">${t('tip_' + key)}</div>
+    <button class="btn sm gold" data-tip="${key}">${ic('check')} ${t('got_it')}</button></div>`;
 }
 function farmActionsHTML() {
   const unread = unreadCount();
@@ -2457,9 +2466,11 @@ function plotActions(p) {
   let html = '<div class="actions">';
   if (p.ready) html += `<button class="btn gold" data-act="harvest">${ic('wheat')} ${c.green ? t('act_plough') : t('act_harvest')} <span class="small">${rs(harvestCost(p.crop))}</span></button>`;
   html += `<button class="btn ${p.irrig ? 'ghost' : 'sky'}" data-act="irrigate">${ic('droplet')} ${p.irrig ? t('act_irrig_off') : t('act_irrig')}</button>`;
-  if (!c.green) html += `<button class="btn ghost" data-act="fertilize" ${p.fert ? 'disabled' : ''}>${ic('flask')} ${t('act_fert')} <span class="small">${rs(FERT_COST * modMult('input'))}</span></button>`;
+  if (!c.green) html += `<button class="btn ghost" data-act="fertilize" ${p.fert ? 'disabled' : ''}>${ic('flask')} ${t('act_fert')} 
+    <span class="small">${rs(FERT_COST * modMult('input'))}</span></button>`;
   const sprayCost = p.pest ? PESTS[p.pest.id].spray : PREV_SPRAY;
-  html += `<button class="btn ${p.pest ? 'danger' : 'ghost'}" data-act="spray" ${p.shield ? 'disabled' : ''}>${ic('bug')} ${p.pest ? t('act_spray') : t('act_spray_prev')} <span class="small">${rs(sprayCost * modMult('input'))}</span></button>`;
+  html += `<button class="btn ${p.pest ? 'danger' : 'ghost'}" data-act="spray" ${p.shield ? 'disabled' : ''}>${ic('bug')} ${p.pest ? t('act_spray') : t('act_spray_prev')} 
+    <span class="small">${rs(sprayCost * modMult('input'))}</span></button>`;
   if (ui.confirmClear === p.i) html += `<button class="btn danger" data-act="fallow">${ic('alert')} ${t('act_confirm_clear')}</button>`;
   else html += `<button class="btn ghost" data-act="clear">${ic('trash')} ${t('act_fallow')}</button>`;
   return html + '</div>';
@@ -2498,7 +2509,8 @@ function renderFarm() {
     <aside class="panel paper" id="panel" aria-label="${t('farm_actions')}">${panelHTML()}</aside>
     <section class="ticker paper" id="logBox">${logHTML()}</section>
   </div>`;
-  $('#fabs').innerHTML = `<button class="btn soil" id="fabSheet">${ic('grid')} ${t('plot')}</button><button class="btn gold" id="fabEnd" ${g.over ? 'disabled' : ''}>${ic('arrow-right')} ${t('end_month')}</button>`;
+  $('#fabs').innerHTML = `<button class="btn soil" id="fabSheet">${ic('grid')} ${t('plot')}</button>
+    <button class="btn gold" id="fabEnd" ${g.over ? 'disabled' : ''}>${ic('arrow-right')} ${t('end_month')}</button>`;
   $('#fabs').style.display = '';
   bindFarm();
   animateIn(view);
@@ -2555,6 +2567,8 @@ function bindFarm() {
   if (fabSheet) fabSheet.onclick = () => document.body.classList.toggle('sheet-open');
   const sheetClose = $('#sheetClose');
   if (sheetClose) sheetClose.onclick = closeSheet;
+  const panel = $('#panel');
+  if (panel) panel.onclick = e => { if (e.target === panel && window.innerWidth <= 980) closeSheet(); };
   const sowOpen = $('#sowOpen');
   if (sowOpen) sowOpen.onclick = () => { ui.sowOpen = true; refreshFarm(); };
   const sowBack = $('#sowBack');
@@ -2679,7 +2693,8 @@ function marketRow(c) {
   const sellCell = cr.mill
     ? `<span class="muted small">${t('mill_only')}</span>`
     : qty
-      ? `<div style="display:flex;gap:6px;align-items:center;justify-content:flex-end"><input type="number" class="num" data-qty="${c}" min="1" max="${qty}" value="${qty}" style="width:84px" aria-label="${t('col_sell')}">
+      ? `<div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
+        <input type="number" class="num" data-qty="${c}" min="1" max="${qty}" value="${qty}" style="width:84px" aria-label="${t('col_sell')}">
          <button class="btn sm gold" data-sell="${c}">${t('sell')}</button></div>`
       : `<span class="muted small">—</span>`;
   return `<tr>
@@ -2728,18 +2743,21 @@ function renderMarket() {
     <div class="panelbox paper"><h2>${ic('coins')} ${t('m_title')}</h2><p class="lead txt">${t('m_lead')}</p>
       <div class="kpis stagger">
         <div class="kpi paper"><div class="k">${ic('wallet')} ${t('cash')}</div><div class="v num">${rsk(g.cash)}</div></div>
-        <div class="kpi paper"><div class="k">${ic('warehouse')} ${t('storage_title')}</div><div class="v num">${rsk(stockValue)}</div><div class="s">${g.inv.length} ${t('al_crops').toLowerCase()}</div></div>
+        <div class="kpi paper"><div class="k">${ic('warehouse')} ${t('storage_title')}</div><div class="v num">${rsk(stockValue)}</div>
+          <div class="s">${g.inv.length} ${t('al_crops').toLowerCase()}</div></div>
         <div class="kpi paper"><div class="k">${ic('factory')} ${t('mill_title')}</div><div class="v num">${rsk(sum(g.recv.map(r => r.amt)))}</div></div>
         <div class="kpi paper"><div class="k">${ic('calendar')} ${t('month')}</div><div class="v">${mName(mOf(g.turn))} · ${t(seasonOf(mOf(g.turn)))}</div></div>
       </div>${lock}
-      <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>${t('col_crop')}</th><th class="num">${t('col_price')}</th><th class="num">${t('col_chg')}</th><th>${t('col_season')}</th><th>${t('trend')}</th><th class="num">${t('col_stock')}</th><th class="num">${t('col_sell')}</th></tr></thead>
+      <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>${t('col_crop')}</th><th class="num">${t('col_price')}</th><th class="num">${t('col_chg')}</th>
+        <th>${t('col_season')}</th><th>${t('trend')}</th><th class="num">${t('col_stock')}</th><th class="num">${t('col_sell')}</th></tr></thead>
       <tbody>${CASH_CROPS.map(marketRow).join('')}</tbody></table></div>
     </div>
     <div class="two" style="margin-top:14px">
       <div class="panelbox paper"><h3>${ic('warehouse')} ${t('storage_title')}</h3>${storageHTML()}
         <div class="sec"><h3>${ic('factory')} ${t('mill_title')}</h3>${receivablesHTML()}</div></div>
       <div class="panelbox paper"><h3>${ic('bell')} ${t('news_title')}</h3>${effectsHTML()}
-        <div class="sec"><h3>${ic('bar-chart')} ${t('r_prices')}</h3><div class="chips" id="priceChips" style="margin-bottom:8px"></div><div class="chart" id="priceChart"></div><div class="legend" id="priceLegend"></div></div></div>
+        <div class="sec"><h3>${ic('bar-chart')} ${t('r_prices')}</h3><div class="chips" id="priceChips" style="margin-bottom:8px"></div>
+          <div class="chart" id="priceChart"></div><div class="legend" id="priceLegend"></div></div></div>
     </div></div>`;
   $$('[data-sell]', view).forEach(b => {
     b.onclick = () => {
@@ -2767,7 +2785,8 @@ function renderBank() {
     <div class="panelbox paper"><h2>${ic('building')} ${t('b_title')}</h2><p class="lead txt">${t('b_lead')}</p>
       <div class="kpis stagger">
         <div class="kpi paper"><div class="k">${ic('wallet')} ${t('cash')}</div><div class="v num">${rsk(g.cash)}</div></div>
-        <div class="kpi paper"><div class="k">${ic('star')} ${t('b_credit')}</div><div class="v num">${Math.round(g.credit)}</div><div class="bar" style="margin-top:6px"><i class="${creditCls}" style="width:${Math.round(g.credit)}%"></i></div></div>
+        <div class="kpi paper"><div class="k">${ic('star')} ${t('b_credit')}</div><div class="v num">${Math.round(g.credit)}</div>
+          <div class="bar" style="margin-top:6px"><i class="${creditCls}" style="width:${Math.round(g.credit)}%"></i></div></div>
         <div class="kpi paper"><div class="k">${ic('building')} ${t('b_loan')}</div><div class="v num">${rsk(g.loan)}</div><div class="s">${loanPct} % ${t('balance').toLowerCase()}</div></div>
         <div class="kpi paper"><div class="k">${ic('wallet')} ${t('b_adv')}</div><div class="v num" style="color:${g.advance > 0 ? 'var(--bad)' : 'inherit'}">${rsk(g.advance)}</div></div>
       </div></div>
@@ -2776,16 +2795,22 @@ function renderBank() {
         <div class="panelbox paper"><h3>${ic('building')} ${t('b_loan')}</h3><p class="small muted txt">${t('b_loan_note', { x: rsk(LOAN_CAP) })}</p>
           ${g.credit < 50 ? `<div class="warn txt small">${t('b_low_credit')}</div>` : ''}${g.loan > LOAN_CAP * .7 ? `<div class="warn txt small">${t('b_overdue')}</div>` : ''}
           <div class="stat"><span>${t('balance')}</span><b class="num">${rs(g.loan)}</b></div>
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${amountField('loanAmt', '200000')}<button class="btn" id="loanTake">${ic('download')} ${t('b_take')}</button><button class="btn ghost" id="loanRepay" ${g.loan ? '' : 'disabled'}>${ic('upload')} ${t('b_repay')}</button></div></div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${amountField('loanAmt', '200000')}
+            <button class="btn" id="loanTake">${ic('download')} ${t('b_take')}</button>
+            <button class="btn ghost" id="loanRepay" ${g.loan ? '' : 'disabled'}>${ic('upload')} ${t('b_repay')}</button></div></div>
         <div class="panelbox paper"><h3>${ic('wallet')} ${t('b_adv')}</h3><p class="small muted txt">${t('b_adv_note')}</p>
           <div class="stat"><span>${t('balance')}</span><b class="num" style="color:${g.advance > 0 ? 'var(--bad)' : 'inherit'}">${rs(g.advance)}</b></div>
-          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${amountField('advAmt', '100000')}<button class="btn soil" id="advTake">${ic('download')} ${t('b_take')}</button><button class="btn ghost" id="advRepay" ${g.advance ? '' : 'disabled'}>${ic('upload')} ${t('b_repay')}</button></div></div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${amountField('advAmt', '100000')}
+            <button class="btn soil" id="advTake">${ic('download')} ${t('b_take')}</button>
+            <button class="btn ghost" id="advRepay" ${g.advance ? '' : 'disabled'}>${ic('upload')} ${t('b_repay')}</button></div></div>
       </div>
       <div class="list">
         <div class="panelbox paper"><h3>${ic('shield-check')} ${t('b_ins')}</h3><p class="small muted txt">${t('b_ins_note')}</p>
-          ${insured ? `<div class="note small">${t('b_insured')} ${mName(mOf(g.insured))} (${t('year')} ${yOf(Math.min(g.insured, TURNS - 1))})</div>` : `<button class="btn" id="insBuy">${ic('shield-check')} ${t('b_ins_buy')} · ${rs(Math.max(10000, Math.round(sum(g.plots.map(p => estimate(p)?.value || 0)) * .02)))}</button>`}</div>
+          ${insured ? `<div class="note small">${t('b_insured')} ${mName(mOf(g.insured))} (${t('year')} ${yOf(Math.min(g.insured, TURNS - 1))})</div>` : `
+            <button class="btn" id="insBuy">${ic('shield-check')} ${t('b_ins_buy')} · ${rs(Math.max(10000, Math.round(sum(g.plots.map(p => estimate(p)?.value || 0)) * .02)))}</button>`}</div>
         <div class="panelbox paper"><h3>${ic('zap')} ${t('b_solar')}</h3><p class="small muted txt">${t('b_solar_note')}</p>
-          ${g.solar ? `<span class="tag">${ic('check')} ${t('b_owned')}</span>` : `<button class="btn sky" id="solarBuy" ${g.cash >= SOLAR_COST ? '' : 'disabled'}>${ic('zap')} ${t('b_buy')} · ${rsk(SOLAR_COST)}</button>`}</div>
+          ${g.solar ? `<span class="tag">${ic('check')} ${t('b_owned')}</span>` : `
+            <button class="btn sky" id="solarBuy" ${g.cash >= SOLAR_COST ? '' : 'disabled'}>${ic('zap')} ${t('b_buy')} · ${rsk(SOLAR_COST)}</button>`}</div>
         <div class="panelbox paper"><h3>${ic('settings')} ${t('nav_settings')}</h3>
           <label class="row" style="cursor:pointer"><span class="txt small">${t('b_machine')}</span><input type="checkbox" id="optCombine" ${g.combine ? 'checked' : ''}></label>
           <label class="row" style="cursor:pointer;margin-top:8px"><span class="txt small">${t('b_auto')}</span><input type="checkbox" id="optAuto" ${g.autoIrr ? 'checked' : ''}></label></div>
@@ -2813,7 +2838,8 @@ function openWaterModal() {
   const nextShare = Math.round(CANAL[(m + 1) % 12] * DIFF[g.diff].water);
   const balance = w.share + w.rain - w.need;
   const balanceLine = balance >= 0 ? `<span class="tag">${t('w_ok')} · ${t('w_surplus')} ${wu(balance)}</span>` : `<span class="tag bad">${t('w_short')} ${wu(-balance)}</span>`;
-  const byPlot = g.plots.filter(p => p.crop).map(p => `<div class="stat"><span>${p.name} · ${tx(CROPS[p.crop])}</span><b class="num">${wu(plotNeed(p))}</b></div>`).join('') || `<div class="muted small">—</div>`;
+  const byPlot = g.plots.filter(p => p.crop).map(p => `
+    <div class="stat"><span>${p.name} · ${tx(CROPS[p.crop])}</span><b class="num">${wu(plotNeed(p))}</b></div>`).join('') || `<div class="muted small">—</div>`;
   openModal(`${modalHead(t('w_title'), 'droplet')}
     <div class="cols">
       <div><div class="stat"><span>${t('w_canal')}</span><b class="num">${wu(w.share)}</b></div>
@@ -2837,7 +2863,8 @@ function openWaterModal() {
 function slotRow(n) {
   const meta = slotMeta(n);
   const desc = meta
-    ? `<b>${esc(meta.name)}</b> · ${t('year')} ${yOf(Math.min(meta.turn, TURNS - 1))} ${mName(mOf(meta.turn))} · ${rsk(meta.cash)} · ${t('d_' + meta.diff)}${meta.over ? ` · <span class="tag">${t('ch_done')}</span>` : ''}`
+    ? `<b>${esc(meta.name)}</b> · ${t('year')} ${yOf(Math.min(meta.turn, TURNS - 1))} ${mName(mOf(meta.turn))} · ${rsk(meta.cash)} · ${t('d_' + meta.diff)}${meta.over ? ` · 
+      <span class="tag">${t('ch_done')}</span>` : ''}`
     : `<span class="muted">${t('s_empty')}</span>`;
   return `<div class="row"><div><div class="small muted">${t('s_slot')} ${n}</div>${desc}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
@@ -2929,7 +2956,8 @@ function lineChart(el, series, labels, { height = 220, fmt = v => nf.format(v) }
     const d = s.data.map((v, i) => `${i ? 'L' : 'M'}${x(i)} ${y(v)}`).join(' ');
     return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" data-line/>`;
   }).join('');
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px">${grid}${xlabels}${paths}<line id="hoverLine" x1="0" x2="0" y1="${padT}" y2="${H - padB}" stroke="#4e3219" stroke-dasharray="3 3" style="display:none"/></svg><div class="tip"></div>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:${H}px">${grid}${xlabels}${paths}
+    <line id="hoverLine" x1="0" x2="0" y1="${padT}" y2="${H - padB}" stroke="#4e3219" stroke-dasharray="3 3" style="display:none"/></svg><div class="tip"></div>`;
   $$('[data-line]', el).forEach(drawPath);
 
   const svg = $('svg', el);
@@ -3030,7 +3058,8 @@ function drawPriceHistory(chartEl, chipsEl, legendEl) {
     const labels = g.prices.wheat.hist.map((_, i) => mName(mOf(i)) + (mOf(i) === 0 || i === 0 ? ` Y${yOf(i)}` : ''));
     lineChart(chartEl, series, labels);
     legendEl.innerHTML = series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.label)}: <b class="num">${rs(s.data[s.data.length - 1])}</b></span>`).join('');
-    chipsEl.innerHTML = `<span class="small muted" style="align-self:center">${t('pick3')}:</span>` + CASH_CROPS.map(c => `<button class="chip ${ui.priceSel.includes(c) ? 'on' : ''}" data-pc="${c}">${tx(CROPS[c])}</button>`).join('');
+    chipsEl.innerHTML = `<span class="small muted" style="align-self:center">${t('pick3')}:</span>` + CASH_CROPS.map(c => `
+      <button class="chip ${ui.priceSel.includes(c) ? 'on' : ''}" data-pc="${c}">${tx(CROPS[c])}</button>`).join('');
     $$('[data-pc]', chipsEl).forEach(b => {
       b.onclick = () => {
         const c = b.dataset.pc;
@@ -3053,8 +3082,13 @@ function kpiCard(icon, k, v, s = '') {
 }
 function yearsTable() {
   if (!g.years.length) return `<div class="note txt">${t('no_years')}</div>`;
-  const rows = g.years.map(y => `<tr><td><b>${t('year')} ${y.y}</b></td><td class="num">${rsk(y.income)}</td><td class="num">${rsk(y.expense)}</td><td class="num" style="color:${y.income - y.expense >= 0 ? 'var(--ok)' : 'var(--bad)'}">${rsk(y.income - y.expense)}</td><td class="num">${y.soil}</td><td class="num">${nf.format(y.water)} / ${nf.format(y.avail)}</td><td class="num">${y.harvests}</td><td class="num">${rsk(y.nw)}</td><td><span class="tag gold">${y.grade}</span></td></tr>`).join('');
-  return `<div class="tablewrap"><table><thead><tr><th>${t('year')}</th><th class="num">${t('y_income')}</th><th class="num">${t('y_expense')}</th><th class="num">${t('y_net')}</th><th class="num">${t('y_soil')}</th><th class="num">${t('y_water')}</th><th class="num">${t('y_harvests')}</th><th class="num">${t('y_nw')}</th><th>${t('y_grade')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const rows = g.years.map(y => `<tr><td><b>${t('year')} ${y.y}</b></td><td class="num">${rsk(y.income)}</td><td class="num">${rsk(y.expense)}</td>
+    <td class="num" style="color:${y.income - y.expense >= 0 ? 'var(--ok)' : 'var(--bad)'}">${rsk(y.income - y.expense)}</td><td class="num">${y.soil}</td>
+    <td class="num">${nf.format(y.water)} / ${nf.format(y.avail)}</td><td class="num">${y.harvests}</td><td class="num">${rsk(y.nw)}</td><td>
+    <span class="tag gold">${y.grade}</span></td></tr>`).join('');
+  return `<div class="tablewrap"><table><thead><tr><th>${t('year')}</th><th class="num">${t('y_income')}</th><th class="num">${t('y_expense')}</th>
+    <th class="num">${t('y_net')}</th><th class="num">${t('y_soil')}</th><th class="num">${t('y_water')}</th><th class="num">${t('y_harvests')}</th>
+    <th class="num">${t('y_nw')}</th><th>${t('y_grade')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function cropsGrownChips() {
   const entries = Object.entries(g.stats.grown);
@@ -3065,7 +3099,8 @@ function renderReports() {
   const gr = grade();
   const s = gr.sust;
   view.innerHTML = `<div class="wrap">
-    <div class="panelbox paper"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div><h2>${ic('bar-chart')} ${t('r_title')}</h2><p class="lead txt">${t('r_lead')}</p></div>
+    <div class="panelbox paper"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div>
+      <h2>${ic('bar-chart')} ${t('r_title')}</h2><p class="lead txt">${t('r_lead')}</p></div>
       <a class="btn ghost" href="#print">${ic('printer')} ${t('r_print')}</a></div>
       <div class="kpis stagger">
         ${kpiCard('wallet', t('r_networth'), rsk(gr.nw), `${t('f_score')} ${gr.score} · ${gr.letter}`)}
@@ -3079,15 +3114,18 @@ function renderReports() {
       <div class="panelbox paper"><h3>${ic('leaf')} ${t('r_soil')}</h3><div class="chart" id="soilChart"></div></div>
     </div>
     <div class="two" style="margin-top:14px">
-      <div class="panelbox paper"><h3>${ic('droplet')} ${t('r_water')}</h3><div class="chart" id="waterChart"></div><div class="legend"><span><i style="background:#4f9ccb"></i>${t('used')}</span><span><i style="background:#a7c957"></i>${t('available')}</span></div></div>
-      <div class="panelbox paper"><h3>${ic('coins')} ${t('r_prices')}</h3><div class="chips" id="priceChips" style="margin-bottom:8px"></div><div class="chart" id="priceChart"></div><div class="legend" id="priceLegend"></div></div>
+      <div class="panelbox paper"><h3>${ic('droplet')} ${t('r_water')}</h3><div class="chart" id="waterChart"></div>
+        <div class="legend"><span><i style="background:#4f9ccb"></i>${t('used')}</span><span><i style="background:#a7c957"></i>${t('available')}</span></div></div>
+      <div class="panelbox paper"><h3>${ic('coins')} ${t('r_prices')}</h3><div class="chips" id="priceChips" style="margin-bottom:8px"></div>
+        <div class="chart" id="priceChart"></div><div class="legend" id="priceLegend"></div></div>
     </div>
     <div class="two" style="margin-top:14px">
       <div class="panelbox paper"><h3>${ic('coins')} ${t('r_income_split')}</h3><div id="incomeSplit"></div></div>
       <div class="panelbox paper"><h3>${ic('wallet')} ${t('r_expense_split')}</h3><div id="expenseSplit"></div></div>
     </div>
     <div class="panelbox paper" style="margin-top:14px"><h3>${ic('calendar')} ${t('r_years')}</h3>${yearsTable()}</div>
-    <div class="panelbox paper" style="margin-top:14px"><h3>${ic('book')} ${t('r_events')}</h3><div class="loglist" style="max-height:320px">${g.log.slice(0, 80).map(logRow).join('') || `<div class="muted small">${t('no_log')}</div>`}</div></div>
+    <div class="panelbox paper" style="margin-top:14px"><h3>${ic('book')} ${t('r_events')}</h3>
+      <div class="loglist" style="max-height:320px">${g.log.slice(0, 80).map(logRow).join('') || `<div class="muted small">${t('no_log')}</div>`}</div></div>
   </div>`;
 
   const cashLabels = g.stats.cashHist.map((_, i) => mName(mOf(i)) + (mOf(i) === 0 || i === 0 ? ` Y${yOf(i)}` : ''));
@@ -3112,15 +3150,20 @@ function renderPrint() {
   const plots = g.plots.map(p => {
     const c = CROPS[p.crop];
     const est = estimate(p);
-    return `<tr><td><b>${p.name}</b></td><td>${c ? tx(c) : t('empty')}</td><td class="num">${c ? (c.orchard ? `${p.age} ${t('mo')}` : `${Math.min(p.stage, c.dur)}/${c.dur}`) : '—'}</td><td class="num">${Math.round(p.soil)}</td><td>${p.pest ? tx(PESTS[p.pest.id]) : '—'}</td><td class="num">${est ? `${nf.format(est.qty)} · ${rsk(est.value)}` : '—'}</td><td class="small">${p.hist.map(h => tx(CROPS[h])).join(', ') || '—'}</td></tr>`;
+    return `<tr><td><b>${p.name}</b></td><td>${c ? tx(c) : t('empty')}</td>
+      <td class="num">${c ? (c.orchard ? `${p.age} ${t('mo')}` : `${Math.min(p.stage, c.dur)}/${c.dur}`) : '—'}</td><td class="num">${Math.round(p.soil)}</td>
+      <td>${p.pest ? tx(PESTS[p.pest.id]) : '—'}</td><td class="num">${est ? `${nf.format(est.qty)} · ${rsk(est.value)}` : '—'}</td>
+      <td class="small">${p.hist.map(h => tx(CROPS[h])).join(', ') || '—'}</td></tr>`;
   }).join('');
-  const stock = g.inv.map(it => `<tr><td>${tx(CROPS[it.crop])}</td><td class="num">${nf.format(it.qty)} ${t('maund')}</td><td class="num">${rsk(it.qty * price(it.crop))}</td></tr>`).join('') || `<tr><td colspan="3" class="muted">—</td></tr>`;
+  const stock = g.inv.map(it => `<tr><td>${tx(CROPS[it.crop])}</td><td class="num">${nf.format(it.qty)} ${t('maund')}</td>
+    <td class="num">${rsk(it.qty * price(it.crop))}</td></tr>`).join('') || `<tr><td colspan="3" class="muted">—</td></tr>`;
   const recv = g.recv.map(r => `<tr><td>${tx(CROPS[r.crop])}</td><td class="num">${t('due_in')} ${r.due - g.turn} ${t('mo_s')}</td><td class="num">${rsk(r.amt)}</td></tr>`).join('');
   const years = g.years.length ? yearsTable() : `<div class="muted small">${t('no_years')}</div>`;
   const today = new Date().toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', { day: 'numeric', month: 'long', year: 'numeric' });
   view.innerHTML = `<div class="wrap printdoc">
     <div class="panelbox paper">
-      <div class="no-print" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><a class="btn ghost" href="#reports">${ic('arrow-left')} ${t('back')}</a><button class="btn gold" id="printBtn">${ic('printer')} ${t('p_print')}</button></div>
+      <div class="no-print" style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><a class="btn ghost" href="#reports">${ic('arrow-left')} ${t('back')}</a>
+        <button class="btn gold" id="printBtn">${ic('printer')} ${t('p_print')}</button></div>
       <h2>${ic('wheat')} ${t('p_title')} — ${esc(g.name)}</h2>
       <p class="lead txt">${t('p_lead')} ${t('year')} ${yOf(Math.min(g.turn, TURNS - 1))}, ${mName(mOf(g.turn))} · ${t('d_' + g.diff)} · ${t('n_seed')} ${g.seed}. ${t('p_generated')}: ${today}.</p>
       <div class="kpis">
@@ -3129,7 +3172,9 @@ function renderPrint() {
         ${kpiCard('leaf', t('r_sust'), s.index, `${t('soil')} ${s.soil} · ${t('r_weff')} ${s.weff} · ${t('r_div')} ${s.div}`)}
         ${kpiCard('star', t('rep'), Math.round(g.credit))}
       </div>
-      <div class="sec"><h3>${ic('grid')} ${t('p_plots')}</h3><div class="tablewrap"><table><thead><tr><th>${t('plot')}</th><th>${t('col_crop')}</th><th class="num">${t('growth')}</th><th class="num">${t('soil')}</th><th>${t('pest')}</th><th class="num">${t('expected')}</th><th>${t('prev_crop')}</th></tr></thead><tbody>${plots}</tbody></table></div></div>
+      <div class="sec"><h3>${ic('grid')} ${t('p_plots')}</h3><div class="tablewrap"><table><thead><tr><th>${t('plot')}</th><th>${t('col_crop')}</th>
+        <th class="num">${t('growth')}</th><th class="num">${t('soil')}</th><th>${t('pest')}</th><th class="num">${t('expected')}</th>
+        <th>${t('prev_crop')}</th></tr></thead><tbody>${plots}</tbody></table></div></div>
       <div class="two sec">
         <div><h3>${ic('warehouse')} ${t('p_stock')}</h3><table><tbody>${stock}${recv}</tbody></table></div>
         <div><h3>${ic('building')} ${t('p_debt')}</h3><table><tbody>
@@ -3161,10 +3206,13 @@ function openYearReport(y) {
       ${kpiCard('piggy', t('y_nw'), rsk(y.nw))}
     </div>
     <div class="note txt" style="margin-top:12px">${t('tip_year')}</div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn gold" data-close>${ic('arrow-right')} ${t('y_continue')}</button><a class="btn ghost" href="#reports" data-close>${ic('bar-chart')} ${t('nav_reports')}</a><a class="btn ghost" href="#print" data-close>${ic('printer')} ${t('r_print')}</a></div>`);
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn gold" data-close>${ic('arrow-right')} ${t('y_continue')}</button>
+      <a class="btn ghost" href="#reports" data-close>${ic('bar-chart')} ${t('nav_reports')}</a>
+      <a class="btn ghost" href="#print" data-close>${ic('printer')} ${t('r_print')}</a></div>`);
 }
 function achievementsHTML() {
-  return `<div class="cols">${achievements().map(a => `<div class="ach ${a.got ? '' : 'locked'}"><div class="ico">${ic(a.icon)}</div><div>${t('ach_' + a.id)}<br><span class="small muted" style="font-weight:400">${t('ach_' + a.id + '_d')}</span></div></div>`).join('')}</div>`;
+  return `<div class="cols">${achievements().map(a => `<div class="ach ${a.got ? '' : 'locked'}"><div class="ico">${ic(a.icon)}</div><div>${t('ach_' + a.id)}<br>
+    <span class="small muted" style="font-weight:400">${t('ach_' + a.id + '_d')}</span></div></div>`).join('')}</div>`;
 }
 function openFinal() {
   const r = g.flags.result || grade();
@@ -3178,7 +3226,9 @@ function openFinal() {
     <p class="txt muted" style="margin:10px 0">${t('f_lead')}</p>${chLine}
     <div class="sec"><h3>${ic('award')} ${t('f_ach')}</h3>${achievementsHTML()}</div>
     <div class="note small txt" style="margin-top:12px">${t('f_saved_hall')}</div>
-    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn gold" href="#new" data-close>${ic('plus')} ${t('f_new')}</a><a class="btn ghost" href="#reports" data-close>${ic('bar-chart')} ${t('nav_reports')}</a><a class="btn ghost" href="#challenges" data-close>${ic('trophy')} ${t('ch_hall')}</a></div>`);
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><a class="btn gold" href="#new" data-close>${ic('plus')} ${t('f_new')}</a>
+      <a class="btn ghost" href="#reports" data-close>${ic('bar-chart')} ${t('nav_reports')}</a>
+      <a class="btn ghost" href="#challenges" data-close>${ic('trophy')} ${t('ch_hall')}</a></div>`);
 }
 
 // ---------- almanac ----------
@@ -3193,7 +3243,8 @@ function cropCard(c) {
   const priceLine = cr.green ? '—' : `${rs(cr.price)} / ${t('maund')}${cr.mill ? ` · ${t('mill_only')}` : ''}`;
   const drain = cr.drain < 0 ? `+${Math.abs(cr.drain)}` : `−${cr.drain}`;
   return `<article class="card paper panelbox" data-search="${esc((cr.en + ' ' + cr.ur + ' ' + cr.note.en + ' ' + cr.note.ur).toLowerCase())}">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:16px;height:16px;border-radius:5px;background:${cr.color};border:1px solid rgba(0,0,0,.15);flex:none"></span><h3 style="margin:0">${tx(cr)}</h3><span class="tag soil" style="margin-left:auto">${cr.cat}</span></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:16px;height:16px;border-radius:5px;background:${cr.color};border:1px solid rgba(0,0,0,.15);flex:none"></span>
+      <h3 style="margin:0">${tx(cr)}</h3><span class="tag soil" style="margin-left:auto">${cr.cat}</span></div>
     <svg viewBox="0 0 140 56" width="140" height="56" aria-hidden="true" style="display:block;margin:0 auto 6px">${cropSprite({ crop: c, stage: cr.dur, dur: cr.dur, age: 40, ready: true, over: 0, soil: 70, i: 0 }, 70, 48)}</svg>
     <div class="stat wrap"><span>${t('al_sow')}</span><b>${monthRange(cr.sow)}</b></div>
     <div class="stat"><span>${t('al_dur')}</span><b class="num">${cr.dur} ${t('months')}</b></div>
@@ -3216,10 +3267,12 @@ function sowingCalendar() {
   return `<div class="tablewrap"><table><thead><tr><th>${t('col_crop')}</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function mechCards() {
-  return MECH.map(m => `<article class="card paper panelbox" data-search="${esc((m.en + ' ' + m.ur + ' ' + m.body.en + ' ' + m.body.ur).toLowerCase())}"><h3>${ic(m.icon)} ${tx(m)}</h3><p class="txt" style="margin:6px 0 0;font-size:.92rem">${tx(m.body)}</p></article>`).join('');
+  return MECH.map(m => `<article class="card paper panelbox" data-search="${esc((m.en + ' ' + m.ur + ' ' + m.body.en + ' ' + m.body.ur).toLowerCase())}">
+    <h3>${ic(m.icon)} ${tx(m)}</h3><p class="txt" style="margin:6px 0 0;font-size:.92rem">${tx(m.body)}</p></article>`).join('');
 }
 function glossaryList() {
-  return GLOSSARY.map(gl => `<div class="row" data-search="${esc((gl.term + ' ' + gl.ur + ' ' + gl.def.en + ' ' + gl.def.ur).toLowerCase())}"><div><b>${esc(gl.term)}</b> <span class="ur" style="display:inline">${esc(gl.ur)}</span><br><span class="small muted txt">${tx(gl.def)}</span></div></div>`).join('');
+  return GLOSSARY.map(gl => `<div class="row" data-search="${esc((gl.term + ' ' + gl.ur + ' ' + gl.def.en + ' ' + gl.def.ur).toLowerCase())}">
+    <div><b>${esc(gl.term)}</b> <span class="ur" style="display:inline">${esc(gl.ur)}</span><br><span class="small muted txt">${tx(gl.def)}</span></div></div>`).join('');
 }
 function filterAlmanac(q) {
   const needle = q.trim().toLowerCase();
@@ -3234,7 +3287,8 @@ function filterAlmanac(q) {
 function renderAlmanac() {
   view.innerHTML = `<div class="wrap">
     <div class="panelbox paper"><h2>${ic('book')} ${t('al_title')} <span class="tag gold">${t('illustrative')}</span></h2><p class="lead txt">${t('al_lead')}</p>
-      <div style="display:flex;align-items:center;gap:8px;background:#fffdf8;border:1px solid var(--line);border-radius:10px;padding:6px 10px;max-width:420px">${ic('search')}<input id="almanacQ" type="text" placeholder="${t('al_search')}" value="${esc(ui.almanacQ)}" style="border:0;background:none;min-height:30px;padding:4px" aria-label="${t('al_search')}"></div></div>
+      <div style="display:flex;align-items:center;gap:8px;background:#fffdf8;border:1px solid var(--line);border-radius:10px;padding:6px 10px;max-width:420px">${ic('search')}
+        <input id="almanacQ" type="text" placeholder="${t('al_search')}" value="${esc(ui.almanacQ)}" style="border:0;background:none;min-height:30px;padding:4px" aria-label="${t('al_search')}"></div></div>
     <div class="sec"><h3 style="font-size:1.2rem">${ic('sprout')} ${t('al_crops')}</h3><div class="grid3 stagger">${CROP_IDS.map(cropCard).join('')}</div></div>
     <div class="panelbox paper sec" data-search="${t('al_calendar').toLowerCase()} calendar کیلنڈر"><h3>${ic('calendar')} ${t('al_calendar')}</h3>${sowingCalendar()}</div>
     <div class="sec"><h3 style="font-size:1.2rem">${ic('settings')} ${t('al_mech')}</h3><div class="grid3 stagger">${mechCards()}</div></div>
@@ -3281,7 +3335,8 @@ function renderAbout() {
         <h3 class="sec">${t('ab_problem')}</h3><p class="muted txt" style="margin:0">${t('ab_problem_t')}</p>
         <h3 class="sec">${t('ab_how')}</h3><p class="muted txt" style="margin:0">${t('ab_how_t')}</p><p class="muted small">${t('ab_stack')}</p>
         <h3 class="sec">${t('ab_data')}</h3><p class="muted txt" style="margin:0">${t('ab_data_t')}</p>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="aboutTour">${ic('play')} ${t('st_tour_btn')}</button><button class="btn ghost" id="aboutKeys">${ic('keyboard')} ${t('st_keys')}</button></div></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="aboutTour">${ic('play')} ${t('st_tour_btn')}</button>
+          <button class="btn ghost" id="aboutKeys">${ic('keyboard')} ${t('st_keys')}</button></div></div>
       <div class="panelbox paper"><h3>${ic('layers')} ${t('ab_modules')}</h3><div class="tablewrap"><table><tbody>${moduleRows}</tbody></table></div></div>
     </div>
     <div><h3 style="margin:0 0 10px">${ic('graduation')} ${t('ab_todo')}</h3><div class="list stagger">${todoHtml}</div></div></div></div>`;
@@ -3300,9 +3355,11 @@ function hallTable(limit = 10) {
   const rows = hall.slice(0, limit).map(h => {
     const ch = CHALLENGES.find(c => c.id === h.challenge);
     const result = ch ? `<span class="tag ${h.won ? '' : 'bad'}">${tx(ch)} · ${h.won ? t('ch_done') : t('ch_failed')}</span>` : `<span class="tag soil">${t('d_' + h.diff)}</span>`;
-    return `<tr><td><b>${esc(h.name)}</b><br><span class="small muted num">${h.date} · ${t('n_seed')} ${h.seed}</span></td><td>${result}</td><td><span class="tag gold">${h.grade}</span> <span class="num small">${h.score}</span></td><td class="num">${rsk(h.nw)}</td><td class="num">${h.sust}</td></tr>`;
+    return `<tr><td><b>${esc(h.name)}</b><br><span class="small muted num">${h.date} · ${t('n_seed')} ${h.seed}</span></td><td>${result}</td><td>
+      <span class="tag gold">${h.grade}</span> <span class="num small">${h.score}</span></td><td class="num">${rsk(h.nw)}</td><td class="num">${h.sust}</td></tr>`;
   }).join('');
-  return `<div class="tablewrap"><table><thead><tr><th>${t('ch_farm')}</th><th>${t('ch_result')}</th><th>${t('f_grade')}</th><th class="num">${t('r_networth')}</th><th class="num">${t('r_sust')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<div class="tablewrap"><table><thead><tr><th>${t('ch_farm')}</th><th>${t('ch_result')}</th><th>${t('f_grade')}</th><th class="num">${t('r_networth')}</th>
+    <th class="num">${t('r_sust')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function renderNew() {
   const hasGame = !!g;
@@ -3312,15 +3369,19 @@ function renderNew() {
       ${hasGame ? `<a class="btn gold block" href="#farm" style="margin-bottom:12px">${ic('play')} ${t('n_continue')} — ${esc(g.name)} · ${t('year')} ${yOf(Math.min(g.turn, TURNS - 1))}</a>` : ''}
       <label class="f" for="ngName">${t('n_name')}</label><input id="ngName" type="text" maxlength="40" value="Chak 7 Farm">
       <label class="f">${t('n_diff')}</label>
-      <div class="list" id="ngDiff">${diffs.map(d => `<label class="row" style="cursor:pointer"><span><input type="radio" name="diff" value="${d}" ${d === 'normal' ? 'checked' : ''}> <b>${t('d_' + d)}</b><br><span class="small muted">${t('d_' + d + '_d')}</span></span></label>`).join('')}</div>
+      <div class="list" id="ngDiff">${diffs.map(d => `<label class="row" style="cursor:pointer"><span>
+        <input type="radio" name="diff" value="${d}" ${d === 'normal' ? 'checked' : ''}> <b>${t('d_' + d)}</b><br>
+        <span class="small muted">${t('d_' + d + '_d')}</span></span></label>`).join('')}</div>
       <label class="f" for="ngSeed">${t('n_seed')} <span class="muted" style="font-weight:400">· ${t('n_seed_d')}</span></label>
-      <div style="display:flex;gap:8px"><input id="ngSeed" type="number" class="num" value="${Math.floor(Math.random() * 1e6)}"><button class="btn ghost" id="ngRandom">${ic('dice')} ${t('n_random')}</button></div>
+      <div style="display:flex;gap:8px"><input id="ngSeed" type="number" class="num" value="${Math.floor(Math.random() * 1e6)}">
+        <button class="btn ghost" id="ngRandom">${ic('dice')} ${t('n_random')}</button></div>
       <label class="row" style="cursor:pointer;margin-top:12px"><span>${t('n_tut')}</span><input type="checkbox" id="ngTut" checked></label>
       <button class="btn gold lg block" id="ngStart" style="margin-top:14px">${ic('tractor')} ${t('n_start')}</button></div>
     <div class="list">
       <div class="panelbox paper"><h3>${ic('help')} ${t('n_how')}</h3><p class="txt muted" style="margin:6px 0 0">${t('n_how_t')}</p></div>
       <div class="panelbox paper"><h3>${ic('folder')} ${t('n_load')}</h3><div class="list">${[1, 2, 3].map(slotRowCompact).join('')}</div></div>
-      <div class="panelbox paper"><h3>${ic('trophy')} ${t('n_hall')}</h3>${hallTable(5)}<a class="btn ghost sm" href="#challenges" style="margin-top:8px">${ic('target')} ${t('nav_challenges')}</a></div>
+      <div class="panelbox paper"><h3>${ic('trophy')} ${t('n_hall')}</h3>${hallTable(5)}
+        <a class="btn ghost sm" href="#challenges" style="margin-top:8px">${ic('target')} ${t('nav_challenges')}</a></div>
     </div></div></div>`;
   $('#ngRandom').onclick = () => { $('#ngSeed').value = Math.floor(Math.random() * 1e6); };
   $('#ngStart').onclick = () => {
@@ -3343,7 +3404,9 @@ function renderNew() {
 function slotRowCompact(n) {
   const meta = slotMeta(n);
   if (!meta) return `<div class="row"><span class="muted">${t('s_slot')} ${n} · ${t('s_empty')}</span></div>`;
-  return `<div class="row"><div><b>${esc(meta.name)}</b><br><span class="small muted">${t('year')} ${yOf(Math.min(meta.turn, TURNS - 1))} ${mName(mOf(meta.turn))} · ${rsk(meta.cash)} · ${t('d_' + meta.diff)}</span></div><button class="btn sm" data-load="${n}">${ic('folder')} ${t('s_load')}</button></div>`;
+  return `<div class="row"><div><b>${esc(meta.name)}</b><br>
+    <span class="small muted">${t('year')} ${yOf(Math.min(meta.turn, TURNS - 1))} ${mName(mOf(meta.turn))} · ${rsk(meta.cash)} · ${t('d_' + meta.diff)}</span></div>
+    <button class="btn sm" data-load="${n}">${ic('folder')} ${t('s_load')}</button></div>`;
 }
 
 // ---------- challenges & hall of fame ----------
@@ -3353,15 +3416,21 @@ function challengeCard(ch) {
   const best = hall.filter(h => h.won).sort((a, b) => b.score - a.score)[0];
   let progress = '';
   if (active) progress = `<div class="note small" style="margin-top:8px">${ic('target')} ${t('ch_progress')}: ${ch.progress()}</div>`;
-  return `<article class="card paper panelbox"><div style="display:flex;gap:10px;align-items:center"><div class="ach" style="padding:6px"><div class="ico">${ic(ch.icon)}</div></div><div><h3 style="margin:0">${tx(ch)}</h3><span class="small muted">${t('d_' + ch.diff)} · ${t('n_seed')} ${ch.seed}</span></div>${active ? `<span class="tag" style="margin-left:auto">${t('ch_active')}</span>` : ''}</div>
+  return `<article class="card paper panelbox"><div style="display:flex;gap:10px;align-items:center"><div class="ach" style="padding:6px">
+    <div class="ico">${ic(ch.icon)}</div></div><div><h3 style="margin:0">${tx(ch)}</h3>
+    <span class="small muted">${t('d_' + ch.diff)} · ${t('n_seed')} ${ch.seed}</span></div>${active ? `
+    <span class="tag" style="margin-left:auto">${t('ch_active')}</span>` : ''}</div>
     <p class="txt" style="margin:8px 0;font-size:.92rem"><b>${t('ch_objective')}:</b> ${tx(ch.obj)}</p>${progress}
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px"><span class="small muted">${best ? `${t('ch_best')}: ${best.grade} · ${best.score} · ${esc(best.name)}` : '—'}</span><button class="btn sm gold" data-ch="${ch.id}">${ic('play')} ${t('ch_start')}</button></div></article>`;
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <span class="small muted">${best ? `${t('ch_best')}: ${best.grade} · ${best.score} · ${esc(best.name)}` : '—'}</span>
+      <button class="btn sm gold" data-ch="${ch.id}">${ic('play')} ${t('ch_start')}</button></div></article>`;
 }
 function renderChallenges() {
   view.innerHTML = `<div class="wrap">
     <div class="panelbox paper"><h2>${ic('target')} ${t('ch_title')}</h2><p class="lead txt">${t('ch_lead')}</p></div>
     <div class="grid3 stagger" style="margin-top:14px">${CHALLENGES.map(challengeCard).join('')}</div>
-    <div class="panelbox paper" style="margin-top:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><h3>${ic('trophy')} ${t('ch_hall')}</h3><button class="btn sm danger" id="clearHall">${ic('trash')} ${t('ch_clear_hall')}</button></div>${hallTable(30)}</div></div>`;
+    <div class="panelbox paper" style="margin-top:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+      <h3>${ic('trophy')} ${t('ch_hall')}</h3><button class="btn sm danger" id="clearHall">${ic('trash')} ${t('ch_clear_hall')}</button></div>${hallTable(30)}</div></div>`;
   $$('[data-ch]', view).forEach(b => {
     b.onclick = () => {
       const ch = CHALLENGES.find(c => c.id === b.dataset.ch);
@@ -3467,9 +3536,12 @@ function plannerRow(p) {
     const when = k === 0 ? t('pl_fits') : `${t('pl_wait')} ${k} ${t('mo')}`;
     return `<option value="${c}" ${planned === c ? 'selected' : ''}>${tx(CROPS[c])} · ${when}</option>`;
   }).join('');
-  const currentLabel = current ? `${tx(current)} <span class="small muted num">${current.orchard ? `${p.age} ${t('mo')}` : `${Math.min(p.stage, current.dur)}/${current.dur}`}</span>` : `<span class="muted">${t('empty')}</span>`;
+  const currentLabel = current ? `${tx(current)} 
+    <span class="small muted num">${current.orchard ? `${p.age} ${t('mo')}` : `${Math.min(p.stage, current.dur)}/${current.dur}`}</span>` : `
+    <span class="muted">${t('empty')}</span>`;
   return `<tr><td><b>${p.name}</b></td><td>${currentLabel}</td><td class="num">${Math.round(p.soil)}</td>
-    <td><select data-plan="${p.i}" aria-label="${t('pl_plan')} ${p.name}"><option value="">${t('pl_keep')}</option><option value="fallow" ${planned === 'fallow' ? 'selected' : ''}>${t('pl_fallow')}</option>${options}</select></td>
+    <td><select data-plan="${p.i}" aria-label="${t('pl_plan')} ${p.name}"><option value="">${t('pl_keep')}</option>
+      <option value="fallow" ${planned === 'fallow' ? 'selected' : ''}>${t('pl_fallow')}</option>${options}</select></td>
     <td class="num">${planned && planned !== 'fallow' ? rs(sowCost(planned)) : '—'}</td></tr>`;
 }
 function renderPlanner() {
@@ -3485,11 +3557,16 @@ function renderPlanner() {
         ${kpiCard(summary.revenue - summary.cost >= 0 ? 'trending-up' : 'trending-down', t('pl_margin'), rsk(summary.revenue - summary.cost))}
       </div></div>
     <div class="two" style="margin-top:14px">
-      <div class="panelbox paper"><div class="tablewrap"><table><thead><tr><th>${t('plot')}</th><th>${t('pl_now')}</th><th class="num">${t('soil')}</th><th>${t('pl_plan')}</th><th class="num">${t('cost')}</th></tr></thead><tbody>${g.plots.map(plannerRow).join('')}</tbody></table></div>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn gold" id="planApply" ${g.over ? 'disabled' : ''}>${ic('sprout')} ${t('pl_apply')}</button><button class="btn ghost" id="planClear">${ic('trash')} ${t('pl_clear')}</button></div></div>
+      <div class="panelbox paper"><div class="tablewrap"><table><thead><tr><th>${t('plot')}</th><th>${t('pl_now')}</th><th class="num">${t('soil')}</th>
+        <th>${t('pl_plan')}</th><th class="num">${t('cost')}</th></tr></thead><tbody>${g.plots.map(plannerRow).join('')}</tbody></table></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn gold" id="planApply" ${g.over ? 'disabled' : ''}>${ic('sprout')} ${t('pl_apply')}</button>
+          <button class="btn ghost" id="planClear">${ic('trash')} ${t('pl_clear')}</button></div></div>
       <div class="list">
-        <div class="panelbox paper"><h3>${ic('droplet')} ${t('pl_water')}</h3><div class="chart" id="planWater"></div><div class="legend"><span><i style="background:#4f9ccb"></i>${t('need')}</span><span><i style="background:#a7c957"></i>${t('share')}</span></div></div>
-        <div class="panelbox paper"><h3>${ic('lightbulb')} ${t('pl_advice')}</h3><div class="list">${advice.map(a => `<div class="${a.cls} txt small">${a.text}</div>`).join('') || `<div class="muted small">—</div>`}</div></div>
+        <div class="panelbox paper"><h3>${ic('droplet')} ${t('pl_water')}</h3><div class="chart" id="planWater"></div>
+          <div class="legend"><span><i style="background:#4f9ccb"></i>${t('need')}</span><span><i style="background:#a7c957"></i>${t('share')}</span></div></div>
+        <div class="panelbox paper"><h3>${ic('lightbulb')} ${t('pl_advice')}</h3><div class="list">${advice.map(a => `
+          <div class="${a.cls} txt small">${a.text}</div>`).join('') || `<div class="muted small">—</div>`}</div></div>
       </div></div></div>`;
   $$('[data-plan]', view).forEach(sel => {
     sel.onchange = () => {
@@ -3518,7 +3595,9 @@ function inboxRow(n) {
   const body = lang === 'ur' ? n.body_ur : n.body_en;
   return `<div class="row ecard ${n.type}" style="animation:none;cursor:default;align-items:center" data-inbox="${n.id}">
     <div class="eic">${ic(n.icon)}</div>
-    <div style="flex:1"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${esc(title)}</b>${n.read ? '' : `<span class="tag bad">${t('in_new')}</span>`}<span class="small muted num" style="margin-left:auto">${when}</span></div><div class="small muted txt">${esc(body)}</div></div>
+    <div style="flex:1"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${esc(title)}</b>${n.read ? '' : `
+      <span class="tag bad">${t('in_new')}</span>`}<span class="small muted num" style="margin-left:auto">${when}</span></div>
+      <div class="small muted txt">${esc(body)}</div></div>
     ${n.read ? '' : `<button class="btn sm ghost" data-read="${n.id}" aria-label="${t('in_mark')}">${ic('check')}</button>`}</div>`;
 }
 function renderInbox() {
@@ -3528,9 +3607,11 @@ function renderInbox() {
     if (ui.inboxFilter === 'unread') return !n.read;
     return n.type === ui.inboxFilter;
   });
-  const chips = INBOX_TYPES.map(k => `<button class="chip ${ui.inboxFilter === k ? 'on' : ''}" data-filter="${k}">${t(k === 'all' ? 'in_all' : k === 'unread' ? 'in_unread' : 'in_' + k)}${k === 'unread' && unread ? ` <span class="tag bad">${unread}</span>` : ''}</button>`).join('');
+  const chips = INBOX_TYPES.map(k => `<button class="chip ${ui.inboxFilter === k ? 'on' : ''}" data-filter="${k}">${t(k === 'all' ? 'in_all' : k === 'unread' ? 'in_unread' : 'in_' + k)}${k === 'unread' && unread ? ` 
+    <span class="tag bad">${unread}</span>` : ''}</button>`).join('');
   view.innerHTML = `<div class="wrap"><div class="panelbox paper">
-    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:flex-start"><div><h2>${ic('bell')} ${t('in_title')}</h2><p class="lead txt">${t('in_lead')}</p></div><button class="btn ghost" id="markAll" ${unread ? '' : 'disabled'}>${ic('check-circle')} ${t('in_mark')}</button></div>
+    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:flex-start"><div><h2>${ic('bell')} ${t('in_title')}</h2>
+      <p class="lead txt">${t('in_lead')}</p></div><button class="btn ghost" id="markAll" ${unread ? '' : 'disabled'}>${ic('check-circle')} ${t('in_mark')}</button></div>
     <div class="chips" style="margin-bottom:12px">${chips}</div>
     <div class="list stagger">${list.map(inboxRow).join('') || `<div class="note txt">${t('in_empty')}</div>`}</div></div></div>`;
   $$('[data-filter]', view).forEach(b => {
@@ -3601,17 +3682,22 @@ function renderSettings() {
   view.innerHTML = `<div class="wrap"><div class="two">
     <div class="panelbox paper"><h2>${ic('settings')} ${t('st_title')}</h2><p class="lead txt">${t('st_lead')}</p>
       <div class="list">
-        ${settingRow(t('st_lang'), `<select id="setLang" style="width:auto"><option value="en" ${lang === 'en' ? 'selected' : ''}>English</option><option value="ur" ${lang === 'ur' ? 'selected' : ''}>اردو</option></select>`)}
+        ${settingRow(t('st_lang'), `<select id="setLang" style="width:auto"><option value="en" ${lang === 'en' ? 'selected' : ''}>English</option>
+          <option value="ur" ${lang === 'ur' ? 'selected' : ''}>اردو</option></select>`)}
         ${settingRow(t('st_compact'), `<input type="checkbox" id="setCompact" ${S.compact ? 'checked' : ''}>`)}
-        ${settingRow(t('st_water'), `<select id="setWater" style="width:auto"><option value="acin" ${S.waterUnit === 'acin' ? 'selected' : ''}>${t('st_acin')}</option><option value="m3" ${S.waterUnit === 'm3' ? 'selected' : ''}>${t('st_m3')}</option></select>`)}
-        ${settingRow(t('st_motion'), `<select id="setMotion" style="width:auto"><option value="auto" ${S.motion === 'auto' ? 'selected' : ''}>${t('st_motion_auto')}</option><option value="reduced" ${S.motion === 'reduced' ? 'selected' : ''}>${t('st_motion_reduced')}</option></select>`)}
+        ${settingRow(t('st_water'), `<select id="setWater" style="width:auto"><option value="acin" ${S.waterUnit === 'acin' ? 'selected' : ''}>${t('st_acin')}</option>
+          <option value="m3" ${S.waterUnit === 'm3' ? 'selected' : ''}>${t('st_m3')}</option></select>`)}
+        ${settingRow(t('st_motion'), `<select id="setMotion" style="width:auto">
+          <option value="auto" ${S.motion === 'auto' ? 'selected' : ''}>${t('st_motion_auto')}</option>
+          <option value="reduced" ${S.motion === 'reduced' ? 'selected' : ''}>${t('st_motion_reduced')}</option></select>`)}
         ${settingRow(t('st_tips'), `<input type="checkbox" id="setTips" ${S.tips ? 'checked' : ''}>`)}
         ${settingRow(t('st_confirm'), `<input type="checkbox" id="setConfirm" ${S.confirmClear ? 'checked' : ''}>`)}
         ${settingRow(t('st_cards'), `<input type="checkbox" id="setCards" ${S.cards ? 'checked' : ''}>`)}
         ${settingRow(t('st_tour'), `<input type="checkbox" id="setTour" ${S.autoTour ? 'checked' : ''}>`)}
         ${settingRow(t('st_sheet'), `<input type="checkbox" id="setSheet" ${S.sheetOnTap ? 'checked' : ''}>`)}
       </div>
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="setTourBtn">${ic('play')} ${t('st_tour_btn')}</button><button class="btn ghost" id="setKeys">${ic('keyboard')} ${t('st_keys')}</button></div></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" id="setTourBtn">${ic('play')} ${t('st_tour_btn')}</button>
+        <button class="btn ghost" id="setKeys">${ic('keyboard')} ${t('st_keys')}</button></div></div>
     <div class="panelbox paper"><h3>${ic('folder')} ${t('st_data')}</h3>
       <div class="stat"><span>${t('st_storage')}</span><b class="num">${kb} KB · ${store.keys().length} keys</b></div>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
@@ -3707,7 +3793,8 @@ function openShortcuts() {
     ['E', t('k_end')], ['F · M · B · P · R', t('k_nav')], ['1 – 9, 0', t('k_plot')], ['← ↑ → ↓', t('k_move')],
     ['S', t('k_sow')], ['H', t('k_harvest')], ['I', t('k_irrig')], ['?', t('k_sheet')], ['Esc', t('k_esc')]
   ];
-  openModal(`${modalHead(t('k_title'), 'keyboard')}<div class="list">${rows.map(([k, d]) => `<div class="row"><span class="txt">${d}</span><kbd class="tag soil num" style="font-size:.85rem">${k}</kbd></div>`).join('')}</div>`);
+  openModal(`${modalHead(t('k_title'), 'keyboard')}<div class="list">${rows.map(([k, d]) => `
+    <div class="row"><span class="txt">${d}</span><kbd class="tag soil num" style="font-size:.85rem">${k}</kbd></div>`).join('')}</div>`);
 }
 function handleKeys(e) {
   if (!g || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -3766,7 +3853,8 @@ function renderNav() {
   const unread = unreadCount();
   const badge = unread ? ` <span class="tag bad">${unread}</span>` : '';
   const secondary = ['almanac', 'challenges', 'settings', 'about'];
-  $('#topnav').innerHTML = NAV.map(([id, key, icon]) => `<a href="#${id}" class="${cur === id ? 'active' : ''} ${secondary.includes(id) ? 'sec' : ''}" title="${t(key)}">${ic(icon)} <span>${t(key)}</span>${id === 'inbox' ? badge : ''}</a>`).join('') +
+  $('#topnav').innerHTML = NAV.map(([id, key, icon]) => `
+    <a href="#${id}" class="${cur === id ? 'active' : ''} ${secondary.includes(id) ? 'sec' : ''}" title="${t(key)}">${ic(icon)} <span>${t(key)}</span>${id === 'inbox' ? badge : ''}</a>`).join('') +
     `<a href="#new" class="${cur === 'new' ? 'active' : ''}">${ic('plus')} <span>${t('nav_new')}</span></a>`;
   $('#mobilebar').innerHTML = MOBILE_NAV.map(id => {
     const [, key, icon] = NAV.find(n => n[0] === id);
