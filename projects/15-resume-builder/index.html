@@ -552,6 +552,8 @@ body.touring .tour-card{display:block}
 .page.bi.modern .side h2 .urh{display:block;margin:0}
 #toasts{width:min(92vw,520px);align-items:center}
 .about .modtbl td:first-child{white-space:nowrap}
+.diff{display:inline-flex;gap:1px;color:var(--line-2);font-size:.85rem}
+.diff .ic.on{color:var(--warn);fill:currentColor}
 .urnote{font-family:var(--urdu);direction:rtl;font-size:1.05rem;line-height:2;text-align:right}
 
 .page .urn{font-family:var(--urdu);font-weight:400;line-height:1.7}
@@ -1148,260 +1150,236 @@ const STD_HEADINGS = new Set(
 // Five fictional Pakistani graduates. The first two seed a fresh install; all five are available
 // from the editor's Sample button (replace the current version or add as a new one).
 // 1. Software engineer (FAST-NUCES) — the original sample
-function sampleResume() {
-  return {
-    id: uid(),
-    name: 'Software Engineer — general',
-    updated: Date.now(),
-    template: 'classic',
-    accent: 'navy',
-    scale: 1,
-    paper: 'a4',
-    lang: 'en',
-    contact: {
-      name: 'Hamza Siddiqui',
-      headline: 'Software Engineer · Full-stack (React, Node.js, Python)',
-      email: 'hamza.siddiqui@gmail.com',
-      phone: '+92 300 1234567',
-      city: 'Lahore, Pakistan',
-      linkedin: 'linkedin.com/in/hamzasiddiqui',
-      github: 'github.com/hamza-sid',
-      website: '',
-      photo: false,
-      photoUrl: '',
-      cnic: false,
-      cnicNo: ''
-    },
-    summary:
-      'Computer Science graduate (FAST-NUCES, CGPA 3.62) with a full-stack internship at Arbisoft and a shipped final-year project used by 300+ farmers. Comfortable across React, Node.js, PostgreSQL and Python; strong on clean APIs, automated testing and clear documentation. Seeking a software engineering role where I can own features end to end.',
-    sections: [
-      { type: 'summary', visible: true },
-      { type: 'experience', visible: true },
-      { type: 'projects', visible: true },
-      { type: 'education', visible: true },
-      { type: 'skills', visible: true },
-      { type: 'certifications', visible: true },
-      { type: 'awards', visible: true },
-      { type: 'languages', visible: true },
-      { type: 'custom', visible: true },
-      { type: 'publications', visible: false },
-      { type: 'teaching', visible: false }
-    ],
-    experience: [
-      {
-        id: uid(),
-        role: 'Software Engineering Intern',
-        company: 'Arbisoft',
-        city: 'Lahore',
-        start: '2025-06',
-        end: '2025-08',
-        present: false,
-        bullets: [
-          'Built 14 REST endpoints in Node.js/Express for an ed-tech client dashboard, cutting average response time by 38 % through query batching and Redis caching',
-          'Wrote 120+ Jest and Supertest cases, raising backend coverage from 41 % to 83 % and catching 9 regressions before release',
-          'Migrated a legacy jQuery admin panel to React with TypeScript, reducing reported UI bugs by 60 % over the internship'
-        ]
-      },
-      {
-        id: uid(),
-        role: 'Teaching Assistant — Data Structures (CS2001)',
-        company: 'FAST-NUCES',
-        city: 'Lahore',
-        start: '2025-01',
-        end: '2025-05',
-        present: false,
-        bullets: [
-          'Led weekly lab sessions for 45 students and designed a Python autograder that saved 10+ hours of marking per week',
-          'Mentored 12 struggling students through office hours; 11 passed the course with a B or higher'
-        ]
-      },
-      {
-        id: uid(),
-        role: 'Freelance Web Developer',
-        company: 'Upwork / local clients',
-        city: 'Remote',
-        start: '2024-03',
-        end: '',
-        present: true,
-        bullets: [
-          'Delivered 7 responsive business websites (Next.js, Tailwind CSS) for Lahore SMEs, maintaining a 5.0 client rating across 9 contracts',
-          'Integrated JazzCash and Easypaisa payment APIs for an online bakery, processing Rs 1.2 M in orders in the first quarter'
-        ]
-      }
-    ],
-    education: [
-      {
-        id: uid(),
-        degree: 'BS Computer Science',
-        institute: 'FAST National University (FAST-NUCES)',
-        city: 'Lahore',
-        start: '2022-09',
-        end: '2026-06',
-        grade: 'CGPA 3.62 / 4.00',
-        honours:
-          "Dean's List (4 semesters) · Coursework: Algorithms, Databases, Operating Systems, Machine Learning, Software Engineering"
-      },
-      {
-        id: uid(),
-        degree: 'FSc Pre-Engineering',
-        institute: 'Punjab Group of Colleges',
-        city: 'Lahore',
-        start: '2020-08',
-        end: '2022-06',
-        grade: '92 % (A+)',
-        honours: ''
-      }
-    ],
-    skills: [
-      {
-        id: uid(),
-        group: 'Languages',
-        items: ['Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'SQL']
-      },
-      {
-        id: uid(),
-        group: 'Frameworks',
-        items: ['React', 'Next.js', 'Node.js', 'Express', 'Flask', 'Tailwind CSS']
-      },
-      {
-        id: uid(),
-        group: 'Tools',
-        items: [
-          'Git',
-          'Docker',
-          'PostgreSQL',
-          'MongoDB',
-          'Redis',
-          'Firebase',
-          'Linux',
-          'Postman',
-          'Figma'
-        ]
-      },
-      {
-        id: uid(),
-        group: 'Soft skills',
-        items: ['Technical writing', 'Mentoring', 'Agile teamwork', 'Client communication']
-      }
-    ],
-    projects: [
-      {
-        id: uid(),
-        name: 'Kisan Mandi Rate Board — Final Year Project',
-        link: 'github.com/hamza-sid/kisan-mandi',
-        stack: 'React, Node.js, PostgreSQL, Leaflet, PWA',
-        bullets: [
-          'Designed and shipped a bilingual (English/Urdu) crop-price dashboard covering 18 mandis; adopted by 300+ farmers in Okara during a 3-month pilot',
-          'Implemented a net-revenue "sell advisor" that ranks mandis after transport and commission costs, improving modelled farmer income by 7 %',
-          'Scraped and normalised daily AMIS price bulletins with a scheduled Python ETL job (99.2 % uptime over the pilot)'
-        ]
-      },
-      {
-        id: uid(),
-        name: 'FaceMark — classroom attendance',
-        link: 'github.com/hamza-sid/facemark',
-        stack: 'Python, OpenCV, Flask, SQLite',
-        bullets: [
-          'Built a face-recognition attendance system reaching 96 % accuracy on a 120-student dataset; reduced roll-call time from 8 minutes to under 1',
-          'Won 2nd place among 40 teams at FAST ProCom 2025'
-        ]
-      },
-      {
-        id: uid(),
-        name: 'Kharcha — expense tracker PWA',
-        link: 'kharcha.vercel.app',
-        stack: 'Vue 3, IndexedDB, Chart.js',
-        bullets: [
-          'Published an offline-first expense tracker with Urdu support; 1,800 installs and a 4.7-star average rating'
-        ]
-      }
-    ],
-    certifications: [
-      {
-        id: uid(),
-        name: 'AWS Certified Cloud Practitioner',
-        issuer: 'Amazon Web Services',
-        date: '2025-11',
-        link: ''
-      },
-      {
-        id: uid(),
-        name: 'Meta Front-End Developer Professional Certificate',
-        issuer: 'Coursera',
-        date: '2025-04',
-        link: ''
-      }
-    ],
-    languages: [
-      { id: uid(), name: 'English', level: 'Fluent (IELTS 7.5)' },
-      { id: uid(), name: 'Urdu', level: 'Native' },
-      { id: uid(), name: 'Punjabi', level: 'Conversational' }
-    ],
-    awards: [
-      {
-        id: uid(),
-        title: '2nd place, FAST ProCom 2025 Hackathon',
-        by: 'FAST-NUCES',
-        date: '2025-03',
-        note: 'Among 40 teams'
-      },
-      {
-        id: uid(),
-        title: 'Merit Scholarship (top 5 % of batch)',
-        by: 'FAST-NUCES',
-        date: '2024-09',
-        note: ''
-      }
-    ],
-    publications: [
-      {
-        id: uid(),
-        title: 'Low-cost crop price forecasting for Pakistani mandis using gradient-boosted trees',
-        venue: 'ICOSST 2025 (student track)',
-        year: '2025',
-        authors: 'H. Siddiqui, A. Raza, S. Malik',
-        link: ''
-      }
-    ],
-    teaching: [
-      {
-        id: uid(),
-        course: 'CS2001 Data Structures (lab)',
-        institute: 'FAST-NUCES',
-        role: 'Teaching Assistant',
-        term: 'Spring 2025'
-      }
-    ],
-    custom: {
-      title: 'Volunteering & Leadership',
-      items: [
-        {
-          id: uid(),
-          title: 'Web Lead, ACM FAST Student Chapter',
-          sub: 'FAST-NUCES Lahore',
-          date: '2024 – 2025',
-          bullets: [
-            'Organised 6 workshops on Git and web development for 200+ first-year students; led a 5-person volunteer web team'
-          ]
-        },
-        {
-          id: uid(),
-          title: 'Volunteer Tutor',
-          sub: 'Akhuwat Foundation, Lahore',
-          date: '2023',
-          bullets: ['Taught basic computer literacy to 30 adult learners over a 10-week programme']
-        }
+const SAMPLE_SWE = {
+  name: 'Software Engineer — general',
+  template: 'classic',
+  accent: 'navy',
+  scale: 1,
+  paper: 'a4',
+  lang: 'en',
+  contact: {
+    name: 'Hamza Siddiqui',
+    headline: 'Software Engineer · Full-stack (React, Node.js, Python)',
+    email: 'hamza.siddiqui@gmail.com',
+    phone: '+92 300 1234567',
+    city: 'Lahore, Pakistan',
+    linkedin: 'linkedin.com/in/hamzasiddiqui',
+    github: 'github.com/hamza-sid',
+    website: '',
+    photo: false,
+    photoUrl: '',
+    cnic: false,
+    cnicNo: ''
+  },
+  summary:
+    'Computer Science graduate (FAST-NUCES, CGPA 3.62) with a full-stack internship at Arbisoft and a shipped final-year project used by 300+ farmers. Comfortable across React, Node.js, PostgreSQL and Python; strong on clean APIs, automated testing and clear documentation. Seeking a software engineering role where I can own features end to end.',
+  sections: [
+    { type: 'summary', visible: true },
+    { type: 'experience', visible: true },
+    { type: 'projects', visible: true },
+    { type: 'education', visible: true },
+    { type: 'skills', visible: true },
+    { type: 'certifications', visible: true },
+    { type: 'awards', visible: true },
+    { type: 'languages', visible: true },
+    { type: 'custom', visible: true },
+    { type: 'publications', visible: false },
+    { type: 'teaching', visible: false }
+  ],
+  experience: [
+    {
+      role: 'Software Engineering Intern',
+      company: 'Arbisoft',
+      city: 'Lahore',
+      start: '2025-06',
+      end: '2025-08',
+      present: false,
+      bullets: [
+        'Built 14 REST endpoints in Node.js/Express for an ed-tech client dashboard, cutting average response time by 38 % through query batching and Redis caching',
+        'Wrote 120+ Jest and Supertest cases, raising backend coverage from 41 % to 83 % and catching 9 regressions before release',
+        'Migrated a legacy jQuery admin panel to React with TypeScript, reducing reported UI bugs by 60 % over the internship'
       ]
     },
-    cover: {
-      job: 'Associate Software Engineer',
-      company: 'Systems Limited',
-      manager: '',
-      source: 'LinkedIn',
-      body: ''
+    {
+      role: 'Teaching Assistant — Data Structures (CS2001)',
+      company: 'FAST-NUCES',
+      city: 'Lahore',
+      start: '2025-01',
+      end: '2025-05',
+      present: false,
+      bullets: [
+        'Led weekly lab sessions for 45 students and designed a Python autograder that saved 10+ hours of marking per week',
+        'Mentored 12 struggling students through office hours; 11 passed the course with a B or higher'
+      ]
+    },
+    {
+      role: 'Freelance Web Developer',
+      company: 'Upwork / local clients',
+      city: 'Remote',
+      start: '2024-03',
+      end: '',
+      present: true,
+      bullets: [
+        'Delivered 7 responsive business websites (Next.js, Tailwind CSS) for Lahore SMEs, maintaining a 5.0 client rating across 9 contracts',
+        'Integrated JazzCash and Easypaisa payment APIs for an online bakery, processing Rs 1.2 M in orders in the first quarter'
+      ]
     }
-  };
-}
+  ],
+  education: [
+    {
+      degree: 'BS Computer Science',
+      institute: 'FAST National University (FAST-NUCES)',
+      city: 'Lahore',
+      start: '2022-09',
+      end: '2026-06',
+      grade: 'CGPA 3.62 / 4.00',
+      honours:
+        "Dean's List (4 semesters) · Coursework: Algorithms, Databases, Operating Systems, Machine Learning, Software Engineering"
+    },
+    {
+      degree: 'FSc Pre-Engineering',
+      institute: 'Punjab Group of Colleges',
+      city: 'Lahore',
+      start: '2020-08',
+      end: '2022-06',
+      grade: '92 % (A+)',
+      honours: ''
+    }
+  ],
+  skills: [
+    {
+      group: 'Languages',
+      items: ['Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'SQL']
+    },
+    {
+      group: 'Frameworks',
+      items: ['React', 'Next.js', 'Node.js', 'Express', 'Flask', 'Tailwind CSS']
+    },
+    {
+      group: 'Tools',
+      items: [
+        'Git',
+        'Docker',
+        'PostgreSQL',
+        'MongoDB',
+        'Redis',
+        'Firebase',
+        'Linux',
+        'Postman',
+        'Figma'
+      ]
+    },
+    {
+      group: 'Soft skills',
+      items: ['Technical writing', 'Mentoring', 'Agile teamwork', 'Client communication']
+    }
+  ],
+  projects: [
+    {
+      name: 'Kisan Mandi Rate Board — Final Year Project',
+      link: 'github.com/hamza-sid/kisan-mandi',
+      stack: 'React, Node.js, PostgreSQL, Leaflet, PWA',
+      bullets: [
+        'Designed and shipped a bilingual (English/Urdu) crop-price dashboard covering 18 mandis; adopted by 300+ farmers in Okara during a 3-month pilot',
+        'Implemented a net-revenue "sell advisor" that ranks mandis after transport and commission costs, improving modelled farmer income by 7 %',
+        'Scraped and normalised daily AMIS price bulletins with a scheduled Python ETL job (99.2 % uptime over the pilot)'
+      ]
+    },
+    {
+      name: 'FaceMark — classroom attendance',
+      link: 'github.com/hamza-sid/facemark',
+      stack: 'Python, OpenCV, Flask, SQLite',
+      bullets: [
+        'Built a face-recognition attendance system reaching 96 % accuracy on a 120-student dataset; reduced roll-call time from 8 minutes to under 1',
+        'Won 2nd place among 40 teams at FAST ProCom 2025'
+      ]
+    },
+    {
+      name: 'Kharcha — expense tracker PWA',
+      link: 'kharcha.vercel.app',
+      stack: 'Vue 3, IndexedDB, Chart.js',
+      bullets: [
+        'Published an offline-first expense tracker with Urdu support; 1,800 installs and a 4.7-star average rating'
+      ]
+    }
+  ],
+  certifications: [
+    {
+      name: 'AWS Certified Cloud Practitioner',
+      issuer: 'Amazon Web Services',
+      date: '2025-11',
+      link: ''
+    },
+    {
+      name: 'Meta Front-End Developer Professional Certificate',
+      issuer: 'Coursera',
+      date: '2025-04',
+      link: ''
+    }
+  ],
+  languages: [
+    { name: 'English', level: 'Fluent (IELTS 7.5)' },
+    { name: 'Urdu', level: 'Native' },
+    { name: 'Punjabi', level: 'Conversational' }
+  ],
+  awards: [
+    {
+      title: '2nd place, FAST ProCom 2025 Hackathon',
+      by: 'FAST-NUCES',
+      date: '2025-03',
+      note: 'Among 40 teams'
+    },
+    {
+      title: 'Merit Scholarship (top 5 % of batch)',
+      by: 'FAST-NUCES',
+      date: '2024-09',
+      note: ''
+    }
+  ],
+  publications: [
+    {
+      title: 'Low-cost crop price forecasting for Pakistani mandis using gradient-boosted trees',
+      venue: 'ICOSST 2025 (student track)',
+      year: '2025',
+      authors: 'H. Siddiqui, A. Raza, S. Malik',
+      link: ''
+    }
+  ],
+  teaching: [
+    {
+      course: 'CS2001 Data Structures (lab)',
+      institute: 'FAST-NUCES',
+      role: 'Teaching Assistant',
+      term: 'Spring 2025'
+    }
+  ],
+  custom: {
+    title: 'Volunteering & Leadership',
+    items: [
+      {
+        title: 'Web Lead, ACM FAST Student Chapter',
+        sub: 'FAST-NUCES Lahore',
+        date: '2024 – 2025',
+        bullets: [
+          'Organised 6 workshops on Git and web development for 200+ first-year students; led a 5-person volunteer web team'
+        ]
+      },
+      {
+        title: 'Volunteer Tutor',
+        sub: 'Akhuwat Foundation, Lahore',
+        date: '2023',
+        bullets: ['Taught basic computer literacy to 30 adult learners over a 10-week programme']
+      }
+    ]
+  },
+  cover: {
+    job: 'Associate Software Engineer',
+    company: 'Systems Limited',
+    manager: '',
+    source: 'LinkedIn',
+    body: ''
+  }
+};
 // 2. Data / ML variant of the same graduate
 function sampleVariant() {
   const r = sampleResume();
@@ -1459,10 +1437,11 @@ function blankResume() {
 }
 
 // 3. Electrical engineering graduate (UET Lahore) — power systems and embedded work
-function sampleElectrical() {
-  const r = blankResume();
-  Object.assign(r, { name: 'Electrical Engineer — power & embedded', template: 'minimal', accent: 'graphite' });
-  r.contact = {
+const SAMPLE_EE = {
+  name: 'Electrical Engineer — power & embedded',
+  template: 'minimal',
+  accent: 'graphite',
+  contact: {
     name: 'Ayesha Tariq',
     headline: 'Electrical Engineer · Power Systems, Embedded C, MATLAB',
     email: 'ayesha.tariq@outlook.com',
@@ -1475,12 +1454,11 @@ function sampleElectrical() {
     photoUrl: '',
     cnic: false,
     cnicNo: ''
-  };
-  r.summary =
-    'Electrical Engineering graduate (UET Lahore, CGPA 3.48) with internship experience at LESCO and a final-year project on low-cost grid fault detection deployed on 6 feeders. Comfortable with MATLAB/Simulink, ETAP, Embedded C and PCB design; registered with the Pakistan Engineering Council. Seeking a graduate trainee engineer role in power distribution or embedded systems.';
-  r.experience = [
+  },
+  summary:
+    'Electrical Engineering graduate (UET Lahore, CGPA 3.48) with internship experience at LESCO and a final-year project on low-cost grid fault detection deployed on 6 feeders. Comfortable with MATLAB/Simulink, ETAP, Embedded C and PCB design; registered with the Pakistan Engineering Council. Seeking a graduate trainee engineer role in power distribution or embedded systems.',
+  experience: [
     {
-      id: uid(),
       role: 'Engineering Intern — Grid Operations',
       company: 'LESCO (Lahore Electric Supply Company)',
       city: 'Lahore',
@@ -1494,7 +1472,6 @@ function sampleElectrical() {
       ]
     },
     {
-      id: uid(),
       role: 'Lab Demonstrator — Electrical Machines',
       company: 'UET Lahore',
       city: 'Lahore',
@@ -1506,10 +1483,9 @@ function sampleElectrical() {
         'Designed 4 new experiment sheets adopted by the department for the following semester'
       ]
     }
-  ];
-  r.education = [
+  ],
+  education: [
     {
-      id: uid(),
       degree: 'BSc Electrical Engineering',
       institute: 'University of Engineering and Technology (UET)',
       city: 'Lahore',
@@ -1519,7 +1495,6 @@ function sampleElectrical() {
       honours: 'Coursework: Power Systems Analysis, Power Electronics, Control Systems, Embedded Systems, Renewable Energy'
     },
     {
-      id: uid(),
       degree: 'FSc Pre-Engineering',
       institute: 'Government College University',
       city: 'Lahore',
@@ -1528,16 +1503,15 @@ function sampleElectrical() {
       grade: '88 %',
       honours: ''
     }
-  ];
-  r.skills = [
-    { id: uid(), group: 'Engineering tools', items: ['MATLAB', 'Simulink', 'ETAP', 'AutoCAD Electrical', 'Proteus', 'Altium Designer'] },
-    { id: uid(), group: 'Programming', items: ['Embedded C', 'Python', 'Arduino', 'STM32 HAL', 'LabVIEW'] },
-    { id: uid(), group: 'Domain', items: ['Load flow analysis', 'Protection coordination', 'PCB design', 'Solar PV sizing', 'SCADA basics'] },
-    { id: uid(), group: 'Soft skills', items: ['Technical reporting', 'Field safety', 'Teamwork'] }
-  ];
-  r.projects = [
+  ],
+  skills: [
+    { group: 'Engineering tools', items: ['MATLAB', 'Simulink', 'ETAP', 'AutoCAD Electrical', 'Proteus', 'Altium Designer'] },
+    { group: 'Programming', items: ['Embedded C', 'Python', 'Arduino', 'STM32 HAL', 'LabVIEW'] },
+    { group: 'Domain', items: ['Load flow analysis', 'Protection coordination', 'PCB design', 'Solar PV sizing', 'SCADA basics'] },
+    { group: 'Soft skills', items: ['Technical reporting', 'Field safety', 'Teamwork'] }
+  ],
+  projects: [
     {
-      id: uid(),
       name: 'Low-cost Feeder Fault Locator — Final Year Project',
       link: 'github.com/ayesha-ee/fault-locator',
       stack: 'STM32, current sensors, LoRa, Python dashboard',
@@ -1547,7 +1521,6 @@ function sampleElectrical() {
       ]
     },
     {
-      id: uid(),
       name: 'Solar-powered irrigation controller',
       link: '',
       stack: 'Arduino, soil-moisture sensors, 12 V PV, MPPT',
@@ -1555,38 +1528,37 @@ function sampleElectrical() {
         'Designed a 300 W off-grid controller for a 2-acre plot in Kasur that cut diesel pumping cost by Rs 6,000 per month in a 3-month trial'
       ]
     }
-  ];
-  r.certifications = [
-    { id: uid(), name: 'Registered Engineer (RE)', issuer: 'Pakistan Engineering Council', date: '2026-07', link: '' },
-    { id: uid(), name: 'Solar PV Design and Installation', issuer: 'NUST PNEC / Coursera', date: '2025-03', link: '' }
-  ];
-  r.languages = [
-    { id: uid(), name: 'English', level: 'Fluent' },
-    { id: uid(), name: 'Urdu', level: 'Native' },
-    { id: uid(), name: 'Punjabi', level: 'Native' }
-  ];
-  r.awards = [{ id: uid(), title: 'Best FYP, Electrical Department', by: 'UET Lahore Open House 2026', date: '2026-05', note: '' }];
-  r.custom = {
+  ],
+  certifications: [
+    { name: 'Registered Engineer (RE)', issuer: 'Pakistan Engineering Council', date: '2026-07', link: '' },
+    { name: 'Solar PV Design and Installation', issuer: 'NUST PNEC / Coursera', date: '2025-03', link: '' }
+  ],
+  languages: [
+    { name: 'English', level: 'Fluent' },
+    { name: 'Urdu', level: 'Native' },
+    { name: 'Punjabi', level: 'Native' }
+  ],
+  awards: [{ title: 'Best FYP, Electrical Department', by: 'UET Lahore Open House 2026', date: '2026-05', note: '' }],
+  custom: {
     title: 'Volunteering',
     items: [
       {
-        id: uid(),
         title: 'Member, IEEE UET Student Branch',
         sub: 'UET Lahore',
         date: '2023 – 2026',
         bullets: ['Co-organised an industrial visit programme to 5 plants for 120 students']
       }
     ]
-  };
-  r.cover = { job: 'Graduate Trainee Engineer', company: 'K-Electric', manager: '', source: 'Rozee.pk', body: '' };
-  return r;
-}
+  },
+  cover: { job: 'Graduate Trainee Engineer', company: 'K-Electric', manager: '', source: 'Rozee.pk', body: '' }
+};
 
 // 4. Business graduate (IBA Karachi) — digital marketing and growth
-function sampleMarketing() {
-  const r = blankResume();
-  Object.assign(r, { name: 'Marketing — digital & growth', template: 'bold', accent: 'burgundy' });
-  r.contact = {
+const SAMPLE_MKT = {
+  name: 'Marketing — digital & growth',
+  template: 'bold',
+  accent: 'burgundy',
+  contact: {
     name: 'Bilal Mehmood',
     headline: 'Digital Marketing Associate · Performance Ads, SEO, Analytics',
     email: 'bilal.mehmood@gmail.com',
@@ -1599,12 +1571,11 @@ function sampleMarketing() {
     photoUrl: '',
     cnic: false,
     cnicNo: ''
-  };
-  r.summary =
-    'BBA (Marketing) graduate from IBA Karachi with internship experience at Daraz and a student-run agency that managed Rs 2.4 M in ad spend for 9 SMEs. Strong on Meta and Google Ads, SEO content and Google Analytics 4, with a habit of reporting results in numbers. Looking for a performance-marketing or growth associate role.';
-  r.experience = [
+  },
+  summary:
+    'BBA (Marketing) graduate from IBA Karachi with internship experience at Daraz and a student-run agency that managed Rs 2.4 M in ad spend for 9 SMEs. Strong on Meta and Google Ads, SEO content and Google Analytics 4, with a habit of reporting results in numbers. Looking for a performance-marketing or growth associate role.',
+  experience: [
     {
-      id: uid(),
       role: 'Marketing Intern — Campaigns',
       company: 'Daraz Pakistan',
       city: 'Karachi',
@@ -1618,7 +1589,6 @@ function sampleMarketing() {
       ]
     },
     {
-      id: uid(),
       role: 'Co-founder & Account Lead',
       company: 'Khyaal Studio (student agency)',
       city: 'Karachi',
@@ -1630,10 +1600,9 @@ function sampleMarketing() {
         'Increased a Clifton bakery client’s Instagram followers from 1,200 to 18,000 in 8 months through a reels-first content calendar'
       ]
     }
-  ];
-  r.education = [
+  ],
+  education: [
     {
-      id: uid(),
       degree: 'BBA (Marketing)',
       institute: 'Institute of Business Administration (IBA)',
       city: 'Karachi',
@@ -1642,16 +1611,15 @@ function sampleMarketing() {
       grade: 'CGPA 3.55 / 4.00',
       honours: "Dean's List 2024 · Coursework: Consumer Behaviour, Digital Marketing, Marketing Research, Brand Management"
     }
-  ];
-  r.skills = [
-    { id: uid(), group: 'Paid media', items: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Campaign budgeting', 'A/B testing'] },
-    { id: uid(), group: 'Analytics', items: ['Google Analytics 4', 'Looker Studio', 'Excel', 'SQL basics', 'Hotjar'] },
-    { id: uid(), group: 'Content & SEO', items: ['SEO', 'Copywriting', 'Canva', 'CapCut', 'WordPress', 'Mailchimp'] },
-    { id: uid(), group: 'Soft skills', items: ['Client pitching', 'Presentation', 'Urdu and English copy'] }
-  ];
-  r.projects = [
+  ],
+  skills: [
+    { group: 'Paid media', items: ['Meta Ads', 'Google Ads', 'TikTok Ads', 'Campaign budgeting', 'A/B testing'] },
+    { group: 'Analytics', items: ['Google Analytics 4', 'Looker Studio', 'Excel', 'SQL basics', 'Hotjar'] },
+    { group: 'Content & SEO', items: ['SEO', 'Copywriting', 'Canva', 'CapCut', 'WordPress', 'Mailchimp'] },
+    { group: 'Soft skills', items: ['Client pitching', 'Presentation', 'Urdu and English copy'] }
+  ],
+  projects: [
     {
-      id: uid(),
       name: 'Go-to-market plan for a Karachi fintech wallet — Final Year Project',
       link: '',
       stack: 'Survey of 420 users, segmentation, Rs 5 M launch budget plan',
@@ -1660,38 +1628,37 @@ function sampleMarketing() {
         'Presented to the fintech’s leadership team; plan rated best in the cohort by the faculty panel'
       ]
     }
-  ];
-  r.certifications = [
-    { id: uid(), name: 'Google Ads Search Certification', issuer: 'Google Skillshop', date: '2025-04', link: '' },
-    { id: uid(), name: 'Meta Certified Digital Marketing Associate', issuer: 'Meta Blueprint', date: '2025-02', link: '' }
-  ];
-  r.languages = [
-    { id: uid(), name: 'English', level: 'Fluent (IELTS 7.0)' },
-    { id: uid(), name: 'Urdu', level: 'Native' },
-    { id: uid(), name: 'Sindhi', level: 'Conversational' }
-  ];
-  r.awards = [{ id: uid(), title: 'Winner, IBA Marketing Case Competition', by: 'IBA Karachi', date: '2025-11', note: '32 teams' }];
-  r.custom = {
+  ],
+  certifications: [
+    { name: 'Google Ads Search Certification', issuer: 'Google Skillshop', date: '2025-04', link: '' },
+    { name: 'Meta Certified Digital Marketing Associate', issuer: 'Meta Blueprint', date: '2025-02', link: '' }
+  ],
+  languages: [
+    { name: 'English', level: 'Fluent (IELTS 7.0)' },
+    { name: 'Urdu', level: 'Native' },
+    { name: 'Sindhi', level: 'Conversational' }
+  ],
+  awards: [{ title: 'Winner, IBA Marketing Case Competition', by: 'IBA Karachi', date: '2025-11', note: '32 teams' }],
+  custom: {
     title: 'Leadership',
     items: [
       {
-        id: uid(),
         title: 'President, IBA Marketing Society',
         sub: 'IBA Karachi',
         date: '2024 – 2025',
         bullets: ['Led a 25-member team to run a 3-day brand festival with 1,500 attendees and Rs 900 K in sponsorships']
       }
     ]
-  };
-  r.cover = { job: 'Performance Marketing Associate', company: 'Bazaar Technologies', manager: '', source: 'LinkedIn', body: '' };
-  return r;
-}
+  },
+  cover: { job: 'Performance Marketing Associate', company: 'Bazaar Technologies', manager: '', source: 'LinkedIn', body: '' }
+};
 
 // 5. Mobile developer (NUST Islamabad) — Flutter and Android
-function sampleMobile() {
-  const r = blankResume();
-  Object.assign(r, { name: 'Mobile Developer — Flutter', template: 'compact', accent: 'teal' });
-  r.contact = {
+const SAMPLE_MOBILE = {
+  name: 'Mobile Developer — Flutter',
+  template: 'compact',
+  accent: 'teal',
+  contact: {
     name: 'Sara Qureshi',
     headline: 'Mobile Developer · Flutter, Kotlin, Firebase',
     email: 'sara.qureshi@proton.me',
@@ -1704,12 +1671,11 @@ function sampleMobile() {
     photoUrl: '',
     cnic: false,
     cnicNo: ''
-  };
-  r.summary =
-    'Computer Science graduate (NUST SEECS, CGPA 3.71) who has shipped 3 Flutter apps to the Play Store with 25,000+ combined installs, including a bilingual pharmacy-finder built as a final-year project. Strong in Flutter, Kotlin, Firebase and REST integration, with experience in offline-first design and app-store release cycles. Seeking a junior mobile engineer role.';
-  r.experience = [
+  },
+  summary:
+    'Computer Science graduate (NUST SEECS, CGPA 3.71) who has shipped 3 Flutter apps to the Play Store with 25,000+ combined installs, including a bilingual pharmacy-finder built as a final-year project. Strong in Flutter, Kotlin, Firebase and REST integration, with experience in offline-first design and app-store release cycles. Seeking a junior mobile engineer role.',
+  experience: [
     {
-      id: uid(),
       role: 'Mobile Development Intern',
       company: 'Careem (Careem Pakistan)',
       city: 'Islamabad',
@@ -1723,7 +1689,6 @@ function sampleMobile() {
       ]
     },
     {
-      id: uid(),
       role: 'Freelance Flutter Developer',
       company: 'Fiverr',
       city: 'Remote',
@@ -1735,10 +1700,9 @@ function sampleMobile() {
         'Integrated JazzCash, Stripe and Firebase Auth for a Peshawar clinic’s appointment app used by 800+ patients'
       ]
     }
-  ];
-  r.education = [
+  ],
+  education: [
     {
-      id: uid(),
       degree: 'BS Computer Science',
       institute: 'NUST (SEECS)',
       city: 'Islamabad',
@@ -1747,16 +1711,15 @@ function sampleMobile() {
       grade: 'CGPA 3.71 / 4.00',
       honours: 'Rector’s Gold Medal nominee · Coursework: Mobile Computing, Databases, HCI, Software Engineering'
     }
-  ];
-  r.skills = [
-    { id: uid(), group: 'Mobile', items: ['Flutter', 'Dart', 'Kotlin', 'Android SDK', 'Jetpack Compose', 'BLoC', 'Riverpod'] },
-    { id: uid(), group: 'Backend & cloud', items: ['Firebase', 'Firestore', 'REST APIs', 'Node.js', 'Supabase', 'SQLite'] },
-    { id: uid(), group: 'Tools', items: ['Git', 'GitHub Actions', 'Fastlane', 'Figma', 'Play Console', 'Crashlytics'] },
-    { id: uid(), group: 'Soft skills', items: ['User interviews', 'Release management', 'Documentation'] }
-  ];
-  r.projects = [
+  ],
+  skills: [
+    { group: 'Mobile', items: ['Flutter', 'Dart', 'Kotlin', 'Android SDK', 'Jetpack Compose', 'BLoC', 'Riverpod'] },
+    { group: 'Backend & cloud', items: ['Firebase', 'Firestore', 'REST APIs', 'Node.js', 'Supabase', 'SQLite'] },
+    { group: 'Tools', items: ['Git', 'GitHub Actions', 'Fastlane', 'Figma', 'Play Console', 'Crashlytics'] },
+    { group: 'Soft skills', items: ['User interviews', 'Release management', 'Documentation'] }
+  ],
+  projects: [
     {
-      id: uid(),
       name: 'DawaiFinder — pharmacy stock locator (FYP)',
       link: 'github.com/saraq/dawaifinder',
       stack: 'Flutter, Firebase, Google Maps SDK, Urdu localisation',
@@ -1766,37 +1729,51 @@ function sampleMobile() {
       ]
     },
     {
-      id: uid(),
       name: 'Namaz Times widget',
       link: 'play.google.com/store/apps/details?id=dev.saraq.namaz',
       stack: 'Kotlin, Jetpack Compose, WorkManager',
       bullets: ['Published an Android home-screen widget with 16,000 installs and a 4.8-star rating']
     }
-  ];
-  r.certifications = [
-    { id: uid(), name: 'Associate Android Developer', issuer: 'Google', date: '2025-05', link: '' }
-  ];
-  r.languages = [
-    { id: uid(), name: 'English', level: 'Fluent' },
-    { id: uid(), name: 'Urdu', level: 'Native' },
-    { id: uid(), name: 'Pashto', level: 'Native' }
-  ];
-  r.awards = [{ id: uid(), title: '1st place, NUST App Hackathon 2025', by: 'NUST SEECS', date: '2025-04', note: '' }];
-  r.custom = {
+  ],
+  certifications: [
+    { name: 'Associate Android Developer', issuer: 'Google', date: '2025-05', link: '' }
+  ],
+  languages: [
+    { name: 'English', level: 'Fluent' },
+    { name: 'Urdu', level: 'Native' },
+    { name: 'Pashto', level: 'Native' }
+  ],
+  awards: [{ title: '1st place, NUST App Hackathon 2025', by: 'NUST SEECS', date: '2025-04', note: '' }],
+  custom: {
     title: 'Volunteering',
     items: [
       {
-        id: uid(),
         title: 'Mentor, Google Developer Student Club',
         sub: 'NUST',
         date: '2024 – 2026',
         bullets: ['Taught a 6-week Flutter bootcamp to 70 students; 12 published their first app']
       }
     ]
-  };
-  r.cover = { job: 'Junior Mobile Engineer', company: 'Bykea', manager: '', source: 'LinkedIn', body: '' };
+  },
+  cover: { job: 'Junior Mobile Engineer', company: 'Bykea', manager: '', source: 'LinkedIn', body: '' }
+};
+
+// Sample constants carry no ids: every load gets fresh ones, so versions never share entry ids.
+const ID_LISTS = ['experience', 'education', 'skills', 'projects', 'certifications', 'languages', 'awards', 'publications', 'teaching'];
+function withIds(data) {
+  const r = clone(data);
+  ID_LISTS.forEach(k => (r[k] || []).forEach(it => (it.id = uid())));
+  (r.custom?.items || []).forEach(it => (it.id = uid()));
   return r;
 }
+function sampleResume() {
+  return Object.assign(withIds(SAMPLE_SWE), { id: uid(), updated: Date.now() });
+}
+// profiles 3–5 start from a blank resume (sections, cover letter) and overlay their data
+const fromBlank = data => Object.assign(blankResume(), withIds(data));
+const sampleElectrical = () => fromBlank(SAMPLE_EE);
+const sampleMarketing = () => fromBlank(SAMPLE_MKT);
+const sampleMobile = () => fromBlank(SAMPLE_MOBILE);
 
 // Registry used by the sample picker and the settings page
 const SAMPLES = [
@@ -5605,14 +5582,14 @@ function dismissWelcome() {
 
 // ---------- about + student extension points ----------
 const TODOS = [
-  ['AI bullet rewriting (bring-your-own API key)', 'AI', 'Adapter in aiRewrite(): send bullet + job title, render 3 variants as suggestion cards; keep the rule engine as offline fallback.', '★★'],
-  ['DOCX export with real Word heading styles', 'export', 'exportDocx(): generate document.xml from blocks() and zip it; ATS parsers read Word styles better than PDF text runs.', '★★★'],
-  ['LinkedIn / JSON Resume import', 'import', 'importJsonResume(): map basics/work/education/skills; parse the LinkedIn data-export ZIP.', '★★'],
-  ['Backend accounts with sharing links', 'backend', 'shareLink(): REST API + auth, signed read-only URLs that render the same resumeHTML() server-side.', '★★★'],
-  ['Recruiter view with annotations', 'collab', 'recruiterView(): a read-only route (#r/<id>) where a mentor highlights text and leaves comments stored against bullet ids.', '★★'],
-  ['Synonym-aware keyword matching', 'ATS', 'keywordMatch(): stemming (Porter), a tech-synonym table (JS ↔ JavaScript, Postgres ↔ PostgreSQL) or small embeddings.', '★★'],
-  ['Calendar export for interviews and deadlines', 'tracker', 'exportInterviewICS(): build VCALENDAR/VEVENT text for the interview date and download it as .ics.', '★'],
-  ['Voice practice with recordings', 'interview', 'startPractice(): record answers with MediaRecorder, store blobs in IndexedDB, play back and count filler words.', '★★']
+  ['AI bullet rewriting (bring-your-own API key)', 'AI', 'Adapter in aiRewrite(): send bullet + job title, render 3 variants as suggestion cards; keep the rule engine as offline fallback.', 2],
+  ['DOCX export with real Word heading styles', 'export', 'exportDocx(): generate document.xml from blocks() and zip it; ATS parsers read Word styles better than PDF text runs.', 3],
+  ['LinkedIn / JSON Resume import', 'import', 'importJsonResume(): map basics/work/education/skills; parse the LinkedIn data-export ZIP.', 2],
+  ['Backend accounts with sharing links', 'backend', 'shareLink(): REST API + auth, signed read-only URLs that render the same resumeHTML() server-side.', 3],
+  ['Recruiter view with annotations', 'collab', 'recruiterView(): a read-only route (#r/<id>) where a mentor highlights text and leaves comments stored against bullet ids.', 2],
+  ['Synonym-aware keyword matching', 'ATS', 'keywordMatch(): stemming (Porter), a tech-synonym table (JS ↔ JavaScript, Postgres ↔ PostgreSQL) or small embeddings.', 2],
+  ['Calendar export for interviews and deadlines', 'tracker', 'exportInterviewICS(): build VCALENDAR/VEVENT text for the interview date and download it as .ics.', 1],
+  ['Voice practice with recordings', 'interview', 'startPractice(): record answers with MediaRecorder, store blobs in IndexedDB, play back and count filler words.', 2]
 ];
 const MODULES = [
   ['edit', 'Resume editor', 'Six ATS-safe templates, live A4 preview, bilingual and Urdu (RTL) CV modes, five sample profiles.'],
@@ -5640,7 +5617,7 @@ function aboutMainHTML() {
 function renderAbout() {
   $('#view-about').innerHTML = `<div class="wrap"><div>${aboutMainHTML()}</div>
     <div><h3 style="margin:4px 0 10px;font-family:var(--serif);font-size:1.2rem;font-weight:600">Left for students to build</h3>
-      <div class="list stagger">${TODOS.map(([h, tag, hint, d]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span><span class="muted" style="font-size:.8rem">${d}</span></h4><div class="muted" style="font-size:.86rem">${esc(hint)}</div></div>`).join('')}</div>
+      <div class="list stagger">${TODOS.map(([h, tag, hint, d]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span><span class="diff" role="img" aria-label="Difficulty ${d} of 3">${ic('star', 'on').repeat(d)}${ic('star').repeat(3 - d)}</span></h4><div class="muted" style="font-size:.86rem">${esc(hint)}</div></div>`).join('')}</div>
       <div class="note" style="margin-top:14px">Search the source for <code>TODO(student)</code> to find the exact stub points.</div>
       <div class="addrow"><button class="btn ghost" id="aboutTour">${ic('play')} Take the tour</button><a class="btn ghost" href="#settings" style="text-decoration:none">${ic('settings')} Settings</a></div></div></div>`;
   animateIn($('#view-about'));
