@@ -3081,14 +3081,34 @@ function weightedPick(chs, rng, exclude = new Set()) {
   return list[list.length - 1];
 }
 
+// Give each chapter a question count proportional to its weightage (largest remainder),
+// then shuffle so the paper reads like a real one instead of grouping by chapter.
+function allocateByWeight(chs, count, rng) {
+  const total = sum(chs.map(W)) || 1;
+  const exact = chs.map(c => (W(c) / total) * count);
+  const counts = exact.map(Math.floor);
+  let left = count - sum(counts);
+  const order = exact.map((v, i) => ({ i, frac: v - Math.floor(v) })).sort((a, b) => b.frac - a.frac || rng() - 0.5);
+  for (let k = 0; left > 0 && k < order.length; k++, left--) counts[order[k].i]++;
+  const out = [];
+  chs.forEach((c, i) => {
+    for (let k = 0; k < counts[i]; k++) out.push(c.id);
+  });
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 function generateMock({ subj, pattern = 'board', seed = Date.now() >>> 0, startedAt = Date.now(), mins }) {
   const s = subjById(subj);
   const pat = patternFor(pattern, s.id);
   const rng = mulberry32(seed);
   const items = [];
   let n = 1;
-  for (let i = 0; i < pat.mcq; i++) items.push({ n: n++, type: 'mcq', ch: weightedPick(s.ch, rng).id, marks: 1, got: null });
-  for (let i = 0; i < pat.short; i++) items.push({ n: n++, type: 'short', ch: weightedPick(s.ch, rng).id, marks: pat.shortMarks, got: null });
+  allocateByWeight(s.ch, pat.mcq, rng).forEach(ch => items.push({ n: n++, type: 'mcq', ch, marks: 1, got: null }));
+  allocateByWeight(s.ch, pat.short, rng).forEach(ch => items.push({ n: n++, type: 'short', ch, marks: pat.shortMarks, got: null }));
   const used = new Set();
   for (let i = 0; i < pat.long; i++) {
     const c = weightedPick(s.ch, rng, used);
@@ -3545,7 +3565,7 @@ function datesheetHtml(today) {
     const gap = prev ? daysBetween(prev, d) : null;
     prev = d;
     return `<div class="ds ${s.id === nextId ? 'next' : ''}"><span class="ico" style="background:${s.color}">${ic(s.icon)}</span>
-      <div class="t"><b>${esc(subjName(s))}</b><span>${esc(dayName(d))} - ${esc(fmtD(d, { day: 'numeric', month: 'long' }))}${gap != null ? ` - ${t('gap')} ${gap}d` : ''}</span></div>
+      <div class="t"><b>${esc(subjName(s))}</b><span>${esc(dayName(d))} - ${esc(fmtD(d, { day: 'numeric', month: 'long' }))}${gap != null ? ` - ${t('gap')} ${gap} ${t('days')}` : ''}</span></div>
       <input type="date" data-ds="${s.id}" value="${d}" aria-label="${esc(subjName(s))} ${esc(t('date'))}">
       <div class="left">${daysLeftLabel(d, today)}</div></div>`;
   }).join('');

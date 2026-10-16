@@ -570,6 +570,7 @@ html[data-theme=dark] .doc h3,html[data-theme=dark] .receipt h3{color:var(--mint
   .btn,.toolbar{display:none!important}
   body{background:#fff}
   .receipt{break-inside:avoid}
+  .tblwrap{border:0;overflow:visible}
 }
 #printRoot{display:none}
 .noanim.enter,.noanim .enter,.noanim .stagger>*{animation:none}
@@ -2776,8 +2777,8 @@ function monthlyReport(c, k) {
   }).join('');
   return `<div class="doc">${docHead(c, tEn('rp_monthly'), TXT.ur.rp_monthly, `#${k + 1} · ${monthLabel(monthOf(c, k), true)} · ${tEn('pot_due').replace('{a}', dateLabel(iso(dueDate(c, k)), true))}`)}
     <div class="tot4"><div><b>${tEn('pay_expected')}</b><span class="amt">${rsFull(st.expected)}</span></div><div><b>${tEn('pay_collected')}</b><span class="amt">${rsFull(st.collected)}</span></div><div><b>${tEn('pay_fees')}</b><span class="amt">${rsFull(st.fees)}</span></div><div><b>${tEn('pay_recipient')}</b><span>${st.recipient ? esc(st.recipient.name) : '—'}</span></div></div>
-    <table class="tbl"><thead><tr><th>${tEn('mem_name')}</th><th>${tEn('ds_status')}</th><th class="num">${tEn('ce_amount')}</th><th>${tEn('rp_date')}</th><th class="num">${tEn('rp_fee')}</th><th>${tEn('ce_note')}</th></tr></thead><tbody>${rows}</tbody>
-      <tfoot><tr><th>${tEn('rp_total')}</th><th></th><th class="num">${rsFull(st.collected)}</th><th></th><th class="num">${rsFull(st.fees)}</th><th></th></tr></tfoot></table>
+    <div class="tblwrap"><table class="tbl"><thead><tr><th>${tEn('mem_name')}</th><th>${tEn('ds_status')}</th><th class="num">${tEn('ce_amount')}</th><th>${tEn('rp_date')}</th><th class="num">${tEn('rp_fee')}</th><th>${tEn('ce_note')}</th></tr></thead><tbody>${rows}</tbody>
+      <tfoot><tr><th>${tEn('rp_total')}</th><th></th><th class="num">${rsFull(st.collected)}</th><th></th><th class="num">${rsFull(st.fees)}</th><th></th></tr></tfoot></table></div>
     <div class="sigs"><div class="sig"><b>${esc(c.organizer?.name || '')}</b><span>${tEn('rp_sign_org')} · منتظم</span></div><div class="sig"><b>${st.recipient ? esc(st.recipient.name) : ''}</b><span>${tEn('rp_sign_rec')} · وصول کنندہ · ${rsFull(st.payout)}</span></div></div></div>`;
 }
 function ledgerReport(c) {
@@ -2803,8 +2804,8 @@ function payoutRegister(c) {
     return `<tr><td class="num">${k + 1}</td><td>${monthLabel(monthOf(c, k), true)}</td><td>${st.recipient ? esc(st.recipient.name) : '—'}<br><span class="small muted mono">${esc(st.recipient?.phone || '')}</span></td><td class="mono small">${dateLabel(c.payouts[k].date, true)}</td><td class="num">${rsFull(c.payouts[k].amt)}</td><td class="mono small">${esc(receiptNo(c, k, null))}</td><td style="min-width:120px;border-bottom:1px solid var(--ink)"></td></tr>`;
   }).join('');
   return `<div class="doc">${docHead(c, tEn('rp_payouts'), TXT.ur.rp_payouts)}
-    <table class="tbl"><thead><tr><th>#</th><th>${tEn('pay_month')}</th><th>${tEn('rp_recv_by')}</th><th>${tEn('rp_date')}</th><th class="num">${tEn('ce_amount')}</th><th>${tEn('rc_no')}</th><th>${tEn('rp_sign_rec')}</th></tr></thead><tbody>${rows}</tbody>
-      <tfoot><tr><th colspan="4">${tEn('rp_total')}</th><th class="num">${rsFull(sum(done.map(k => c.payouts[k].amt)))}</th><th colspan="2"></th></tr></tfoot></table></div>`;
+    <div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>${tEn('pay_month')}</th><th>${tEn('rp_recv_by')}</th><th>${tEn('rp_date')}</th><th class="num">${tEn('ce_amount')}</th><th>${tEn('rc_no')}</th><th>${tEn('rp_sign_rec')}</th></tr></thead><tbody>${rows}</tbody>
+      <tfoot><tr><th colspan="4">${tEn('rp_total')}</th><th class="num">${rsFull(sum(done.map(k => c.payouts[k].amt)))}</th><th colspan="2"></th></tr></tfoot></table></div></div>`;
 }
 function statementsReport(c) {
   return `<div class="doc">${c.members.map((m, idx) => `${idx ? '<div class="pagebreak"></div>' : ''}<h3>${esc(c.name)} — ${tEn('stm_title')}</h3><div class="sub">${dateLabel(iso(today), true)} · <span lang="ur" style="display:inline">${TXT.ur.stm_title}</span></div>${statementHTML(c, m)}`).join('')}</div>`;
@@ -2817,7 +2818,7 @@ function disputeReport(c) {
     const hist = (d.history || []).map(h => `<div class="small">${dateLabel(h.at.slice(0, 10))} · <b>${tEn('ds_' + h.status)}</b>${h.note ? ' — ' + esc(h.note) : ''}</div>`).join('');
     return `<tr><td class="mono small">#${esc(d.id)}</td><td>${esc(m?.name || '—')}<br><span class="small muted">${monthLabel(monthOf(c, d.cycle), true)}</span></td><td>${tEn('ds_t_' + d.type)}<div class="small muted">${esc(d.note)}</div></td><td>${dsBadge(d.status)}</td><td>${hist}</td></tr>`;
   }).join('');
-  return `<div class="doc">${docHead(c, tEn('rp_disputes'), TXT.ur.rp_disputes)}<table class="tbl"><thead><tr><th>#</th><th>${tEn('ds_who')}</th><th>${tEn('ds_type')}</th><th>${tEn('ds_status')}</th><th>${tEn('ds_history')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<div class="doc">${docHead(c, tEn('rp_disputes'), TXT.ur.rp_disputes)}<div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>${tEn('ds_who')}</th><th>${tEn('ds_type')}</th><th>${tEn('ds_status')}</th><th>${tEn('ds_history')}</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
 /* --- Agreement (bilingual) --- */
@@ -2853,7 +2854,7 @@ function agreementHTML(c) {
       <li><b>Records.</b> The organizer shall maintain this register, record every payment with its date, issue receipts, and share the monthly statement with every member.</li>
       <li><b>Disputes.</b> Any dispute shall be logged in this register and first be resolved by discussion among the members; failing that, by two neutral persons agreed upon by the parties. The members acknowledge that this is an informal mutual arrangement without statutory protection, entered into on trust.</li>
     </ol>
-    <table class="tbl" style="margin:10px 0"><thead><tr><th>#</th><th>Month</th><th>Recipient</th><th>Pot</th></tr></thead><tbody>${orderRows}</tbody></table>
+    <div class="tblwrap" style="margin:10px 0"><table class="tbl"><thead><tr><th>#</th><th>Month</th><th>Recipient</th><th>Pot</th></tr></thead><tbody>${orderRows}</tbody></table></div>
     ${agreementUrdu(c, n, pot, method, lateUr, startUr, dUr)}
     <h4 style="margin-top:18px;font-size:.9rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Signatures · دستخط</h4><div class="sigs">${sigs}</div></div>`;
 }
