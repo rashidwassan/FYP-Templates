@@ -867,6 +867,7 @@ html[lang="ur"] .fact .k { font-weight: 600; }
 .diffbox.ok { background: var(--green-soft); color: var(--green); }
 .diffbox.bad { background: var(--red-soft); color: var(--red); }
 .diffbox .money { font-size: 1.4rem; display: block; }
+.diffbox .sub { display: block; font-size: 1.05rem; margin-top: 2px; }
 @media (min-width: 760px) { .denoms { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* ---------- charts (hand-coded SVG) ---------- */
@@ -1950,7 +1951,7 @@ const STR = {
   cf_over: ['Over limit', 'حد سے زیادہ'],
   cf_near: ['Near limit', 'حد کے قریب'],
   cf_old: ['90+ days', '90+ دن'],
-  le_open: ['Opening balance', 'سابقہ بقایا'],
+  le_open: ['Brought forward', 'سابقہ بقایا'],
   le_sale: ['Goods on udhaar', 'ادھار پر سامان'],
   le_loan: ['Cash lent', 'نقد ادھار'],
   le_other: ['Other udhaar', 'دیگر ادھار'],
@@ -6304,7 +6305,7 @@ function openAudit() {
     <div class="small">${t('auditChecked', { n: s.checked })}${s.issues.length ? ' · ' + t('auditIssues', { n: s.issues.length }) : ' · ' + t('auditOk')}</div>
     ${s.issues.slice(0, 6).map(i => `<div class="small dr">${esc(i)}</div>`).join('')}${(s.warnings || []).slice(0, 4).map(w => `<div class="small amber">${esc(w)}</div>`).join('')}</div></div>`;
   openModal(`${sheetHead(t('booksCheck'), 'audit')}<p class="small muted">${t('auditIntro')}</p>
-    <div class="diffbox ${a.ok ? 'ok' : 'bad'} mb">${t(a.ok ? 'booksOk' : 'booksBad')}<span class="money">${t('booksSub', { n: a.checks })}</span></div>${a.sections.map(sec).join('')}`, { wide: true });
+    <div class="diffbox ${a.ok ? 'ok' : 'bad'} mb">${t(a.ok ? 'booksOk' : 'booksBad')}<span class="sub">${t('booksSub', { n: a.checks })}</span></div>${a.sections.map(sec).join('')}`, { wide: true });
 }
 
 // ---------- roles: owner PIN (salted SHA-256) and a sales-only helper mode ----------

@@ -2,7 +2,7 @@
 
 **The red cloth-bound khata of a Pakistani grocery store, with the arithmetic done exactly.** An Urdu-first, mobile-first, single-file app for small karyana and general stores: a POS-style quick sale with loose-weight selling and 58 mm receipts, inventory with moving-average cost and first-expiry-first-out batches, an udhaar ledger with credit limits, ageing and polite WhatsApp/SMS reminders, suppliers and purchases with reorder suggestions from sales velocity, a daily cash book with a counted day close, reports with month-end profit and loss, and an owner PIN with a sales-only helper mode. اردو اور English دونوں میں، مکمل دائیں سے بائیں ترتیب کے ساتھ۔
 
-**Scale:** 6,817 lines in one `index.html` (≈ 5,600 lines of JavaScript, ≈ 1,040 of CSS) · 17 routed modules plus tour, search palette, PIN pad, shortcuts and print layouts · 827 bilingual strings · 95 sprite icons · seed of 126 items (35 sold loose), 25 customers, 6 suppliers and a 60-day simulated history: ≈ 2,320 bills with ≈ 5,050 lines, ≈ 500 udhaar entries, 116 purchases, ≈ 120 stock adjustments, ≈ 110 cash entries and 59 day closes · 8 student TODOs.
+**Scale:** 6,818 lines in one `index.html` (≈ 5,600 lines of JavaScript, ≈ 1,040 of CSS) · 17 routed modules plus tour, search palette, PIN pad, shortcuts and print layouts · 827 bilingual strings · 95 sprite icons · seed of 126 items (35 sold loose), 25 customers, 6 suppliers and a 60-day simulated history: ≈ 2,320 bills with ≈ 5,050 lines, ≈ 500 udhaar entries, 116 purchases, ≈ 120 stock adjustments, ≈ 110 cash entries and 59 day closes · 8 student TODOs.
 
 ## Getting started
 
