@@ -153,6 +153,7 @@ table.tbl th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;colo
 table.tbl tr:last-child td{border-bottom:0}
 table.tbl td.num,table.tbl th.num{text-align:right;font-variant-numeric:tabular-nums}
 table.tbl img{width:48px;height:36px;object-fit:cover;border-radius:6px;display:block;background:var(--stage)}
+table.tbl td.file{white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- KPI tiles / charts ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
@@ -234,7 +235,7 @@ table.tbl img{width:48px;height:36px;object-fit:cover;border-radius:6px;display:
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
 .tile:hover{transform:translateY(-2px)}
 .tile .ring{display:flex;align-items:center;gap:12px}
-.tile .ring svg{width:64px;height:64px;flex:none}
+.tile .ring>svg{width:64px;height:64px;flex:none}
 .tile .lvl{font-weight:700;font-size:1.05rem}
 .tile .why{font-size:.8rem;color:var(--muted);margin-top:8px}
 .risk-low{color:var(--green)}
@@ -3191,7 +3192,7 @@ function renderBatch(total = batchRows.length) {
     const mini = ['yellow', 'brown', 'white'].map(k => `<span class="pill" style="margin-right:4px">${k[0].toUpperCase()} ${Math.round(r.p[k] * 100)}%</span>`).join('');
     return `<tr>
       <td><img src="${r.thumb}" alt=""></td>
-      <td>${esc(r.name)}</td>
+      <td class="file" title="${esc(r.name)}">${esc(r.name)}</td>
       <td class="num"><b>${r.health}</b></td>
       <td><span class="pill ${cls}">${label}</span></td>
       <td>${mini}</td>

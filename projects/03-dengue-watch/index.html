@@ -1277,6 +1277,7 @@ const TXT = {
     s_best: 'Best score',
     s_avg: 'Average',
     s_dist: 'Score distribution',
+    s_score: 'Score',
     // learn
     l_title: 'Know dengue',
     l_lead: 'Facts families ask about most, in English and Urdu, plus a searchable FAQ.',
@@ -1703,6 +1704,7 @@ const TXT = {
     s_best: 'بہترین اسکور',
     s_avg: 'اوسط',
     s_dist: 'اسکور کی تقسیم',
+    s_score: 'اسکور',
     l_title: 'ڈینگی کو جانیں',
     l_lead: 'وہ باتیں جو گھرانے سب سے زیادہ پوچھتے ہیں، اور قابل تلاش سوال جواب۔',
     l_contacts: 'مقامی رابطے',
@@ -2277,7 +2279,7 @@ function renderWeather(city, totals) {
     <div class="two wide">
       <div>
         <div class="chart" id="wxChart"></div>
-        <div class="legend"><span><i class="sw" style="background:#7f1d1d"></i>${t('cases')}</span><span><i class="sw" style="background:#60a5fa"></i>${t('w_rain')} (mm)</span><span><i class="sw" style="background:#ffb547"></i>${t('w_temp')} (°C)</span></div>
+        <div class="legend"><span><i class="sw" style="background:#7f1d1d"></i>${t('cases')}</span><span><i class="sw" style="background:#60a5fa"></i>${t('w_rain')} (mm)</span><span><i class="sw" style="background:#ffb547"></i>${t('w_temp')} (°C, 20–40)</span></div>
       </div>
       <div>
         <div class="kv">
@@ -2304,6 +2306,8 @@ function comboChart(el, cases, rain, temp, dates) {
   const mxR = Math.max(...rain, 40, 10);
   const yC = v => P.t + (1 - v / mxC) * (H - P.t - P.b);
   const yR = v => P.t + (1 - v / mxR) * (H - P.t - P.b);
+  // temperature uses its own 20–40 °C scale so weekly variation stays visible
+  const yT = v => P.t + (1 - clamp(v - 20, 0, 20) / 20) * (H - P.t - P.b);
   const xm = i => P.l + i * bw + bw / 2;
   let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
   [0, 0.5, 1].forEach(f => {
@@ -2316,7 +2320,7 @@ function comboChart(el, cases, rain, temp, dates) {
     if (i % 2 === 0) s += `<text x="${xm(i)}" y="${H - 10}" font-size="10" fill="#8fa3c0" text-anchor="middle">${dates[i].toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}</text>`;
   });
   s += `<polyline class="series" points="${rain.map((v, i) => `${xm(i)},${yR(v)}`).join(' ')}" fill="none" stroke="#60a5fa" stroke-width="2.5"/>`;
-  s += `<polyline class="series" points="${temp.map((v, i) => `${xm(i)},${yR(v)}`).join(' ')}" fill="none" stroke="#ffb547" stroke-width="2" stroke-dasharray="5 4"/>`;
+  s += `<polyline class="series" points="${temp.map((v, i) => `${xm(i)},${yT(v)}`).join(' ')}" fill="none" stroke="#ffb547" stroke-width="2" stroke-dasharray="5 4"/>`;
   s += '</svg><div class="tip"></div>';
   el.innerHTML = s;
   drawPaths(el);
@@ -4063,7 +4067,7 @@ function renderScores(el) {
           const color = s >= 8 ? 'var(--teal)' : s >= 5 ? 'var(--amber)' : 'var(--surface-3)';
           return `<div style="flex:1;text-align:center"><div style="height:${Math.max(4, (n / mx) * 96)}px;border-radius:4px 4px 0 0;background:${color}"></div><div class="muted" style="font-size:.66rem">${s}</div></div>`;
         }).join('')}</div></div>
-      <div class="card" style="padding:0;overflow:hidden"><div class="tblwrap" style="border:0;border-radius:0"><table class="tbl" style="min-width:0"><thead><tr><th>${t('s_student')}</th><th>${t('v_date')}</th><th class="num">${t('q_score')}</th><th class="noprint"></th></tr></thead>
+      <div class="card" style="padding:0;overflow:hidden"><div class="tblwrap" style="border:0;border-radius:0"><table class="tbl" style="min-width:0"><thead><tr><th>${t('s_student')}</th><th>${t('v_date')}</th><th class="num">${t('s_score')}</th><th class="noprint"></th></tr></thead>
         <tbody>${attempts.slice(0, 15).map((a, i) => `<tr><td>${esc(a.name)}</td><td>${fmtDate(a.ts, { day: 'numeric', month: 'short' })}</td><td class="num"><b>${a.score}</b>/${a.total}</td><td class="noprint"><button class="btn ghost sm icon" data-delq="${i}" aria-label="Delete">${ic('trash')}</button></td></tr>`).join('')}</tbody></table></div></div>
     </div>`;
   animateKpis(el);

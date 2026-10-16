@@ -2676,6 +2676,7 @@ function mapSide(cId) {
   </div>`;
 }
 
+// TODO(student): replace the schematic SVG with a Leaflet tile map (OpenStreetMap), keep the same dot colouring, and add a GPS "use my location" button.
 function renderMap() {
   const params = routeParams();
   const saved = store.get('mapC', 'wheat');
@@ -3825,6 +3826,7 @@ $('#bellBtn').onclick = () => {
 window.addEventListener('hashchange', route);
 
 // ---------- init ----------
+// TODO(student): offline PWA — add manifest.json and register a service worker here (navigator.serviceWorker.register('sw.js')) so the board installs and opens without network.
 applyTheme();
 ensureDemoData();
 const lastSync = store.get('lastSync');

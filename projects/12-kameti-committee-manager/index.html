@@ -2731,3 +2731,309 @@ function plannerResults(R) {
     ${R.perTurn.map(p => `<tr class="turnrow"><td class="${p.turn === R.k ? 'hi' : ''}">#${p.turn}</td><td class="num">${rs(p.realPot)}</td><td class="num" style="color:${p.gain >= 0 ? 'var(--ok)' : 'var(--bad)'}">${p.gain >= 0 ? '+' : '−'}${rs(Math.abs(p.gain))}</td><td class="num" style="color:${p.adv >= 0 ? 'var(--ok)' : 'var(--bad)'}">${p.adv >= 0 ? '+' : '−'}${rs(Math.abs(p.adv))}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
+/* --- Reports: printable documents generated from the matrix --- */
+const REPORTS = ['monthly', 'ledger', 'payouts', 'statements', 'disputes'];
+const REPORT_ICON = { monthly: 'calendar', ledger: 'grid', payouts: 'award', statements: 'file', disputes: 'flag' };
+function renderReports() {
+  const c = active();
+  if (!c) return emptyView();
+  const n = c.order.length;
+  if (reportCycle == null || reportCycle >= n) reportCycle = currentCycle(c);
+  const seg = REPORTS.map(k => `<button class="${reportKind === k ? 'on' : ''}" data-r="${k}">${ic(REPORT_ICON[k])}${t('rp_' + k)}</button>`).join('');
+  const cycleSel = reportKind === 'monthly' ? `<label class="sr" for="rpCycle">${t('rp_cycle')}</label><select id="rpCycle" style="width:auto;min-width:180px">${c.order.map((_, k) => `<option value="${k}" ${k === reportCycle ? 'selected' : ''}>#${k + 1} · ${monthLabel(monthOf(c, k), true)}</option>`).join('')}</select>` : '';
+  view.innerHTML = `<div class="card enter" style="margin-bottom:14px"><h2>${ic('printer')}${t('rp_title')}</h2><p class="lead txt">${t('rp_s')}</p>
+      <div class="toolbar" style="margin:0"><div class="seg" id="rpSeg">${seg}</div>${cycleSel}<span class="spacer"></span><button class="btn" id="rpPrint">${ic('printer')}${t('rp_print')}</button></div></div>
+    <div class="enter" id="rpDoc">${reportHTML(c, reportKind)}</div>`;
+  $$('#rpSeg button').forEach(b => (b.onclick = () => {
+    reportKind = b.dataset.r;
+    refresh();
+  }));
+  const sel = $('#rpCycle');
+  if (sel) sel.onchange = () => {
+    reportCycle = +sel.value;
+    refresh();
+  };
+  $('#rpPrint').onclick = () => printEl($('#rpDoc').innerHTML);
+}
+function reportHTML(c, kind) {
+  if (kind === 'ledger') return ledgerReport(c);
+  if (kind === 'payouts') return payoutRegister(c);
+  if (kind === 'statements') return statementsReport(c);
+  if (kind === 'disputes') return disputeReport(c);
+  return monthlyReport(c, reportCycle);
+}
+const docHead = (c, title, urTitle, sub = '') => `<h3>${esc(c.name)} — ${title}</h3><div class="sub">${sub ? esc(sub) + ' · ' : ''}${tf('rp_prepared', { a: dateLabel(iso(today), true), b: c.organizer?.name || '—' })} · <span lang="ur" style="display:inline">${urTitle}</span></div>`;
+function monthlyReport(c, k) {
+  const st = monthStats(c, k);
+  const rows = c.members.map(m => {
+    const p = cell(c, k, m.id);
+    const over = (!p || p.s === 'unpaid') && dueDate(c, k) < today;
+    return `<tr><td>${esc(m.name)}<br><span class="small muted mono">${esc(m.phone)}</span></td><td>${stBadge(p?.s, over)}</td><td class="num">${p && p.s !== 'waived' ? rsFull(p.amt) : '—'}</td><td class="mono small">${p?.date ? dateLabel(p.date) : '—'}</td><td class="num">${p ? rsFull(lateFeeFor(c, k, m, p)) : '—'}</td><td class="small muted">${esc(p?.note || '')}</td></tr>`;
+  }).join('');
+  return `<div class="doc">${docHead(c, tEn('rp_monthly'), TXT.ur.rp_monthly, `#${k + 1} · ${monthLabel(monthOf(c, k), true)} · ${tEn('pot_due').replace('{a}', dateLabel(iso(dueDate(c, k)), true))}`)}
+    <div class="tot4"><div><b>${tEn('pay_expected')}</b><span class="amt">${rsFull(st.expected)}</span></div><div><b>${tEn('pay_collected')}</b><span class="amt">${rsFull(st.collected)}</span></div><div><b>${tEn('pay_fees')}</b><span class="amt">${rsFull(st.fees)}</span></div><div><b>${tEn('pay_recipient')}</b><span>${st.recipient ? esc(st.recipient.name) : '—'}</span></div></div>
+    <table class="tbl"><thead><tr><th>${tEn('mem_name')}</th><th>${tEn('ds_status')}</th><th class="num">${tEn('ce_amount')}</th><th>${tEn('rp_date')}</th><th class="num">${tEn('rp_fee')}</th><th>${tEn('ce_note')}</th></tr></thead><tbody>${rows}</tbody>
+      <tfoot><tr><th>${tEn('rp_total')}</th><th></th><th class="num">${rsFull(st.collected)}</th><th></th><th class="num">${rsFull(st.fees)}</th><th></th></tr></tfoot></table>
+    <div class="sigs"><div class="sig"><b>${esc(c.organizer?.name || '')}</b><span>${tEn('rp_sign_org')} · منتظم</span></div><div class="sig"><b>${st.recipient ? esc(st.recipient.name) : ''}</b><span>${tEn('rp_sign_rec')} · وصول کنندہ · ${rsFull(st.payout)}</span></div></div></div>`;
+}
+function ledgerReport(c) {
+  const n = c.order.length;
+  const head = c.order.map((_, k) => `<th>${monthLabel(monthOf(c, k))}</th>`).join('');
+  const body = c.members.map(m => `<tr><td>${esc(m.name)}</td>${c.order.map((_, k) => {
+    const p = cell(c, k, m.id);
+    if (!p) return `<td class="num muted">${dueDate(c, k) < today ? '✕' : '·'}</td>`;
+    const mark = p.s === 'waived' ? 'W' : p.s === 'partial' ? 'P' : p.s === 'late' ? 'L' : '✓';
+    return `<td class="num">${mark} ${p.s !== 'waived' ? nf.format(p.amt) : ''}</td>`;
+  }).join('')}</tr>`).join('');
+  const stats = c.order.map((_, k) => monthStats(c, k));
+  return `<div class="doc">${docHead(c, tEn('rp_ledger'), TXT.ur.rp_ledger, `${n} ${tEn('months')} · ${rsFull(c.contribution)} × ${totalSlots(c)}`)}
+    <div class="tblwrap"><table class="tbl" style="font-size:.8rem"><thead><tr><th>${tEn('mem_name')}</th>${head}</tr></thead><tbody>${body}</tbody>
+      <tfoot><tr><th>${tEn('pay_collected')}</th>${stats.map(s => `<th class="num">${nf.format(s.collected)}</th>`).join('')}</tr><tr><th>${tEn('pay_fees')}</th>${stats.map(s => `<th class="num">${nf.format(s.fees)}</th>`).join('')}</tr><tr><th>${tEn('pay_recipient')}</th>${stats.map(s => `<th>${s.recipient ? esc(s.recipient.name.split(' ')[0]) : '—'}</th>`).join('')}</tr></tfoot></table></div>
+    <p class="small muted">✓ ${tEn('st_paid')} · L ${tEn('st_late')} · P ${tEn('st_partial')} · W ${tEn('st_waived')} · ✕ ${tEn('st_overdue')} · ${tEn('ov_late')}: ${esc(lateRuleName(c.lateFee, TXT.en))} · ${tEn('ov_grace')}: ${c.graceDays || 0} ${tEn('sch_days')}</p></div>`;
+}
+function payoutRegister(c) {
+  const done = Object.keys(c.payouts).map(Number).sort((a, b) => a - b);
+  if (!done.length) return `<div class="doc">${docHead(c, tEn('rp_payouts'), TXT.ur.rp_payouts)}<p class="muted">${tEn('rp_no_payouts')}</p></div>`;
+  const rows = done.map(k => {
+    const st = monthStats(c, k);
+    return `<tr><td class="num">${k + 1}</td><td>${monthLabel(monthOf(c, k), true)}</td><td>${st.recipient ? esc(st.recipient.name) : '—'}<br><span class="small muted mono">${esc(st.recipient?.phone || '')}</span></td><td class="mono small">${dateLabel(c.payouts[k].date, true)}</td><td class="num">${rsFull(c.payouts[k].amt)}</td><td class="mono small">${esc(receiptNo(c, k, null))}</td><td style="min-width:120px;border-bottom:1px solid var(--ink)"></td></tr>`;
+  }).join('');
+  return `<div class="doc">${docHead(c, tEn('rp_payouts'), TXT.ur.rp_payouts)}
+    <table class="tbl"><thead><tr><th>#</th><th>${tEn('pay_month')}</th><th>${tEn('rp_recv_by')}</th><th>${tEn('rp_date')}</th><th class="num">${tEn('ce_amount')}</th><th>${tEn('rc_no')}</th><th>${tEn('rp_sign_rec')}</th></tr></thead><tbody>${rows}</tbody>
+      <tfoot><tr><th colspan="4">${tEn('rp_total')}</th><th class="num">${rsFull(sum(done.map(k => c.payouts[k].amt)))}</th><th colspan="2"></th></tr></tfoot></table></div>`;
+}
+function statementsReport(c) {
+  return `<div class="doc">${c.members.map((m, idx) => `${idx ? '<div class="pagebreak"></div>' : ''}<h3>${esc(c.name)} — ${tEn('stm_title')}</h3><div class="sub">${dateLabel(iso(today), true)} · <span lang="ur" style="display:inline">${TXT.ur.stm_title}</span></div>${statementHTML(c, m)}`).join('')}</div>`;
+}
+function disputeReport(c) {
+  const list = (c.disputes || []).slice().sort((a, b) => a.created.localeCompare(b.created));
+  if (!list.length) return `<div class="doc">${docHead(c, tEn('rp_disputes'), TXT.ur.rp_disputes)}<p class="muted">${tEn('ds_empty')}</p></div>`;
+  const rows = list.map(d => {
+    const m = memberById(c, d.memberId);
+    const hist = (d.history || []).map(h => `<div class="small">${dateLabel(h.at.slice(0, 10))} · <b>${tEn('ds_' + h.status)}</b>${h.note ? ' — ' + esc(h.note) : ''}</div>`).join('');
+    return `<tr><td class="mono small">#${esc(d.id)}</td><td>${esc(m?.name || '—')}<br><span class="small muted">${monthLabel(monthOf(c, d.cycle), true)}</span></td><td>${tEn('ds_t_' + d.type)}<div class="small muted">${esc(d.note)}</div></td><td>${dsBadge(d.status)}</td><td>${hist}</td></tr>`;
+  }).join('');
+  return `<div class="doc">${docHead(c, tEn('rp_disputes'), TXT.ur.rp_disputes)}<table class="tbl"><thead><tr><th>#</th><th>${tEn('ds_who')}</th><th>${tEn('ds_type')}</th><th>${tEn('ds_status')}</th><th>${tEn('ds_history')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* --- Agreement (bilingual) --- */
+function agreementHTML(c) {
+  const slots = totalSlots(c);
+  const n = c.order.length;
+  const pot = c.contribution * slots;
+  const method = { fixed: ['a fixed order agreed by all members', 'تمام ممبران کی متفقہ مقررہ ترتیب'], lottery: ['a lottery draw witnessed by the members', 'ممبران کی موجودگی میں قرعہ اندازی'], organizer: ["the organizer's decision", 'منتظم کے فیصلے'], need: ['a need-based ranking of written requests, reviewed by all members', 'تحریری درخواستوں کی ضرورت کی بنیاد پر درجہ بندی، جس کا جائزہ تمام ممبران لیں'] }[c.method] || ['a fixed order', 'مقررہ ترتیب'];
+  const lf = c.lateFee || { type: 'none' };
+  const grace = c.graceDays || 0;
+  const lateEn = lf.type === 'none' ? 'No late fee applies' : lf.type === 'flat' ? `A late fee of Rs ${nf.format(lf.value)} applies to every payment made more than ${grace} day(s) after the collection day` : `A late fee of ${lf.value}% of the contribution applies for every week (or part) of delay beyond ${grace} grace day(s)${c.feeCap ? `, capped at Rs ${nf.format(c.feeCap)} per payment` : ''}`;
+  const lateUr = lf.type === 'none' ? 'کوئی تاخیری جرمانہ نہیں' : lf.type === 'flat' ? `وصولی کی تاریخ کے ${grace} دن بعد ہر ادائیگی پر ${nf.format(lf.value)} روپے جرمانہ ہوگا` : `${grace} رعایتی دنوں کے بعد تاخیر کے ہر ہفتے (یا اس کے حصے) پر قسط کا ${lf.value}% جرمانہ ہوگا${c.feeCap ? `، فی ادائیگی زیادہ سے زیادہ ${nf.format(c.feeCap)} روپے` : ''}`;
+  const orderRows = c.order.map((id, k) => {
+    const m = id ? memberById(c, id) : null;
+    const slotTxt = m && (m.slots || 1) > 1 ? ` (slot ${c.order.slice(0, k + 1).filter(x => x === id).length})` : '';
+    return `<tr><td class="num">${k + 1}</td><td>${monthLabel(monthOf(c, k), true)}</td><td>${m ? esc(m.name) + slotTxt : '—'}</td><td class="amt">${rsFull(pot)}</td></tr>`;
+  }).join('');
+  const sigs = [`<div class="sig"><b>${esc(c.organizer?.name || '')}</b><span>Organizer / منتظم · ${esc(c.organizer?.phone || '')}</span></div>`]
+    .concat(c.members.map(m => `<div class="sig"><b>${esc(m.name)}</b><span>${esc(m.phone)}${m.cnic4 ? ' · CNIC ' + cnicMask(m) : ''}</span></div>`)).join('');
+  const startEn = fromIso(c.startMonth + '-01').toLocaleDateString('en-PK', { month: 'long', year: 'numeric' });
+  const startUr = fromIso(c.startMonth + '-01').toLocaleDateString('ur-PK-u-nu-latn', { month: 'long', year: 'numeric' });
+  const dEn = today.toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dUr = today.toLocaleDateString('ur-PK-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `<div class="doc"><h3>Committee (Kameti) Agreement</h3><div class="sub">"${esc(c.name)}" · ${dEn}</div>
+    <p>This agreement is made between the organizer <b>${esc(c.organizer?.name || '—')}</b> (${esc(c.organizer?.phone || '')}) and the members listed below for the rotating savings committee named <b>"${esc(c.name)}"</b>.</p>
+    <div class="terms"><div><b>Monthly contribution</b><span class="amt">${rsFull(c.contribution)}</span> per slot</div><div><b>Pot per cycle</b><span class="amt">${rsFull(pot)}</span></div><div><b>Cycles</b><span class="amt">${n}</span> months from ${startEn}</div><div><b>Collection day</b>${c.collectionDay} of every month · ${grace} grace day(s)</div><div><b>Payout order</b>${esc(method[0])}</div><div><b>Late fee</b>${esc(lateRuleName(lf, TXT.en))}</div></div>
+    <ol>
+      <li><b>Contribution.</b> Each member shall pay ${rsFull(c.contribution)} per slot held, on or before day ${c.collectionDay} of every month, starting ${startEn}, for ${n} consecutive months.</li>
+      <li><b>Pot and payout.</b> The monthly pot of ${rsFull(pot)} shall be handed to the member whose turn it is, according to the payout order below, on the collection day or within three days of full collection. Late fees collected in a month are added to that month's payout. Every payout is acknowledged with a signed receipt.</li>
+      <li><b>Payout order.</b> The order was decided by ${esc(method[0])}. Once fixed, it may only be changed with the consent of every affected member, recorded in this register.</li>
+      <li><b>Late payment.</b> ${esc(lateEn)}. A partial payment is recorded with its balance, which remains due.</li>
+      <li><b>Default.</b> A member who fails to pay for a month must settle within seven days. Failing that, the remaining members and the organizer may agree to (a) split the shortfall equally, (b) have the organizer advance it, or (c) move the defaulter's turn to the last cycle; a member who has already received the pot remains liable for all remaining contributions.</li>
+      <li><b>Records.</b> The organizer shall maintain this register, record every payment with its date, issue receipts, and share the monthly statement with every member.</li>
+      <li><b>Disputes.</b> Any dispute shall be logged in this register and first be resolved by discussion among the members; failing that, by two neutral persons agreed upon by the parties. The members acknowledge that this is an informal mutual arrangement without statutory protection, entered into on trust.</li>
+    </ol>
+    <table class="tbl" style="margin:10px 0"><thead><tr><th>#</th><th>Month</th><th>Recipient</th><th>Pot</th></tr></thead><tbody>${orderRows}</tbody></table>
+    ${agreementUrdu(c, n, pot, method, lateUr, startUr, dUr)}
+    <h4 style="margin-top:18px;font-size:.9rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Signatures · دستخط</h4><div class="sigs">${sigs}</div></div>`;
+}
+function agreementUrdu(c, n, pot, method, lateUr, startUr, dUr) {
+  return `<div class="ur" lang="ur"><h3>کمیٹی معاہدہ</h3><div class="sub">"${esc(c.name)}" · ${dUr}</div>
+      <p>یہ معاہدہ منتظم <b>${esc(c.organizer?.name || '—')}</b> (${esc(c.organizer?.phone || '')}) اور ذیل میں درج ممبران کے درمیان <b>"${esc(c.name)}"</b> نامی بچت کمیٹی کے لیے طے پایا۔</p>
+      <ol>
+        <li><b>قسط:</b> ہر ممبر ${startUr} سے ${n} ماہ تک ہر مہینے کی ${c.collectionDay} تاریخ تک فی حصہ ${nf.format(c.contribution)} روپے ادا کرے گا۔</li>
+        <li><b>رقم اور ادائیگی:</b> ہر ماہ ${nf.format(pot)} روپے کی رقم درج ذیل ترتیب کے مطابق باری والے ممبر کو وصولی کے دن یا مکمل وصولی کے تین دن کے اندر دی جائے گی۔ اس مہینے کا تاخیری جرمانہ اسی ادائیگی میں شامل ہوگا۔ ہر ادائیگی کی دستخط شدہ رسید دی جائے گی۔</li>
+        <li><b>ادائیگی کی ترتیب:</b> ترتیب ${esc(method[1])} سے طے ہوئی۔ ایک بار مقرر ہونے کے بعد صرف متاثرہ ممبران کی رضامندی سے، اس رجسٹر میں درج کر کے، بدلی جا سکتی ہے۔</li>
+        <li><b>تاخیر:</b> ${esc(lateUr)}۔ جزوی ادائیگی اس کے بقایا کے ساتھ درج ہوگی جو واجب الادا رہے گا۔</li>
+        <li><b>نادہندگی:</b> جو ممبر کسی مہینے کی قسط ادا نہ کرے وہ سات دن کے اندر ادا کرے گا۔ بصورت دیگر باقی ممبران اور منتظم (الف) کمی برابر تقسیم کرنے، (ب) منتظم کے پیشگی ادا کرنے، یا (ج) نادہندہ کی باری آخری سائیکل میں کرنے پر متفق ہو سکتے ہیں؛ جو ممبر رقم وصول کر چکا ہو وہ باقی تمام قسطوں کا ذمہ دار رہے گا۔</li>
+        <li><b>ریکارڈ:</b> منتظم یہ رجسٹر برقرار رکھے گا، ہر ادائیگی تاریخ کے ساتھ درج کرے گا، رسیدیں جاری کرے گا اور ہر ممبر کو ماہانہ گوشوارہ دے گا۔</li>
+        <li><b>تنازعات:</b> ہر تنازعہ اس رجسٹر میں درج ہوگا اور پہلے ممبران کی باہمی گفتگو سے حل ہوگا؛ بصورت دیگر فریقین کی رضامندی سے دو غیر جانبدار افراد فیصلہ کریں گے۔ ممبران تسلیم کرتے ہیں کہ یہ اعتماد پر مبنی غیر رسمی باہمی انتظام ہے جسے قانونی تحفظ حاصل نہیں۔</li>
+      </ol></div>`;
+}
+// TODO(student): e-signatures. Hash the agreement text (SubtleCrypto SHA-256), let each member sign on a canvas or via OTP, and store
+// {memberId, hash, signatureImage, signedAt} so a changed agreement is detectable.
+function signAgreement() {
+  toast(t('not_built'), 'gold', 'pen-tool');
+}
+function renderAgreement() {
+  const c = active();
+  if (!c) return emptyView();
+  view.innerHTML = `<div class="card enter" style="margin-bottom:14px"><div class="toolbar" style="margin:0"><div style="flex:1;min-width:200px"><h2 style="margin:0">${ic('file')}${t('ag_title')}</h2><p class="lead txt" style="margin:4px 0 0">${t('ag_s')}</p></div><button class="btn" id="agPrint">${ic('printer')}${t('ag_print')}</button><button class="btn ghost" id="agSign">${ic('pen-tool')}${t('ag_sign')}</button></div></div>
+    <div class="grid g21 stagger"><div id="agDoc">${agreementHTML(c)}</div>
+      <div style="align-self:start"><div class="note bad txt" style="margin-bottom:12px">${ic('alert')} ${t('ag_risk')}</div><div class="card"><h2>${ic('help')}${t('ag_faq')}</h2><div class="faq">${t('faq').map(([q, a]) => `<details><summary>${ic('chevron-right')}<span>${esc(q)}</span></summary><p>${esc(a)}</p></details>`).join('')}</div></div></div></div>`;
+  $('#agPrint').onclick = () => printEl($('#agDoc').innerHTML);
+  $('#agSign').onclick = signAgreement;
+}
+
+/* --- Settings --- */
+function renderSettings() {
+  const sw = (id, label, sub, on) => `<div class="switch"><div class="lbl"><b>${label}</b><span>${sub}</span></div><button class="toggle" id="${id}" role="switch" aria-checked="${on}" aria-label="${label}"></button></div>`;
+  const segOf = (id, opts, cur) => `<div class="seg" id="${id}">${opts.map(([v, l]) => `<button class="${cur === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  const lockOpts = [0, 1, 5, 15, 30].map(v => `<option value="${v}" ${SETTINGS.autoLock === v ? 'selected' : ''}>${v ? tf('se_min', { a: v }) : t('se_never')}</option>`).join('');
+  view.innerHTML = `<div class="grid g2 stagger">
+    <div class="card"><h2>${ic('sun')}${t('se_appearance')}</h2>
+      <label class="f">${t('se_lang')}</label>${segOf('seLang', [['en', 'English'], ['ur', 'اردو']], lang)}
+      <label class="f">${t('se_theme')}</label>${segOf('seTheme', [['light', t('se_light')], ['dark', t('se_dark')], ['system', t('se_system')]], SETTINGS.theme)}
+      <div style="margin-top:10px">${sw('seMotion', t('se_motion'), t('se_motion_s'), !SETTINGS.motion)}${sw('seCompact', t('se_compact'), t('se_compact_s'), SETTINGS.compact)}</div></div>
+    <div class="card"><h2>${ic('sliders')}${t('se_rules')}</h2>
+      <label class="f" for="seGrace">${t('se_grace')}</label><input id="seGrace" class="mono" type="range" min="0" max="10" value="${SETTINGS.graceDays}"><div class="rangeval"><span>0</span><b id="seGraceV">${SETTINGS.graceDays}</b><span>10</span></div>
+      <label class="f" for="seRemind">${t('se_remind')}</label><input id="seRemind" class="mono" type="range" min="0" max="14" value="${SETTINGS.remindDays}"><div class="rangeval"><span>0</span><b id="seRemindV">${SETTINGS.remindDays}</b><span>14</span></div>
+      <p class="small muted txt">${t('se_remind_s')}</p></div>
+    <div class="card"><h2>${ic('lock')}${t('se_security')}</h2><p class="lead txt">${t('se_pin_s')}</p>
+      <div class="toolbar" style="margin:0 0 10px">${SETTINGS.pinHash ? `<button class="btn ghost" id="sePinChange">${ic('key')}${t('se_pin_change')}</button><button class="btn danger" id="sePinRemove">${ic('unlock')}${t('se_pin_remove')}</button><button class="btn" id="seLockNow">${ic('lock')}${t('lock_now')}</button>` : `<button class="btn" id="sePinSet">${ic('key')}${t('se_pin_set')}</button>`}</div>
+      <label class="f" for="seAuto">${t('se_autolock')}</label><select id="seAuto" ${SETTINGS.pinHash ? '' : 'disabled'}>${lockOpts}</select></div>
+    <div class="card"><h2>${ic('save')}${t('se_data')}</h2>
+      <p class="small muted">${t('se_storage')}: <b class="mono">${(store.bytes() / 1024).toFixed(1)} KB</b> · ${DB.committees.length} ${t('db_kpi_committees').toLowerCase()} · ${LOG.length} ${t('in_activity').toLowerCase()} · ${INBOX.length} ${t('in_notifs').toLowerCase()}</p>
+      <div class="toolbar" style="margin:0"><button class="btn" id="seExport">${ic('download')}${t('se_export')}</button><label class="btn ghost" for="seImport">${ic('upload')}${t('se_import')}</label><input type="file" id="seImport" accept="application/json,.json" class="hidden"><button class="btn ghost" id="seDemo">${ic('refresh')}${t('ab_reset')}</button><button class="btn danger" id="seClear">${ic('trash')}${t('se_clear')}</button></div></div>
+    <div class="card"><h2>${ic('sparkles')}${t('se_tour')}</h2><button class="btn ghost" id="seTour">${ic('play')}${t('tour_start')}</button></div>
+    <div class="card"><h2>${ic('grid')}${t('se_shortcuts')}</h2><div class="list" style="gap:6px">${[['1 … 9', 'sc_1'], ['I', 'sc_2'], ['N', 'sc_3'], ['L', 'sc_4'], ['Esc', 'sc_5'], ['Shift+L', 'sc_6']].map(([k, s]) => `<div style="display:flex;gap:10px;align-items:center;font-size:.88rem"><span class="kbd">${k}</span><span class="txt">${t(s)}</span></div>`).join('')}</div></div>
+  </div>`;
+  wireSettings();
+}
+function wireSettings() {
+  $$('#seLang button').forEach(b => (b.onclick = () => {
+    lang = b.dataset.v;
+    applyLang();
+  }));
+  $$('#seTheme button').forEach(b => (b.onclick = () => {
+    saveSettings({ theme: b.dataset.v });
+    applyTheme();
+    refresh();
+  }));
+  const toggle = (id, fn) => ($('#' + id).onclick = () => {
+    fn();
+    toast(t('se_saved'), 'ok');
+    applyTheme();
+    refresh();
+  });
+  toggle('seMotion', () => saveSettings({ motion: !SETTINGS.motion }));
+  toggle('seCompact', () => saveSettings({ compact: !SETTINGS.compact }));
+  $('#seGrace').oninput = e => {
+    saveSettings({ graceDays: +e.target.value });
+    $('#seGraceV').textContent = e.target.value;
+  };
+  $('#seRemind').oninput = e => {
+    saveSettings({ remindDays: +e.target.value });
+    $('#seRemindV').textContent = e.target.value;
+  };
+  $('#seAuto').onchange = e => saveSettings({ autoLock: +e.target.value });
+  const pinSet = $('#sePinSet');
+  if (pinSet) pinSet.onclick = () => pinSetup(false);
+  const pinChange = $('#sePinChange');
+  if (pinChange) pinChange.onclick = () => pinSetup(true);
+  const pinRemove = $('#sePinRemove');
+  if (pinRemove) pinRemove.onclick = () => pinSetup(true, true);
+  const lockNow = $('#seLockNow');
+  if (lockNow) lockNow.onclick = lockApp;
+  $('#seExport').onclick = exportAll;
+  $('#seImport').onchange = importAll;
+  $('#seDemo').onclick = resetDemo;
+  $('#seClear').onclick = eraseAll;
+  $('#seTour').onclick = startTour;
+}
+function exportAll() {
+  const payload = { app: 'kameti', version: 2, exported: new Date().toISOString(), db: DB, settings: { ...SETTINGS, pinHash: '' }, log: LOG, inbox: INBOX, planner: PLAN };
+  download(`kameti-backup-${iso(today)}.json`, JSON.stringify(payload, null, 2));
+}
+function importAll(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      const db = d.db && Array.isArray(d.db.committees) ? d.db : Array.isArray(d.committees) ? { committees: d.committees, activeId: d.activeId } : null;
+      if (!db) throw new Error('bad');
+      DB = { committees: db.committees, activeId: db.activeId || db.committees[0]?.id || null };
+      DB.committees.forEach(syncOrder);
+      if (Array.isArray(d.log)) LOG = d.log;
+      if (Array.isArray(d.inbox)) INBOX = d.inbox;
+      if (d.settings) saveSettings({ ...d.settings, pinHash: SETTINGS.pinHash });
+      store.set('log', LOG);
+      store.set('inbox', INBOX);
+      logEvent('lg_import', {}, null);
+      save();
+      applyTheme();
+      toast(tf('ab_imported', { a: DB.committees.length }), 'ok');
+      renderAll();
+    } catch {
+      toast(t('ab_import_err'), 'bad');
+    }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+}
+async function resetDemo() {
+  if (!(await confirmDlg(t('ab_reset_q'), t('ab_reset')))) return;
+  const seed = demoData();
+  DB = seed.db;
+  LOG = seed.log;
+  INBOX = [];
+  selMonth = null;
+  store.set('log', LOG);
+  store.set('inbox', INBOX);
+  logEvent('lg_reset', {}, null);
+  save();
+  toast(t('ab_reset_ok'), 'ok');
+  renderAll();
+}
+async function eraseAll() {
+  if (!(await confirmDlg(t('se_clear_q'), t('se_clear')))) return;
+  store.keys().forEach(k => store.remove(k));
+  DB = { committees: [], activeId: null };
+  LOG = [];
+  INBOX = [];
+  SETTINGS = Object.assign({}, DEFAULT_SETTINGS, { bannerDismissed: true });
+  toast(t('se_cleared'), 'ok');
+  applyTheme();
+  renderAll();
+}
+
+/* --- About --- */
+const TODOS = [
+  ['Multi-device sync + member logins', '★★★', 'Push every store.set() to a backend (Supabase / Firebase / own API) and pull on start; each member logs in and sees their own statement.', 'syncToBackend()'],
+  ['OTP-confirmed payment acknowledgements', '★★', 'When the organizer records a payment, the member confirms it with a one-time code so the register is two-sided.', 'requestAck()'],
+  ['Raast / JazzCash / Easypaisa integration', '★★★', 'Payment links per member per cycle; gateway callbacks auto-fill the matrix (auto-reconciliation).', 'reconcile()'],
+  ['E-signatures on the agreement', '★★', 'Hash the agreement, sign on canvas or via OTP, store signature + hash per member.', 'signAgreement()'],
+  ['Evidence uploads on disputes', '★★', 'Attach receipt photos (resized, stored as data URLs or uploaded) to a dispute and show them in its history.', 'attachEvidence()'],
+  ['Portable trust score', '★★★', 'Signed outcome history that travels with a member across organizers and devices.', 'trustScore()'],
+  ['SMS reminders', '★', 'A server-side scheduler sends SMS on the collection day via an SMS gateway.', 'sendSms()'],
+  ['Live inflation and bank rates in the planner', '★', 'Fetch SBP / PBS figures with a last-synced stamp and offline fallback to the sliders.', 'fetchInflation()']
+];
+const MODULES = [
+  ['layers', 'Dashboard', 'renderDashboard · monthEvents'], ['pie-chart', 'Overview', 'renderOverview · monthStats'], ['users', 'Members & order', 'renderMembers · syncOrder · lotteryModal'],
+  ['hand', 'Need-based payout', 'needScore · rankByNeed'], ['grid', 'Payments matrix', 'renderPayments · setStatus · lateFeeFor'], ['file', 'Receipts', 'receiptModal · drawQR'],
+  ['calendar', 'Schedule + simulator', 'renderSchedule · simulate'], ['flag', 'Disputes', 'renderDisputes · disputeDetail'], ['shield-check', 'Trust & people', 'trustScore · allPeople · profileModal'],
+  ['calculator', 'Planner', 'planMath · plannerResults'], ['printer', 'Reports & agreement', 'reportHTML · agreementHTML'], ['bell', 'Inbox & log', 'scanAlerts · logEvent'],
+  ['settings', 'Settings & lock', 'renderSettings · pinSetup · lockApp'], ['sparkles', 'Onboarding tour', 'startTour']
+];
+function renderAbout() {
+  view.innerHTML = `<div class="grid g21 stagger"><div>
+    <div class="card" style="margin-bottom:14px"><h2>${ic('info')}${t('ab_title')}</h2>
+      <h3 class="txt" style="margin:12px 0 4px;font-size:.95rem">${t('ab_problem')}</h3><p class="muted txt" style="margin:0">${t('ab_problem_t')}</p>
+      <h3 class="txt" style="margin:14px 0 4px;font-size:.95rem">${t('ab_how')}</h3><p class="muted txt" style="margin:0">${t('ab_how_t')}</p><p class="muted small txt">${t('ab_stack')}</p>
+      <div class="note bad txt" style="margin-top:10px">${ic('alert')} ${t('ag_risk')}</div></div>
+    <div class="card" style="margin-bottom:14px"><h2>${ic('git-branch')}${t('ab_modules')}</h2><div class="modmap">${MODULES.map(([i, n, f]) => `<div><b>${ic(i)}${esc(n)}</b><span class="mono small muted">${esc(f)}</span></div>`).join('')}</div></div>
+    <div class="card"><h2>${ic('save')}${t('ab_data')}</h2><p class="lead txt">${t('ab_data_t')}</p>
+      <div class="toolbar" style="margin:0"><button class="btn" id="expJson">${ic('download')}${t('ab_export')}</button><a class="btn ghost" href="#settings">${ic('settings')}${t('nav_settings')}</a><button class="btn ghost" id="abTour">${ic('play')}${t('tour_start')}</button></div></div></div>
+    <div><h3 style="margin:0 0 10px;display:flex;align-items:center;gap:8px">${ic('git-branch')}${t('ab_todo')}</h3><div class="list stagger">${TODOS.map(([h, s, b, fn]) => `<div class="todo"><h4>${esc(h)} <span class="stars">${s}</span><span class="tag">${esc(fn)}</span></h4><div class="muted small">${esc(b)}</div></div>`).join('')}</div></div></div>`;
+  $('#expJson').onclick = exportAll;
+  $('#abTour').onclick = startTour;
+}
+
