@@ -103,6 +103,7 @@ html.no-anim *,html.no-anim *::before,html.no-anim *::after{animation-duration:.
 .tabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:9px 4px;font-size:.74rem;font-weight:600;cursor:pointer;display:grid;place-items:center;gap:2px;border-bottom:2px solid transparent;white-space:nowrap}
 .tabs button .ic{width:16px;height:16px}
 .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs .tclose{flex:0 0 34px;color:var(--muted)}
 .side-body{flex:1;overflow:auto;padding:10px;min-width:0}
 .side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.78rem;color:var(--muted);margin-bottom:8px;flex-wrap:wrap}
 .orow{display:flex;align-items:center;gap:4px;padding:3px 6px 3px 4px;border-radius:7px;cursor:pointer;min-height:30px;font-size:.86rem}
@@ -184,9 +185,9 @@ html.no-anim *,html.no-anim *::before,html.no-anim *::after{animation-duration:.
 
 /* find & replace bar */
 .findbar{position:absolute;top:14px;right:14px;width:min(320px,calc(100% - 28px));background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 16px 40px -20px rgba(0,0,0,.45);z-index:5;display:none;gap:8px;animation:pop .2s var(--ease)}
-.findbar.on{display:grid}
+.findbar.on{display:grid;grid-template-columns:minmax(0,1fr)}
 .findbar .frow{display:flex;gap:6px;align-items:center}
-.findbar input[type=text]{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 8px}
+.findbar input[type=text]{flex:1;min-width:0;width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 8px}
 .findbar .count{font-size:.76rem;color:var(--muted);min-width:56px;text-align:right}
 .findbar label{font-size:.78rem;color:var(--muted);display:inline-flex;gap:4px;align-items:center}
 .findbar .tb{color:var(--ink);width:30px;height:30px}
@@ -256,7 +257,9 @@ kbd{background:var(--bg);border:1px solid var(--line);border-bottom-width:2px;bo
 .list{display:grid;gap:8px}
 .keys{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:6px 14px;font-size:.86rem;align-items:center}
 .code{width:100%;min-height:200px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px;resize:vertical;white-space:pre}
-.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:start}
+.set-grid .list{align-content:start}
+input[type=checkbox],input[type=range]{accent-color:var(--accent)}
 .themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .theme-card{border:1px solid var(--line);border-radius:12px;padding:8px;cursor:pointer;display:grid;gap:6px;background:var(--bg);text-align:left;color:var(--ink);font-weight:600;font-size:.82rem}
 .theme-card.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
@@ -439,6 +442,7 @@ kbd{background:var(--bg);border:1px solid var(--line);border-bottom-width:2px;bo
       <button data-tab="comments" role="tab"><svg class="ic"><use href="#i-message"/></svg>Comments</button>
       <button data-tab="history" role="tab"><svg class="ic"><use href="#i-history"/></svg>History</button>
       <button data-tab="activity" role="tab"><svg class="ic"><use href="#i-activity"/></svg>Activity</button>
+      <button class="tclose" id="sideClose" aria-label="Close side panel"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div class="side-body" id="sideBody"></div>
   </aside>
@@ -867,6 +871,7 @@ function save() {
 }
 
 function flushSave() {
+  saveT = 0;
   const ok = store.set('doc:' + doc.id, doc);
   const idx = store.get('docs', []);
   if (!idx.includes(doc.id)) {
@@ -880,6 +885,14 @@ function flushSave() {
   }
   setSaveStatus('Saved', 'var(--ok)');
 }
+// Write a debounced save immediately (before switching documents or leaving the page).
+function flushPending() {
+  if (!saveT || !doc) return;
+  clearTimeout(saveT);
+  flushSave();
+}
+window.addEventListener('pagehide', flushPending);
+
 // TODO(student): real-time collaboration — broadcast snapshot diffs over WebSocket/WebRTC and merge with a CRDT (Yjs/Automerge) instead of localStorage only.
 
 function resetScene() {
@@ -892,6 +905,8 @@ function resetScene() {
 }
 
 function activateDoc() {
+  clearTimeout(fitTimer);
+  stopViewAnim();
   view = doc.view || { x: 0, y: 0, z: 1 };
   sel.clear();
   selEdge = null;
@@ -909,6 +924,7 @@ function activateDoc() {
 }
 
 function loadDoc(id) {
+  flushPending();
   const d = store.get('doc:' + id, null);
   if (!d) return false;
   doc = normalizeDoc(d);
@@ -918,11 +934,11 @@ function loadDoc(id) {
 // TODO(student): cloud documents — sync `doc` to an account (Supabase/Firebase), add version history in the cloud and read-only share links.
 
 function openNew(name, mode, build) {
+  flushPending();
   doc = newDoc(name, mode);
   if (build) build(doc);
   doc.view = { x: 0, y: 0, z: 1 };
   activateDoc();
-  log(`Opened "${doc.name}"`, 'file');
 }
 
 // ---------- geometry ----------
@@ -946,8 +962,15 @@ function anchor(n, toward) {
   return { x: c.x + dx * s, y: c.y + dy * s };
 }
 
+// In flowcharts the elbow follows the layout direction whenever the boxes do not overlap.
 function orthoPath(a, b, ca, cb) {
-  const horiz = Math.abs(cb.x - ca.x) > Math.abs(cb.y - ca.y);
+  let horiz = Math.abs(cb.x - ca.x) > Math.abs(cb.y - ca.y);
+  if (doc.mode === 'flow') {
+    const vGap = b.y >= a.y + a.h || a.y >= b.y + b.h;
+    const hGap = b.x >= a.x + a.w || a.x >= b.x + b.w;
+    if (settings.flowDir === 'LR' && hGap) horiz = true;
+    else if (settings.flowDir !== 'LR' && vGap) horiz = false;
+  }
   if (horiz) {
     const x1 = ca.x < cb.x ? a.x + a.w : a.x;
     const x2 = ca.x < cb.x ? b.x : b.x + b.w;
@@ -960,6 +983,55 @@ function orthoPath(a, b, ca, cb) {
   return `M${ca.x} ${y1}L${ca.x} ${my}L${cb.x} ${my}L${cb.x} ${y2}`;
 }
 
+// A lane is the free channel the layered layout reserved for an edge that skips layers.
+// It stays valid only while both end nodes keep the box they had at layout time.
+const laneKey = (a, b) => `${a.x},${a.y},${a.w},${a.h}|${b.x},${b.y},${b.w},${b.h}`;
+
+// Leave/enter boxes on the lane's side so the edge does not share the centre port.
+function lanePort(n, at, horizontal) {
+  if (n.shape === 'diamond' || n.shape === 'circle') return horizontal ? n.y + n.h / 2 : n.x + n.w / 2;
+  return horizontal ? clamp(at, n.y + n.h * 0.25, n.y + n.h * 0.75) : clamp(at, n.x + n.w * 0.25, n.x + n.w * 0.75);
+}
+
+function lanePath(a, b, lane) {
+  if (lane.dir === 'LR') {
+    const fwd = b.x > a.x;
+    const sx = fwd ? a.x + a.w : a.x;
+    const ex = fwd ? b.x : b.x + b.w;
+    const g = Math.min(28, Math.abs(ex - sx) / 4) * (fwd ? 1 : -1);
+    const sy = lanePort(a, lane.at, true);
+    const ey = lanePort(b, lane.at, true);
+    return `M${sx} ${sy}L${sx + g} ${sy}L${sx + g} ${lane.at}L${ex - g} ${lane.at}L${ex - g} ${ey}L${ex} ${ey}`;
+  }
+  const down = b.y > a.y;
+  const sy = down ? a.y + a.h : a.y;
+  const ey = down ? b.y : b.y + b.h;
+  const g = Math.min(28, Math.abs(ey - sy) / 4) * (down ? 1 : -1);
+  const sx = lanePort(a, lane.at, false);
+  const ex = lanePort(b, lane.at, false);
+  return `M${sx} ${sy}L${sx} ${sy + g}L${lane.at} ${sy + g}L${lane.at} ${ey - g}L${ex} ${ey - g}L${ex} ${ey}`;
+}
+
+// Midpoint of one of our own path strings (M/L polylines or a single cubic C).
+function pathMid(d) {
+  const v = (d.match(/-?\d*\.?\d+(?:e-?\d+)?/g) || []).map(Number);
+  if (d.includes('C')) {
+    return { x: (v[0] + 3 * v[2] + 3 * v[4] + v[6]) / 8, y: (v[1] + 3 * v[3] + 3 * v[5] + v[7]) / 8 };
+  }
+  const pts = [];
+  for (let i = 0; i + 1 < v.length; i += 2) pts.push({ x: v[i], y: v[i + 1] });
+  const segs = pts.slice(1).map((p, i) => Math.hypot(p.x - pts[i].x, p.y - pts[i].y));
+  let left = segs.reduce((a, s) => a + s, 0) / 2;
+  for (let i = 0; i < segs.length; i++) {
+    if (left <= segs[i] && segs[i] > 0) {
+      const t = left / segs[i];
+      return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * t, y: pts[i].y + (pts[i + 1].y - pts[i].y) * t };
+    }
+    left -= segs[i];
+  }
+  return pts[0] || { x: 0, y: 0 };
+}
+
 function edgePath(e) {
   const a = N(e.from);
   const b = N(e.to);
@@ -969,7 +1041,10 @@ function edgePath(e) {
   const p = anchor(a, cb);
   const q = anchor(b, ca);
   if (e.type === 'straight') return `M${p.x} ${p.y}L${q.x} ${q.y}`;
-  if (e.type === 'ortho') return orthoPath(a, b, ca, cb);
+  if (e.type === 'ortho') {
+    const useLane = doc.mode === 'flow' && e.lane && e.lane.key === laneKey(a, b);
+    return useLane ? lanePath(a, b, e.lane) : orthoPath(a, b, ca, cb);
+  }
   const dx = Math.abs(q.x - p.x) * 0.5 + 20;
   const c1x = p.x + (q.x > p.x ? dx : -dx);
   const c2x = q.x + (q.x > p.x ? -dx : dx);
@@ -1202,17 +1277,8 @@ function setEdgeGeometry(g, e) {
   g.querySelector('.hit').setAttribute('d', d);
   const t = g.querySelector('text');
   if (!t) return;
-  let p;
-  try {
-    p = line.getPointAtLength(line.getTotalLength() / 2);
-  } catch {
-    p = null;
-  }
-  if (!p) {
-    const a = N(e.from);
-    const b = N(e.to);
-    p = { x: (center(a).x + center(b).x) / 2, y: (center(a).y + center(b).y) / 2 };
-  }
+  // computed from the path string: the DOM length would lag behind the d transition
+  const p = pathMid(d);
   t.setAttribute('x', p.x);
   t.setAttribute('y', p.y - 6);
 }
@@ -1260,7 +1326,7 @@ function renderMinimap() {
     mm.innerHTML = '';
     return;
   }
-  const bb = bounds(doc.nodes);
+  const bb = bounds(doc.nodes.concat(doc.stickies));
   const pad = 60;
   const r = $('#wrap').getBoundingClientRect();
   const vx = -view.x / view.z;
@@ -1268,12 +1334,14 @@ function renderMinimap() {
   const vw = r.width / view.z;
   const vh = r.height / view.z;
   mm.setAttribute('viewBox', `${bb.x - pad} ${bb.y - pad} ${bb.w + pad * 2} ${bb.h + pad * 2}`);
-  const rects = doc.nodes.map(n => `<rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="6" fill="${n.color}" stroke="${DARK(n.color)}"/>`).join('');
+  const notes = doc.stickies.map(s => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${s.color}" opacity=".8"/>`).join('');
+  const rects = notes + doc.nodes.map(n => `<rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="6" fill="${n.color}" stroke="${DARK(n.color)}"/>`).join('');
   const port = `<rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="rgba(37,99,235,.08)" stroke="#2563eb" stroke-width="${Math.max(2, (bb.w + pad * 2) / 160)}"/>`;
   mm.innerHTML = rects + port;
 }
 
 function fit() {
+  stopViewAnim();
   const r = $('#wrap').getBoundingClientRect();
   const items = doc.nodes.concat(doc.stickies);
   if (!items.length) {
@@ -1289,6 +1357,7 @@ function fit() {
 }
 
 function zoomAt(f, sx, sy) {
+  stopViewAnim();
   const r = $('#wrap').getBoundingClientRect();
   const px = sx == null ? r.width / 2 : sx - r.left;
   const py = sy == null ? r.height / 2 : sy - r.top;
@@ -1302,6 +1371,12 @@ function zoomAt(f, sx, sy) {
 
 // Tween the view to a target with ease-in-out; used by presentation and navigation.
 let viewAnim = 0;
+
+// Any direct view change (fit, zoom, pan, opening a document) wins over a running tween.
+function stopViewAnim() {
+  cancelAnimationFrame(viewAnim);
+  viewAnim = 0;
+}
 function animateView(target, dur = 600, done) {
   cancelAnimationFrame(viewAnim);
   if (!settings.animations || matchMedia('(prefers-reduced-motion: reduce)').matches) dur = 0;
@@ -1359,6 +1434,7 @@ const GAPX = 70;
 const GAPY = 16;
 
 const heightCache = new Map();
+let fitTimer = 0;
 
 // Height of a subtree (collapsed nodes count as leaves); memoised per layout run.
 function subtreeHeight(n, map) {
@@ -1432,7 +1508,7 @@ function acyclicEdges() {
   const list = [];
   doc.edges.forEach(e => {
     if (!ids.has(e.from) || !ids.has(e.to) || e.from === e.to) return;
-    const rec = { from: e.from, to: e.to };
+    const rec = { from: e.from, to: e.to, ref: e };
     list.push(rec);
     out.get(e.from).push(rec);
   });
@@ -1476,26 +1552,58 @@ function assignLayers(edges) {
   return layer;
 }
 
-function groupLayers(layer) {
-  const byL = new Map();
-  doc.nodes.forEach(n => {
-    const l = layer.get(n.id) || 0;
-    if (!byL.has(l)) byL.set(l, []);
-    byL.get(l).push(n);
-  });
+// 3. split edges that skip layers into chains of small dummy items
+function buildLayerGraph(edges, layer) {
   const horizontal = settings.flowDir === 'LR';
+  const items = new Map(doc.nodes.map(n => [n.id, { id: n.id, w: n.w, h: n.h, node: n, key: horizontal ? n.y : n.x }]));
+  const segs = [];
+  const chains = [];
+  edges.forEach((e, k) => {
+    const span = layer.get(e.to) - layer.get(e.from);
+    if (span <= 1) {
+      segs.push({ from: e.from, to: e.to });
+      return;
+    }
+    const a = items.get(e.from);
+    const b = items.get(e.to);
+    const chain = { ref: e.ref, ids: [] };
+    let prev = e.from;
+    for (let s = 1; s < span; s++) {
+      const id = `~${k}.${s}`;
+      const key = a.key + ((b.key - a.key) * s) / span;
+      items.set(id, { id, w: 24, h: 24, dummy: true, key });
+      layer.set(id, layer.get(e.from) + s);
+      segs.push({ from: prev, to: id });
+      chain.ids.push(id);
+      prev = id;
+    }
+    segs.push({ from: prev, to: e.to });
+    chains.push(chain);
+  });
+  return { items, segs, chains };
+}
+
+function groupLayers(layer, items) {
+  const byL = new Map();
+  items.forEach(it => {
+    const l = layer.get(it.id) || 0;
+    if (!byL.has(l)) byL.set(l, []);
+    byL.get(l).push(it);
+  });
   const layers = [...byL.keys()].sort((a, b) => a - b).map(l => byL.get(l));
   // start from the current drawing order so repeated layouts are stable
-  layers.forEach(ns => ns.sort((a, b) => (horizontal ? a.y - b.y : a.x - b.x)));
+  layers.forEach(ns => ns.sort((a, b) => a.key - b.key));
   return layers;
 }
 
-// 3. crossing reduction: barycenter sweeps, keeping the best ordering seen
+// 4. crossing reduction: barycenter sweeps, keeping the best ordering seen
 function countCrossings(layers, edges) {
   const pos = new Map();
-  layers.forEach(ns => ns.forEach((n, i) => pos.set(n.id, i)));
   const layerOf = new Map();
-  layers.forEach((ns, l) => ns.forEach(n => layerOf.set(n.id, l)));
+  layers.forEach((ns, l) => ns.forEach((n, i) => {
+    pos.set(n.id, i);
+    layerOf.set(n.id, l);
+  }));
   let total = 0;
   for (let l = 0; l < layers.length - 1; l++) {
     const pairs = edges
@@ -1503,9 +1611,7 @@ function countCrossings(layers, edges) {
       .map(e => [pos.get(e.from), pos.get(e.to)]);
     for (let i = 0; i < pairs.length; i++) {
       for (let j = i + 1; j < pairs.length; j++) {
-        const [a1, b1] = pairs[i];
-        const [a2, b2] = pairs[j];
-        if ((a1 - a2) * (b1 - b2) < 0) total++;
+        if ((pairs[i][0] - pairs[j][0]) * (pairs[i][1] - pairs[j][1]) < 0) total++;
       }
     }
   }
@@ -1538,15 +1644,23 @@ function orderLayers(layers, edges) {
       best = layers.map(ns => ns.slice());
     }
   }
-  best.forEach((ns, i) => layers[i] = ns);
+  best.forEach((ns, i) => (layers[i] = ns));
   return bestCross;
 }
 
-// 4. coordinates: pack each layer, then pull nodes toward their neighbours' mean
-function assignCoordinates(layers, edges) {
+// 5. coordinates: pack each layer, then alternate downward/upward passes that pull
+//    every item toward the mean centre of its neighbours in the previous/next layer
+function assignCoordinates(layers, edges, items) {
   const horizontal = settings.flowDir === 'LR';
   const gap = settings.nodeGap;
-  const size = n => (horizontal ? n.h : n.w);
+  const size = it => (horizontal ? it.h : it.w);
+  const preds = new Map();
+  const succs = new Map();
+  const push = (m, k, v) => (m.has(k) ? m.get(k).push(v) : m.set(k, [v]));
+  edges.forEach(e => {
+    push(succs, e.from, e.to);
+    push(preds, e.to, e.from);
+  });
   const pos = new Map();
   layers.forEach(ns => {
     const total = ns.reduce((a, n) => a + size(n), 0) + gap * (ns.length - 1);
@@ -1556,12 +1670,14 @@ function assignCoordinates(layers, edges) {
       c += size(n) + gap;
     });
   });
-  for (let pass = 0; pass < 3; pass++) {
-    layers.forEach(ns => {
+  for (let pass = 0; pass < 7; pass++) {
+    const down = pass % 2 === 0;
+    const order = down ? layers : layers.slice().reverse();
+    order.forEach(ns => {
       const desired = ns.map(n => {
-        const nb = edges.filter(e => e.from === n.id || e.to === n.id).map(e => (e.from === n.id ? e.to : e.from)).filter(id => pos.has(id));
+        const nb = (down ? preds : succs).get(n.id) || [];
         if (!nb.length) return pos.get(n.id);
-        const mean = nb.reduce((a, id) => a + pos.get(id) + size(N(id)) / 2, 0) / nb.length;
+        const mean = nb.reduce((a, id) => a + pos.get(id) + size(items.get(id)) / 2, 0) / nb.length;
         return mean - size(n) / 2;
       });
       let minC = -Infinity;
@@ -1572,19 +1688,32 @@ function assignCoordinates(layers, edges) {
       });
     });
   }
+  return pos;
+}
+
+// 6. write positions back; long edges remember the lane their dummies reserved
+function applyCoordinates(layers, pos, chains) {
+  const horizontal = settings.flowDir === 'LR';
+  const centre = new Map();
   let depth = 0;
   layers.forEach(ns => {
-    const thick = Math.max(...ns.map(n => (horizontal ? n.w : n.h)));
-    ns.forEach(n => {
-      if (horizontal) {
-        n.x = Math.round(depth);
-        n.y = Math.round(pos.get(n.id));
-      } else {
-        n.x = Math.round(pos.get(n.id));
-        n.y = Math.round(depth);
-      }
+    const real = ns.filter(n => !n.dummy);
+    const thick = Math.max(56, ...real.map(n => (horizontal ? n.w : n.h)));
+    ns.forEach(it => {
+      centre.set(it.id, pos.get(it.id) + (horizontal ? it.h : it.w) / 2);
+      if (it.dummy) return;
+      const n = it.node;
+      n.x = Math.round(horizontal ? depth + (thick - n.w) / 2 : pos.get(it.id));
+      n.y = Math.round(horizontal ? pos.get(it.id) : depth + (thick - n.h) / 2);
     });
     depth += thick + settings.layerGap - 56;
+  });
+  doc.edges.forEach(e => delete e.lane);
+  chains.forEach(ch => {
+    const lane = ch.ids.reduce((a, id) => a + centre.get(id), 0) / ch.ids.length;
+    const a = N(ch.ref.from);
+    const b = N(ch.ref.to);
+    ch.ref.lane = { at: Math.round(lane), key: laneKey(a, b), dir: horizontal ? 'LR' : 'TB' };
   });
 }
 
@@ -1592,10 +1721,20 @@ function layeredLayout() {
   if (!doc.nodes.length) return { layers: 0, crossings: 0 };
   const edges = acyclicEdges();
   const layer = assignLayers(edges);
-  const layers = groupLayers(layer);
-  const crossings = orderLayers(layers, edges);
-  assignCoordinates(layers, edges);
-  return { layers: layers.length, crossings };
+  const { items, segs, chains } = buildLayerGraph(edges, layer);
+  const layers = groupLayers(layer, items);
+  const crossings = orderLayers(layers, segs);
+  const pos = assignCoordinates(layers, segs, items);
+  applyCoordinates(layers, pos, chains);
+  return { layers: layers.length, crossings, dummies: chains.reduce((a, c) => a + c.ids.length, 0) };
+}
+
+// Crossings of the current drawing (used by tests and the layout announcement).
+function currentCrossings() {
+  const edges = acyclicEdges();
+  const layer = assignLayers(edges);
+  const { items, segs } = buildLayerGraph(edges, layer);
+  return countCrossings(groupLayers(layer, items), segs);
 }
 
 function autoLayout() {
@@ -1607,7 +1746,9 @@ function autoLayout() {
   }
   snapshot();
   render();
-  setTimeout(fit, 380);
+  // fit once the node transitions have settled
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(fit, 380);
 }
 
 // ---------- interactions ----------
@@ -1652,7 +1793,7 @@ function clearSelection() {
 wrap.addEventListener('pointerdown', onPointerDown);
 function onPointerDown(e) {
   if (e.target.closest('.float,.minimap,.hint,.findbar,.present-bar,.welcome,.editor')) return;
-  if (present.active) return;
+  if (present.active || e.button === 2) return;
   try {
     wrap.setPointerCapture(e.pointerId);
   } catch {
@@ -1669,6 +1810,7 @@ function onPointerDown(e) {
     return;
   }
   if (e.button === 1 || tool === 'pan' || spaceDown) {
+    stopViewAnim();
     drag = { type: 'pan', sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y };
     wrap.classList.add('panning');
     return;
@@ -1888,20 +2030,27 @@ function endConnect(d, w) {
   render();
 }
 
+// Pointer capture retargets click/dblclick to #wrap, so resolve the real element under the pointer.
+function hitTarget(e) {
+  return document.elementFromPoint(e.clientX, e.clientY) || e.target;
+}
+
 // -- double-click: edit text, label a connector or add a node --
 wrap.addEventListener('dblclick', e => {
   if (present.active) return;
-  const g = e.target.closest('g.node');
+  const hit = hitTarget(e);
+  if (hit.closest('.float,.minimap,.findbar,.welcome,.editor')) return;
+  const g = hit.closest('g.node');
   if (g) {
     startEdit(N(g.dataset.id));
     return;
   }
-  const gs = e.target.closest('g.sticky');
+  const gs = hit.closest('g.sticky');
   if (gs) {
     startEdit(S(gs.dataset.sid), 'sticky');
     return;
   }
-  const ge = e.target.closest('g.edge');
+  const ge = hit.closest('g.edge');
   if (ge) {
     const ed = E(ge.dataset.id);
     const l = prompt('Edge label', ed.label || '');
@@ -2800,7 +2949,13 @@ $('#imgFile').onchange = e => {
 const side = { open: false, tab: 'outline', raf: 0, editing: null, dragId: null };
 
 function toggleSide(force) {
+  const was = side.open;
   side.open = force == null ? !side.open : !!force;
+  // on desktop the canvas narrows by the panel width; shift the view to keep the map centred
+  if (was !== side.open && innerWidth > 900 && doc) {
+    view.x += side.open ? -140 : 140;
+    applyView();
+  }
   $('#work').classList.toggle('side-open', side.open);
   $('#sideBtn').classList.toggle('on', side.open);
   settings.sideOpen = side.open;
@@ -2814,7 +2969,6 @@ function setSideTab(tab) {
   side.tab = tab;
   settings.sideTab = tab;
   saveSettings();
-  if (tab === 'activity') store.set('logSeen', Date.now());
   renderSide(true);
 }
 
@@ -2829,7 +2983,7 @@ function renderSideSoon() {
 function renderSide(animate = false) {
   updateBadge();
   if (!side.open || side.editing) return;
-  $$('#sideTabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === side.tab));
+  $$('#sideTabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === side.tab));
   const body = $('#sideBody');
   const views = { outline: outlineView, comments: commentsView, history: historyView, activity: activityView };
   const active = document.activeElement;
@@ -2845,14 +2999,15 @@ function renderSide(animate = false) {
   }
 }
 
-// Badge on the side-panel button: open comments plus unseen activity.
+// Badge on the side-panel button: number of open comments in this document.
 function updateBadge() {
   const open = doc ? doc.comments.filter(c => !c.resolved).length : 0;
   $('#sideBadge').textContent = open ? String(Math.min(open, 99)) : '';
 }
 
 $('#sideBtn').onclick = () => toggleSide();
-$$('#sideTabs button').forEach(b => (b.onclick = () => setSideTab(b.dataset.tab)));
+$$('#sideTabs [data-tab]').forEach(b => (b.onclick = () => setSideTab(b.dataset.tab)));
+$('#sideClose').onclick = () => toggleSide(false);
 
 // -- outline (editable tree synced with the canvas) --
 function outlineView() {
@@ -3101,6 +3256,7 @@ function saveVersion(label = 'Manual', announceIt = false) {
   if (announceIt) toast(ok ? 'Version saved' : 'Storage full, version not saved', ok ? 'save' : 'alert');
   log(`Saved version "${label}"`, 'history');
   if (side.open && side.tab === 'history') renderSide();
+  if (!sel.size && !selEdge && !selSticky) renderInspector();
   return v;
 }
 
@@ -3650,10 +3806,12 @@ function bindDocs() {
   const ids = store.get('docs', []);
   $('#newMind').onclick = () => {
     openNew('Untitled mind map', 'mind');
+    log('Created a blank mind map', 'git-branch');
     closeModal();
   };
   $('#newFlow').onclick = () => {
     openNew('Untitled flowchart', 'flow');
+    log('Created a blank flowchart', 'layout');
     closeModal();
   };
   $('#impMmd').onclick = openMermaidImport;
@@ -4231,7 +4389,7 @@ function presentKeys(e) {
 
 // a click anywhere on the canvas advances to the next slide
 wrap.addEventListener('click', e => {
-  if (!present.active || e.target.closest('.present-bar')) return;
+  if (!present.active || hitTarget(e).closest('.present-bar')) return;
   gotoStep(present.i + 1);
 });
 $('#presentBtn').onclick = () => startPresent();
@@ -4271,7 +4429,7 @@ $('#themeBtn').onclick = e => {
 wrap.addEventListener('contextmenu', e => {
   if (present.active) return;
   e.preventDefault();
-  const g = e.target.closest('g.node');
+  const g = hitTarget(e).closest('g.node');
   const w = toWorld(e.clientX, e.clientY);
   if (!g) {
     openPop(e.clientX, e.clientY, [
@@ -4398,7 +4556,8 @@ function storageSummary() {
   store.keys().forEach(k => (bytes += (localStorage.getItem(NS + k) || '').length * 2));
   const docs = store.get('docs', []).length;
   const versions = store.keys().filter(k => k.startsWith('ver:')).reduce((a, k) => a + store.get(k, []).length, 0);
-  return `${docs} documents · ${versions} saved versions · ${(bytes / 1024).toFixed(1)} KB used of about 5 MB (browser limit).`;
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  return `${plural(docs, 'document')} · ${plural(versions, 'saved version')} · ${(bytes / 1024).toFixed(1)} KB used of about 5 MB (browser limit).`;
 }
 
 function exportBackup() {
@@ -4669,10 +4828,7 @@ window.nuqta = {
   navigate,
   openTemplate: i => openTemplate(TEMPLATES[i]),
   layered: layeredLayout,
-  countCrossings: () => {
-    const edges = acyclicEdges();
-    return countCrossings(groupLayers(assignLayers(edges)), edges);
-  },
+  countCrossings: currentCrossings,
   toMermaid,
   parseMermaid,
   importMermaid,
