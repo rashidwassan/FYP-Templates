@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dengue Watch</title>
+<meta name="description" content="Community dengue surveillance for Pakistani cities: town-level case heatmap, WHO 2009 triage, fever diary, breeding-site reporter on a map and weekly prevention checklist.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1626;--surface:#122036;--surface-2:#182b47;--surface-3:#1f3557;--ink:#e8eef8;--muted:#8fa3c0;--line:#22375a;
+  --red:#ff5a5f;--red-soft:rgba(255,90,95,.16);--amber:#ffb547;--amber-soft:rgba(255,181,71,.16);--teal:#2dd4bf;--teal-soft:rgba(45,212,191,.14);--green:#4ade80;--green-soft:rgba(74,222,128,.14);--blue:#60a5fa;
+  --radius:14px;--font:"Inter",system-ui,sans-serif;--font-ur:"Noto Nastaliq Urdu",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.2}
+.ur{font-family:var(--font-ur);line-height:2;direction:rtl;text-align:right}
+.muted{color:var(--muted)} .hidden{display:none!important}
+/* shell: left rail + content */
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+.rail{background:#0a1322;border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
+.brand .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--red),#c2185b);display:grid;place-items:center;color:#fff;flex:none}
+.brand h1{font-size:1rem;font-weight:800} .brand small{display:block;font-size:.7rem;color:var(--muted)}
+.rail a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-weight:600;font-size:.92rem}
+.rail a:hover{background:var(--surface);color:var(--ink)} .rail a.on{background:var(--red-soft);color:#fff}
+.rail a .ic{width:22px;text-align:center}
+.rail .foot{margin-top:auto;display:grid;gap:8px}
+.city{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 10px;outline:0}
+.lang{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;font-weight:700;cursor:pointer}
+main{padding:24px 26px 90px;max-width:1200px}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.pagehead h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em} .pagehead p{margin:4px 0 0;color:var(--muted)}
+section[data-page]{display:none} section[data-page].on{display:block}
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.card h3{font-size:1rem;margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.kpi .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.kpi .v{font-size:1.6rem;font-weight:800;margin-top:4px;letter-spacing:-.02em} .kpi .s{font-size:.8rem;color:var(--muted)}
+.kpi.red .v{color:var(--red)} .kpi.amber .v{color:var(--amber)} .kpi.teal .v{color:var(--teal)}
+.dash{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:16px}
+/* heat tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{border-radius:12px;padding:12px;border:1px solid var(--line);cursor:pointer;position:relative;overflow:hidden;background:var(--surface-2);transition:transform .15s}
+.tile:hover{transform:translateY(-2px)} .tile.on{outline:2px solid var(--teal)}
+.tile .n{font-weight:700;font-size:.88rem} .tile .c{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:2px} .tile .d{font-size:.75rem;color:var(--muted)}
+.scale{display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);margin-top:10px}
+.scale i{height:10px;flex:1;border-radius:3px;display:block}
+/* chart */
+.chart{position:relative} .chart svg{width:100%;height:220px;display:block;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:#000c;color:#fff;border-radius:8px;padding:6px 9px;font-size:.78rem;transform:translate(-50%,-115%);white-space:nowrap;display:none}
+/* forms */
+.btn{border:0;border-radius:10px;padding:10px 15px;font-weight:700;cursor:pointer;background:var(--red);color:#fff;display:inline-flex;align-items:center;gap:8px}
+.btn.teal{background:var(--teal);color:#06211e} .btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)} .btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px} .btn:disabled{opacity:.45;cursor:not-allowed}
+select,input[type=text],input[type=number],input[type=date],input[type=time],textarea{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:9px 11px;outline:0;color:var(--ink)}
+select:focus,input:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+label.f{display:block;font-size:.74rem;font-weight:700;color:var(--muted);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.07em}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 14px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.check{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);cursor:pointer;font-size:.9rem}
+.check input{margin-top:3px;accent-color:var(--red);width:16px;height:16px;flex:none}
+.check.ws{border-color:rgba(255,181,71,.4)} .check.sev{border-color:rgba(255,90,95,.5)}
+.checks{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.verdict{border-radius:14px;padding:18px 20px;border:1px solid var(--line)}
+.verdict.A{background:var(--green-soft);border-color:rgba(74,222,128,.4)} .verdict.B{background:var(--amber-soft);border-color:rgba(255,181,71,.5)} .verdict.C{background:var(--red-soft);border-color:rgba(255,90,95,.6)} .verdict.N{background:var(--surface-2)}
+.verdict h3{font-size:1.3rem;margin-bottom:6px} .verdict ul{margin:8px 0 0;padding-left:18px} .verdict li{margin:3px 0}
+.badge{display:inline-block;border-radius:6px;padding:2px 8px;font-size:.72rem;font-weight:700;background:var(--surface-3);color:var(--muted)}
+.badge.red{background:var(--red-soft);color:var(--red)} .badge.amber{background:var(--amber-soft);color:var(--amber)} .badge.green{background:var(--green-soft);color:var(--green)} .badge.teal{background:var(--teal-soft);color:var(--teal)}
+.banner{border-radius:12px;padding:12px 14px;font-weight:600;display:flex;gap:10px;align-items:flex-start}
+.banner.red{background:var(--red-soft);border:1px solid rgba(255,90,95,.5)} .banner.amber{background:var(--amber-soft);border:1px solid rgba(255,181,71,.5)} .banner.teal{background:var(--teal-soft);border:1px solid rgba(45,212,191,.4)}
+/* diary */
+.days{display:flex;gap:6px;overflow:auto;padding-bottom:6px}
+.day{flex:none;width:64px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);padding:8px 6px;text-align:center;cursor:pointer}
+.day.on{border-color:var(--teal);background:var(--teal-soft)} .day .t{font-size:.7rem;color:var(--muted)} .day .v{font-weight:800} .day.ws{border-color:var(--red)}
+.phase{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0}
+.phase div{padding:8px;border-radius:8px;text-align:center;font-size:.78rem;font-weight:700;background:var(--surface-2);color:var(--muted)}
+.phase div.on{color:#fff} .phase .f.on{background:#b45309} .phase .c.on{background:#b91c1c} .phase .r.on{background:#15803d}
+/* report */
+#map{height:380px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.rep{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.rep img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:none;background:var(--surface-2)}
+.rep.cleared{opacity:.6}
+/* prevent */
+.task{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer}
+.task input{width:20px;height:20px;accent-color:var(--teal)} .task.done{background:var(--teal-soft);border-color:rgba(45,212,191,.4)}
+.task .ur{font-size:.95rem;color:var(--muted)}
+.ring{width:110px;height:110px}
+/* learn */
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;border-top:3px solid var(--c,var(--teal))}
+.fact h4{font-size:.98rem;margin-bottom:6px} .fact p{margin:0;font-size:.9rem;color:var(--muted)} .fact .ur{margin-top:8px;color:var(--ink)}
+.todo{border:1px dashed var(--muted);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.todo h4{font-size:.95rem;display:flex;gap:8px;align-items:center;margin-bottom:4px} .tag{font-size:.68rem;background:var(--teal);color:#06211e;border-radius:6px;padding:2px 6px;font-weight:800}
+.list{display:grid;gap:10px}
+.spark{width:70px;height:22px}
+#toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:grid;gap:8px;z-index:60}
+.toast{background:#fff;color:#0b1626;padding:10px 16px;border-radius:10px;font-weight:700;animation:pop .25s}
+.toast.ok{background:var(--teal);color:#06211e} .toast.bad{background:var(--red);color:#fff}
+@keyframes pop{from{transform:translateY(8px);opacity:0}}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;background:#0a1322;border-top:1px solid var(--line);z-index:35;padding:6px 2px env(safe-area-inset-bottom)}
+.bottomnav a{flex:1;text-align:center;text-decoration:none;color:var(--muted);font-size:.66rem;font-weight:700;padding:6px 1px;border-radius:8px}
+.bottomnav a.on{color:#fff;background:var(--red-soft)} .bottomnav a span{display:block;font-size:1.1rem}
+@media (max-width:980px){.shell{grid-template-columns:1fr}.rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 14px}.rail a{display:none}.rail .foot{margin:0;display:flex;flex:1;justify-content:flex-end}.city{width:auto}.brand{padding:0}.bottomnav{display:flex}main{padding:18px 14px 90px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dash,.two{grid-template-columns:minmax(0,1fr)}}
+@media print{.rail,.bottomnav,#toasts{display:none}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="rail">
+  <div class="brand"><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v18M5 7l14 10M5 17 19 7"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg></div><div><h1>Dengue Watch</h1><small data-i18n="tagline">Community dengue surveillance</small></div></div>
+  <nav id="railnav" style="display:contents"></nav>
+  <div class="foot"><select class="city" id="citySel"></select><button class="lang" id="langBtn">اردو</button></div>
+</aside>
+<main>
+  <section data-page="dash" class="on"><div class="pagehead"><div><h2 data-i18n="d_title">Outbreak dashboard</h2><p id="dashSub"></p></div><span class="badge teal" data-i18n="simBadge">simulated surveillance data</span></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="dash"><div class="card"><h3 data-i18n="d_heat">Cases this week by town</h3><div class="tiles" id="tiles"></div><div class="scale"><span>0</span><i style="background:linear-gradient(90deg,var(--surface-3),#7f1d1d,var(--red))"></i><span id="scaleMax"></span></div></div>
+      <div style="display:grid;gap:16px"><div class="card"><h3 data-i18n="d_trend">12-week trend</h3><div class="chart" id="trend"></div></div><div class="card" id="townDetail"></div></div></div>
+  </section>
+
+  <section data-page="triage"><div class="pagehead"><div><h2 data-i18n="t_title">Dengue triage</h2><p data-i18n="t_lead">Based on the WHO 2009 classification. A screening aid for families and community health workers, not a substitute for a doctor.</p></div></div>
+    <div class="two"><div>
+      <div class="card"><h3 data-i18n="t_fever">Fever</h3><div class="cols"><div><label class="f" data-i18n="t_hasFever">Fever present?</label><select id="trFever"><option value="1">Yes</option><option value="0">No</option></select></div><div><label class="f" data-i18n="t_days">Days of fever</label><input id="trDays" type="number" min="0" max="21" value="2"></div><div><label class="f" data-i18n="t_plt">Platelets (×10³/µL, optional)</label><input id="trPlt" type="number" min="0" placeholder="e.g. 140"></div></div></div>
+      <div class="card" style="margin-top:14px"><h3 data-i18n="t_probable">Probable dengue criteria</h3><div class="checks" id="trProb"></div></div>
+      <div class="card" style="margin-top:14px"><h3 data-i18n="t_warn">Warning signs <span class="badge amber">critical phase</span></h3><div class="checks" id="trWarn"></div></div>
+      <div class="card" style="margin-top:14px"><h3 data-i18n="t_severe">Severe dengue signs <span class="badge red">emergency</span></h3><div class="checks" id="trSev"></div></div>
+      <div class="card" style="margin-top:14px"><h3 data-i18n="t_co">Co-existing conditions / social</h3><div class="checks" id="trCo"></div></div>
+    </div><div id="trOut" style="position:sticky;top:18px"></div></div>
+  </section>
+
+  <section data-page="diary"><div class="pagehead"><div><h2 data-i18n="f_title">Fever diary</h2><p data-i18n="f_lead">Track temperature, fluids and warning signs day by day. Days 3–7, when the fever drops, are the dangerous critical phase.</p></div><button class="btn teal" id="newEp" data-i18n="f_new">＋ New episode</button></div>
+    <div id="diary"></div></section>
+
+  <section data-page="report"><div class="pagehead"><div><h2 data-i18n="r_title">Report a breeding site</h2><p data-i18n="r_lead">Aedes breeds in clean standing water: coolers, drums, tyres, plant saucers. Pin it, photograph it, get it cleared.</p></div></div>
+    <div class="two"><div class="card" id="repForm"></div><div><div id="map"></div><div id="mapNote" class="muted" style="font-size:.8rem;margin:6px 2px"></div><div class="list" id="repList" style="margin-top:12px"></div></div></div></section>
+
+  <section data-page="prevent"><div class="pagehead"><div><h2 data-i18n="p_title">Weekly prevention</h2><p data-i18n="p_lead">Ten minutes every week breaks the mosquito's 7–10 day life cycle. Pick a “dry day” and keep the streak.</p></div></div><div id="prevent"></div></section>
+
+  <section data-page="learn"><div class="pagehead"><div><h2 data-i18n="l_title">Know dengue</h2><p data-i18n="l_lead">Facts families ask about most, in English and Urdu.</p></div></div><div class="facts" id="facts"></div></section>
+
+  <section data-page="about"><div class="pagehead"><div><h2 data-i18n="a_title">About this project</h2></div></div><div class="two" id="about"></div></section>
+</main>
+</div>
+<nav class="bottomnav" id="bottomnav"></nav>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Dengue Watch — single-file app
+   utils · i18n · seed data (cities/towns, seasonal weekly cases) ·
+   dashboard · WHO triage · fever diary · breeding-site reports (Leaflet, lazy) ·
+   prevention checklist · learn · about.   Student hooks: TODO(student)
+   ===================================================================== */
+const NS = 'dengue:';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = { get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } } };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const toast = (m, type = '') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = m; $('#toasts').append(t); setTimeout(() => t.remove(), 3200); };
+const uid = () => Math.random().toString(36).slice(2, 9);
+function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const dayKey = d => d.toISOString().slice(0, 10);
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+function isoWeek(d) { const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return x.getUTCFullYear() + '-W' + String(Math.ceil(((x - y0) / 864e5 + 1) / 7)).padStart(2, '0'); }
+
+// ---------- i18n ----------
+const TXT = {
+  en: { tagline: 'Community dengue surveillance', simBadge: 'simulated surveillance data', nav_dash: 'Dashboard', nav_triage: 'Triage', nav_diary: 'Fever diary', nav_report: 'Report site', nav_prevent: 'Prevent', nav_learn: 'Learn', nav_about: 'About',
+    d_title: 'Outbreak dashboard', d_heat: 'Cases this week by town', d_trend: '12-week trend', k_week: 'Cases this week', k_change: 'vs last week', k_hot: 'Hotspot towns', k_open: 'Open breeding reports', k_hot_s: 'rising > 20%', k_open_s: 'reported by the community', week: 'week', pick: 'Click a town tile for details', cases: 'cases', lastweek: 'last week', trend: 'trend', share: 'share of city cases',
+    t_title: 'Dengue triage', t_lead: 'Based on the WHO 2009 classification. A screening aid for families and community health workers, not a substitute for a doctor.', t_fever: 'Fever', t_hasFever: 'Fever present?', t_days: 'Days of fever', t_plt: 'Platelets (×10³/µL, optional)', t_probable: 'Probable dengue criteria', t_warn: 'Warning signs', t_severe: 'Severe dengue signs', t_co: 'Co-existing conditions / social',
+    vA: 'Group A — manage at home with daily review', vB: 'Group B — go to a hospital today', vC: 'Group C — EMERGENCY: nearest hospital now', vN: 'Dengue less likely from what you entered', doNow: 'What to do now', comeBack: 'Return to hospital immediately if', plt_note: 'Platelet count alone does not decide severity; warning signs and haematocrit matter more. Below 100 with any warning sign means hospital.',
+    f_title: 'Fever diary', f_lead: 'Track temperature, fluids and warning signs day by day. Days 3–7, when the fever drops, are the dangerous critical phase.', f_new: '＋ New episode', f_name: 'Patient name', f_age: 'Age', f_start: 'First day of fever', f_create: 'Start diary', f_none: 'No episode yet. Start a diary when fever begins.', f_day: 'Day', f_temp: 'Temperature °C', f_plt: 'Platelets', f_hct: 'Haematocrit %', f_fluids: 'Fluids (glasses)', f_urine: 'Passing urine normally?', f_ws: 'Warning signs today', f_note: 'Notes', f_save: 'Save day', f_delete: 'Delete episode', ph_f: 'Febrile', ph_c: 'Critical', ph_r: 'Recovery', f_alert_ws: 'A warning sign was recorded. Go to a hospital now — do not wait for the next reading.', f_alert_crit: 'Fever is dropping after the febrile phase: the critical phase (24–48 h) starts now. Watch for warning signs and keep fluids up.', f_chart: 'Temperature and platelets', f_saved: 'Day saved',
+    r_title: 'Report a breeding site', r_lead: 'Aedes breeds in clean standing water: coolers, drums, tyres, plant saucers. Pin it, photograph it, get it cleared.', r_type: 'Type of site', r_sev: 'Size', r_addr: 'Address / landmark', r_notes: 'Notes', r_photo: 'Photo (optional)', r_gps: 'Use my location', r_pin: 'Or click the map to drop a pin', r_submit: 'Submit report', r_none: 'No reports yet.', r_clear: 'Mark cleared', r_reopen: 'Reopen', r_wa: 'WhatsApp text', r_saved: 'Report saved on this device', r_need: 'Add an address or a map pin first.', r_mapoff: 'Map library could not load (offline). Reports still work from the list.', r_maptiles: 'Map tiles © OpenStreetMap contributors', s_small: 'Small (pot, saucer)', s_med: 'Medium (cooler, drum)', s_large: 'Large (tank, construction site)', st_open: 'open', st_cleared: 'cleared',
+    p_title: 'Weekly prevention', p_lead: 'Ten minutes every week breaks the mosquito\'s 7–10 day life cycle. Pick a “dry day” and keep the streak.', p_dryday: 'My dry day', p_streak: 'week streak', p_thisweek: 'this week', p_done: 'All done this week — the next dry day is', p_history: 'Last 8 weeks',
+    l_title: 'Know dengue', l_lead: 'Facts families ask about most, in English and Urdu.', a_title: 'About this project', a_todo: 'Left for students to build',
+    days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] },
+  ur: { tagline: 'کمیونٹی ڈینگی نگرانی', simBadge: 'نمونہ نگرانی ڈیٹا', nav_dash: 'ڈیش بورڈ', nav_triage: 'جانچ', nav_diary: 'بخار ڈائری', nav_report: 'اطلاع دیں', nav_prevent: 'بچاؤ', nav_learn: 'معلومات', nav_about: 'تعارف',
+    d_title: 'وبا کا ڈیش بورڈ', d_heat: 'اس ہفتے کیس بلحاظ ٹاؤن', d_trend: '12 ہفتوں کا رجحان', k_week: 'اس ہفتے کیس', k_change: 'پچھلے ہفتے کے مقابلے', k_hot: 'خطرناک ٹاؤن', k_open: 'کھلی اطلاعات', k_hot_s: '20% سے زیادہ اضافہ', k_open_s: 'کمیونٹی کی اطلاعات', week: 'ہفتہ', pick: 'تفصیل کے لیے ٹاؤن پر کلک کریں', cases: 'کیس', lastweek: 'پچھلا ہفتہ', trend: 'رجحان', share: 'شہر کے کیسوں کا حصہ',
+    t_title: 'ڈینگی جانچ', t_lead: 'عالمی ادارہ صحت 2009 کی درجہ بندی پر مبنی۔ گھرانوں اور ہیلتھ ورکرز کے لیے مددگار، ڈاکٹر کا متبادل نہیں۔', t_fever: 'بخار', t_hasFever: 'بخار ہے؟', t_days: 'بخار کے دن', t_plt: 'پلیٹلیٹس (اختیاری)', t_probable: 'ممکنہ ڈینگی کی علامات', t_warn: 'خطرے کی علامات', t_severe: 'شدید ڈینگی کی علامات', t_co: 'ساتھ کی بیماریاں / حالات',
+    vA: 'گروپ A — گھر پر دیکھ بھال، روزانہ معائنہ', vB: 'گروپ B — آج ہی ہسپتال جائیں', vC: 'گروپ C — ایمرجنسی: فوراً قریبی ہسپتال', vN: 'آپ کی معلومات سے ڈینگی کا امکان کم ہے', doNow: 'ابھی کیا کریں', comeBack: 'فوراً ہسپتال واپس جائیں اگر', plt_note: 'صرف پلیٹلیٹس شدت کا فیصلہ نہیں کرتے؛ خطرے کی علامات زیادہ اہم ہیں۔ 100 سے کم اور کوئی خطرے کی علامت ہو تو ہسپتال۔',
+    f_title: 'بخار ڈائری', f_lead: 'روزانہ درجہ حرارت، پانی اور خطرے کی علامات لکھیں۔ دن 3 سے 7، جب بخار اترتا ہے، خطرناک مرحلہ ہے۔', f_new: '＋ نیا ریکارڈ', f_name: 'مریض کا نام', f_age: 'عمر', f_start: 'بخار کا پہلا دن', f_create: 'ڈائری شروع کریں', f_none: 'ابھی کوئی ریکارڈ نہیں۔ بخار شروع ہوتے ہی ڈائری بنائیں۔', f_day: 'دن', f_temp: 'درجہ حرارت °C', f_plt: 'پلیٹلیٹس', f_hct: 'ہیماٹوکرٹ %', f_fluids: 'پانی (گلاس)', f_urine: 'پیشاب معمول کے مطابق؟', f_ws: 'آج خطرے کی علامات', f_note: 'نوٹ', f_save: 'دن محفوظ کریں', f_delete: 'ریکارڈ حذف کریں', ph_f: 'بخار', ph_c: 'نازک', ph_r: 'صحت یابی', f_alert_ws: 'خطرے کی علامت درج ہوئی ہے۔ ابھی ہسپتال جائیں — اگلی ریڈنگ کا انتظار نہ کریں۔', f_alert_crit: 'بخار اتر رہا ہے: اگلے 24–48 گھنٹے نازک مرحلہ ہیں۔ خطرے کی علامات پر نظر رکھیں اور پانی پلاتے رہیں۔', f_chart: 'درجہ حرارت اور پلیٹلیٹس', f_saved: 'دن محفوظ ہو گیا',
+    r_title: 'افزائش کی جگہ کی اطلاع', r_lead: 'ایڈیز مچھر صاف کھڑے پانی میں پلتا ہے: کولر، ڈرم، ٹائر، گملوں کی پلیٹیں۔ نشان لگائیں، تصویر لیں، صاف کروائیں۔', r_type: 'جگہ کی قسم', r_sev: 'سائز', r_addr: 'پتہ / نشانی', r_notes: 'نوٹ', r_photo: 'تصویر (اختیاری)', r_gps: 'میری لوکیشن', r_pin: 'یا نقشے پر کلک کر کے نشان لگائیں', r_submit: 'اطلاع جمع کریں', r_none: 'ابھی کوئی اطلاع نہیں۔', r_clear: 'صاف ہو گیا', r_reopen: 'دوبارہ کھولیں', r_wa: 'واٹس ایپ پیغام', r_saved: 'اطلاع محفوظ ہو گئی', r_need: 'پہلے پتہ یا نقشے پر نشان لگائیں۔', r_mapoff: 'نقشہ لوڈ نہیں ہوا (آف لائن)۔ فہرست سے اطلاعات کام کرتی ہیں۔', r_maptiles: 'نقشہ © OpenStreetMap', s_small: 'چھوٹی (گملا، پلیٹ)', s_med: 'درمیانی (کولر، ڈرم)', s_large: 'بڑی (ٹینکی، زیر تعمیر جگہ)', st_open: 'کھلی', st_cleared: 'صاف',
+    p_title: 'ہفتہ وار بچاؤ', p_lead: 'ہر ہفتے دس منٹ مچھر کے 7–10 دن کے چکر کو توڑ دیتے ہیں۔ ایک "خشک دن" مقرر کریں۔', p_dryday: 'میرا خشک دن', p_streak: 'ہفتوں کا سلسلہ', p_thisweek: 'اس ہفتے', p_done: 'اس ہفتے سب ہو گیا — اگلا خشک دن', p_history: 'پچھلے 8 ہفتے',
+    l_title: 'ڈینگی کو جانیں', l_lead: 'وہ باتیں جو گھرانے سب سے زیادہ پوچھتے ہیں۔', a_title: 'اس پروجیکٹ کا تعارف', a_todo: 'طلبہ کے لیے باقی کام',
+    days: ['اتوار', 'پیر', 'منگل', 'بدھ', 'جمعرات', 'جمعہ', 'ہفتہ'] }
+};
+let lang = store.get('lang', 'en');
+const t = k => TXT[lang][k] ?? TXT.en[k] ?? k;
+const nm = o => lang === 'ur' ? (o.ur || o.en) : o.en;
+
+// ---------- seed data ----------
+const CITIES = [
+  { id: 'lahore', en: 'Lahore', ur: 'لاہور', lat: 31.52, lng: 74.35, zoom: 11, towns: [['Ravi Town', 'راوی ٹاؤن', 31.63, 74.30, 30], ['Shalimar Town', 'شالیمار ٹاؤن', 31.59, 74.38, 26], ['Aziz Bhatti Town', 'عزیز بھٹی ٹاؤن', 31.56, 74.42, 18], ['Data Gunj Bakhsh', 'داتا گنج بخش', 31.57, 74.31, 24], ['Gulberg Town', 'گلبرگ ٹاؤن', 31.51, 74.35, 14], ['Samanabad Town', 'سمن آباد ٹاؤن', 31.54, 74.29, 20], ['Iqbal Town', 'اقبال ٹاؤن', 31.50, 74.29, 22], ['Nishtar Town', 'نشتر ٹاؤن', 31.44, 74.33, 16], ['Wagha Town', 'واہگہ ٹاؤن', 31.60, 74.50, 12], ['Lahore Cantt', 'لاہور کینٹ', 31.50, 74.40, 10]] },
+  { id: 'rawalpindi', en: 'Rawalpindi', ur: 'راولپنڈی', lat: 33.60, lng: 73.05, zoom: 11, towns: [['Rawal Town', 'راول ٹاؤن', 33.62, 73.07, 28], ['Potohar Town', 'پوٹھوہار ٹاؤن', 33.58, 73.02, 22], ['Rawalpindi Cantt', 'راولپنڈی کینٹ', 33.58, 73.10, 12], ['Taxila', 'ٹیکسلا', 33.74, 72.79, 8], ['Gujar Khan', 'گوجر خان', 33.25, 73.30, 7], ['Kahuta', 'کہوٹہ', 33.59, 73.39, 5], ['Kallar Syedan', 'کلر سیداں', 33.42, 73.37, 4], ['Murree', 'مری', 33.91, 73.39, 2]] },
+  { id: 'karachi', en: 'Karachi', ur: 'کراچی', lat: 24.89, lng: 67.06, zoom: 10, towns: [['Central', 'سینٹرل', 24.93, 67.04, 26], ['East', 'ایسٹ', 24.90, 67.10, 30], ['West', 'ویسٹ', 24.93, 66.95, 14], ['South', 'ساؤتھ', 24.84, 67.02, 16], ['Korangi', 'کورنگی', 24.83, 67.13, 22], ['Malir', 'ملیر', 24.90, 67.20, 18], ['Keamari', 'کیماڑی', 24.85, 66.95, 10]] },
+].map(c => ({ ...c, towns: c.towns.map(([en, ur, lat, lng, base], i) => ({ id: c.id + '_' + i, en, ur, lat, lng, base })) }));
+const CITY = Object.fromEntries(CITIES.map(c => [c.id, c]));
+let cityId = store.get('city', 'lahore');
+const WEEKS = 12;
+const weekStart = i => addDays(today, -7 * (WEEKS - 1 - i) - today.getDay()); // Sunday of each week
+// Seasonal multiplier: Pakistan's dengue season peaks mid-October after monsoon.
+function seasonal(d) { const doy = (d - new Date(d.getFullYear(), 0, 0)) / 864e5; const peak = 288, sd = 32; return .12 + Math.exp(-((doy - peak) ** 2) / (2 * sd * sd)); }
+const wkCache = new Map();
+/** weekly case counts for every town in a city: {townId: number[WEEKS]} — deterministic per ISO week */
+function weekly(city) {
+  const key = city.id + '|' + isoWeek(today); if (wkCache.has(key)) return wkCache.get(key);
+  const out = {}; for (const tw of city.towns) { const r = rng(hash(key + tw.id)); out[tw.id] = Array.from({ length: WEEKS }, (_, i) => Math.max(0, Math.round(tw.base * seasonal(weekStart(i)) * (0.7 + r() * .6)))); }
+  wkCache.set(key, out); return out;
+}
+// TODO(student): replace weekly() with real surveillance data (provincial dengue dashboards, DHIS2 exports, hospital line lists).
+// Keep the same shape so the dashboard, tiles and trend chart keep working.
+
+// ---------- WHO 2009 triage data ----------
+const PROB = [['nausea', 'Nausea or vomiting', 'متلی یا قے'], ['rash', 'Skin rash', 'جلد پر دانے'], ['aches', 'Body aches, joint or eye pain', 'جسم، جوڑوں یا آنکھوں میں درد'], ['tourniquet', 'Tourniquet test positive', 'ٹورنیکیٹ ٹیسٹ مثبت'], ['leukopenia', 'Low white cell count (if known)', 'سفید خلیے کم (اگر معلوم ہو)'], ['area', 'Lives in or travelled to an area with dengue', 'ڈینگی والے علاقے میں رہائش یا سفر']];
+const WARN = [['abd', 'Abdominal pain or tenderness', 'پیٹ میں درد'], ['vomit', 'Persistent vomiting (3+ in 24 h)', 'مسلسل قے'], ['fluid', 'Fluid accumulation (swollen belly, breathlessness)', 'پیٹ یا سینے میں پانی'], ['bleed', 'Bleeding gums, nose, blood in vomit or stool, heavy periods', 'مسوڑھوں، ناک سے خون یا قے/پاخانے میں خون'], ['lethargy', 'Lethargy or restlessness', 'سستی یا بے چینی'], ['liver', 'Enlarged tender liver', 'جگر بڑھا ہوا'], ['hct', 'Rising haematocrit with falling platelets', 'ہیماٹوکرٹ بڑھنا، پلیٹلیٹس گرنا']];
+const SEV = [['shock', 'Cold clammy hands, weak pulse, fainting (shock)', 'ٹھنڈے ہاتھ پاؤں، کمزور نبض، بے ہوشی'], ['resp', 'Severe breathing difficulty', 'سانس لینے میں شدید دشواری'], ['sbleed', 'Severe bleeding', 'شدید خون بہنا'], ['organ', 'Confusion, fits, very yellow eyes, chest pain', 'بے ہوشی، دورے، آنکھیں بہت پیلی، سینے میں درد']];
+const CO = [['preg', 'Pregnancy', 'حمل'], ['infant', 'Infant under 1 year', 'ایک سال سے کم بچہ'], ['elderly', 'Elderly (65+)', 'بزرگ (65+)'], ['diabetes', 'Diabetes, kidney, heart disease or obesity', 'ذیابیطس، گردے، دل کی بیماری یا موٹاپا'], ['alone', 'Lives alone or far from a hospital', 'اکیلے رہتے ہیں یا ہسپتال دور ہے'], ['nofluids', 'Cannot drink fluids or pass urine for 6 h', 'پانی نہیں پی سکتے یا 6 گھنٹے پیشاب نہیں']];
+const ADVICE = {
+  A: { en: ['Rest and drink plenty: ORS, water, fresh juice, soup — aim for a glass every hour while awake', 'Paracetamol only for fever (max 4 doses a day). NO aspirin, ibuprofen, diclofenac or other NSAIDs — they cause bleeding', 'Sponge with room-temperature water for high fever', 'Daily review by a doctor with a complete blood count until 48 h after the fever ends', 'Sleep under a net and use repellent so mosquitoes do not carry the virus to others'], ur: ['آرام کریں اور خوب پانی پئیں: او آر ایس، پانی، جوس، شوربہ — جاگتے ہوئے ہر گھنٹے ایک گلاس', 'بخار کے لیے صرف پیراسیٹامول۔ اسپرین، بروفن، ڈیکلوفیناک بالکل نہیں — خون بہنے کا خطرہ', 'تیز بخار پر عام پانی کی پٹیاں', 'بخار ختم ہونے کے 48 گھنٹے بعد تک روزانہ ڈاکٹر سے معائنہ اور سی بی سی', 'مچھر دانی اور لوشن استعمال کریں تاکہ وائرس دوسروں تک نہ پہنچے'] },
+  B: { en: ['Go to a hospital with dengue facilities today for observation and IV fluids if needed', 'Carry any blood reports; ask for a complete blood count and haematocrit on arrival', 'Keep sipping ORS on the way; paracetamol only', 'Do not accept a “wait and see” plan if a warning sign appeared during defervescence'], ur: ['آج ہی ڈینگی سہولت والے ہسپتال جائیں تاکہ نگرانی اور ضرورت پر ڈرپ لگ سکے', 'خون کی رپورٹیں ساتھ رکھیں؛ پہنچتے ہی سی بی سی اور ہیماٹوکرٹ کروائیں', 'راستے میں او آر ایس پیتے رہیں؛ صرف پیراسیٹامول', 'بخار اترتے وقت خطرے کی علامت آئی ہو تو انتظار نہ کریں'] },
+  C: { en: ['Call Rescue 1122 or go to the nearest emergency department immediately', 'Lie the patient flat with legs raised if faint; keep warm', 'Do not give anything by mouth if unconscious', 'Tell the team: suspected severe dengue, day of fever, and any bleeding'], ur: ['فوراً ریسکیو 1122 کو کال کریں یا قریبی ایمرجنسی جائیں', 'بے ہوشی پر مریض کو لٹا کر ٹانگیں اونچی کریں؛ گرم رکھیں', 'بے ہوش مریض کو منہ سے کچھ نہ دیں', 'عملے کو بتائیں: شدید ڈینگی کا شبہ، بخار کا کون سا دن، اور خون بہنا'] },
+  N: { en: ['Fever without dengue features can still be malaria, typhoid or a viral infection — see a doctor if it lasts more than 2 days', 'Use paracetamol, fluids and rest meanwhile', 'Re-check this triage daily; dengue warning signs usually appear on days 3–7'], ur: ['ڈینگی کی علامات کے بغیر بخار ملیریا، ٹائیفائیڈ یا وائرل ہو سکتا ہے — 2 دن سے زیادہ ہو تو ڈاکٹر کو دکھائیں', 'پیراسیٹامول، پانی اور آرام', 'روزانہ یہ جانچ دہرائیں؛ خطرے کی علامات عموماً دن 3–7 میں آتی ہیں'] }
+};
+const RETURN_IF = { en: ['severe abdominal pain or persistent vomiting', 'bleeding from gums, nose, in vomit or stool', 'cold or clammy hands and feet, fainting, drowsiness or irritability', 'difficulty breathing', 'no urine for 6 hours'], ur: ['پیٹ میں شدید درد یا مسلسل قے', 'مسوڑھوں، ناک سے خون یا قے/پاخانے میں خون', 'ٹھنڈے چپچپے ہاتھ پاؤں، بے ہوشی، غنودگی یا چڑچڑاپن', 'سانس میں دشواری', '6 گھنٹے پیشاب نہ آنا'] };
+
+// ---------- dashboard ----------
+let selTown = null;
+function sparkline(arr, color) { const w = 70, h = 22, mx = Math.max(...arr, 1); const pts = arr.map((v, i) => `${(i / (arr.length - 1) * w).toFixed(1)},${(h - 2 - v / mx * (h - 4)).toFixed(1)}`).join(' '); return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/></svg>`; }
+function renderDash() {
+  const city = CITY[cityId], wk = weekly(city), N = WEEKS - 1;
+  const totals = Array.from({ length: WEEKS }, (_, i) => city.towns.reduce((a, tw) => a + wk[tw.id][i], 0));
+  const now = totals[N], prev = totals[N - 1] || 1, chg = (now - prev) / prev * 100;
+  const hot = city.towns.filter(tw => wk[tw.id][N] > wk[tw.id][N - 1] * 1.2 && wk[tw.id][N] >= 5);
+  const open = store.get('reports', []).filter(r => r.city === cityId && r.status === 'open').length;
+  $('#dashSub').textContent = `${nm(city)} · ${isoWeek(today)} · ${t('week')} ${WEEKS}/${WEEKS}`;
+  const kpi = (cls, k, v, s) => `<div class="kpi ${cls}"><div class="k">${t(k)}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  $('#kpis').innerHTML = kpi('red', 'k_week', now, `${t('lastweek')}: ${prev}`) + kpi(chg > 0 ? 'amber' : 'teal', 'k_change', (chg > 0 ? '+' : '') + chg.toFixed(0) + '%', chg > 0 ? '▲' : '▼') + kpi('amber', 'k_hot', hot.length, t('k_hot_s')) + kpi('teal', 'k_open', open, t('k_open_s'));
+  const max = Math.max(...city.towns.map(tw => wk[tw.id][N]), 1); $('#scaleMax').textContent = max;
+  $('#tiles').innerHTML = city.towns.map(tw => { const v = wk[tw.id][N], p = wk[tw.id][N - 1], f = v / max; const bg = `color-mix(in srgb, var(--red) ${Math.round(f * 85)}%, var(--surface-2))`; return `<div class="tile ${selTown === tw.id ? 'on' : ''}" data-tw="${tw.id}" style="background:${bg}"><div class="n">${esc(nm(tw))}</div><div class="c">${v}</div><div class="d">${v > p ? '▲' : v < p ? '▼' : '•'} ${Math.abs(v - p)} ${t('lastweek')}</div></div>`; }).join('');
+  $$('.tile').forEach(el => el.onclick = () => { selTown = el.dataset.tw; renderDash(); });
+  barChart($('#trend'), totals, Array.from({ length: WEEKS }, (_, i) => weekStart(i)));
+  const tw = city.towns.find(x => x.id === selTown);
+  $('#townDetail').innerHTML = tw ? `<h3>${esc(nm(tw))}</h3><div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center"><div><div class="muted" style="font-size:.75rem">${t('cases')}</div><div style="font-size:1.6rem;font-weight:800">${wk[tw.id][N]}</div></div><div><div class="muted" style="font-size:.75rem">${t('lastweek')}</div><div style="font-size:1.2rem;font-weight:700">${wk[tw.id][N - 1]}</div></div><div><div class="muted" style="font-size:.75rem">${t('share')}</div><div style="font-size:1.2rem;font-weight:700">${(wk[tw.id][N] / now * 100).toFixed(0)}%</div></div><div><div class="muted" style="font-size:.75rem">${t('trend')}</div>${sparkline(wk[tw.id], 'var(--red)')}</div></div><div style="margin-top:10px"><a href="#report" class="btn ghost sm">📍 ${t('nav_report')}</a></div>` : `<p class="muted" style="margin:0">${t('pick')}</p>`;
+}
+function barChart(el, vals, dates) {
+  const W = 520, H = 220, P = { l: 34, r: 8, t: 14, b: 30 }, mx = Math.max(...vals, 1); const bw = (W - P.l - P.r) / vals.length;
+  const y = v => P.t + (1 - v / mx) * (H - P.t - P.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  [0, .5, 1].forEach(f => { s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(mx * f)}" y2="${y(mx * f)}" stroke="#22375a"/><text x="${P.l - 6}" y="${y(mx * f) + 4}" font-size="10" fill="#8fa3c0" text-anchor="end">${Math.round(mx * f)}</text>`; });
+  vals.forEach((v, i) => { const x = P.l + i * bw + bw * .15, last = i === vals.length - 1; s += `<rect class="b" data-i="${i}" x="${x}" y="${y(v)}" width="${bw * .7}" height="${H - P.b - y(v)}" rx="3" fill="${last ? '#ff5a5f' : '#7f1d1d'}"/>`; if (i % 2 === 0) s += `<text x="${x + bw * .35}" y="${H - 10}" font-size="10" fill="#8fa3c0" text-anchor="middle">${dates[i].toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}</text>`; });
+  const pts = vals.map((v, i) => `${P.l + i * bw + bw / 2},${y(v)}`).join(' '); s += `<polyline points="${pts}" fill="none" stroke="#ffb547" stroke-width="2" stroke-dasharray="4 3"/></svg><div class="tip"></div>`;
+  el.innerHTML = s; const tip = $('.tip', el), svg = $('svg', el);
+  $$('rect.b', el).forEach(r => { r.onmouseenter = () => { const i = +r.dataset.i, rect = svg.getBoundingClientRect(); tip.style.display = 'block'; tip.style.left = (P.l + i * bw + bw / 2) / W * rect.width + 'px'; tip.style.top = y(vals[i]) / H * rect.height + 'px'; tip.textContent = `${isoWeek(dates[i])}: ${vals[i]} ${t('cases')}`; }; r.onmouseleave = () => tip.style.display = 'none'; });
+}
+
+// ---------- triage ----------
+function renderTriageForm() {
+  const box = (arr, id, cls) => $('#' + id).innerHTML = arr.map(([k, en, ur]) => `<label class="check ${cls}"><input type="checkbox" data-k="${k}"><span>${lang === 'ur' ? esc(ur) : esc(en)}</span></label>`).join('');
+  box(PROB, 'trProb', ''); box(WARN, 'trWarn', 'ws'); box(SEV, 'trSev', 'sev'); box(CO, 'trCo', '');
+  $$('#trProb input,#trWarn input,#trSev input,#trCo input,#trFever,#trDays,#trPlt').forEach(el => el.addEventListener('change', runTriage)); runTriage();
+}
+function triage({ fever, days, prob, warn, sev, co, plt }) {
+  if (sev.length) return 'C';
+  if (warn.length || (fever && prob.length >= 2 && co.length) || (plt && plt < 100 && warn.length)) return warn.length || sev.length ? 'B' : co.length ? 'B' : 'A';
+  if (fever && prob.length >= 2) return co.length ? 'B' : 'A';
+  return 'N';
+}
+function runTriage() {
+  const g = id => $$('#' + id + ' input:checked').map(i => i.dataset.k);
+  const inp = { fever: $('#trFever').value === '1', days: +$('#trDays').value, prob: g('trProb'), warn: g('trWarn'), sev: g('trSev'), co: g('trCo'), plt: +$('#trPlt').value || null };
+  const v = triage(inp), adv = ADVICE[v][lang] || ADVICE[v].en;
+  const crit = inp.fever && inp.days >= 3 && inp.days <= 7;
+  $('#trOut').innerHTML = `<div class="verdict ${v}"><div class="badge ${v === 'C' ? 'red' : v === 'B' ? 'amber' : v === 'A' ? 'green' : ''}">WHO 2009 · ${v === 'N' ? '—' : 'Group ' + v}</div><h3 style="margin-top:8px">${t('v' + v)}</h3>
+    ${crit ? `<div class="banner amber" style="margin:10px 0">⏱ ${lang === 'ur' ? 'دن 3–7: نازک مرحلہ۔ بخار اترنا بہتری نہیں، سب سے زیادہ خطرے کا وقت ہے۔' : 'Day 3–7: critical phase. A falling fever is not recovery — it is the highest-risk window.'}</div>` : ''}
+    <h4 style="font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:12px">${t('doNow')}</h4><ul class="${lang === 'ur' ? 'ur' : ''}">${adv.map(a => `<li>${esc(a)}</li>`).join('')}</ul>
+    ${v !== 'C' ? `<h4 style="font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:12px">${t('comeBack')}</h4><ul class="${lang === 'ur' ? 'ur' : ''}">${(RETURN_IF[lang] || RETURN_IF.en).map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
+    ${inp.plt ? `<p class="muted" style="font-size:.82rem;margin:12px 0 0">${t('plt_note')}</p>` : ''}
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" onclick="window.print()">🖨</button><a class="btn ghost sm" href="https://wa.me/?text=${encodeURIComponent(`Dengue triage (WHO 2009): ${t('v' + v)}\n` + adv.join('\n'))}" target="_blank" rel="noopener">WhatsApp</a></div></div>`;
+}
+
+// ---------- fever diary ----------
+let epId = store.get('ep', null), dayIdx = 0;
+function renderDiary() {
+  const eps = store.get('episodes', []); const ep = eps.find(e => e.id === epId) || eps[0]; const el = $('#diary');
+  if (!ep) { el.innerHTML = `<div class="card"><p class="muted" style="margin:0">${t('f_none')}</p></div>`; return; }
+  epId = ep.id; store.set('ep', epId);
+  const start = new Date(ep.start), totalDays = Math.max(1, Math.min(14, Math.round((today - start) / 864e5) + 1));
+  if (dayIdx >= totalDays) dayIdx = totalDays - 1;
+  const e = ep.entries[dayIdx] || {};
+  const phase = d => d < 3 ? 'f' : d < 7 ? 'c' : 'r';
+  // defervescence detection: temp < 38 today after a day ≥ 38 within febrile window
+  const temps = Array.from({ length: totalDays }, (_, i) => ep.entries[i]?.temp ?? null);
+  const defer = dayIdx >= 2 && temps[dayIdx] != null && temps[dayIdx] < 38 && temps.slice(0, dayIdx).some(x => x != null && x >= 38);
+  const anyWs = (e.ws || []).length > 0;
+  el.innerHTML = `<div class="two"><div>
+    <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">${esc(ep.name)} <span class="muted" style="font-weight:500">· ${esc(ep.age)} · ${t('f_day')} ${dayIdx + 1}</span></h3><div class="muted" style="font-size:.82rem">${eps.length > 1 ? `<select id="epSel" style="width:auto;padding:4px 8px;margin-top:6px">${eps.map(x => `<option value="${x.id}" ${x.id === ep.id ? 'selected' : ''}>${esc(x.name)} · ${x.start}</option>`).join('')}</select>` : ep.start}</div></div><button class="btn ghost sm" id="epDel">${t('f_delete')}</button></div>
+      <div class="phase"><div class="f ${phase(dayIdx) === 'f' ? 'on' : ''}">${t('ph_f')} · 1–3</div><div class="c ${phase(dayIdx) === 'c' ? 'on' : ''}">${t('ph_c')} · 3–7</div><div class="r ${phase(dayIdx) === 'r' ? 'on' : ''}">${t('ph_r')} · 7+</div></div>
+      <div class="days">${Array.from({ length: totalDays }, (_, i) => { const x = ep.entries[i]; return `<div class="day ${i === dayIdx ? 'on' : ''} ${x?.ws?.length ? 'ws' : ''}" data-i="${i}"><div class="t">${t('f_day')} ${i + 1}</div><div class="v">${x?.temp != null ? x.temp + '°' : '—'}</div><div class="t">${x?.plt ? x.plt + 'k' : ''}</div></div>`; }).join('')}</div>
+      ${anyWs ? `<div class="banner red" style="margin-top:12px">🚨 ${t('f_alert_ws')}</div>` : defer ? `<div class="banner amber" style="margin-top:12px">⚠️ ${t('f_alert_crit')}</div>` : ''}
+      <div class="cols" style="margin-top:6px"><div><label class="f">${t('f_temp')}</label><input id="dTemp" type="number" step=".1" min="35" max="42" value="${e.temp ?? ''}"></div><div><label class="f">${t('f_plt')}</label><input id="dPlt" type="number" min="0" value="${e.plt ?? ''}" placeholder="×10³"></div><div><label class="f">${t('f_hct')}</label><input id="dHct" type="number" min="0" max="70" value="${e.hct ?? ''}"></div><div><label class="f">${t('f_fluids')}</label><input id="dFl" type="number" min="0" max="30" value="${e.fluids ?? ''}"></div></div>
+      <label class="f">${t('f_urine')}</label><select id="dUr"><option value="1" ${e.urine !== false ? 'selected' : ''}>Yes</option><option value="0" ${e.urine === false ? 'selected' : ''}>No</option></select>
+      <label class="f">${t('f_ws')}</label><div class="checks">${WARN.map(([k, en, ur]) => `<label class="check ws"><input type="checkbox" data-k="${k}" ${(e.ws || []).includes(k) ? 'checked' : ''}><span>${lang === 'ur' ? esc(ur) : esc(en)}</span></label>`).join('')}</div>
+      <label class="f">${t('f_note')}</label><input id="dNote" type="text" value="${esc(e.note || '')}">
+      <div style="margin-top:14px"><button class="btn teal" id="dSave">${t('f_save')}</button></div></div>
+    </div><div class="card"><h3>${t('f_chart')}</h3><div class="chart" id="dChart"></div></div></div>`;
+  $$('.day').forEach(d => d.onclick = () => { dayIdx = +d.dataset.i; renderDiary(); });
+  $('#dSave').onclick = () => { ep.entries[dayIdx] = { temp: $('#dTemp').value === '' ? null : +$('#dTemp').value, plt: +$('#dPlt').value || null, hct: +$('#dHct').value || null, fluids: +$('#dFl').value || null, urine: $('#dUr').value === '1', ws: $$('#diary .check input:checked').map(i => i.dataset.k), note: $('#dNote').value.trim() }; store.set('episodes', eps); toast(t('f_saved'), 'ok'); renderDiary(); };
+  $('#epDel').onclick = () => { if (!confirm('Delete this episode?')) return; store.set('episodes', eps.filter(x => x.id !== ep.id)); epId = null; renderDiary(); };
+  const sel = $('#epSel'); if (sel) sel.onchange = () => { epId = sel.value; dayIdx = 0; renderDiary(); };
+  dualChart($('#dChart'), temps, Array.from({ length: totalDays }, (_, i) => ep.entries[i]?.plt ?? null));
+}
+function dualChart(el, temps, plts) {
+  const W = 520, H = 220, P = { l: 36, r: 36, t: 14, b: 26 }, n = Math.max(temps.length, 2);
+  const x = i => P.l + i / (n - 1) * (W - P.l - P.r), yT = v => P.t + (1 - (v - 35) / 7) * (H - P.t - P.b), yP = v => P.t + (1 - Math.min(v, 300) / 300) * (H - P.t - P.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  [36, 38, 40].forEach(v => s += `<line x1="${P.l}" x2="${W - P.r}" y1="${yT(v)}" y2="${yT(v)}" stroke="#22375a"/><text x="${P.l - 6}" y="${yT(v) + 4}" font-size="10" fill="#ffb547" text-anchor="end">${v}°</text>`);
+  [100, 150].forEach(v => s += `<text x="${W - P.r + 6}" y="${yP(v) + 4}" font-size="10" fill="#60a5fa">${v}k</text><line x1="${P.l}" x2="${W - P.r}" y1="${yP(v)}" y2="${yP(v)}" stroke="#60a5fa" stroke-opacity=".25" stroke-dasharray="3 3"/>`);
+  s += `<rect x="${x(2)}" y="${P.t}" width="${Math.max(0, x(Math.min(6, n - 1)) - x(2))}" height="${H - P.t - P.b}" fill="#b91c1c" opacity=".12"/>`;
+  const line = (arr, y, col) => { const pts = arr.map((v, i) => v == null ? null : `${x(i)},${y(v)}`).filter(Boolean); return pts.length ? `<polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="2.5"/>` + arr.map((v, i) => v == null ? '' : `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${col}"/>`).join('') : ''; };
+  s += line(temps, yT, '#ffb547') + line(plts, yP, '#60a5fa');
+  for (let i = 0; i < n; i++) s += `<text x="${x(i)}" y="${H - 8}" font-size="10" fill="#8fa3c0" text-anchor="middle">D${i + 1}</text>`;
+  el.innerHTML = s + '</svg>';
+}
+$('#newEp').onclick = () => {
+  const el = $('#diary'); el.insertAdjacentHTML('afterbegin', `<div class="card" id="newEpCard" style="margin-bottom:14px"><div class="cols"><div><label class="f">${t('f_name')}</label><input id="neName" type="text"></div><div><label class="f">${t('f_age')}</label><input id="neAge" type="text" placeholder="e.g. 12 y"></div><div><label class="f">${t('f_start')}</label><input id="neStart" type="date" value="${dayKey(today)}" max="${dayKey(today)}"></div></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn teal" id="neGo">${t('f_create')}</button><button class="btn ghost" onclick="document.getElementById('newEpCard').remove()">✕</button></div></div>`);
+  $('#neGo').onclick = () => { const name = $('#neName').value.trim(); if (!name) return toast(t('f_name'), 'bad'); const eps = store.get('episodes', []); const ep = { id: uid(), name, age: $('#neAge').value.trim() || '—', start: $('#neStart').value, entries: {} }; eps.unshift(ep); store.set('episodes', eps); epId = ep.id; dayIdx = 0; renderDiary(); };
+};
+
+// ---------- breeding-site reports (Leaflet lazy) ----------
+const SITES = [['tank', 'Uncovered water tank / drum', 'کھلی ٹینکی / ڈرم'], ['cooler', 'Air cooler / AC tray', 'ایئر کولر / اے سی ٹرے'], ['tyres', 'Old tyres', 'پرانے ٹائر'], ['pots', 'Plant pots / saucers', 'گملے / پلیٹیں'], ['construction', 'Construction site', 'زیر تعمیر جگہ'], ['roof', 'Rooftop junk / puddles', 'چھت پر کباڑ / پانی'], ['drain', 'Blocked drain / gutter', 'بند نالی'], ['other', 'Other', 'دیگر']];
+let map = null, markers = null, pin = null, pinLatLng = null, photoData = null;
+const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(src)); document.head.append(s); });
+async function ensureMap() {
+  if (map) { map.setView([CITY[cityId].lat, CITY[cityId].lng], CITY[cityId].zoom); return true; }
+  try {
+    if (!window.L_) { const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.append(css); await loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'); }
+    const c = CITY[cityId]; map = L.map('map', { zoomControl: true }).setView([c.lat, c.lng], c.zoom);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    markers = L.layerGroup().addTo(map);
+    map.on('click', e => { pinLatLng = e.latlng; if (pin) pin.setLatLng(e.latlng); else pin = L.circleMarker(e.latlng, { radius: 9, color: '#2dd4bf', fillColor: '#2dd4bf', fillOpacity: .9 }).addTo(map); $('#pinInfo').textContent = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`; });
+    $('#mapNote').textContent = t('r_maptiles'); return true;
+  } catch { $('#mapNote').textContent = t('r_mapoff'); $('#map').innerHTML = `<div class="muted" style="padding:30px;text-align:center">${t('r_mapoff')}</div>`; return false; }
+}
+function drawMarkers() {
+  if (!map) return; markers.clearLayers();
+  store.get('reports', []).filter(r => r.city === cityId && r.lat).forEach(r => L.circleMarker([r.lat, r.lng], { radius: r.size === 'large' ? 11 : r.size === 'med' ? 8 : 6, color: r.status === 'open' ? '#ff5a5f' : '#4ade80', fillColor: r.status === 'open' ? '#ff5a5f' : '#4ade80', fillOpacity: .75, weight: 2 }).bindPopup(`<b>${esc(SITES.find(s => s.id === r.type)?.en || r.type)}</b><br>${esc(r.addr)}<br><small>${new Date(r.ts).toLocaleDateString()} · ${r.status}</small>`).addTo(markers));
+}
+function renderReport() {
+  $('#repForm').innerHTML = `<label class="f">${t('r_type')}</label><select id="rType">${SITES.map(([k, en, ur]) => `<option value="${k}">${lang === 'ur' ? esc(ur) : esc(en)}</option>`).join('')}</select>
+    <label class="f">${t('r_sev')}</label><select id="rSize"><option value="small">${t('s_small')}</option><option value="med" selected>${t('s_med')}</option><option value="large">${t('s_large')}</option></select>
+    <label class="f">${t('r_addr')}</label><input id="rAddr" type="text" placeholder="Street 4, Block C, Township">
+    <label class="f">${t('r_notes')}</label><textarea id="rNotes" rows="2"></textarea>
+    <label class="f">${t('r_photo')}</label><input id="rPhoto" type="file" accept="image/*" capture="environment"><img id="rPrev" class="hidden" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px" alt="">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px"><button class="btn ghost sm" id="rGps">📍 ${t('r_gps')}</button><span class="muted" style="font-size:.8rem" id="pinInfo">${t('r_pin')}</span></div>
+    <div style="margin-top:14px"><button class="btn" id="rGo">${t('r_submit')}</button></div>
+    <!-- TODO(student): upload reports (with photo) to a backend; notify the Town Municipal / District Health Office; let sanitary inspectors verify and close them. -->`;
+  SITES.forEach(s => s.id = s[0]);
+  $('#rPhoto').onchange = e => { const f = e.target.files[0]; if (!f) return; const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); const sc = 320 / Math.max(img.width, img.height); c.width = img.width * sc; c.height = img.height * sc; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); photoData = c.toDataURL('image/jpeg', .7); $('#rPrev').src = photoData; $('#rPrev').classList.remove('hidden'); }; img.src = URL.createObjectURL(f); };
+  $('#rGps').onclick = () => navigator.geolocation?.getCurrentPosition(p => { pinLatLng = { lat: p.coords.latitude, lng: p.coords.longitude }; $('#pinInfo').textContent = `${pinLatLng.lat.toFixed(5)}, ${pinLatLng.lng.toFixed(5)}`; if (map) { map.setView([pinLatLng.lat, pinLatLng.lng], 16); if (pin) pin.setLatLng(pinLatLng); else pin = L.circleMarker(pinLatLng, { radius: 9, color: '#2dd4bf', fillColor: '#2dd4bf', fillOpacity: .9 }).addTo(map); } }, () => toast('Location unavailable', 'bad'), { enableHighAccuracy: true, timeout: 8000 });
+  $('#rGo').onclick = () => { const addr = $('#rAddr').value.trim(); if (!addr && !pinLatLng) return toast(t('r_need'), 'bad'); const reps = store.get('reports', []); reps.unshift({ id: uid(), city: cityId, type: $('#rType').value, size: $('#rSize').value, addr, notes: $('#rNotes').value.trim(), lat: pinLatLng?.lat, lng: pinLatLng?.lng, photo: photoData, status: 'open', ts: Date.now() }); if (!store.set('reports', reps)) return toast('Storage full', 'bad'); toast(t('r_saved'), 'ok'); photoData = null; pinLatLng = null; if (pin) { pin.remove(); pin = null; } renderReport(); renderRepList(); drawMarkers(); };
+  renderRepList(); ensureMap().then(drawMarkers);
+}
+function renderRepList() {
+  const reps = store.get('reports', []).filter(r => r.city === cityId);
+  $('#repList').innerHTML = reps.length ? reps.map(r => { const s = SITES.find(x => x[0] === r.type); const wa = encodeURIComponent(`Dengue breeding site report\nType: ${s?.[1]}\nSize: ${r.size}\nLocation: ${r.addr}${r.lat ? ` (https://maps.google.com/?q=${r.lat},${r.lng})` : ''}\nNotes: ${r.notes || '-'}\nReported: ${new Date(r.ts).toLocaleString()}`); return `<div class="rep ${r.status}">${r.photo ? `<img src="${r.photo}" alt="">` : `<div style="width:64px;height:64px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;flex:none">🦟</div>`}<div style="flex:1;min-width:0"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${lang === 'ur' ? esc(s?.[2]) : esc(s?.[1])}</b><span class="badge ${r.status === 'open' ? 'red' : 'green'}">${t('st_' + r.status)}</span><span class="badge">${t('s_' + (r.size === 'med' ? 'med' : r.size)).split(' ')[0]}</span></div><div class="muted" style="font-size:.85rem">${esc(r.addr) || `${r.lat?.toFixed(4)}, ${r.lng?.toFixed(4)}`} · ${new Date(r.ts).toLocaleDateString()}</div>${r.notes ? `<div style="font-size:.85rem">${esc(r.notes)}</div>` : ''}<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn ghost sm" data-tog="${r.id}">${r.status === 'open' ? '✓ ' + t('r_clear') : t('r_reopen')}</button><a class="btn ghost sm" href="https://wa.me/?text=${wa}" target="_blank" rel="noopener">${t('r_wa')}</a><button class="btn ghost sm" data-del="${r.id}">🗑</button></div></div></div>`; }).join('') : `<div class="card"><p class="muted" style="margin:0">${t('r_none')}</p></div>`;
+  $$('[data-tog]').forEach(b => b.onclick = () => { const reps = store.get('reports', []); const r = reps.find(x => x.id === b.dataset.tog); r.status = r.status === 'open' ? 'cleared' : 'open'; store.set('reports', reps); renderRepList(); drawMarkers(); });
+  $$('[data-del]').forEach(b => b.onclick = () => { store.set('reports', store.get('reports', []).filter(x => x.id !== b.dataset.del)); renderRepList(); drawMarkers(); });
+}
+
+// ---------- prevention ----------
+const TASKS = [['tank', 'Cover every water tank, drum and bucket tightly', 'ہر ٹینکی، ڈرم اور بالٹی کو اچھی طرح ڈھانپیں'], ['cooler', 'Empty and scrub air coolers and AC trays', 'کولر اور اے سی ٹرے خالی کر کے رگڑ کر صاف کریں'], ['pots', 'Empty plant saucers; fill vase water with sand', 'گملوں کی پلیٹیں خالی کریں؛ گلدان میں ریت ڈالیں'], ['junk', 'Turn over tyres, cans, shells; clear rooftop junk', 'ٹائر، ڈبے الٹ دیں؛ چھت کا کباڑ ہٹائیں'], ['drain', 'Unblock gutters and drains around the house', 'گھر کے گرد نالیاں کھولیں'], ['fridge', 'Dry the fridge drip tray and water dispenser tray', 'فریج کی ٹرے خشک کریں'], ['screen', 'Check window and door screens for holes', 'کھڑکیوں اور دروازوں کی جالی چیک کریں'], ['repel', 'Repellent and full sleeves at dawn and dusk, especially for children', 'صبح و شام لوشن اور پوری آستین، خاص کر بچوں کے لیے']];
+function renderPrevent() {
+  const wkKey = isoWeek(today), done = store.get('prev:' + wkKey, []), dry = store.get('dryday', 5);
+  // streak: consecutive past weeks with all tasks done (this week counts once complete)
+  let streak = 0; for (let w = done.length === TASKS.length ? 0 : 1; w < 60; w++) { const k = isoWeek(addDays(today, -7 * w)); if ((store.get('prev:' + k, [])).length === TASKS.length) streak++; else break; }
+  const pct = done.length / TASKS.length, r = 46, c = 2 * Math.PI * r;
+  const nextDry = addDays(today, ((dry - today.getDay()) + 7) % 7 || 7);
+  const hist = Array.from({ length: 8 }, (_, i) => { const k = isoWeek(addDays(today, -7 * (7 - i))); return store.get('prev:' + k, []).length; });
+  $('#prevent').innerHTML = `<div class="two"><div class="list">${TASKS.map(([k, en, ur]) => `<label class="task ${done.includes(k) ? 'done' : ''}"><input type="checkbox" data-k="${k}" ${done.includes(k) ? 'checked' : ''}><div><div>${esc(en)}</div><div class="ur">${esc(ur)}</div></div></label>`).join('')}</div>
+    <div class="card"><div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><svg class="ring" viewBox="0 0 110 110"><circle cx="55" cy="55" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="10"/><circle cx="55" cy="55" r="${r}" fill="none" stroke="var(--teal)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c * pct} ${c}" transform="rotate(-90 55 55)"/><text x="55" y="61" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">${done.length}/${TASKS.length}</text></svg><div><div class="muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700">${t('p_thisweek')} · ${wkKey}</div><div style="font-size:2rem;font-weight:800;letter-spacing:-.02em">${streak} <span style="font-size:.95rem;color:var(--muted);font-weight:600">${t('p_streak')}</span></div></div></div>
+      <label class="f">${t('p_dryday')}</label><select id="dryday">${TXT[lang].days.map((d, i) => `<option value="${i}" ${i === dry ? 'selected' : ''}>${d}</option>`).join('')}</select>
+      ${pct === 1 ? `<div class="banner teal" style="margin-top:14px">🎉 ${t('p_done')} ${nextDry.toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', { weekday: 'long', day: 'numeric', month: 'short' })}</div>` : ''}
+      <div class="muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-top:18px">${t('p_history')}</div>
+      <div style="display:flex;gap:6px;align-items:flex-end;height:60px;margin-top:8px">${hist.map(h => `<div style="flex:1;height:${Math.max(6, h / TASKS.length * 60)}px;border-radius:4px;background:${h === TASKS.length ? 'var(--teal)' : 'var(--surface-3)'}"></div>`).join('')}</div>
+      <!-- TODO(student): weekly push/SMS reminder on the dry day; neighbourhood leaderboard (mohalla vs mohalla) via a backend. -->
+    </div></div>`;
+  $$('#prevent .task input').forEach(i => i.onchange = () => { const d = store.get('prev:' + wkKey, []); const k = i.dataset.k; store.set('prev:' + wkKey, i.checked ? [...new Set([...d, k])] : d.filter(x => x !== k)); renderPrevent(); });
+  $('#dryday').onchange = e => { store.set('dryday', +e.target.value); renderPrevent(); };
+}
+
+// ---------- learn ----------
+const FACTS = [
+  ['🦟', 'Aedes bites in daylight', 'The dengue mosquito (Aedes aegypti) bites mostly in the early morning and before dusk, indoors and outdoors. Night-time nets alone are not enough.', 'ڈینگی مچھر صبح سویرے اور شام سے پہلے کاٹتا ہے، گھر کے اندر اور باہر۔ صرف رات کی مچھر دانی کافی نہیں۔', 'var(--red)'],
+  ['💧', 'Clean water, not dirty water', 'It lays eggs in small amounts of clean standing water: coolers, drums, tyres, plant saucers, fridge trays. Eggs survive dry for months.', 'یہ صاف کھڑے پانی میں انڈے دیتا ہے: کولر، ڈرم، ٹائر، گملوں کی پلیٹیں۔ انڈے مہینوں خشک حالت میں زندہ رہتے ہیں۔', 'var(--blue)'],
+  ['🌡️', 'The fever dropping is the danger', 'Days 3–7, when the temperature falls, are the critical phase when plasma leaks from blood vessels. Most deaths happen here, not at peak fever.', 'دن 3 سے 7، جب بخار اترتا ہے، نازک مرحلہ ہے۔ زیادہ تر اموات اسی وقت ہوتی ہیں، تیز بخار میں نہیں۔', 'var(--amber)'],
+  ['💊', 'Paracetamol only', 'Never give aspirin, ibuprofen (Brufen), diclofenac or other painkillers of that family: they increase bleeding. Paracetamol, fluids and rest.', 'اسپرین، بروفن، ڈیکلوفیناک کبھی نہ دیں: خون بہنے کا خطرہ بڑھتا ہے۔ صرف پیراسیٹامول، پانی اور آرام۔', 'var(--red)'],
+  ['🩸', 'Platelets are not the whole story', 'A falling platelet count is expected. Warning signs (belly pain, vomiting, bleeding, lethargy) and rising haematocrit matter more than the number alone.', 'پلیٹلیٹس گرنا متوقع ہے۔ خطرے کی علامات اور ہیماٹوکرٹ بڑھنا صرف نمبر سے زیادہ اہم ہیں۔', 'var(--teal)'],
+  ['🔁', 'A second infection can be worse', 'There are four dengue serotypes. Infection with a different one later carries a higher risk of severe dengue, so prevention matters even after recovery.', 'ڈینگی کی چار اقسام ہیں۔ دوسری قسم سے دوبارہ انفیکشن زیادہ خطرناک ہو سکتا ہے، اس لیے صحت یابی کے بعد بھی بچاؤ ضروری ہے۔', 'var(--amber)'],
+  ['🥤', 'Fluids are the treatment', 'There is no antiviral. Oral rehydration (ORS), water, juices and soups prevent most hospital admissions. No urine for 6 hours is an emergency sign.', 'کوئی اینٹی وائرل دوا نہیں۔ او آر ایس، پانی، جوس اور شوربہ زیادہ تر داخلوں سے بچاتے ہیں۔ 6 گھنٹے پیشاب نہ آنا ایمرجنسی ہے۔', 'var(--blue)'],
+  ['📞', 'Who to call', 'Rescue 1122 for emergencies. Sehat Tahaffuz helpline 1166 for health information. Add your district health office and nearest dengue ward below.', 'ایمرجنسی کے لیے ریسکیو 1122۔ صحت کی معلومات کے لیے صحت تحفظ 1166۔', 'var(--teal)'],
+];
+function renderLearn() {
+  const custom = store.get('contacts', '');
+  $('#facts').innerHTML = FACTS.map(([ic, h, en, ur, c]) => `<div class="fact" style="--c:${c}"><div style="font-size:1.4rem">${ic}</div><h4>${esc(h)}</h4><p>${esc(en)}</p><div class="ur">${esc(ur)}</div></div>`).join('') + `<div class="fact" style="--c:var(--muted)"><h4>Local contacts</h4><textarea id="contacts" rows="4" placeholder="District Health Office: ...&#10;Nearest dengue ward: ...">${esc(custom)}</textarea><button class="btn ghost sm" style="margin-top:8px" id="saveContacts">Save</button></div>`;
+  $('#saveContacts').onclick = () => { store.set('contacts', $('#contacts').value); toast('Saved', 'ok'); };
+}
+
+// ---------- about ----------
+const TODOS = [
+  ['Real surveillance feed', 'Replace weekly() with provincial dengue dashboard exports or hospital line lists; add a “data as of” stamp and gap handling.', 'data'],
+  ['Report backend + routing', 'Store reports with photos server-side, route them to the relevant Town Municipal Administration / District Health Office, and let sanitary inspectors verify and close them.', 'backend'],
+  ['Hotspot alerts', 'SMS or push to residents of a town when weekly cases rise more than 20%, or when a breeding site is reported within 200 m of their home (geofencing).', 'notifications'],
+  ['Outbreak forecasting', 'Model weekly cases from rainfall, temperature and humidity with a 2–4 week lag; show a forecast band on the trend chart.', 'ML'],
+  ['Offline map tiles', 'Cache tiles for the user\'s town so the reporter works without signal; or render a schematic SVG town map as the fallback.', 'maps'],
+  ['Clinician mode', 'A ward dashboard that imports fever-diary exports, tracks haematocrit trends and flags patients entering the critical phase.', 'product'],
+  ['Mohalla leaderboard', 'Gamify the prevention checklist across neighbourhoods; award “dengue-free street” badges verified by inspectors.', 'engagement'],
+];
+function renderAbout() {
+  $('#about').innerHTML = `<div class="card"><h3>${t('a_title')}</h3><p class="muted">Dengue returns to Lahore, Rawalpindi and Karachi every autumn. Breeding sites go unreported, families mistake the critical phase for recovery, and the wrong painkillers cause bleeding. Dengue Watch puts surveillance, triage and prevention in one offline-first page.</p>
+    <p class="muted">Case counts are simulated from a seasonal curve peaking in mid-October with per-town baselines and are re-seeded weekly. The triage follows the WHO 2009 case classification (probable dengue, warning signs, severe dengue; Groups A/B/C). Nothing here replaces clinical judgement.</p>
+    <p class="muted" style="font-size:.85rem">Stack: one HTML file, vanilla JS, hand-drawn SVG charts, localStorage. Leaflet + OpenStreetMap load only on the Report page.</p></div>
+    <div><h3 style="margin:0 0 10px">${t('a_todo')}</h3><div class="list">${TODOS.map(([h, b, tag]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div></div>`).join('')}</div></div>`;
+}
+
+// ---------- nav / boot ----------
+const NAV = [['dash', '▦'], ['triage', '🩺'], ['diary', '🌡️'], ['report', '📍'], ['prevent', '✅'], ['learn', '📖'], ['about', 'ⓘ']];
+function go(page) {
+  if (!NAV.some(n => n[0] === page)) page = 'dash';
+  $$('section[data-page]').forEach(s => s.classList.toggle('on', s.dataset.page === page));
+  $$('#railnav a,#bottomnav a').forEach(a => a.classList.toggle('on', a.dataset.p === page));
+  ({ dash: renderDash, triage: renderTriageForm, diary: renderDiary, report: renderReport, prevent: renderPrevent, learn: renderLearn, about: renderAbout })[page]();
+  if (page === 'report' && map) setTimeout(() => map.invalidateSize(), 50);
+}
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English';
+  $('#railnav').innerHTML = NAV.map(([p, ic]) => `<a href="#${p}" data-p="${p}"><span class="ic">${ic}</span>${t('nav_' + p)}</a>`).join('');
+  $('#bottomnav').innerHTML = NAV.map(([p, ic]) => `<a href="#${p}" data-p="${p}"><span>${ic}</span>${t('nav_' + p)}</a>`).join('');
+  $('#citySel').innerHTML = CITIES.map(c => `<option value="${c.id}" ${c.id === cityId ? 'selected' : ''}>${esc(nm(c))}</option>`).join('');
+  go((location.hash || '#dash').slice(1));
+}
+$('#citySel').onchange = e => { cityId = e.target.value; store.set('city', cityId); selTown = null; if (map) { map.setView([CITY[cityId].lat, CITY[cityId].lng], CITY[cityId].zoom); drawMarkers(); } go((location.hash || '#dash').slice(1)); };
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+applyLang();
+</script>
+</body>
+</html>
