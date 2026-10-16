@@ -2,7 +2,7 @@
 
 Single-file HTML/CSS/JS project templates for Final Year Projects by Pakistani university students. Each project solves a real local (or globally useful) problem, works offline from `file://`, ships with proper SVG iconography and fluid motion, and deliberately leaves a documented set of features for the student to build.
 
-Start with [`IDEAS.md`](IDEAS.md) for the full backlog of 85 ideas. Projects are numbered in build order; the idea number from the backlog is shown alongside.
+Start with [`IDEAS.md`](IDEAS.md) for the full backlog of 90 ideas, or open [`index.html`](index.html) for a visual hub with a guided tour of the repository. Projects are numbered in build order; the idea number from the backlog is shown alongside.
 
 ## Projects
 
@@ -43,6 +43,31 @@ Projects 01–08 are built; 09 onward are in progress. Each folder has an `index
 ## Running
 
 Open any `projects/*/index.html` in Chrome, Edge, Firefox or Safari. For camera, geolocation and notification features serve the folder over HTTP (for example `python3 -m http.server`), since browsers restrict those on `file://`.
+
+## For students: money, competitions, careers, tools
+
+**Money and support**
+- Ignite's NGIRI program funds prototypes with up to Rs 84,700 for equipment and Rs 12,100 for other costs; the national champion team wins Rs 400,000. Check whether your department is registered. ([ignite](https://ignite.org.pk/?p=2503))
+- HEC's Innovator Seed Fund gave 28 university startups grants of up to Rs 10 million each in its 2022-23 round. Students and recent alumni can apply if their incubation centre endorses them and they register a company with SECP. ([hec](https://www.hec.gov.pk/english/news/news/Pages/28-University-Startups-Win-HEC-Innovator-Seed-Fund.aspx))
+- Campus pitch funds: Rawalpindi Women University's 2025 pitch fest awarded Rs 9 million in seed funding; Punjab is setting up funding pools at each university. ([dawn](https://www.dawn.com/news/1960379))
+- NIC Islamabad gives selected startups a year of free workspace and has run campus sessions on turning an FYP into a startup. ([startup.pk](https://www.startup.pk/nic-islamabad/), [bahria](https://archive.bahria.edu.pk/?p=14865))
+
+**Competitions and recognition**
+- P@SHA ICT Awards: the 2026 cycle closed on 10 August; winners go to APICTA in Jakarta in December 2026. Aim for the 2027 cycle. ([propakistani](https://propakistani.pk/2026/08/03/psha-opens-applications-for-22nd-ict-awards-winners-to-represent-pakistan-at-apicta-2026/))
+- Microsoft Imagine Cup 2027: teams of up to four students, up to $5,000 in Azure credits, listed deadline 8 January 2027, world championship May 2027. ([imaginecup](https://imaginecup.microsoft.com/en-us/category/34))
+- Ignite's national FYP championship has drawn winners from universities across Pakistan, not only the big-city ones. ([propakistani](https://propakistani.pk/2017/05/20/student-entrepreneurs-honored-national-competition-final-year-projects/))
+
+**Jobs and careers**
+- At IBA Karachi's June 2026 FYP exhibition several students received job offers and interview calls. ([iba](https://smcs.iba.edu.pk/iba-smcs-hosted-the-computer-science-final-year-project-fyp-exhibition-2026.php))
+- 32.8 % of graduates aged 20–24 are unemployed (Gallup Pakistan on the 2024-25 Labour Force Survey); a strong FYP moves you up the queue. ([gallup](https://galluppakistandigitalanalytics.com/2026/07/24/in-pakistan-a-university-degree-can-mean-a-longer-wait-for-a-job-not-a-faster-one/))
+- Employers say new graduates lack job skills; your FYP is the evidence that you are the exception. ([thenews](https://www.thenews.pk/tns/detail/1397528-the-point-of-education))
+- AI is cutting demand for routine programming while opening roles in AI engineering, cybersecurity and cloud. A basic data-entry app no longer stands out. ([bloompakistan](https://bloompakistan.com/?p=163533))
+- IT exports hit a record $4.6 billion in FY26 with a $10 billion target by FY29; freelancer earnings passed $1 billion with 2.37 million registered freelancers. A finished, deployed FYP is a portfolio piece clients can try. ([profit](https://profit.pakistantoday.com.pk/2026/07/18/pakistans-it-exports-hit-record-dollar46-billion-in-fy26-surpass-government-target), [outsourceaccelerator](https://news.outsourceaccelerator.com/pakistan-it-exports-record/))
+- The National AI Policy's High-Tech Internship Program targets 20,000 placements a year plus 3,000 postgraduate scholarships. ([meatechwatch](https://meatechwatch.com/2025/10/03/pakistan-launches-national-ai-policy-2025-with-goal-to-train-one-million-by-2030/))
+
+**Tools**
+- GPU access is the biggest limit for AI research in Pakistan; prefer ideas that run with small models on free Colab or Kaggle, or with APIs. ([geo](https://www.geo.tv/latest/611676-pakistani-students-revolutionary-geogemma-project-wins-top-google-award))
+- Under the August 2026 Pakistan–Google agreement students get a year of free Google AI Plus and Gemini; a payment method is required and it converts to paid unless cancelled. ([propakistani](https://propakistani.pk/2026/08/21/how-pakistani-students-can-get-free-gemini-subscription-for-1-year/))
 
 ## Contributing / PRs
 
