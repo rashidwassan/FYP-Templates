@@ -247,6 +247,7 @@ tr:last-child td{border-bottom:0} td.num,th.num{text-align:right;font-variant-nu
   .tally{grid-template-columns:repeat(2,minmax(0,1fr))}
   .suit .m{grid-template-columns:minmax(0,1fr)} .suit .m .chip{justify-self:start}
   .detailhead > div:nth-child(2){flex:1 1 calc(100% - 72px)!important}
+  .kpis:has(+ .split.detail-open){display:none} /* phones: open the record straight away */
 }
 @media (max-width:420px){ .bottomnav a{font-size:.6rem} }
 @media (min-width:901px) and (max-height:920px){ .brand small{display:none} .brand{padding-bottom:8px} .rail a.nav{min-height:38px} .railnav .sec{padding-top:6px} .profile{padding:8px 12px} }
@@ -769,7 +770,6 @@ const L = {
     fp_lead: 'Counsel every woman of reproductive age, check suitability, record the method and schedule the follow-up.',
     fp_pick: 'Pick a woman from the list.',
     fp_none: 'No women registered.',
-    fp_current: 'Current method',
     fp_noMethod: 'No method',
     fp_questions: 'Suitability questions — ask the woman',
     fp_methods: 'Methods and suitability',
@@ -795,7 +795,6 @@ const L = {
     fp_stopped: 'Stopped',
     fp_counselOnly: 'Counselled only — no method yet',
     fp_facility: 'Provided at facility — refer',
-    fp_resupply: 'Resupply',
     fp_every: 'every',
     fp_then: 'then',
     fp_tapMethod: 'Tap a method to choose it.',
@@ -821,7 +820,6 @@ const L = {
     nu_kpi_mam: 'MAM cases (90 days)',
     nu_kpi_supp: 'Doses due',
     nu_note: 'Cut-offs (SAM < 11.5 cm, MAM 11.5–12.4 cm) and dose ages are illustrative training values; the CMAM / nutrition programme guidelines override them.',
-    nu_otp: 'OTP site',
     nu_chart: 'MUAC trend',
     nu_complete: 'Complete for age',
     nu_notYet: 'Not yet (age)',
@@ -846,7 +844,6 @@ const L = {
     sc_confirmed: 'Confirmed — on treatment',
     sc_ruledOut: 'Ruled out',
     sc_notAttended: 'Did not attend',
-    sc_history: 'Screening log',
     sc_save: 'Save screening',
     sc_saved: 'Screening saved',
     sc_kpi_tb: 'Presumptive TB referred',
@@ -858,15 +855,12 @@ const L = {
     sc_symptoms: 'Symptoms — ask and look',
     sc_pick: 'Pick a screening from the log or start a new one.',
     sc_none: 'No screenings recorded yet.',
-    sc_filter: 'Show',
-    sc_setOutcome: 'Record outcome',
     sc_outcomeSaved: 'Outcome saved',
     su_title: 'Supplies',
     su_lead: 'LHW kit stock: receipts, dispensing, stock-outs and monthly consumption.',
     su_item: 'Item',
     su_stock: 'In stock',
     su_min: 'Minimum',
-    su_unit: 'Unit',
     su_expiry: 'Expiry',
     su_stockout: 'Stock-out',
     su_low: 'Low',
@@ -890,13 +884,11 @@ const L = {
     su_requestLead: 'Items below minimum, with the quantity needed to reach two months of stock.',
     su_auto: 'auto',
     su_notEnough: 'Not enough stock — recorded, check the physical count',
-    su_pick: 'Pick an item.',
     su_need: 'Request',
     su_noRequest: 'Nothing below minimum.',
     su_in: 'Received',
     su_out: 'Dispensed',
     su_count: 'Count set to',
-    su_type: 'Movement',
     bp_title: 'Birth-preparedness plan',
     bp_lead: 'Agree the plan with the mother and family; tick what is arranged.',
     bp_place: 'Planned place of delivery',
@@ -905,10 +897,6 @@ const L = {
     bp_money: 'Money saved (Rs)',
     bp_donor: 'Blood donor (name, group)',
     bp_companion: 'Birth companion',
-    bp_decision: 'Decision-maker informed (husband / mother-in-law)',
-    bp_kit: 'Clean delivery kit and baby clothes ready',
-    bp_signs: 'Family knows danger signs and where to go',
-    bp_card: 'ANC card and CNIC kept together',
     bp_ready: 'ready',
     bp_save: 'Save plan',
     bp_saved: 'Birth plan saved',
@@ -916,7 +904,6 @@ const L = {
     bp_arranged: 'Arranged',
     ni_title: 'Polio NID tally',
     ni_lead: 'Door-to-door tally for National Immunization Days: big buttons, one tap per child.',
-    ni_campaign: 'Campaign',
     ni_new: 'New campaign',
     ni_name: 'Campaign name',
     ni_start: 'Start date',
@@ -935,7 +922,6 @@ const L = {
     ni_missed: 'Missed children to revisit',
     ni_missedShort: 'missed',
     ni_addMissed: 'Add missed child',
-    ni_covered: 'Covered',
     ni_byDay: 'Tally by day',
     ni_saved: 'Tally saved',
     ni_active: 'Active',
@@ -945,7 +931,6 @@ const L = {
     ni_vaccine: 'Vaccine',
     ni_close: 'Close campaign',
     ni_reopen: 'Reopen',
-    ni_summary: 'Campaign summary',
     ni_house: 'House / landmark',
     ni_none: 'No campaigns yet.',
     ni_pickDay: 'Tally day',
@@ -961,7 +946,6 @@ const L = {
     vt_ageAt: 'Age at death',
     vt_ageUnit: 'Unit',
     vt_cause: 'Probable cause',
-    vt_status: 'Registration',
     vt_recorded: 'Recorded',
     vt_reported: 'Reported to LHS',
     vt_registered: 'Registered (Union Council)',
@@ -972,12 +956,10 @@ const L = {
     vt_kpi_pending: 'Not yet registered',
     vt_kpi_mat: 'Maternal / neonatal deaths (12 mo)',
     vt_none: 'No events recorded.',
-    vt_log: 'Event log',
     vt_link: 'Household',
     vt_maternal: 'Maternal death — notify the LHS within 24 hours; a verbal autopsy will follow.',
     vt_neonatal: 'Neonatal death — notify the LHS; review the delivery and postnatal visits.',
     vt_mother: 'Mother',
-    vt_filter: 'Show',
     vt_months: 'months',
     vt_years: 'years',
     sv_title: 'Supervisor mode',
@@ -1013,7 +995,6 @@ const L = {
     sv_i_ref: 'Referrals',
     sv_i_stockout: 'Stock-out items',
     sv_ranking: 'LHW ranking (composite score)',
-    sv_score: 'Score',
     sv_note: "Targets are illustrative. Other LHWs' figures are demo summaries that would arrive via sync; this LHW's row is computed live from the records on this phone.",
     sv_saved: 'LHW saved',
     sv_remove: 'Remove',
@@ -1022,7 +1003,6 @@ const L = {
     sv_unlocked: 'Supervisor mode unlocked',
     sv_pinRule: 'PIN must be 4–6 digits.',
     sv_phone: 'Phone',
-    sv_compare: 'Compare LHWs',
     r_title: 'Monthly report',
     r_lead: 'Counts for the LHW monthly register. Pick a month, export CSV, DHIS2 JSON or print.',
     r_month: 'Month',
@@ -1073,7 +1053,6 @@ const L = {
     sy_imported: 'Backup imported',
     sy_badFile: 'Could not read that file.',
     sy_records: 'records',
-    sy_photo: 'Attach register photo',
     sy_note: 'This sync is simulated: records are marked synced after a short delay. The real server, conflict handling and retry queue are a student extension (see About).',
     sy_type_households: 'Households',
     sy_type_women: 'Women',
@@ -1344,7 +1323,6 @@ const L = {
     fp_lead: 'ہر خاتون کو مشورہ دیں، موزونیت جانچیں، طریقہ درج کریں اور فالو اپ طے کریں۔',
     fp_pick: 'فہرست سے خاتون چنیں۔',
     fp_none: 'کوئی خاتون درج نہیں۔',
-    fp_current: 'موجودہ طریقہ',
     fp_noMethod: 'کوئی طریقہ نہیں',
     fp_questions: 'موزونیت کے سوالات — خاتون سے پوچھیں',
     fp_methods: 'طریقے اور موزونیت',
@@ -1370,7 +1348,6 @@ const L = {
     fp_stopped: 'بند کر دیا',
     fp_counselOnly: 'صرف مشورہ — ابھی کوئی طریقہ نہیں',
     fp_facility: 'مرکز پر دستیاب — ریفر کریں',
-    fp_resupply: 'دوبارہ فراہمی',
     fp_every: 'ہر',
     fp_then: 'پھر',
     fp_tapMethod: 'طریقہ چننے کے لیے اس پر کلک کریں۔',
@@ -1396,7 +1373,6 @@ const L = {
     nu_kpi_mam: 'درمیانی قلت (90 دن)',
     nu_kpi_supp: 'خوراکیں باقی',
     nu_note: 'حدیں (شدید 11.5 سے کم، درمیانی 11.5 تا 12.4 سینٹی میٹر) اور خوراک کی عمریں تربیتی مثال ہیں؛ پروگرام کی سرکاری ہدایات حتمی ہیں۔',
-    nu_otp: 'او ٹی پی مرکز',
     nu_chart: 'بازو کی پیمائش کا رجحان',
     nu_complete: 'عمر کے لحاظ سے مکمل',
     nu_notYet: 'ابھی نہیں (عمر)',
@@ -1421,7 +1397,6 @@ const L = {
     sc_confirmed: 'تصدیق — علاج جاری',
     sc_ruledOut: 'منفی نکلا',
     sc_notAttended: 'نہیں گیا / گئی',
-    sc_history: 'جانچ کا ریکارڈ',
     sc_save: 'جانچ محفوظ کریں',
     sc_saved: 'جانچ محفوظ ہو گئی',
     sc_kpi_tb: 'ممکنہ ٹی بی ریفر',
@@ -1433,15 +1408,12 @@ const L = {
     sc_symptoms: 'علامات — پوچھیں اور دیکھیں',
     sc_pick: 'ریکارڈ سے جانچ چنیں یا نئی شروع کریں۔',
     sc_none: 'ابھی کوئی جانچ درج نہیں۔',
-    sc_filter: 'دکھائیں',
-    sc_setOutcome: 'نتیجہ درج کریں',
     sc_outcomeSaved: 'نتیجہ محفوظ',
     su_title: 'سامان',
     su_lead: 'ایل ایچ ڈبلیو کٹ کا اسٹاک: وصولی، تقسیم، ختم ہونے والا سامان اور ماہانہ کھپت۔',
     su_item: 'سامان',
     su_stock: 'موجود',
     su_min: 'کم از کم',
-    su_unit: 'یونٹ',
     su_expiry: 'میعاد',
     su_stockout: 'ختم',
     su_low: 'کم',
@@ -1465,13 +1437,11 @@ const L = {
     su_requestLead: 'کم از کم سے نیچے سامان اور دو مہینے کے اسٹاک کے لیے درکار مقدار۔',
     su_auto: 'خودکار',
     su_notEnough: 'اسٹاک ناکافی — درج ہو گیا، گنتی چیک کریں',
-    su_pick: 'سامان چنیں۔',
     su_need: 'درکار',
     su_noRequest: 'کچھ بھی کم از کم سے نیچے نہیں۔',
     su_in: 'وصول ہوا',
     su_out: 'دیا گیا',
     su_count: 'گنتی',
-    su_type: 'قسم',
     bp_title: 'زچگی کی تیاری کا منصوبہ',
     bp_lead: 'ماں اور خاندان کے ساتھ منصوبہ طے کریں؛ جو بندوبست ہو گیا نشان لگائیں۔',
     bp_place: 'زچگی کی مجوزہ جگہ',
@@ -1480,10 +1450,6 @@ const L = {
     bp_money: 'بچائی گئی رقم (روپے)',
     bp_donor: 'خون دینے والا (نام، گروپ)',
     bp_companion: 'زچگی میں ساتھ رہنے والی',
-    bp_decision: 'فیصلہ کرنے والے کو آگاہ کیا (شوہر / ساس)',
-    bp_kit: 'صاف زچگی کٹ اور بچے کے کپڑے تیار',
-    bp_signs: 'خاندان خطرے کی علامات اور جانے کی جگہ جانتا ہے',
-    bp_card: 'حمل کارڈ اور شناختی کارڈ ایک جگہ',
     bp_ready: 'تیار',
     bp_save: 'منصوبہ محفوظ کریں',
     bp_saved: 'منصوبہ محفوظ ہو گیا',
@@ -1491,7 +1457,6 @@ const L = {
     bp_arranged: 'بندوبست ہو گیا',
     ni_title: 'پولیو مہم کی گنتی',
     ni_lead: 'قومی پولیو مہم کی گھر گھر گنتی: بڑے بٹن، ہر بچے پر ایک ٹیپ۔',
-    ni_campaign: 'مہم',
     ni_new: 'نئی مہم',
     ni_name: 'مہم کا نام',
     ni_start: 'شروع',
@@ -1510,7 +1475,6 @@ const L = {
     ni_missed: 'رہ گئے بچے — دوبارہ جائیں',
     ni_missedShort: 'رہ گئے',
     ni_addMissed: 'رہ گیا بچہ شامل کریں',
-    ni_covered: 'ہو گیا',
     ni_byDay: 'روزانہ گنتی',
     ni_saved: 'گنتی محفوظ',
     ni_active: 'جاری',
@@ -1520,7 +1484,6 @@ const L = {
     ni_vaccine: 'ویکسین',
     ni_close: 'مہم ختم کریں',
     ni_reopen: 'دوبارہ کھولیں',
-    ni_summary: 'مہم کا خلاصہ',
     ni_house: 'گھر / نشانی',
     ni_none: 'ابھی کوئی مہم نہیں۔',
     ni_pickDay: 'گنتی کا دن',
@@ -1536,7 +1499,6 @@ const L = {
     vt_ageAt: 'موت کے وقت عمر',
     vt_ageUnit: 'یونٹ',
     vt_cause: 'ممکنہ وجہ',
-    vt_status: 'رجسٹریشن',
     vt_recorded: 'درج',
     vt_reported: 'سپروائزر کو اطلاع',
     vt_registered: 'یونین کونسل میں رجسٹرڈ',
@@ -1547,12 +1509,10 @@ const L = {
     vt_kpi_pending: 'ابھی رجسٹرڈ نہیں',
     vt_kpi_mat: 'زچگی / نومولود اموات (12 ماہ)',
     vt_none: 'کوئی اندراج نہیں۔',
-    vt_log: 'اندراجات',
     vt_link: 'گھرانہ',
     vt_maternal: 'زچگی سے موت — 24 گھنٹے میں سپروائزر کو اطلاع دیں؛ تفصیلی جائزہ ہوگا۔',
     vt_neonatal: 'نومولود کی موت — سپروائزر کو اطلاع دیں؛ زچگی اور بعد کے وزٹ کا جائزہ لیں۔',
     vt_mother: 'ماں',
-    vt_filter: 'دکھائیں',
     vt_months: 'ماہ',
     vt_years: 'سال',
     sv_title: 'سپروائزر موڈ',
@@ -1588,7 +1548,6 @@ const L = {
     sv_i_ref: 'ریفرل',
     sv_i_stockout: 'ختم شدہ سامان',
     sv_ranking: 'ایل ایچ ڈبلیو درجہ بندی (مجموعی اسکور)',
-    sv_score: 'اسکور',
     sv_note: 'اہداف مثال کے طور پر ہیں۔ دیگر ایل ایچ ڈبلیو کے اعداد نمونہ خلاصے ہیں جو سنک سے آتے؛ اس ایل ایچ ڈبلیو کی قطار اس فون کے ریکارڈ سے براہ راست بنتی ہے۔',
     sv_saved: 'محفوظ ہو گیا',
     sv_remove: 'ہٹائیں',
@@ -1597,7 +1556,6 @@ const L = {
     sv_unlocked: 'سپروائزر موڈ کھل گیا',
     sv_pinRule: 'پن 4 تا 6 ہندسوں کا ہونا چاہیے۔',
     sv_phone: 'فون',
-    sv_compare: 'ایل ایچ ڈبلیو کا موازنہ',
     r_title: 'ماہانہ رپورٹ',
     r_lead: 'ایل ایچ ڈبلیو ماہانہ رجسٹر کے اعداد۔ مہینہ چنیں، CSV، DHIS2 JSON نکالیں یا پرنٹ کریں۔',
     r_month: 'مہینہ',
@@ -1648,7 +1606,6 @@ const L = {
     sy_imported: 'بیک اپ درآمد ہو گیا',
     sy_badFile: 'فائل پڑھی نہیں جا سکی۔',
     sy_records: 'ریکارڈ',
-    sy_photo: 'رجسٹر کی تصویر لگائیں',
     sy_note: 'یہ سنک نمونہ ہے: ریکارڈ تھوڑی دیر بعد "سنک شدہ" نشان زد ہو جاتے ہیں۔ حقیقی سرور طلبہ کا کام ہے (تعارف دیکھیں)۔',
     sy_type_households: 'گھرانے',
     sy_type_women: 'خواتین',
@@ -2867,7 +2824,8 @@ function slipArticle(model) {
     <div class="sig"><div>${t('s_sig')}</div><div>${t('s_recv')}</div></div></article>`;
 }
 
-/** Share / SMS the slip text. The real gateway is a student TODO; here we use the Web Share API or the sms: URI. */
+/** Share / SMS the slip text via the Web Share API or the sms: URI. Used by ANC/PNC, nutrition and screening slips. */
+// TODO(student): SMS referral gateway. Send `text` to the Lady Health Supervisor / receiving facility through an SMS gateway (Telenor/Jazz API behind your backend) and log delivery status on the visit or screening record.
 function shareSlip(text) {
   if (navigator.share) {
     navigator.share({ text }).catch(() => {});
@@ -3047,11 +3005,11 @@ function womanRow(w) {
   } else {
     status = t('hh_noPreg');
   }
-  if (fp) status += ` · <span class="chip teal" style="padding:1px 7px">${ic('pill')} ${esc(fpMethod(fp.method).en)}</span>`;
+  if (fp) status += ` · <span class="chip teal wrap" style="padding:1px 7px">${ic('pill')} ${esc(fpMethod(fp.method).en)}</span>`;
   const action = active
     ? `<a class="btn sm" href="#pregnancy/${p.id}">${ic('heart')} ${t('td_open')}</a>`
     : `<button class="btn teal sm" data-reg="${w.id}">${ic('plus')} ${t('hh_regPreg')}</button>`;
-  return `<div class="row"><div style="min-width:0"><b>${esc(w.name)}</b> <span class="muted">· ${w.age} ${bi({ en: 'y', ur: 'سال' })}</span><div class="small muted" style="margin-top:2px">${status}</div></div><div style="display:flex;gap:6px;flex:none">${action}<a class="btn ghost sm" href="#fp/${w.id}" aria-label="${t('nav_fp')}">${ic('pill')}</a></div></div>`;
+  return `<div class="row" style="flex-wrap:wrap"><div style="min-width:0;flex:1 1 200px"><b>${esc(w.name)}</b> <span class="muted">· ${w.age} ${bi({ en: 'y', ur: 'سال' })}</span><div class="small muted" style="margin-top:2px">${status}</div></div><div style="display:flex;gap:6px;flex:none">${action}<a class="btn ghost sm" href="#fp/${w.id}" aria-label="${t('nav_fp')}">${ic('pill')}</a></div></div>`;
 }
 
 function childRow(c) {
@@ -3416,7 +3374,8 @@ function renderPncForm(det, p) {
   const assess = () => {
     const urg = urgNow(picked(det, 'msign'), picked(det, 'bsign'));
     const cur = $('#nDest')?.value;
-    $('#nAssess').innerHTML = `<h3>${ic('activity')} ${t('v_assess')}</h3>${urgBanner(urg)}${urg ? `<div class="cols">${field(t('v_refTo'), destSelect('nDest', DEST, cur || destFor(urg)))}</div>` : ''}`;
+    $('#nAssess').innerHTML = `<h3>${ic('activity')} ${t('v_assess')}</h3>${urgBanner(urg)}${urg ? `<div class="cols">${field(t('v_refTo'), destSelect('nDest', DEST, destTouched && cur ? cur : destFor(urg)))}</div>` : ''}`;
+    $('#nDest')?.addEventListener('change', () => (destTouched = true));
   };
   wireChecks(det, assess);
   if ($('#nBf')) segControl($('#nBf'), 'yes', v => {
@@ -3561,7 +3520,6 @@ function renderSlip(det, p, vid) {
   ];
   const smsText = `REFERRAL ${URG[r.urg].en.split(' — ')[0]}: ${w.name} (${w.age}y) ${isAnc ? 'GA ' + gaStr(p.lmp, v.date) : 'PNC day ' + v.day}, ${findings.join(', ')}. Reason: ${r.reason}. To ${destName(r.dest)}. LHW ${profile.name} ${profile.code} ${fmtS(v.date)}`;
   det.innerHTML = backBtn(`#pregnancy/${p.id}`) + slipActions('sSms') + slipArticle({ date: v.date, urg: r.urg, rows, signs, reason: r.reason, dest: r.dest });
-  // TODO(student): SMS referral. Send smsText to the Lady Health Supervisor / receiving facility through an SMS gateway (e.g. a Twilio/Telenor API behind your backend) and log delivery status on the visit record.
   $('#sSms').onclick = () => shareSlip(smsText);
 }
 
