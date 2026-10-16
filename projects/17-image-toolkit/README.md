@@ -2,7 +2,7 @@
 
 **Resize, crop, compress, convert, stamp and strip EXIF — without uploading a single pixel.** A pro-tool style photo utility that runs entirely in the browser: Pakistani ID-photo presets (passport 35 × 45 mm, CNIC / NADRA 1 × 1 inch), a portal **requirement checker** (NADRA, DGIP, HEC, NTS, visas, social), "fit under 200 KB" compression by binary search, an EXIF / GPS inspector with one-click metadata stripping, a **watermark stamp** for CNIC copies, **print sheets** of passport photos, before/after comparison, batch export to a ZIP written in plain JavaScript, a printable session report, an activity inbox and an onboarding tour.
 
-**Scale:** 4519 lines in one HTML file · 19 modules (11 tool panels + export estimator, filmstrip, activity inbox, printable report, onboarding tour, keyboard shortcuts, settings/themes, sample generator) · 79 seed records (6 generated sample images with real EXIF / PNG metadata, 21 portal requirement rules, 12 resize presets, 7 crop aspects, 4 paper sizes, 6 stamp presets, 7 tour steps, 14 keyboard shortcuts, 2 hand-built EXIF blocks).
+**Scale:** 4517 lines in one HTML file · 19 modules (11 tool panels + export estimator, filmstrip, activity inbox, printable report, onboarding tour, keyboard shortcuts, settings/themes, sample generator) · 79 seed records (6 generated sample images with real EXIF / PNG metadata, 21 portal requirement rules, 12 resize presets, 7 crop aspects, 4 paper sizes, 6 stamp presets, 7 tour steps, 14 keyboard shortcuts, 2 hand-built EXIF blocks).
 
 ## Getting started
 
