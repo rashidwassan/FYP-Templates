@@ -38,8 +38,8 @@ h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.01em}
 @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 @keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
 @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(214,31,105,.35)}70%{box-shadow:0 0 0 18px rgba(214,31,105,0)}100%{box-shadow:0 0 0 0 rgba(214,31,105,0)}}
-@keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
-@keyframes toastOut{to{opacity:0;transform:translateY(-8px)}}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .enter{animation:fadeUp var(--dur) var(--ease) both}
 .stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
@@ -135,7 +135,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);margin:0}
 .cmp:hover .grip,.cmp.drag .grip{transform:translate(-50%,-50%) scale(1.1);background:var(--accent);color:#fff}
 .peek{position:absolute;z-index:5;pointer-events:none;background:rgba(35,38,45,.92);color:#fff;border-radius:9px;padding:7px 9px;font-size:.74rem;font-family:var(--mono);display:none;white-space:nowrap;line-height:1.35}
 .peek i{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(255,255,255,.5);vertical-align:-3px;margin-right:6px}
-.shade{position:absolute;inset:0;background:rgba(35,38,45,.55);pointer-events:none}
+.shade{position:absolute;left:0;top:0;box-sizing:content-box;border:0 solid rgba(35,38,45,.55);pointer-events:none}
 .cropbox{position:absolute;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.3);cursor:move;touch-action:none}
 .cropbox::before,.cropbox::after{content:"";position:absolute;inset:0;pointer-events:none}
 .cropbox.grid::before{background:linear-gradient(to right,transparent calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% - .5px),rgba(255,255,255,.55) calc(33.33% + .5px),transparent calc(33.33% + .5px),transparent calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% - .5px),rgba(255,255,255,.55) calc(66.66% + .5px),transparent calc(66.66% + .5px))}
@@ -206,7 +206,7 @@ body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{
 .switch{position:relative;width:46px;height:26px;border-radius:999px;background:var(--line-2);border:0;cursor:pointer;flex:none;transition:background .2s} .switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s var(--ease);box-shadow:0 1px 3px rgba(0,0,0,.3)} .switch.on{background:var(--accent)} .switch.on::after{transform:translateX(20px)}
 
 /* ---------- Toasts ---------- */
-#toasts{position:fixed;left:50%;top:calc(var(--topbar) + 10px);transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;width:max-content;max-width:calc(100vw - 32px)}
+#toasts{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;width:max-content;max-width:calc(100vw - 32px)}
 .toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;box-shadow:0 12px 30px -10px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;animation:toastIn .3s var(--ease) both;font-size:.9rem}
 .toast.out{animation:toastOut .3s var(--ease) both} .toast.ok{background:var(--ok)} .toast.bad{background:var(--bad)} .toast.accent{background:var(--accent)}
 
@@ -223,6 +223,7 @@ body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{
   .film{min-height:0} .film .side{display:none}
   .topbar .pill span{display:none} .topbar .pill{padding:8px} .brand small{display:none} .topbar .btn span{display:none} .topbar .btn{padding:8px 10px}
   .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #toasts{bottom:20px}
 }
 @media (max-width:480px){.fmtgrid{grid-template-columns:1fr 1fr} .drop{padding:34px 16px} .drop h2{font-size:1.35rem}}
 @media print{.topbar,.rail,.props,.film,.stagebar,#toasts,.drawer,.scrim,.peek{display:none!important} .ws{display:block;height:auto} .stage{overflow:visible;padding:0}}
@@ -232,20 +233,16 @@ body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{
 <!-- Icon sprite (Lucide-style, 24×24, stroke 2). Only the symbols used below are kept; custom ones at the end. -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
-<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
 <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
 <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
-<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
 <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
-<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
 <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
 <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
 <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
 <symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
-<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
 <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
 <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
 <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
@@ -256,8 +253,6 @@ body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{
 <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
 <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol>
-<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
-<symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
 <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
 <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
 <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></symbol>
@@ -269,16 +264,11 @@ body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{
 <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
 <symbol id="i-crop" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></symbol>
 <symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
-<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></symbol>
 <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
 <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
 <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.8-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></symbol>
 <symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></symbol>
 <symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M8 11h6"/></symbol>
-<symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
-<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></symbol>
-<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></symbol>
-<symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
 <!-- custom symbols in the same style -->
 <symbol id="i-compress" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></symbol>
 <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8M3 3v5h5"/></symbol>
@@ -677,11 +667,13 @@ function fitZoom() { const st = $('#stage'), img = active(); if (!img) return 1;
 function renderStage() {
   const img = active(); if (!img) return; const src = cur(img);
   const cA = $('#cAfter'); if (cA.width !== src.width || cA.height !== src.height) { cA.width = src.width; cA.height = src.height; }
-  const ax = cA.getContext('2d'); ax.clearRect(0, 0, cA.width, cA.height); ax.drawImage(src, 0, 0);
+  const ax = cA.getContext('2d'); ax.clearRect(0, 0, cA.width, cA.height); if (pipe.format === 'image/jpeg' && hasAlpha(src)) { ax.fillStyle = pipe.bg; ax.fillRect(0, 0, cA.width, cA.height); } ax.drawImage(src, 0, 0); // JPEG export flattens alpha, so the preview does too
   const cB = $('#cBefore'); if (S.beforeId !== img.id) { cB.width = img.orig.width; cB.height = img.orig.height; cB.getContext('2d').drawImage(img.orig, 0, 0); S.beforeId = img.id; }
   if (S.zoomFit) S.zoom = fitZoom();
   const W = Math.max(1, Math.round(src.width * S.zoom)), H = Math.max(1, Math.round(src.height * S.zoom)), fr = $('#frame');
-  fr.style.width = W + 'px'; fr.style.height = H + 'px'; fr.classList.toggle('pix', S.zoom > 1.01); cB.style.width = W + 'px'; cB.style.height = H + 'px';
+  fr.style.width = W + 'px'; fr.style.height = H + 'px'; fr.classList.toggle('pix', S.zoom > 1.01);
+  const bs = Math.min(W / img.orig.width, H / img.orig.height), bw = Math.round(img.orig.width * bs), bh = Math.round(img.orig.height * bs); // 'before' keeps its own aspect, letterboxed in the frame
+  Object.assign(cB.style, { width: bw + 'px', height: bh + 'px', left: Math.round((W - bw) / 2) + 'px', top: Math.round((H - bh) / 2) + 'px' });
   $('#zoomv').textContent = Math.round(S.zoom * 100) + '%';
   const changed = src.width !== img.orig.width || src.height !== img.orig.height;
   $('#dims').innerHTML = `${src.width} × ${src.height} px${changed ? ` <span class="muted small">(from ${img.orig.width} × ${img.orig.height})</span>` : ''}`;
@@ -728,7 +720,8 @@ function renderCropBox() {
   const box = $('#cropbox'), shade = $('#cropShade'), img = active(), show = img && S.tool === 'crop' && !img.preview; box.classList.toggle('hidden', !show); shade.classList.toggle('hidden', !show); if (!show) return;
   if (!S.crop || S.crop.base !== img.work) initCrop(img);
   const c = S.crop, z = S.zoom, L = c.x * z, T = c.y * z, R = (c.x + c.w) * z, B = (c.y + c.h) * z; box.style.left = L + 'px'; box.style.top = T + 'px'; box.style.width = c.w * z + 'px'; box.style.height = c.h * z + 'px'; box.classList.toggle('grid', S.cropGrid !== false);
-  shade.style.clipPath = `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${L}px ${T}px, ${L}px ${B}px, ${R}px ${B}px, ${R}px ${T}px, ${L}px ${T}px)`;
+  const FW = Math.max(1, Math.round(img.work.width * z)), FH = Math.max(1, Math.round(img.work.height * z)); // the dark surround is the shade's border; its content box is the crop window
+  Object.assign(shade.style, { width: Math.max(0, R - L) + 'px', height: Math.max(0, B - T) + 'px', borderWidth: `${Math.max(0, T)}px ${Math.max(0, FW - R)}px ${Math.max(0, FH - B)}px ${Math.max(0, L)}px` });
   $('#cropLbl').textContent = `${c.w} × ${c.h}`; ['x', 'y', 'w', 'h'].forEach(k => { const el = $('#cp_' + k); if (el && document.activeElement !== el) el.value = c[k]; });
 }
 function cropDrag(hd, s, dx, dy, W, H, asp) {
@@ -987,14 +980,14 @@ function panelBatch() {
     <p class="small muted" style="margin:8px 0 0">Crops, rotations and adjustments already applied per image are kept.</p>
     <div class="actions"><button class="btn block" id="bzRun" ${n && !(b && b.running) ? '' : 'disabled'}>${ic('play')} Run on ${n} image${n !== 1 ? 's' : ''}</button></div>
     ${b ? `<div class="bar" style="margin-top:12px"><i id="bzBar" style="width:${b.done / b.total * 100}%"></i></div><div class="small muted" id="bzStatus" style="margin-top:4px">${b.running ? `Processing ${Math.min(b.done + 1, b.total)} of ${b.total}…` : `Done — ${b.total} file${b.total !== 1 ? 's' : ''} in ${(b.ms / 1000).toFixed(1)} s`}</div>` : ''}</div>
-    ${b && !b.running ? `<div class="sect"><h4>Results</h4><div class="kpis"><div class="kpi"><div class="k">Before</div><div class="v" id="bzBefore">0</div></div><div class="kpi"><div class="k">After</div><div class="v" id="bzAfter">0</div></div><div class="kpi ok"><div class="k">Saved</div><div class="v" id="bzSaved">0</div></div></div>
+    ${b && !b.running ? `<div class="sect"><h4>Results</h4><div class="kpis"><div class="kpi"><div class="k">Before</div><div class="v" id="bzBefore">0</div></div><div class="kpi"><div class="k">After</div><div class="v" id="bzAfter">0</div></div><div class="kpi ok"><div class="k">Saved</div><div class="v" id="bzSaved">0</div><div class="small muted" id="bzSavedP"></div></div></div>
       <div class="results stagger">${b.items.map((it, i) => `<div class="r"><span class="nm" title="${esc(it.name)}">${esc(it.name)}</span><button class="btn sm ghost" data-dl="${i}" aria-label="Download ${esc(it.name)}">${ic('download')}</button><span class="sz" style="grid-column:1/-1">${it.w} × ${it.h} · ${fmtBytes(it.before)} → <b>${fmtBytes(it.after)}</b> (${it.after <= it.before ? '−' : '+'}${Math.abs(pct(it.after, it.before))} %)</span></div>`).join('')}</div>
       <div class="actions"><button class="btn block dark" id="bzZip">${ic('archive')} Download all as ZIP</button><button class="btn ghost block" id="bzPdf">${ic('file')} Export as one PDF</button></div></div>` : ''}`;
   const bind = () => {
     $('#bzRz').onchange = e => { pipe.batchResize = e.target.checked; savePipe(); e.target.closest('.chk').classList.toggle('on', pipe.batchResize); };
     $('#bzRun').onclick = () => runBatch({ resize: pipe.batchResize });
     if (b && !b.running) {
-      countUp($('#bzBefore'), b.before, { fmt: fmtBytes }); countUp($('#bzAfter'), b.after, { fmt: fmtBytes }); countUp($('#bzSaved'), Math.max(0, b.before - b.after), { fmt: v => `${fmtBytes(v)} · ${Math.round(v / (b.before || 1) * 100)} %` });
+      countUp($('#bzBefore'), b.before, { fmt: fmtBytes }); countUp($('#bzAfter'), b.after, { fmt: fmtBytes }); countUp($('#bzSaved'), Math.max(0, b.before - b.after), { fmt: fmtBytes }); countUp($('#bzSavedP'), Math.max(0, pct(b.after, b.before)), { fmt: v => Math.round(v) + ' % smaller' });
       $$('[data-dl]').forEach(x => x.onclick = () => { const it = b.items[+x.dataset.dl]; saveBlob(it.blob, it.name); }); $('#bzZip').onclick = downloadZip;
       // TODO(student): multi-image PDF export. Build a PDF by hand: for each item encode as JPEG, write an /XObject /Subtype /Image /Filter /DCTDecode stream, one page per image sized to A4, then the xref table; saveBlob(new Blob([...], {type:'application/pdf'}), 'scans.pdf').
       $('#bzPdf').onclick = () => toast('PDF export is a student extension (see About)', '', 'file');

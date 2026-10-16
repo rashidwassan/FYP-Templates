@@ -149,7 +149,7 @@ table.t tr.hl td{background:rgba(246,193,119,.1)}
 /* ---------- Data structures ---------- */
 .ds-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;flex:1}
 .ds-view{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-height:320px;position:relative;overflow:hidden;display:flex;flex-direction:column}
-.cells{display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap}
+.cells{display:flex;gap:30px 6px;align-items:flex-end;flex-wrap:wrap;padding-top:18px}
 .cell{width:46px;height:46px;border-radius:9px;background:var(--panel-3);border:1px solid var(--line-2);display:grid;place-items:center;font-family:var(--mono);font-weight:600;transition:transform .3s var(--ease),opacity .3s,background .2s,border-color .2s;position:relative}
 .cell.enter{animation:fadeUp .3s var(--ease) both}
 .cell.leave{opacity:0;transform:translateY(-14px) scale(.9)}
@@ -157,9 +157,10 @@ table.t tr.hl td{background:rgba(246,193,119,.1)}
 .cell .tag{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.62rem;color:var(--muted);font-family:var(--mono);white-space:nowrap}
 .stack-col{display:flex;flex-direction:column-reverse;gap:6px;width:120px;min-height:260px;justify-content:flex-start;border:1px dashed var(--line-2);border-top:0;border-radius:0 0 10px 10px;padding:8px}
 .stack-col .cell{width:100%;height:38px}
-.queue-row{display:flex;gap:6px;min-height:60px;align-items:center;border:1px dashed var(--line-2);border-left:0;border-right:0;padding:12px 8px;overflow-x:auto}
+.stack-col .cell .tag{top:50%;left:auto;right:-36px;transform:translateY(-50%)}
+.queue-row{display:flex;gap:6px;min-height:60px;align-items:center;border:1px dashed var(--line-2);border-left:0;border-right:0;padding:26px 8px;overflow-x:auto}
 .ptr{font-size:.7rem;color:var(--muted);font-family:var(--mono)}
-svg.tree{width:100%;height:100%;min-height:300px;display:block}
+svg.tree{width:100%;height:auto;max-height:520px;display:block}
 svg.tree .node{transition:transform .45s var(--ease)}
 svg.tree .node circle{fill:var(--panel-3);stroke:var(--line-2);stroke-width:2;transition:fill .25s,stroke .25s}
 svg.tree .node text{fill:var(--ink);font-family:var(--mono);font-size:13px;font-weight:600;text-anchor:middle;dominant-baseline:central}
@@ -429,7 +430,7 @@ function showCode({ title = '', sub = '', badges = [], code = [], line = -1, not
   const key = title + '|' + code.join('\n');
   if (key !== cpLinesKey) { cpLinesKey = key; $('#cpCode').innerHTML = code.map(l => `<li><span class="src">${hlLine(l)}</span></li>`).join(''); }
   $$('#cpCode li').forEach((li, i) => li.classList.toggle('on', i === line));
-  const on = $('#cpCode li.on'); if (on && typeof on.scrollIntoView === 'function') on.scrollIntoView({ block: 'nearest' });
+  const on = $('#cpCode li.on'), box = $('#cpCode'); if (on && (on.offsetTop < box.scrollTop || on.offsetTop + on.offsetHeight > box.scrollTop + box.clientHeight)) box.scrollTop = on.offsetTop - box.clientHeight / 2;
   const nt = $('#cpNote'); nt.textContent = note || 'Press play or step forward to begin.'; nt.className = 'cp-note ' + noteKind;
   $('#cpStats').innerHTML = stats.map(s => `<div class="stat ${s.cls || ''}"><div class="k">${esc(s.k)}</div><div class="v">${esc(s.v)}</div></div>`).join('');
 }
@@ -544,7 +545,7 @@ function drawBars(t) {
     if (cur) { if ((cur.type === 'compare' || cur.type === 'visit') && (cur.i === i || cur.j === i)) { col = COL.cmp; glow = COL.cmp; } if ((cur.type === 'swap' && (cur.i === i || cur.j === i)) || (cur.type === 'set' && cur.i === i)) { col = COL.swp; glow = COL.swp; } }
     const h = Math.max(2, (H - top - 26) * m.disp[i] / max), x = pad + i * bw + gap / 2, y = H - 26 - h, w = Math.max(1, bw - gap);
     ctx.shadowBlur = glow ? 18 : 0; ctx.shadowColor = glow || 'transparent'; ctx.fillStyle = col;
-    if (w > 3) { ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(4, w / 2)); ctx.fill(); } else ctx.fillRect(x, y, w, h);
+    if (w > 3 && ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(4, w / 2)); ctx.fill(); } else ctx.fillRect(x, y, w, h);
     ctx.shadowBlur = 0;
     if (labels) { ctx.fillStyle = glow ? col : COL.muted; ctx.fillText(m.arr[i], x + w / 2, y - 8); }
   }
@@ -809,7 +810,7 @@ const COMP_COLS = [COL.piv, COL.srt, COL.cmp, COL.swp, '#7fb069', '#f0a0c0', '#5
 const NR = 17;
 function drawGraph(t) {
   const cv = $('#grCv'); if (!cv) return; const { ctx, W, H } = fitCanvas(cv); const m = t ? t.model : grModel(), cur = t ? P.cur(t) : null;
-  if (!GV.panned && GR.nodes.length) { const xs = GR.nodes.map(n => n.x), ys = GR.nodes.map(n => n.y), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys); GV.scale = Math.min(1, (W - 60) / Math.max(1, x1 - x0), (H - 70) / Math.max(1, y1 - y0)); GV.ox = (W - (x0 + x1) * GV.scale) / 2; GV.oy = (H - 26 - (y0 + y1) * GV.scale) / 2; }
+  if (!GV.panned && GR.nodes.length) { const xs = GR.nodes.map(n => n.x), ys = GR.nodes.map(n => n.y), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys); GV.scale = Math.min(1, (W - 60) / Math.max(1, x1 - x0), (H - 110) / Math.max(1, y1 - y0)); GV.ox = (W - (x0 + x1) * GV.scale) / 2; GV.oy = 44 + (H - 70 - (y0 + y1) * GV.scale) / 2; }
   ctx.clearRect(0, 0, W, H); ctx.save(); ctx.translate(GV.ox, GV.oy); ctx.scale(GV.scale, GV.scale);
   ctx.font = '600 11px "Fira Code", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   GR.edges.forEach((E, e) => {
@@ -818,7 +819,7 @@ function drawGraph(t) {
     const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, ex = b.x - ux * (GR.directed ? NR + 2 : 0), ey = b.y - uy * (GR.directed ? NR + 2 : 0);
     ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(ex, ey); ctx.stroke(); ctx.shadowBlur = 0;
     if (GR.directed) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - ux * 10 - uy * 5, ey - uy * 10 + ux * 5); ctx.lineTo(ex - ux * 10 + uy * 5, ey - uy * 10 - ux * 5); ctx.fill(); }
-    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; ctx.fillStyle = e === GV.selE ? COL.piv : COL.panel2; ctx.beginPath(); ctx.roundRect(mx - 11, my - 8, 22, 16, 5); ctx.fill(); ctx.fillStyle = e === GV.selE ? '#13111c' : COL.ink; ctx.fillText(E.w, mx, my + .5);
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2; ctx.fillStyle = e === GV.selE ? COL.piv : COL.panel2; if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(mx - 11, my - 8, 22, 16, 5); ctx.fill(); } else ctx.fillRect(mx - 11, my - 8, 22, 16); ctx.fillStyle = e === GV.selE ? '#13111c' : COL.ink; ctx.fillText(E.w, mx, my + .5);
   });
   if (GV.rubber) { ctx.strokeStyle = COL.piv; ctx.setLineDash([5, 5]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(GR.nodes[GV.rubber.u].x, GR.nodes[GV.rubber.u].y); ctx.lineTo(GV.rubber.x, GV.rubber.y); ctx.stroke(); ctx.setLineDash([]); }
   ctx.font = '700 13px Manrope, sans-serif';
@@ -958,7 +959,7 @@ const randVal = () => 1 + Math.floor(Math.random() * 99);
 function dsStack() {
   const CAP = 8, info = () => ({ title: 'Stack', sub: 'array-backed · LIFO', code: ['push(x):', '  if top == capacity - 1: overflow', '  top = top + 1; a[top] = x', 'pop():', '  if top < 0: underflow', '  x = a[top]; top = top - 1; return x'], badges: [{ v: 'push O(1)' }, { v: 'pop O(1)' }, { v: 'LIFO' }], stats: [{ k: 'size', v: `${DS.stack.length} / ${CAP}` }, { k: 'top', v: DS.stack.length ? DS.stack[DS.stack.length - 1] : '—', cls: 'cmp' }] });
   $('#dsCtrl').innerHTML = `<label>Value <input type="number" id="dsVal" min="0" max="999" value="${randVal()}"></label><button class="btn primary" id="dsPush">${ic('arrow-down')} Push</button><button class="btn" id="dsPop">${ic('arrow-up')} Pop</button><span class="muted" style="font-size:.78rem">Last in, first out · capacity ${CAP}</span>`;
-  const draw = hl => { $('#dsView').innerHTML = `<div style="display:flex;gap:32px;align-items:flex-end;flex-wrap:wrap"><div><div class="ptr" style="margin-bottom:6px">top = ${DS.stack.length - 1}</div><div class="stack-col">${DS.stack.map((v, i) => `<div class="cell ${hl && hl.i === i ? hl.cls : ''}" data-i="${i}">${v}${i === DS.stack.length - 1 ? '<span class="tag" style="top:auto;bottom:-16px">top</span>' : ''}</div>`).join('')}</div></div><div class="muted" style="font-size:.84rem;max-width:380px"><p style="margin:0 0 8px">A stack grows and shrinks at one end only. Function calls, undo history and depth-first search all use one.</p><p style="margin:0">Push and pop are O(1): nothing shifts, only the <span class="mono">top</span> index moves.</p></div></div>`; };
+  const draw = hl => { $('#dsView').innerHTML = `<div style="display:flex;gap:32px;align-items:flex-end;flex-wrap:wrap"><div><div class="ptr" style="margin-bottom:6px">top = ${DS.stack.length - 1}</div><div class="stack-col">${DS.stack.map((v, i) => `<div class="cell ${hl && hl.i === i ? hl.cls : ''}" data-i="${i}">${v}${i === DS.stack.length - 1 ? '<span class="tag">← top</span>' : ''}</div>`).join('')}</div></div><div class="muted" style="font-size:.84rem;max-width:380px"><p style="margin:0 0 8px">A stack grows and shrinks at one end only. Function calls, undo history and depth-first search all use one.</p><p style="margin:0">Push and pop are O(1): nothing shifts, only the <span class="mono">top</span> index moves.</p></div></div>`; };
   draw(); showCode({ ...info(), note: 'Push a value or pop the top element.' });
   $('#dsPush').onclick = () => { const x = +$('#dsVal').value; $('#dsVal').value = randVal(); dsRun((function* () { yield { line: 1, note: `top = ${DS.stack.length - 1}, capacity ${CAP}` }; if (DS.stack.length >= CAP) { yield { line: 1, note: 'Overflow — the stack is full', bad: true }; return; } const n = DS.stack.length; yield { line: 2, note: `top becomes ${n}; a[${n}] = ${x}`, act: () => DS.stack.push(x), hl: { i: n, cls: 'found enter' } }; })(), info, draw); };
   $('#dsPop').onclick = () => dsRun((function* () { yield { line: 4, note: `top = ${DS.stack.length - 1}` }; if (!DS.stack.length) { yield { line: 4, note: 'Underflow — nothing to pop', bad: true }; return; } const i = DS.stack.length - 1, v = DS.stack[i]; yield { line: 5, note: `x = a[${i}] = ${v}`, hl: { i, cls: 'hi' } }; yield { line: 5, note: `Returned ${v}; top = ${i - 1}`, leave: i, act: () => DS.stack.pop() }; })(), info, draw);
@@ -1002,7 +1003,7 @@ function dsBST() {
 function dsBSearch() {
   const info = () => ({ title: 'Binary search', sub: `sorted array of ${DS.bs.a.length} · target ${DS.bs.t}`, code: ['lo = 0; hi = n - 1', 'while lo ≤ hi:', '  mid = (lo + hi) / 2', '  if a[mid] == target: return mid', '  else if a[mid] < target: lo = mid + 1', '  else: hi = mid - 1', 'return not found'], badges: [{ v: 'O(log n)', cls: 'good' }, { v: 'needs sorted input' }], stats: [{ k: 'n', v: DS.bs.a.length }, { k: 'max probes', v: Math.ceil(Math.log2(DS.bs.a.length + 1)), cls: 'cmp' }] });
   $('#dsCtrl').innerHTML = `<label>Target <input type="number" id="dsVal" min="0" max="999" value="${DS.bs.t}"></label><button class="btn primary" id="bsGo">${ic('search')} Search</button><button class="btn sm ghost" id="bsRand">${ic('dice')} New array</button><span class="muted" style="font-size:.78rem">Compare with a linear scan: up to ${DS.bs.a.length} reads vs ${Math.ceil(Math.log2(DS.bs.a.length + 1))}</span>`;
-  const draw = hl => { const a = DS.bs.a; $('#dsView').innerHTML = `<div class="cells" style="margin-top:26px">${a.map((v, i) => { const c = []; if (hl) { if (i < hl.lo || i > hl.hi) c.push('dead'); if (hl.found === i) c.push('found'); else if (hl.mid === i) c.push('mid'); else if (hl.lo === i) c.push('lo'); else if (hl.hi === i) c.push('hi'); } const tags = hl ? [hl.lo === i ? 'lo' : '', hl.mid === i ? 'mid' : '', hl.hi === i ? 'hi' : ''].filter(Boolean).join(' ') : ''; return `<div class="cell ${c.join(' ')}">${v}${tags ? `<span class="tag">${tags}</span>` : ''}<span class="tag" style="top:auto;bottom:-16px;color:var(--dim)">${i}</span></div>`; }).join('')}</div><p class="muted" style="font-size:.84rem;max-width:560px;margin-top:34px">Each probe halves the search range, so a billion sorted items need at most 30 probes. The trade-off: the array must already be sorted.</p>`; };
+  const draw = hl => { const a = DS.bs.a; $('#dsView').innerHTML = `<div class="cells">${a.map((v, i) => { const c = []; if (hl) { if (i < hl.lo || i > hl.hi) c.push('dead'); if (hl.found === i) c.push('found'); else if (hl.mid === i) c.push('mid'); else if (hl.lo === i) c.push('lo'); else if (hl.hi === i) c.push('hi'); } const tags = hl ? [hl.lo === i ? 'lo' : '', hl.mid === i ? 'mid' : '', hl.hi === i ? 'hi' : ''].filter(Boolean).join(' ') : ''; return `<div class="cell ${c.join(' ')}">${v}${tags ? `<span class="tag">${tags}</span>` : ''}<span class="tag" style="top:auto;bottom:-16px;color:var(--dim)">${i}</span></div>`; }).join('')}</div><p class="muted" style="font-size:.84rem;max-width:560px;margin-top:34px">Each probe halves the search range, so a billion sorted items need at most 30 probes. The trade-off: the array must already be sorted.</p>`; };
   draw(); showCode({ ...info(), note: 'Enter a target and press Search.' });
   $('#bsGo').onclick = () => { const t = +$('#dsVal').value; DS.bs.t = t; dsRun((function* () { const a = DS.bs.a; let lo = 0, hi = a.length - 1, n = 0; yield { line: 0, note: `Search for ${t} in ${a.length} sorted values`, hl: { lo, hi } }; while (lo <= hi) { const mid = (lo + hi) >> 1; n++; yield { line: 2, note: `mid = ${mid}, a[mid] = ${a[mid]}`, hl: { lo, hi, mid } }; if (a[mid] === t) { yield { line: 3, note: `Found ${t} at index ${mid} after ${n} probe${n > 1 ? 's' : ''}`, hl: { lo, hi, mid, found: mid } }; return; } if (a[mid] < t) { lo = mid + 1; yield { line: 4, note: `${a[mid]} < ${t} → discard the left half`, hl: { lo, hi } }; } else { hi = mid - 1; yield { line: 5, note: `${a[mid]} > ${t} → discard the right half`, hl: { lo, hi } }; } } yield { line: 6, note: `${t} is not in the array (${n} probes)`, bad: true, hl: { lo: -1, hi: -1 } }; })(), info, draw); };
   $('#bsRand').onclick = () => { mini.stop(); const r = rng(newSeed()); const s = new Set(); while (s.size < 15) s.add(1 + Math.floor(r() * 99)); DS.bs.a = [...s].sort((x, y) => x - y); DS.bs.t = DS.bs.a[Math.floor(r() * 15)]; dsBSearch(); };
@@ -1012,7 +1013,7 @@ function drawHeap(hl) {
   const xy = i => { const d = Math.floor(Math.log2(i + 1)), j = i - (2 ** d - 1); return [(j + .5) / 2 ** d * W, 30 + d * gy]; };
   let svg = $('#heapSvg');
   if (!svg) { $('#dsView').innerHTML = `<svg class="tree" id="heapSvg" preserveAspectRatio="xMidYMin meet" aria-label="Min-heap as a tree"><g id="hLines"></g><g id="hNodes"></g></svg><div class="ptr" style="margin:10px 0 6px">array view (index below)</div><div class="cells" id="heapRow"></div>`; svg = $('#heapSvg'); }
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.style.minHeight = H + 'px';
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   $('#hLines').innerHTML = a.map((_, i) => { if (!i) return ''; const [x, y] = xy(i), [px, py] = xy((i - 1) >> 1); return `<line x1="${px}" y1="${py}" x2="${x}" y2="${y}"/>`; }).join('');
   const nodesG = $('#hNodes'), seen = new Set();
   a.forEach((v, i) => { const id = DS.heap.ids[i]; seen.add(id); let g = nodesG.querySelector(`[data-id="${id}"]`); const [x, y] = xy(i); if (!g) { g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('data-id', id); g.innerHTML = '<circle r="18"/><text></text>'; nodesG.append(g); } const cls = hl ? (hl.swap && hl.swap.includes(i) ? 'found' : hl.cmp && hl.cmp.includes(i) ? 'visit' : hl.hl && hl.hl.includes(i) ? 'new' : '') : ''; g.setAttribute('class', 'node ' + cls); g.style.transform = `translate(${x}px,${y}px)`; g.querySelector('text').textContent = v; });
