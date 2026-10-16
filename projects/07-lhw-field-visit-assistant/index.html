@@ -3323,6 +3323,7 @@ function renderAncForm(det, p) {
   det.innerHTML = ancFormHtml(p, w);
   let fm = 'na';
   let urgOverride = null;
+  let destTouched = false; // follow destFor(urg) until the LHW picks a destination
   const draft = () => ({
     date: $('#vDate').value,
     sys: +$('#vSys').value || 0,
@@ -3349,11 +3350,12 @@ function renderAncForm(det, p) {
     const urgLabels = [t('v_urgNone'), t('v_urgNext'), t('v_urgSame'), t('v_urgEmerg')];
     const autoReason = [...a.flags.map(f => f.en.split(' — ')[0].split('. ')[0]), ...v.signs.map(s => PREG_DANGER.find(x => x.id === s)?.en)].filter(Boolean).join('; ');
     const referralHtml = urg
-      ? `<div class="cols">${field(t('v_refTo'), destSelect('vDest', DEST, curDest || destFor(urg)))}</div>${field(t('v_refReason'), `<textarea id="vReason" rows="2" maxlength="300">${esc(curReason ?? autoReason)}</textarea>`)}`
+      ? `<div class="cols">${field(t('v_refTo'), destSelect('vDest', DEST, destTouched && curDest ? curDest : destFor(urg)))}</div>${field(t('v_refReason'), `<textarea id="vReason" rows="2" maxlength="300">${esc(curReason ?? autoReason)}</textarea>`)}`
       : '';
     $('#vAssess').innerHTML = `<h3>${ic('activity')} ${t('v_assess')}</h3>${flagsHtml}
       <label class="f">${t('v_referral')}</label>${urgBanner(urg)}
       <div class="seg" id="vUrg" style="margin-top:8px">${[0, 1, 2, 3].map(u => `<button data-u="${u}" class="${u === urg ? 'on' : ''}">${urgLabels[u]}</button>`).join('')}</div>${referralHtml}`;
+    $('#vDest')?.addEventListener('change', () => (destTouched = true));
     $$('#vUrg button').forEach(b => (b.onclick = () => {
       urgOverride = +b.dataset.u;
       assess();
@@ -3409,6 +3411,7 @@ function renderPncForm(det, p) {
       <label class="f">${t('v_counsel')}</label><div class="checks" id="nCounsel">${checklist(COUNSEL_PNC, [], 'ok', 'counsel')}</div></div>
     <div style="position:sticky;top:14px"><div class="card" id="nAssess"></div><div class="actions"><button class="btn block" id="nSave" style="font-size:1.1rem;min-height:56px">${ic('check')} ${t('v_save')}</button></div></div></div>`;
   let bf = 'yes';
+  let destTouched = false;
   const urgNow = (ms, bs) => Math.max(assessSigns(PNC_DANGER, ms), assessSigns(NB_DANGER, bs), bf === 'no' ? 2 : 0);
   const assess = () => {
     const urg = urgNow(picked(det, 'msign'), picked(det, 'bsign'));
@@ -4138,6 +4141,7 @@ function renderScreeningForm(det, householdId) {
       <p class="muted small" style="margin:12px 0 0">${t('sc_note')}</p></div>
     <div style="position:sticky;top:14px"><div class="card" id="scAssess"></div><div class="actions"><button class="btn block" id="scSave" style="font-size:1.1rem;min-height:56px">${ic('check')} ${t('sc_save')}</button></div></div></div>`;
   let type = 'tb';
+  let destTouched = false; // follow the rule's destination until the LHW picks one
   const drawSigns = () => {
     $('#scSigns').innerHTML = checklist(screenSigns(type), [], '', 'scs');
     wireChecks($('#scSigns'), assess);
@@ -4147,7 +4151,8 @@ function renderScreeningForm(det, householdId) {
     const r = screenResult(type, picked($('#scSigns'), 'scs'));
     const cur = $('#scDest')?.value;
     const banner = `<div class="alert ${r.urg >= 3 ? 'red' : r.urg ? 'amber' : 'green'}">${ic(r.urg >= 3 ? 'siren' : r.urg ? 'alert' : 'check-circle', 'lg')}<div><b>${esc(L.en[r.key])}</b><div class="ur">${esc(L.ur[r.key])}</div></div></div>`;
-    $('#scAssess').innerHTML = `<h3>${ic('activity')} ${t('sc_result')}</h3>${banner}${r.urg ? `<div style="margin-top:8px">${urgBanner(r.urg)}</div><div class="cols">${field(t('v_refTo'), destSelect('scDest', DEST, cur || r.dest))}</div>` : ''}`;
+    $('#scAssess').innerHTML = `<h3>${ic('activity')} ${t('sc_result')}</h3>${banner}${r.urg ? `<div style="margin-top:8px">${urgBanner(r.urg)}</div><div class="cols">${field(t('v_refTo'), destSelect('scDest', DEST, destTouched && cur ? cur : r.dest))}</div>` : ''}`;
+    $('#scDest')?.addEventListener('change', () => (destTouched = true));
   };
   segControl($('#scType'), 'tb', v => {
     type = v;
