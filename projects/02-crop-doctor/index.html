@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crop Doctor</title>
+<meta name="description" content="Offline-first leaf disease assistant for Pakistani crops: colour-segmentation analyzer, trainable in-browser classifier (TensorFlow.js), symptom wizard and bilingual treatment cards.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f7f2;--surface:#fff;--surface-2:#eaf2ea;--ink:#15231a;--muted:#5f7066;--line:#dbe6db;
+  --green:#1e8e5a;--green-deep:#136a43;--green-soft:#e2f4ea;--lime:#b9e26b;--amber:#d99a06;--amber-soft:#fdf3d7;--red:#d1433b;--red-soft:#fbe4e2;--violet:#6b5bd2;--violet-soft:#ebe8fb;
+  --stage:#0f1c15;--stage-2:#172a20;--stage-line:#27402f;
+  --radius:16px;--radius-sm:10px;--shadow:0 14px 40px -24px rgba(21,35,26,.35);
+  --font:"Sora",system-ui,sans-serif;--font-ur:"Noto Nastaliq Urdu",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.2}
+.ur{font-family:var(--font-ur);line-height:2;font-size:1.05em}
+.muted{color:var(--muted)} .hidden{display:none!important}
+/* header */
+.hdr{position:sticky;top:0;z-index:20;background:rgba(243,247,242,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hdr .in{max-width:1280px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:16px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--green),var(--green-deep));display:grid;place-items:center;color:#fff}
+.brand h1{font-size:1.05rem;font-weight:700} .brand small{display:block;font-size:.72rem;color:var(--muted)}
+.tabs{display:flex;gap:2px;margin-left:8px;overflow:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:none;padding:8px 13px;border-radius:10px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button.on{background:var(--ink);color:#fff}
+.spacer{flex:1}
+.lang{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer}
+main{max-width:1280px;margin:0 auto;padding:22px 18px 60px}
+section[data-page]{display:none} section[data-page].on{display:block}
+/* buttons/forms */
+.btn{border:0;border-radius:11px;padding:10px 15px;font-weight:600;cursor:pointer;background:var(--green);color:#fff;display:inline-flex;align-items:center;gap:8px;transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--surface-2);color:var(--ink)} .btn.dark{background:var(--stage-2);color:#dff5e6;border:1px solid var(--stage-line)} .btn.danger{background:var(--red-soft);color:var(--red)} .btn.violet{background:var(--violet);color:#fff}
+.btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px} .btn:disabled{opacity:.45;cursor:not-allowed}
+select,input[type=text],input[type=file]{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 11px;outline:0}
+select:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+label.f{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.86rem;font-weight:600;cursor:pointer}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.chip.sym.on{background:var(--violet);border-color:var(--violet)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.card h2{font-size:1.15rem;margin-bottom:4px} .card p.lead{margin:0 0 12px;color:var(--muted)}
+.pill{display:inline-block;border-radius:6px;padding:2px 8px;font-size:.72rem;font-weight:700;background:var(--surface-2);color:var(--muted)}
+.pill.sev1{background:var(--green-soft);color:var(--green-deep)} .pill.sev2{background:var(--amber-soft);color:#8a6100} .pill.sev3{background:var(--red-soft);color:var(--red)}
+/* scan layout */
+.scan{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.9fr);gap:20px;align-items:start}
+.stage{position:relative;background:radial-gradient(120% 90% at 50% 0%,var(--stage-2),var(--stage));border-radius:20px;aspect-ratio:4/3;overflow:hidden;border:1px solid var(--stage-line);box-shadow:0 30px 60px -40px rgba(0,0,0,.8)}
+.stage video,.stage img,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.stage canvas.overlay{pointer-events:none;opacity:0;transition:opacity .2s} .stage.show-overlay canvas.overlay{opacity:1}
+.stage .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#9fc3ad;padding:30px}
+.stage .empty b{display:block;color:#dff5e6;font-size:1.1rem;margin-bottom:6px}
+.stage.drag{outline:3px dashed var(--lime);outline-offset:-10px}
+.stage .corner{position:absolute;width:26px;height:26px;border:3px solid var(--lime);opacity:.8}
+.stage .corner.tl{top:14px;left:14px;border-right:0;border-bottom:0} .stage .corner.tr{top:14px;right:14px;border-left:0;border-bottom:0} .stage .corner.bl{bottom:14px;left:14px;border-right:0;border-top:0} .stage .corner.br{bottom:14px;right:14px;border-left:0;border-top:0}
+.stage .scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--lime),transparent);top:0;opacity:0}
+.stage.busy .scanline{opacity:1;animation:scan 1.1s linear infinite}
+@keyframes scan{from{top:0}to{top:100%}}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.samples{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
+/* result */
+.gauge{display:flex;align-items:center;gap:16px}
+.gauge svg{width:120px;height:120px;flex:none}
+.gauge .big{font-size:2rem;font-weight:700;letter-spacing:-.02em;line-height:1}
+.bars{display:grid;gap:7px;margin-top:12px}
+.bar{display:grid;grid-template-columns:110px 1fr 46px;gap:10px;align-items:center;font-size:.85rem}
+.bar .track{height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.bar .fill{height:100%;border-radius:999px}
+.bar .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.match{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer}
+.match:hover{border-color:var(--green)}
+.match .pct{font-weight:700;font-variant-numeric:tabular-nums;min-width:46px;text-align:right}
+.match .track{flex:1;height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.match .fill{height:100%;background:var(--green)}
+.mlbox{border:1px dashed var(--violet);background:var(--violet-soft);border-radius:12px;padding:12px 14px;margin-top:14px}
+.status{font-size:.82rem;color:var(--muted)}
+/* library */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.dcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;cursor:pointer;transition:transform .15s,border-color .15s;box-shadow:var(--shadow)}
+.dcard:hover{transform:translateY(-2px);border-color:var(--green)}
+.dcard h3{font-size:1.02rem;margin:6px 0 2px} .dcard .ur{font-size:1.05rem;color:var(--green-deep)}
+.dcard p{margin:8px 0 0;font-size:.86rem;color:var(--muted)}
+/* modal */
+.modal-scrim{position:fixed;inset:0;background:rgba(15,28,21,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-scrim.on{display:flex}
+.modal{background:var(--surface);border-radius:20px;max-width:720px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 40px 80px -30px rgba(0,0,0,.6)}
+.modal header{padding:20px 22px 12px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;position:sticky;top:0;background:var(--surface)}
+.modal header h2{font-size:1.35rem} .modal .body{padding:18px 22px 26px}
+.modal h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:16px 0 6px}
+.modal ol,.modal ul{margin:0;padding-left:20px} .modal li{margin:4px 0}
+.urbox{background:var(--green-soft);border-radius:12px;padding:12px 16px;direction:rtl;text-align:right}
+.urbox li{margin:2px 0}
+.close{margin-left:auto;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;width:36px;height:36px;cursor:pointer}
+/* history */
+.hist{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.hcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.hcard img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--stage);display:block}
+.hcard .b{padding:10px 12px;font-size:.84rem}
+/* train */
+.train{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.9fr);gap:20px;align-items:start}
+.counts{display:grid;gap:6px;margin-top:10px}
+.todo{border:1px dashed var(--green-deep);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
+.todo h4{font-size:.95rem;display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.tag{font-size:.68rem;background:var(--green-deep);color:#fff;border-radius:6px;padding:2px 6px;font-weight:700}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;align-items:start}
+.list{display:grid;gap:10px}
+.steps{counter-reset:s;display:grid;gap:8px}
+.steps div{display:flex;gap:10px;align-items:flex-start;font-size:.9rem}
+.steps div::before{counter-increment:s;content:counter(s);flex:none;width:24px;height:24px;border-radius:50%;background:var(--green-soft);color:var(--green-deep);display:grid;place-items:center;font-weight:700;font-size:.78rem}
+#toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:grid;gap:8px;z-index:60}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;animation:pop .25s}
+.toast.ok{background:var(--green)} .toast.bad{background:var(--red)}
+@keyframes pop{from{transform:translateY(8px);opacity:0}}
+@media (max-width:900px){.scan,.train{grid-template-columns:minmax(0,1fr)}.hdr .in{flex-wrap:wrap}.tabs{order:5;flex-basis:100%;margin-left:0}.brand small{display:none}}
+@media print{.hdr,.tools,.samples,#toasts{display:none}.modal{max-height:none;box-shadow:none}}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="in">
+  <div class="brand"><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c6 0 12-6 12-14-6 0-12 4-12 14Z"/><path d="M4 20c2-5 5-8 9-10"/><circle cx="18" cy="18" r="3"/><path d="m20.2 20.2 1.8 1.8"/></svg></div>
+    <div><h1 data-i18n="title">Crop Doctor</h1><small data-i18n="tagline">Offline leaf diagnosis for Pakistani crops</small></div></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="spacer"></div>
+  <button class="lang" id="langBtn">اردو</button>
+</div></header>
+
+<main>
+<!-- SCAN -->
+<section data-page="scan" class="on">
+  <div class="scan">
+    <div>
+      <div id="stageSlot"></div>
+      <div class="tools">
+        <button class="btn dark" id="camBtn">📷 <span data-i18n="camera">Camera</span></button>
+        <button class="btn" id="snapBtn" disabled>◉ <span data-i18n="capture">Capture</span></button>
+        <label class="btn ghost" for="file">⬆ <span data-i18n="upload">Upload photo</span></label><input id="file" type="file" accept="image/*" capture="environment" class="hidden">
+        <button class="btn ghost" id="ovBtn" disabled>▦ <span data-i18n="overlay">Overlay</span></button>
+        <span class="spacer"></span>
+        <button class="btn ghost" id="saveBtn" disabled>💾 <span data-i18n="save">Save scan</span></button>
+      </div>
+      <div class="samples"><span data-i18n="samples">No leaf handy? Try a synthetic sample:</span>
+        <button class="chip" data-sample="healthy" data-i18n="s_healthy">Healthy</button><button class="chip" data-sample="chlorosis" data-i18n="s_chlorosis">Yellowing</button><button class="chip" data-sample="spots" data-i18n="s_spots">Brown spots</button><button class="chip" data-sample="powdery" data-i18n="s_powdery">Powdery</button></div>
+    </div>
+    <aside class="card" id="result">
+      <label class="f" data-i18n="crop">Crop</label><select id="cropSel"></select>
+      <div id="resBody" style="margin-top:14px"><p class="muted" data-i18n="res_empty">Capture or upload a leaf photo. The baseline analyzer runs instantly and fully offline; the trainable ML model adds a second opinion once you have taught it a few examples.</p></div>
+    </aside>
+  </div>
+</section>
+
+<!-- SYMPTOMS -->
+<section data-page="symptoms">
+  <div class="two">
+    <div class="card"><h2 data-i18n="sy_title">Symptom wizard</h2><p class="lead" data-i18n="sy_lead">No photo needed. Pick the crop, the affected part and what you see; the wizard ranks likely diseases.</p>
+      <label class="f" data-i18n="crop">Crop</label><div class="chips" id="syCrop"></div>
+      <label class="f" data-i18n="part">Affected part</label><div class="chips" id="syPart"></div>
+      <label class="f" data-i18n="symptoms">Symptoms (pick all that apply)</label><div class="chips" id="sySym"></div>
+      <div style="margin-top:14px;display:flex;gap:8px"><button class="btn ghost" id="syReset" data-i18n="reset">Reset</button></div>
+    </div>
+    <div><h3 style="margin:0 0 10px" data-i18n="sy_results">Likely diseases</h3><div class="list" id="syOut"><p class="muted" data-i18n="sy_empty">Select at least one symptom.</p></div></div>
+  </div>
+</section>
+
+<!-- TRAIN -->
+<section data-page="train">
+  <div class="train">
+    <div>
+      <div id="trainStageSlot"></div>
+      <div class="tools"><button class="btn dark" id="camBtn2">📷 <span data-i18n="camera">Camera</span></button><button class="btn" id="snapBtn2" disabled>◉ <span data-i18n="capture">Capture</span></button><label class="btn ghost" for="file2">⬆ <span data-i18n="upload">Upload photo</span></label><input id="file2" type="file" accept="image/*" class="hidden"></div>
+      <div class="card" style="margin-top:16px"><h2 data-i18n="tr_protocol">Dataset protocol</h2>
+        <div class="steps" id="protocol"></div></div>
+    </div>
+    <aside class="card">
+      <h2 data-i18n="tr_title">Teach the classifier</h2><p class="lead" data-i18n="tr_lead">Transfer learning in the browser: MobileNet extracts features, a k-nearest-neighbour head learns your classes. Everything stays on this device.</p>
+      <div id="mlStatus" class="status"></div>
+      <div id="trainBody"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- LIBRARY -->
+<section data-page="library">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div class="chips" id="libCrop"></div></div>
+  <div class="grid" id="libGrid"></div>
+</section>
+
+<!-- HISTORY -->
+<section data-page="history">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px"><h2 style="font-size:1.15rem" data-i18n="hi_title">Saved scans</h2><span class="spacer"></span><button class="btn ghost sm" id="histExport">⬇ JSON</button><button class="btn danger sm" id="histClear" data-i18n="clear">Clear all</button></div>
+  <div class="hist" id="hist"></div>
+</section>
+
+<!-- ABOUT -->
+<section data-page="about"><div class="two" id="about"></div></section>
+</main>
+
+<!-- shared stage (moved between Scan and Train) -->
+<div class="stage" id="stage">
+  <video id="cam" playsinline muted class="hidden"></video>
+  <img id="shot" alt="" class="hidden">
+  <canvas id="overlay" class="overlay"></canvas>
+  <div class="empty" id="stageEmpty"><div><b data-i18n="st_title">Drop a leaf photo here</b><span data-i18n="st_sub">or use the camera · JPG/PNG · fill the frame with one leaf on a plain background</span></div></div>
+  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><i class="scanline"></i>
+</div>
+<canvas id="work" class="hidden"></canvas>
+<div id="stageParking" class="hidden"></div>
+
+<div class="modal-scrim" id="modalScrim"><div class="modal" role="dialog" aria-modal="true"><header><div id="mHead"></div><button class="close" id="mClose" aria-label="Close">✕</button></header><div class="body" id="mBody"></div></div></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Crop Doctor — single-file app
+   utils · i18n · knowledge base · stage/intake · baseline analyzer ·
+   ML (TF.js MobileNet + KNN, lazy) · symptom wizard · library · history
+   Student extension points: TODO(student)
+   ===================================================================== */
+const NS = 'cropdoc:';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = { get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } } };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const toast = (m, type = '') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = m; $('#toasts').append(t); setTimeout(() => t.remove(), 3200); };
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+// ---------- i18n ----------
+const L = {
+  en: { title: 'Crop Doctor', tagline: 'Offline leaf diagnosis for Pakistani crops', nav_scan: 'Scan', nav_symptoms: 'Symptoms', nav_train: 'Train', nav_library: 'Library', nav_history: 'History', nav_about: 'About',
+    camera: 'Camera', stop: 'Stop camera', capture: 'Capture', upload: 'Upload photo', overlay: 'Overlay', save: 'Save scan', saved: 'Scan saved to history', samples: 'No leaf handy? Try a synthetic sample:', s_healthy: 'Healthy', s_chlorosis: 'Yellowing', s_spots: 'Brown spots', s_powdery: 'Powdery',
+    crop: 'Crop', res_empty: 'Capture or upload a leaf photo. The baseline analyzer runs instantly and fully offline; the trainable ML model adds a second opinion once you have taught it a few examples.',
+    st_title: 'Drop a leaf photo here', st_sub: 'or use the camera · JPG/PNG · fill the frame with one leaf on a plain background',
+    health: 'Leaf health index', healthy: 'Looks healthy', mild: 'Mild stress', severe: 'Significant damage', breakdown: 'Pixel breakdown (leaf area)', c_green: 'Healthy green', c_yellow: 'Yellow / chlorotic', c_brown: 'Brown / necrotic', c_white: 'White / pale', bg: 'background removed',
+    cues: 'Visual cues', cue_yellow: 'Chlorosis — think rust, virus, nutrient or sucking-pest stress', cue_brown: 'Necrotic tissue — think fungal/bacterial spots or blight', cue_white: 'Pale/white patches — think powdery mildew or downy growth', cue_none: 'No strong abnormal colour signal',
+    matches: 'Closest matches by colour (not a diagnosis)', ml_title: 'ML second opinion', ml_off: 'The classifier has no examples yet. Teach it in Train.', ml_enable: 'Enable ML module', ml_loading: 'Loading TensorFlow.js + MobileNet…', ml_fail: 'ML module could not load (offline?). The baseline analyzer still works.', ml_pred: 'Prediction', ml_conf: 'confidence', ml_examples: 'examples', ml_predict: 'Predict current image',
+    sy_title: 'Symptom wizard', sy_lead: 'No photo needed. Pick the crop, the affected part and what you see; the wizard ranks likely diseases.', part: 'Affected part', symptoms: 'Symptoms (pick all that apply)', reset: 'Reset', sy_results: 'Likely diseases', sy_empty: 'Select at least one symptom.', match: 'match',
+    p_leaf: 'Leaf', p_stem: 'Stem', p_fruit: 'Fruit / flower / head', p_plant: 'Whole plant',
+    tr_title: 'Teach the classifier', tr_lead: 'Transfer learning in the browser: MobileNet extracts features, a k-nearest-neighbour head learns your classes. Everything stays on this device.', tr_protocol: 'Dataset protocol', tr_class: 'Class for the current image', tr_add: 'Add current image as example', tr_counts: 'Examples per class', tr_export: 'Export dataset', tr_import: 'Import', tr_clear: 'Clear dataset', tr_need: 'Capture or upload an image first.', tr_added: 'Example added', tr_storage: 'Dataset too large for localStorage; export it instead.',
+    hi_title: 'Saved scans', clear: 'Clear all', hi_empty: 'No scans saved yet.', delete: 'Delete',
+    lib_all: 'All crops', severity: 'Severity', type: 'Type', conditions: 'Favourable conditions', sym_list: 'Symptoms', treat: 'Treatment', treat_ur: 'علاج (اردو)', prevent: 'Prevention', listen: 'Listen', print: 'Print card',
+    ab_title: 'About this project', ab_todo: 'Left for students to build',
+    sample_note: 'Synthetic sample — generated on a canvas for demo purposes', healthy_class: 'Healthy',
+  },
+  ur: { title: 'کراپ ڈاکٹر', tagline: 'پاکستانی فصلوں کے پتوں کی آف لائن تشخیص', nav_scan: 'اسکین', nav_symptoms: 'علامات', nav_train: 'تربیت', nav_library: 'لائبریری', nav_history: 'ریکارڈ', nav_about: 'تعارف',
+    camera: 'کیمرہ', stop: 'کیمرہ بند', capture: 'تصویر لیں', upload: 'تصویر اپ لوڈ', overlay: 'نقشہ', save: 'محفوظ کریں', saved: 'اسکین ریکارڈ میں محفوظ', samples: 'پتہ موجود نہیں؟ نمونہ آزمائیں:', s_healthy: 'صحت مند', s_chlorosis: 'پیلاہٹ', s_spots: 'بھورے دھبے', s_powdery: 'سفوفی',
+    crop: 'فصل', res_empty: 'پتے کی تصویر لیں یا اپ لوڈ کریں۔ بنیادی تجزیہ فوراً اور آف لائن چلتا ہے؛ ML ماڈل چند مثالیں سکھانے کے بعد دوسری رائے دیتا ہے۔',
+    st_title: 'پتے کی تصویر یہاں ڈالیں', st_sub: 'یا کیمرہ استعمال کریں · سادہ پس منظر پر ایک پتہ پورے فریم میں',
+    health: 'پتے کی صحت کا اشاریہ', healthy: 'صحت مند لگتا ہے', mild: 'ہلکا دباؤ', severe: 'نمایاں نقصان', breakdown: 'رنگوں کی تقسیم (پتے کا حصہ)', c_green: 'صحت مند سبز', c_yellow: 'پیلا', c_brown: 'بھورا / مردہ', c_white: 'سفید / پھیکا', bg: 'پس منظر ہٹایا گیا',
+    cues: 'بصری اشارے', cue_yellow: 'پیلاہٹ — کنگی، وائرس، غذائی کمی یا رس چوسنے والے کیڑے', cue_brown: 'مردہ بافت — پھپھوندی/جراثیمی دھبے یا جھلساؤ', cue_white: 'سفید دھبے — سفوفی پھپھوندی', cue_none: 'کوئی واضح غیر معمولی رنگ نہیں',
+    matches: 'رنگ کے لحاظ سے قریبی مماثلت (تشخیص نہیں)', ml_title: 'ML دوسری رائے', ml_off: 'ماڈل کو ابھی مثالیں نہیں سکھائیں۔ تربیت میں سکھائیں۔', ml_enable: 'ML ماڈیول چالو کریں', ml_loading: 'TensorFlow.js لوڈ ہو رہا ہے…', ml_fail: 'ML ماڈیول لوڈ نہیں ہوا (آف لائن؟)۔ بنیادی تجزیہ کام کرتا ہے۔', ml_pred: 'پیش گوئی', ml_conf: 'اعتماد', ml_examples: 'مثالیں', ml_predict: 'موجودہ تصویر پر پیش گوئی',
+    sy_title: 'علامات کی مدد سے تشخیص', sy_lead: 'تصویر کی ضرورت نہیں۔ فصل، متاثرہ حصہ اور علامات چنیں۔', part: 'متاثرہ حصہ', symptoms: 'علامات (سب چنیں جو نظر آئیں)', reset: 'صاف کریں', sy_results: 'ممکنہ بیماریاں', sy_empty: 'کم از کم ایک علامت چنیں۔', match: 'مماثلت',
+    p_leaf: 'پتہ', p_stem: 'تنا', p_fruit: 'پھل / پھول / بالی', p_plant: 'پورا پودا',
+    tr_title: 'ماڈل کو سکھائیں', tr_lead: 'براؤزر میں ٹرانسفر لرننگ: MobileNet خصوصیات نکالتا ہے، KNN آپ کی کلاسیں سیکھتا ہے۔ سب کچھ اسی آلے پر رہتا ہے۔', tr_protocol: 'ڈیٹا جمع کرنے کا طریقہ', tr_class: 'موجودہ تصویر کی کلاس', tr_add: 'موجودہ تصویر بطور مثال شامل کریں', tr_counts: 'ہر کلاس کی مثالیں', tr_export: 'ڈیٹا برآمد', tr_import: 'درآمد', tr_clear: 'ڈیٹا صاف', tr_need: 'پہلے تصویر لیں یا اپ لوڈ کریں۔', tr_added: 'مثال شامل ہو گئی', tr_storage: 'ڈیٹا بہت بڑا ہے؛ برآمد کر لیں۔',
+    hi_title: 'محفوظ اسکین', clear: 'سب صاف', hi_empty: 'ابھی کوئی اسکین محفوظ نہیں۔', delete: 'حذف',
+    lib_all: 'تمام فصلیں', severity: 'شدت', type: 'قسم', conditions: 'سازگار حالات', sym_list: 'علامات', treat: 'علاج', treat_ur: 'علاج (اردو)', prevent: 'بچاؤ', listen: 'سنیں', print: 'کارڈ پرنٹ',
+    ab_title: 'اس پروجیکٹ کا تعارف', ab_todo: 'طلبہ کے لیے باقی کام', sample_note: 'مصنوعی نمونہ — مظاہرے کے لیے', healthy_class: 'صحت مند' }
+};
+let lang = store.get('lang', 'en');
+const t = k => L[lang][k] ?? L.en[k] ?? k;
+const nm = o => lang === 'ur' ? o.ur : o.en;
+
+// ---------- knowledge base ----------
+const CROPS = [['cotton', 'Cotton', 'کپاس'], ['wheat', 'Wheat', 'گندم'], ['rice', 'Rice', 'چاول'], ['citrus', 'Citrus', 'ترشاوہ (کینو/مالٹا)'], ['tomato', 'Tomato', 'ٹماٹر'], ['potato', 'Potato', 'آلو'], ['mango', 'Mango', 'آم'], ['sugarcane', 'Sugarcane', 'گنا'], ['chilli', 'Chilli', 'مرچ']].map(([id, en, ur]) => ({ id, en, ur }));
+const PARTS = ['leaf', 'stem', 'fruit', 'plant'];
+// symptom: id, parts, en, ur
+const SYMPTOMS = [
+  ['leaf_curl', ['leaf'], 'Leaves curling upward or downward', 'پتوں کا اوپر یا نیچے مڑنا'], ['vein_thick', ['leaf'], 'Thickened, dark veins', 'موٹی سیاہ رگیں'], ['enations', ['leaf'], 'Leaf-like outgrowths under the leaf', 'پتے کے نیچے ابھار'],
+  ['yellow_stripes', ['leaf'], 'Yellow-orange pustules in stripes', 'پیلی نارنجی دھاریوں میں دانے'], ['brown_pustules', ['leaf', 'stem'], 'Scattered orange-brown pustules', 'بکھرے بھورے دانے'], ['brown_spots_halo', ['leaf', 'fruit'], 'Brown spots with a yellow halo', 'پیلے حلقے والے بھورے دھبے'],
+  ['target_spots', ['leaf'], 'Concentric ring (target) spots', 'گول حلقوں والے دھبے'], ['water_soaked', ['leaf', 'stem'], 'Water-soaked, greasy patches', 'پانی جیسے چکنے دھبے'], ['angular_spots', ['leaf'], 'Angular spots bounded by veins', 'رگوں کے بیچ کونے دار دھبے'],
+  ['spindle_lesions', ['leaf'], 'Spindle / diamond-shaped grey lesions', 'تکلی نما سرمئی دھبے'], ['tip_yellowing', ['leaf'], 'Yellowing or drying from tips and margins', 'نوک اور کناروں سے پیلا پن'], ['white_powder', ['leaf', 'fruit'], 'White powdery coating', 'سفید پاؤڈر جیسی تہہ'],
+  ['white_fuzz_under', ['leaf'], 'White fuzzy growth under the leaf', 'پتے کے نیچے سفید روئیں'], ['black_coating', ['leaf', 'fruit'], 'Black sooty coating', 'کالی کالک جیسی تہہ'], ['honeydew', ['leaf'], 'Sticky honeydew, tiny insects under leaves', 'چپچپا مادہ، پتوں کے نیچے کیڑے'],
+  ['black_spike', ['fruit'], 'Black powdery grain heads', 'کالی پاؤڈر جیسی بالیاں'], ['raised_corky', ['leaf', 'fruit'], 'Raised corky lesions', 'ابھرے کھردرے زخم'], ['mottle', ['leaf'], 'Blotchy, uneven yellowing', 'غیر متوازن دھبے دار پیلاہٹ'],
+  ['yellow_veins', ['leaf'], 'Yellow or corky veins', 'پیلی یا کھردری رگیں'], ['yellow_margins', ['leaf'], 'Yellowing leaf margins', 'پتوں کے پیلے کنارے'], ['dark_lesions', ['stem', 'fruit'], 'Dark sunken lesions on stem or fruit', 'تنے یا پھل پر گہرے دھنسے زخم'],
+  ['red_interior', ['stem'], 'Red interior with white patches when split', 'کاٹنے پر سرخ اندرونی حصہ'], ['wilting', ['stem', 'plant'], 'Wilting despite moist soil', 'گیلی مٹی کے باوجود مرجھانا'], ['stunted', ['plant'], 'Stunted growth', 'بڑھوتری رکنا'],
+  ['black_spots_fruit', ['fruit'], 'Black irregular spots on fruit or flowers', 'پھل یا پھول پر کالے دھبے'], ['lopsided_fruit', ['fruit'], 'Small, lopsided, bitter fruit', 'چھوٹا ٹیڑھا کڑوا پھل'], ['premature_drop', ['fruit', 'plant'], 'Premature flower / fruit drop', 'پھول یا پھل کا قبل از وقت گرنا'],
+].map(([id, parts, en, ur]) => ({ id, parts, en, ur }));
+const SYM = Object.fromEntries(SYMPTOMS.map(s => [s.id, s]));
+// disease: id, crops, en, ur, type, sev(1-3), cond, sym (primary), sym2 (secondary), cues{y,b,w}, treat (en[]), treat_ur[], prevent[]
+const DISEASES = [
+  { id: 'clcuv', crops: ['cotton'], en: 'Cotton Leaf Curl Virus (CLCuV)', ur: 'کپاس کا پتہ مروڑ وائرس', type: 'Virus · whitefly-borne', sev: 3, cond: 'Hot humid weather, high whitefly populations, late sowing', sym: ['leaf_curl', 'vein_thick', 'enations'], sym2: ['stunted', 'yellow_margins'], cues: { y: .35, b: .1, w: 0 },
+    treat: ['No chemical cure once infected: rogue out (uproot and bury) infected plants early', 'Control whitefly: yellow sticky traps, neem-based sprays, rotate recommended insecticide groups and follow the label', 'Remove alternate hosts and weeds (okra, tobacco, hollyhock) around the field', 'Avoid late sowing; use CLCuV-tolerant varieties recommended for your zone'],
+    treat_ur: ['وائرس کا کوئی علاج نہیں؛ شروع میں ہی بیمار پودے اکھاڑ کر دبا دیں', 'سفید مکھی قابو کریں: پیلے چپکنے والے کارڈ، نیم کا سپرے، سفارش کردہ زہر باری باری استعمال کریں', 'کھیت کے گرد بھنڈی، تمباکو اور جڑی بوٹیاں ختم کریں', 'دیر سے کاشت نہ کریں؛ اپنے علاقے کی برداشت والی اقسام لگائیں'], prevent: ['Certified seed', 'Sow within the recommended window', 'Scout whitefly weekly from seedling stage'] },
+  { id: 'cotton_blight', crops: ['cotton'], en: 'Bacterial Blight (Angular Leaf Spot)', ur: 'کپاس کا جراثیمی جھلساؤ', type: 'Bacterium', sev: 2, cond: 'Rain splash, warm humid weather, sprinkler irrigation', sym: ['angular_spots', 'water_soaked'], sym2: ['dark_lesions'], cues: { y: .2, b: .6, w: 0 },
+    treat: ['Use acid-delinted, certified seed', 'Spray copper-based bactericide at first symptoms; 2–3 sprays 10 days apart as per label', 'Avoid working in wet fields, it spreads the bacterium', 'Destroy crop residue after harvest; rotate with non-host crops'],
+    treat_ur: ['تیزاب سے صاف شدہ تصدیق شدہ بیج استعمال کریں', 'پہلی علامات پر تانبے والی دوا کا سپرے؛ 10 دن کے وقفے سے 2–3 بار', 'گیلے کھیت میں کام نہ کریں، بیماری پھیلتی ہے', 'فصل کی باقیات تلف کریں؛ فصلوں کا ہیر پھیر کریں'], prevent: ['Clean seed', 'Furrow irrigation', 'Residue management'] },
+  { id: 'sucking_pests', crops: ['cotton', 'chilli', 'tomato'], en: 'Whitefly / Jassid Damage', ur: 'سفید مکھی اور تیلے کا نقصان', type: 'Insect pest', sev: 2, cond: 'Hot dry spells, excessive nitrogen, pyrethroid overuse', sym: ['honeydew', 'yellow_margins'], sym2: ['black_coating', 'leaf_curl'], cues: { y: .5, b: .2, w: .05 },
+    treat: ['Scout 3 leaves per plant weekly; act at the economic threshold (about 5 whitefly adults per leaf)', 'Neem oil or insecticidal soap for light infestations', 'Rotate insecticide groups; avoid pyrethroid overuse which flares whitefly', 'Conserve natural enemies: ladybirds, lacewings, parasitic wasps'],
+    treat_ur: ['ہفتہ وار ہر پودے کے 3 پتے دیکھیں؛ حد (5 سفید مکھی فی پتہ) پر عمل کریں', 'ہلکے حملے پر نیم کا تیل یا صابن کا سپرے', 'زہر کے گروپ بدلتے رہیں', 'دوست کیڑوں کی حفاظت کریں'], prevent: ['Balanced nitrogen', 'Yellow sticky traps', 'Avoid broad-spectrum sprays early season'] },
+  { id: 'yellow_rust', crops: ['wheat'], en: 'Yellow (Stripe) Rust', ur: 'گندم کی پیلی کنگی', type: 'Fungus · Puccinia striiformis', sev: 3, cond: 'Cool 10–15°C, humid, dew; February–March in Punjab', sym: ['yellow_stripes'], sym2: ['yellow_margins', 'stunted'], cues: { y: .75, b: .1, w: 0 },
+    treat: ['Spray a systemic fungicide (propiconazole or tebuconazole) at the first pustules; repeat after 15 days if the weather stays cool and humid', 'Grow rust-resistant varieties released for your zone', 'Avoid excessive nitrogen; do not delay sowing', 'Report early outbreaks to the agriculture department for area-wide response'],
+    treat_ur: ['پہلے دانوں پر ہی سسٹمک پھپھوند کش (پروپیکونازول یا ٹیبوکونازول) سپرے کریں؛ موسم ٹھنڈا نم رہے تو 15 دن بعد دہرائیں', 'اپنے علاقے کی مزاحم اقسام کاشت کریں', 'زیادہ یوریا نہ ڈالیں؛ کاشت میں دیر نہ کریں', 'ابتدائی حملے کی اطلاع محکمہ زراعت کو دیں'], prevent: ['Resistant varieties', 'Timely sowing', 'Scout from tillering'] },
+  { id: 'leaf_rust', crops: ['wheat'], en: 'Leaf (Brown) Rust', ur: 'گندم کی بھوری کنگی', type: 'Fungus · Puccinia triticina', sev: 2, cond: 'Warm 15–25°C, humid weather', sym: ['brown_pustules'], sym2: ['yellow_margins'], cues: { y: .35, b: .45, w: 0 },
+    treat: ['Systemic fungicide at the first pustules on upper leaves', 'Resistant varieties; avoid late sowing', 'Destroy volunteer wheat that carries the fungus between seasons'],
+    treat_ur: ['اوپر کے پتوں پر پہلے دانوں پر سسٹمک پھپھوند کش سپرے', 'مزاحم اقسام؛ دیر سے کاشت نہ کریں', 'خودرو گندم تلف کریں'], prevent: ['Resistant varieties', 'Remove volunteers'] },
+  { id: 'loose_smut', crops: ['wheat'], en: 'Loose Smut', ur: 'کھلی کانگیاری', type: 'Fungus · seed-borne', sev: 2, cond: 'Infection happens at flowering in the previous crop; carried inside the seed', sym: ['black_spike'], sym2: [], cues: { y: .05, b: .4, w: 0 },
+    treat: ['No cure in the standing crop; cut smutted heads into paper bags before the spores blow', 'Treat seed with a systemic fungicide (carboxin or tebuconazole) before sowing', 'Use certified seed from smut-free fields'],
+    treat_ur: ['کھڑی فصل میں علاج نہیں؛ کالی بالیاں کاغذ کے تھیلے میں کاٹ لیں', 'بوائی سے پہلے بیج کو سسٹمک پھپھوند کش لگائیں', 'تصدیق شدہ بیج استعمال کریں'], prevent: ['Seed treatment', 'Certified seed'] },
+  { id: 'rice_blast', crops: ['rice'], en: 'Rice Blast', ur: 'چاول کا بلاسٹ (جھلساؤ)', type: 'Fungus · Magnaporthe oryzae', sev: 3, cond: 'Long leaf wetness, high humidity, excess nitrogen, cool nights', sym: ['spindle_lesions'], sym2: ['dark_lesions', 'wilting'], cues: { y: .15, b: .55, w: .2 },
+    treat: ['Apply tricyclazole or isoprothiolane at the first lesions; protect at booting if blast is active in the area', 'Split nitrogen doses; avoid heavy single applications', 'Keep fields flooded and avoid very dense seeding', 'Use resistant varieties; burn or plough in infected stubble'],
+    treat_ur: ['پہلے دھبوں پر ٹرائی سائکلازول سپرے کریں؛ علاقے میں حملہ ہو تو گوبھ کے وقت بچاؤ کریں', 'یوریا قسطوں میں ڈالیں', 'کھیت میں پانی کھڑا رکھیں؛ گھنی بوائی نہ کریں', 'مزاحم اقسام؛ بیمار مڈھ جلا دیں'], prevent: ['Resistant varieties', 'Balanced N', 'Clean stubble'] },
+  { id: 'rice_blb', crops: ['rice'], en: 'Bacterial Leaf Blight', ur: 'چاول کا جراثیمی جھلساؤ', type: 'Bacterium · Xanthomonas oryzae', sev: 2, cond: 'Storms and flooding, high nitrogen, 25–34°C', sym: ['tip_yellowing', 'water_soaked'], sym2: ['wilting'], cues: { y: .6, b: .25, w: 0 },
+    treat: ['Drain the field and let it dry for a few days, then re-flood', 'Pause nitrogen top-dressing until the disease slows; add potash', 'Copper sprays give limited control; prevention matters more', 'Use resistant varieties and clean seed; remove weed hosts on bunds'],
+    treat_ur: ['کھیت کا پانی نکال کر چند دن خشک کریں پھر پانی دیں', 'یوریا روک دیں؛ پوٹاش ڈالیں', 'تانبے کے سپرے کا اثر محدود ہے؛ بچاؤ زیادہ اہم ہے', 'مزاحم اقسام اور صاف بیج؛ وٹوں پر جڑی بوٹیاں ختم کریں'], prevent: ['Resistant varieties', 'Avoid excess N'] },
+  { id: 'brown_spot', crops: ['rice'], en: 'Brown Spot', ur: 'چاول کا بھورا دھبہ', type: 'Fungus · Bipolaris oryzae', sev: 2, cond: 'Potash/silicon-poor soils, drought stress', sym: ['brown_spots_halo'], sym2: [], cues: { y: .3, b: .6, w: 0 },
+    treat: ['Correct potash and silicon deficiency with balanced fertilizer', 'Treat seed with fungicide, or hot water at 53–54°C for 10 minutes', 'Spray mancozeb or propiconazole if spots spread quickly on the flag leaf'],
+    treat_ur: ['پوٹاش اور سلیکون کی کمی پوری کریں', 'بیج کو پھپھوند کش لگائیں یا 53 ڈگری گرم پانی میں 10 منٹ', 'جھنڈا پتے پر دھبے تیزی سے پھیلیں تو مینکوزیب سپرے'], prevent: ['Balanced nutrition', 'Seed treatment'] },
+  { id: 'citrus_canker', crops: ['citrus'], en: 'Citrus Canker', ur: 'ترشاوہ کینکر', type: 'Bacterium · Xanthomonas citri', sev: 2, cond: 'Warm rainy weather, wind-driven rain, leaf-miner wounds', sym: ['raised_corky', 'brown_spots_halo'], sym2: ['black_spots_fruit', 'premature_drop'], cues: { y: .3, b: .5, w: 0 },
+    treat: ['Copper sprays (oxychloride or hydroxide) on each new flush and after rain', 'Prune and burn infected twigs; disinfect tools between trees', 'Plant windbreaks; control citrus leaf miner which opens wounds', 'Do not move infected nursery plants'],
+    treat_ur: ['ہر نئی پھوٹ اور بارش کے بعد تانبے کا سپرے', 'بیمار ٹہنیاں کاٹ کر جلائیں؛ اوزار جراثیم سے پاک کریں', 'ہوا روک درخت لگائیں؛ لیف مائنر قابو کریں', 'بیمار پنیری نہ منتقل کریں'], prevent: ['Windbreaks', 'Clean nursery stock'] },
+  { id: 'hlb', crops: ['citrus'], en: 'Citrus Greening (HLB)', ur: 'ترشاوہ گرینگ (ایچ ایل بی)', type: 'Bacterium · psyllid-borne', sev: 3, cond: 'Spread by Asian citrus psyllid on new flush', sym: ['mottle', 'lopsided_fruit'], sym2: ['yellow_veins', 'stunted'], cues: { y: .6, b: .1, w: 0 },
+    treat: ['No cure: remove and destroy confirmed trees to protect the orchard', 'Control Asian citrus psyllid on every new flush', 'Replant only with certified disease-free nursery stock', 'Feed trees well to prolong productive life where removal is not possible'],
+    treat_ur: ['علاج نہیں: تصدیق شدہ بیمار درخت ہٹا کر تلف کریں', 'ہر نئی پھوٹ پر سِلّا کیڑا قابو کریں', 'صرف تصدیق شدہ صحت مند پنیری لگائیں', 'ہٹانا ممکن نہ ہو تو درخت کی خوراک کا خیال رکھیں'], prevent: ['Certified stock', 'Psyllid monitoring'] },
+  { id: 'sooty', crops: ['citrus', 'mango'], en: 'Sooty Mold (scale / whitefly)', ur: 'کالی پھپھوندی', type: 'Fungus growing on honeydew', sev: 1, cond: 'Follows sap-sucking insects: scale, mealybug, whitefly', sym: ['black_coating', 'honeydew'], sym2: [], cues: { y: .05, b: .5, w: 0 },
+    treat: ['Control the insects producing honeydew', 'Wash foliage with water and mild soap; the mold flakes off once insects are gone', 'Horticultural oil spray in cool hours'],
+    treat_ur: ['رس چوسنے والے کیڑے قابو کریں', 'پتوں کو پانی اور ہلکے صابن سے دھوئیں', 'ٹھنڈے وقت باغبانی تیل کا سپرے'], prevent: ['Monitor scale and mealybug'] },
+  { id: 'early_blight', crops: ['tomato', 'potato'], en: 'Early Blight', ur: 'ابتدائی جھلساؤ', type: 'Fungus · Alternaria solani', sev: 2, cond: 'Warm humid weather, older leaves, stressed plants', sym: ['target_spots', 'brown_spots_halo'], sym2: ['tip_yellowing'], cues: { y: .3, b: .6, w: 0 },
+    treat: ['Remove lower infected leaves; stake plants for airflow', 'Protectant fungicide (mancozeb or chlorothalonil) every 7–10 days in wet weather', 'Mulch to stop soil splash; use drip rather than sprinkler irrigation', 'Three-year rotation away from tomato and potato'],
+    treat_ur: ['نیچے کے بیمار پتے ہٹائیں؛ پودوں کو سہارا دیں', 'گیلے موسم میں 7–10 دن بعد مینکوزیب سپرے', 'ملچ ڈالیں؛ ڈرپ آبپاشی کریں', 'تین سال ٹماٹر/آلو نہ لگائیں'], prevent: ['Rotation', 'Mulch', 'Healthy transplants'] },
+  { id: 'late_blight', crops: ['tomato', 'potato'], en: 'Late Blight', ur: 'پچھیتا جھلساؤ', type: 'Oomycete · Phytophthora infestans', sev: 3, cond: 'Cool 10–20°C, wet, foggy weather', sym: ['water_soaked', 'white_fuzz_under'], sym2: ['dark_lesions', 'wilting'], cues: { y: .1, b: .4, w: .3 },
+    treat: ['Act fast: bag and destroy badly infected plants', 'Systemic + protectant fungicide (e.g. metalaxyl + mancozeb) at the first sign in blight weather', 'Avoid evening irrigation; improve drainage', 'Use certified seed potato; destroy cull piles and volunteers'],
+    treat_ur: ['فوراً عمل کریں: شدید بیمار پودے تھیلے میں ڈال کر تلف کریں', 'پہلی علامت پر میٹالیکسل + مینکوزیب سپرے', 'شام کو پانی نہ دیں؛ نکاسی بہتر کریں', 'تصدیق شدہ بیج آلو؛ خودرو پودے تلف کریں'], prevent: ['Certified seed', 'Weather-based spray schedule'] },
+  { id: 'leaf_curl_virus', crops: ['tomato', 'chilli'], en: 'Leaf Curl Virus (ToLCV / ChiLCV)', ur: 'پتہ مروڑ وائرس (ٹماٹر/مرچ)', type: 'Virus · whitefly-borne', sev: 3, cond: 'High whitefly pressure, warm weather', sym: ['leaf_curl', 'yellow_margins'], sym2: ['stunted', 'vein_thick'], cues: { y: .5, b: .05, w: 0 },
+    treat: ['Rogue out infected seedlings early', 'Raise nursery under insect-proof net; reflective mulch repels whitefly', 'Whitefly control with rotation of insecticide groups', 'Plant tolerant hybrids'],
+    treat_ur: ['بیمار پنیری شروع میں نکال دیں', 'پنیری جالی کے نیچے اگائیں؛ چمکدار ملچ استعمال کریں', 'سفید مکھی قابو کریں', 'برداشت والی اقسام لگائیں'], prevent: ['Net-house nursery', 'Early roguing'] },
+  { id: 'anthracnose', crops: ['mango'], en: 'Anthracnose', ur: 'آم کا اینتھراکنوز', type: 'Fungus · Colletotrichum', sev: 2, cond: 'Rain during flowering, high humidity', sym: ['black_spots_fruit', 'dark_lesions'], sym2: ['brown_spots_halo', 'premature_drop'], cues: { y: .1, b: .6, w: 0 },
+    treat: ['Prophylactic copper or carbendazim/mancozeb sprays at flowering and fruit set', 'Prune dead twigs and open the canopy', 'Post-harvest hot water dip at 52°C for 5 minutes reduces fruit rot'],
+    treat_ur: ['پھول اور پھل بننے پر تانبے یا کاربنڈازم کا حفاظتی سپرے', 'سوکھی ٹہنیاں کاٹیں؛ چھتری کھلی رکھیں', 'توڑنے کے بعد 52 ڈگری گرم پانی میں 5 منٹ ڈبوئیں'], prevent: ['Canopy management', 'Flowering-time sprays'] },
+  { id: 'mango_pm', crops: ['mango'], en: 'Powdery Mildew', ur: 'آم کی سفوفی پھپھوندی', type: 'Fungus · Oidium mangiferae', sev: 2, cond: 'Cool nights, warm days, low rain during flowering', sym: ['white_powder', 'premature_drop'], sym2: [], cues: { y: .05, b: .05, w: .75 },
+    treat: ['Wettable sulfur or a systemic fungicide at panicle emergence; repeat at fruit set', 'Avoid excess nitrogen; prune for airflow'],
+    treat_ur: ['بور نکلتے وقت گندھک یا سسٹمک پھپھوند کش؛ پھل بننے پر دہرائیں', 'زیادہ یوریا نہ ڈالیں؛ ہوا کے لیے کانٹ چھانٹ'], prevent: ['Sulfur at bud break'] },
+  { id: 'red_rot', crops: ['sugarcane'], en: 'Red Rot', ur: 'گنے کی سرخ سڑن', type: 'Fungus · Colletotrichum falcatum', sev: 3, cond: 'Waterlogging, infected sets, susceptible varieties', sym: ['red_interior', 'tip_yellowing'], sym2: ['wilting'], cues: { y: .4, b: .3, w: 0 },
+    treat: ['No field cure: uproot and burn infected clumps', 'Use disease-free sets; hot water set treatment at 50°C for 2 hours', 'Resistant varieties; avoid ratooning infected fields; rotate with non-host crops'],
+    treat_ur: ['کھیت میں علاج نہیں: بیمار جھنڈ اکھاڑ کر جلائیں', 'صحت مند سیٹ؛ 50 ڈگری گرم پانی میں 2 گھنٹے', 'مزاحم اقسام؛ بیمار کھیت کی مونڈھی نہ رکھیں'], prevent: ['Healthy seed cane', 'Drainage'] },
+  { id: 'chilli_mites', crops: ['chilli'], en: 'Thrips / Mite Leaf Curl', ur: 'مرچ کا پتہ مروڑ (تھرپس / جوں)', type: 'Insect / mite', sev: 2, cond: 'Hot dry weather, water stress', sym: ['leaf_curl'], sym2: ['mottle'], cues: { y: .35, b: .15, w: 0 },
+    treat: ['Identify first: upward curl points to thrips, downward curl to mites', 'Sulfur for mites, spinosad or neem for thrips, sprayed in the evening', 'Avoid water stress; remove weeds around the plot'],
+    treat_ur: ['پہچان: اوپر مڑنا تھرپس، نیچے مڑنا جوں', 'جوں کے لیے گندھک؛ تھرپس کے لیے اسپینوسیڈ یا نیم، شام کو', 'پانی کی کمی نہ ہونے دیں؛ جڑی بوٹیاں ختم کریں'], prevent: ['Regular irrigation', 'Weed control'] },
+];
+const DIS = Object.fromEntries(DISEASES.map(d => [d.id, d]));
+const CROP = Object.fromEntries(CROPS.map(c => [c.id, c]));
+
+// ---------- stage / intake ----------
+const stage = $('#stage'), video = $('#cam'), shot = $('#shot'), overlay = $('#overlay'), work = $('#work');
+let stream = null, hasImage = false, lastAnalysis = null;
+let cropId = store.get('crop', 'cotton');
+function mountStage(slotId) { $('#' + slotId).append(stage); if (stream) video.play().catch(() => {}); }
+function setCamUI(on) { $$('#camBtn,#camBtn2').forEach(b => b.innerHTML = `📷 <span>${on ? t('stop') : t('camera')}</span>`); $$('#snapBtn,#snapBtn2').forEach(b => b.disabled = !on); }
+async function toggleCamera() {
+  if (stream) { stream.getTracks().forEach(tr => tr.stop()); stream = null; video.classList.add('hidden'); setCamUI(false); if (!hasImage) $('#stageEmpty').classList.remove('hidden'); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } }, audio: false });
+    video.srcObject = stream; await video.play(); video.classList.remove('hidden'); shot.classList.add('hidden'); $('#stageEmpty').classList.add('hidden'); stage.classList.remove('show-overlay'); setCamUI(true);
+  } catch (e) { toast('Camera unavailable: ' + e.message, 'bad'); }
+}
+function snap() { if (!stream) return; const c = document.createElement('canvas'); c.width = video.videoWidth; c.height = video.videoHeight; c.getContext('2d').drawImage(video, 0, 0); loadImage(c.toDataURL('image/jpeg', .92)); }
+function loadImage(src, note) {
+  const img = new Image(); img.onload = () => { shot.src = src; shot.classList.remove('hidden'); video.classList.add('hidden'); $('#stageEmpty').classList.add('hidden'); hasImage = true; $('#ovBtn').disabled = false; $('#saveBtn').disabled = false; analyze(img, note); if (stream) { stream.getTracks().forEach(tr => tr.stop()); stream = null; setCamUI(false); } }; img.src = src;
+}
+function readFile(f) { if (!f || !f.type.startsWith('image/')) return; const r = new FileReader(); r.onload = e => loadImage(e.target.result); r.readAsDataURL(f); }
+$$('#camBtn,#camBtn2').forEach(b => b.onclick = toggleCamera); $$('#snapBtn,#snapBtn2').forEach(b => b.onclick = snap);
+$$('#file,#file2').forEach(i => i.onchange = e => { readFile(e.target.files[0]); e.target.value = ''; });
+['dragenter', 'dragover'].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.add('drag'); }));
+['dragleave', 'drop'].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.remove('drag'); }));
+stage.addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
+document.addEventListener('paste', e => { const f = [...(e.clipboardData?.files || [])][0]; if (f) readFile(f); });
+$('#ovBtn').onclick = () => stage.classList.toggle('show-overlay');
+
+// synthetic samples: a leaf drawn on canvas so the pipeline can be demonstrated without a dataset
+function synthLeaf(kind) {
+  const c = document.createElement('canvas'); c.width = 640; c.height = 480; const x = c.getContext('2d');
+  x.fillStyle = kind === 'powdery' ? '#6b5a48' : '#f2efe6'; x.fillRect(0, 0, 640, 480);
+  x.save(); x.translate(320, 240); x.rotate(-.35);
+  const g = x.createLinearGradient(-220, 0, 220, 0); g.addColorStop(0, '#2e7d32'); g.addColorStop(.5, '#43a047'); g.addColorStop(1, '#2f6f2b');
+  const leaf = new Path2D(); leaf.moveTo(-230, 0); leaf.bezierCurveTo(-120, -170, 120, -170, 230, 0); leaf.bezierCurveTo(120, 170, -120, 170, -230, 0);
+  x.fillStyle = g; x.fill(leaf);
+  x.strokeStyle = 'rgba(200,230,170,.6)'; x.lineWidth = 4; x.beginPath(); x.moveTo(-225, 0); x.lineTo(225, 0); x.stroke();
+  x.lineWidth = 1.5; for (let i = -180; i <= 180; i += 36) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 40, -70 * (1 - Math.abs(i) / 260)); x.moveTo(i, 0); x.lineTo(i + 40, 70 * (1 - Math.abs(i) / 260)); x.stroke(); }
+  x.clip(leaf); const R = Math.random;
+  if (kind === 'chlorosis') { for (let i = 0; i < 26; i++) { const px = -200 + R() * 400, py = -110 + R() * 220, r = 18 + R() * 40; const rg = x.createRadialGradient(px, py, 0, px, py, r); rg.addColorStop(0, 'rgba(240,210,60,.95)'); rg.addColorStop(1, 'rgba(240,210,60,0)'); x.fillStyle = rg; x.fillRect(px - r, py - r, 2 * r, 2 * r); } }
+  if (kind === 'spots') { for (let i = 0; i < 22; i++) { const px = -200 + R() * 400, py = -110 + R() * 220, r = 7 + R() * 14; x.fillStyle = 'rgba(230,190,60,.85)'; x.beginPath(); x.arc(px, py, r * 1.7, 0, 7); x.fill(); x.fillStyle = '#6d3b1e'; x.beginPath(); x.arc(px, py, r, 0, 7); x.fill(); x.fillStyle = '#3e2212'; x.beginPath(); x.arc(px, py, r * .45, 0, 7); x.fill(); } }
+  if (kind === 'powdery') { for (let i = 0; i < 1400; i++) { const px = -220 + R() * 440, py = -130 + R() * 260; x.fillStyle = `rgba(255,255,255,${.35 + R() * .5})`; x.beginPath(); x.arc(px, py, 1 + R() * 4, 0, 7); x.fill(); } }
+  x.restore(); return c.toDataURL('image/png');
+}
+$$('[data-sample]').forEach(b => b.onclick = () => loadImage(synthLeaf(b.dataset.sample), t('sample_note')));
+
+// ---------- baseline analyzer: colour segmentation ----------
+function rgb2hsv(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; let h = 0; if (d) { h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360; } return [h, mx ? d / mx : 0, mx]; }
+function analyze(img, note) {
+  stage.classList.add('busy');
+  const W = 320, H = Math.round(W * img.height / img.width); work.width = W; work.height = H;
+  const x = work.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, W, H);
+  const d = x.getImageData(0, 0, W, H).data;
+  // background reference = median colour of a border ring (plain backgrounds are strongly recommended in the protocol)
+  const ring = [], m = Math.max(3, Math.round(Math.min(W, H) * .04));
+  for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) if (xx < m || yy < m || xx >= W - m || yy >= H - m) { const i = (yy * W + xx) * 4; ring.push([d[i], d[i + 1], d[i + 2]]); }
+  const med = k => { const a = ring.map(p => p[k]).sort((p, q) => p - q); return a[a.length >> 1]; };
+  const bg = [med(0), med(1), med(2)];
+  overlay.width = W; overlay.height = H; const o = overlay.getContext('2d'); const od = o.createImageData(W, H), od2 = od.data;
+  const cnt = { green: 0, yellow: 0, brown: 0, white: 0, bg: 0 };
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    const dist = Math.hypot(r - bg[0], g - bg[1], b - bg[2]);
+    let cls;
+    if (dist < 42) cls = 'bg';
+    else { const [h, s, v] = rgb2hsv(r, g, b);
+      if (v < .13) cls = 'brown'; else if (s < .22 && v > .72) cls = 'white'; else if (s < .18) cls = 'bg';
+      else if (h >= 66 && h <= 170) cls = 'green'; else if (h >= 38 && h < 66) cls = 'yellow'; else if (h < 38 || h > 335) cls = 'brown'; else cls = 'bg'; }
+    cnt[cls]++;
+    const col = { bg: [15, 28, 21, 150], green: [0, 0, 0, 0], yellow: [255, 196, 0, 150], brown: [190, 60, 30, 165], white: [255, 255, 255, 170] }[cls];
+    od2[i] = col[0]; od2[i + 1] = col[1]; od2[i + 2] = col[2]; od2[i + 3] = col[3];
+  }
+  o.putImageData(od, 0, 0);
+  const leaf = cnt.green + cnt.yellow + cnt.brown + cnt.white || 1, total = d.length / 4;
+  const p = { green: cnt.green / leaf, yellow: cnt.yellow / leaf, brown: cnt.brown / leaf, white: cnt.white / leaf, bgShare: cnt.bg / total, leafShare: leaf / total };
+  lastAnalysis = { p, health: Math.round(p.green * 100), note, ts: Date.now(), crop: cropId };
+  renderResult(); setTimeout(() => stage.classList.remove('busy'), 600);
+  if (ML.ready) predictML();
+}
+function visualMatches(p, crop) {
+  const list = DISEASES.filter(d => d.crops.includes(crop)).map(d => { const maxW = d.cues.y + d.cues.b + d.cues.w || 1; const score = (d.cues.y * p.yellow + d.cues.b * p.brown + d.cues.w * p.white) / maxW; return { d, score }; });
+  return list.sort((a, b) => b.score - a.score).slice(0, 3);
+}
+function gauge(v) { const r = 48, c = 2 * Math.PI * r, col = v >= 85 ? 'var(--green)' : v >= 60 ? 'var(--amber)' : 'var(--red)'; return `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="12"/><circle cx="60" cy="60" r="${r}" fill="none" stroke="${col}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c * v / 100} ${c}" transform="rotate(-90 60 60)" style="transition:stroke-dasharray .6s"/><text x="60" y="66" text-anchor="middle" font-size="26" font-weight="700" fill="${col}">${v}</text></svg>`; }
+function renderResult() {
+  const a = lastAnalysis, body = $('#resBody');
+  if (!a) { body.innerHTML = `<p class="muted">${t('res_empty')}</p>`; return; }
+  const { p } = a, status = a.health >= 85 ? 'healthy' : a.health >= 60 ? 'mild' : 'severe';
+  const cues = []; if (p.yellow > .12) cues.push(t('cue_yellow')); if (p.brown > .08) cues.push(t('cue_brown')); if (p.white > .1) cues.push(t('cue_white')); if (!cues.length) cues.push(t('cue_none'));
+  const matches = a.health >= 92 ? [] : visualMatches(p, cropId);
+  const bar = (k, v, col) => `<div class="bar"><span>${t(k)}</span><div class="track"><div class="fill" style="width:${(v * 100).toFixed(0)}%;background:${col}"></div></div><span class="n">${(v * 100).toFixed(0)}%</span></div>`;
+  body.innerHTML = `${a.note ? `<div class="pill" style="margin-bottom:10px">${esc(a.note)}</div>` : ''}
+    <div class="gauge">${gauge(a.health)}<div><div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700">${t('health')}</div><div class="big" style="color:${status === 'healthy' ? 'var(--green)' : status === 'mild' ? 'var(--amber)' : 'var(--red)'}">${t(status)}</div><div class="status">${nm(CROP[cropId])} · ${(p.leafShare * 100).toFixed(0)}% leaf · ${(p.bgShare * 100).toFixed(0)}% ${t('bg')}</div></div></div>
+    <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:16px">${t('breakdown')}</div>
+    <div class="bars">${bar('c_green', p.green, 'var(--green)')}${bar('c_yellow', p.yellow, '#f1c40f')}${bar('c_brown', p.brown, '#a0522d')}${bar('c_white', p.white, '#cfd8dc')}</div>
+    <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:16px">${t('cues')}</div><ul style="margin:6px 0 0;padding-left:18px;font-size:.9rem">${cues.map(c => `<li>${c}</li>`).join('')}</ul>
+    ${matches.length ? `<div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:16px">${t('matches')}</div><div class="list" style="margin-top:8px">${matches.map(m => `<div class="match" data-d="${m.d.id}"><div style="flex:1"><b>${esc(nm(m.d))}</b><div class="track" style="margin-top:6px"><div class="fill" style="width:${Math.round(m.score * 100)}%"></div></div></div><span class="pct">${Math.round(m.score * 100)}%</span></div>`).join('')}</div>` : ''}
+    <div class="mlbox" id="mlbox"></div>`;
+  $$('.match', body).forEach(el => el.onclick = () => openDisease(el.dataset.d));
+  renderMLBox();
+}
+$('#saveBtn').onclick = () => {
+  if (!lastAnalysis) return; const c = document.createElement('canvas'); c.width = 160; c.height = 120; c.getContext('2d').drawImage(shot, 0, 0, 160, 120);
+  const hist = store.get('history', []); hist.unshift({ id: uid(), ts: Date.now(), crop: cropId, health: lastAnalysis.health, p: lastAnalysis.p, top: visualMatches(lastAnalysis.p, cropId)[0]?.d.id || null, ml: lastAnalysis.ml || null, thumb: c.toDataURL('image/jpeg', .7) });
+  if (store.set('history', hist.slice(0, 60))) toast(t('saved'), 'ok'); else toast('Storage full', 'bad');
+};
+
+// ---------- ML module (lazy): TF.js + MobileNet feature extractor + KNN head ----------
+// TODO(student): replace the KNN head with a CNN you train offline (Keras → tensorflowjs_converter) on a real, labelled leaf dataset.
+// Keep predictML()'s return shape ({label, confidence}) so the UI keeps working.
+const ML = { ready: false, loading: false, error: null, net: null, knn: null };
+const CDN = ['https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js', 'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js', 'https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier@1.2.6/dist/knn-classifier.min.js'];
+const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('failed ' + src)); document.head.append(s); });
+async function loadML() {
+  if (ML.ready || ML.loading) return; ML.loading = true; ML.error = null; renderMLBox(); renderTrain();
+  try { for (const u of CDN) await loadScript(u); ML.net = await mobilenet.load({ version: 2, alpha: 1 }); ML.knn = knnClassifier.create(); restoreDataset(); ML.ready = true; toast('ML module ready', 'ok'); if (hasImage) predictML(); }
+  catch (e) { ML.error = e.message; }
+  ML.loading = false; renderMLBox(); renderTrain();
+}
+function classesForCrop(c) { return [{ id: 'healthy', en: t('healthy_class'), ur: t('healthy_class') }, ...DISEASES.filter(d => d.crops.includes(c))]; }
+function labelOf(id) { return id === 'healthy' ? t('healthy_class') : nm(DIS[id]) || id; }
+function counts() { return ML.knn ? ML.knn.getClassExampleCount() : {}; }
+function addExample(label) {
+  if (!hasImage) return toast(t('tr_need'), 'bad');
+  const act = ML.net.infer(work, true); ML.knn.addExample(act, label); act.dispose(); persistDataset(); toast(t('tr_added'), 'ok'); renderTrain(); predictML();
+}
+async function predictML() {
+  if (!ML.ready || !hasImage || ML.knn.getNumClasses() === 0) { if (lastAnalysis) lastAnalysis.ml = null; renderMLBox(); return; }
+  const act = ML.net.infer(work, true); const r = await ML.knn.predictClass(act, Math.min(5, ML.knn.getNumClasses() * 2)); act.dispose();
+  if (lastAnalysis) lastAnalysis.ml = { label: r.label, confidence: r.confidences[r.label] };
+  renderMLBox();
+}
+function persistDataset() {
+  const ds = ML.knn.getClassifierDataset(), out = {}; for (const [k, ten] of Object.entries(ds)) out[k] = { shape: ten.shape, data: Array.from(ten.dataSync()).map(v => +v.toFixed(4)) };
+  if (!store.set('knn', out)) toast(t('tr_storage'), 'bad');
+}
+function restoreDataset() { const saved = store.get('knn', null); if (!saved) return; const ds = {}; for (const k in saved) ds[k] = tf.tensor(saved[k].data, saved[k].shape); ML.knn.setClassifierDataset(ds); }
+function renderMLBox() {
+  const box = $('#mlbox'); if (!box) return;
+  const total = Object.values(counts()).reduce((a, b) => a + b, 0);
+  let inner = `<b style="color:var(--violet)">🧠 ${t('ml_title')}</b> `;
+  if (ML.loading) inner += `<div class="status">${t('ml_loading')}</div>`;
+  else if (ML.error) inner += `<div class="status">${t('ml_fail')}</div><button class="btn violet sm" style="margin-top:8px" onclick="loadML()">↻ ${t('ml_enable')}</button>`;
+  else if (!ML.ready) inner += `<div class="status">${t('ml_off')}</div><button class="btn violet sm" style="margin-top:8px" onclick="loadML()">${t('ml_enable')}</button>`;
+  else if (!total) inner += `<div class="status">${t('ml_off')}</div>`;
+  else if (lastAnalysis?.ml) inner += `<div style="font-size:1.1rem;font-weight:700;margin-top:4px">${esc(labelOf(lastAnalysis.ml.label))}</div><div class="status">${Math.round(lastAnalysis.ml.confidence * 100)}% ${t('ml_conf')} · ${total} ${t('ml_examples')}</div>`;
+  else inner += `<div class="status">${total} ${t('ml_examples')}</div>`;
+  box.innerHTML = inner;
+}
+function renderTrain() {
+  const st = $('#mlStatus'), body = $('#trainBody');
+  if (ML.loading) { st.textContent = t('ml_loading'); body.innerHTML = ''; return; }
+  if (!ML.ready) { st.textContent = ML.error ? t('ml_fail') : ''; body.innerHTML = `<button class="btn violet" style="margin-top:10px" onclick="loadML()">${t('ml_enable')}</button>`; return; }
+  st.textContent = `TF.js ${tf.version.tfjs} · MobileNet v2 · backend: ${tf.getBackend()}`;
+  const cls = classesForCrop(cropId), cnt = counts(), total = Object.values(cnt).reduce((a, b) => a + b, 0), max = Math.max(1, ...Object.values(cnt));
+  body.innerHTML = `<label class="f">${t('crop')}</label><select id="trCrop">${CROPS.map(c => `<option value="${c.id}" ${c.id === cropId ? 'selected' : ''}>${esc(nm(c))}</option>`).join('')}</select>
+    <label class="f">${t('tr_class')}</label><select id="trClass">${cls.map(c => `<option value="${c.id}">${esc(labelOf(c.id))}</option>`).join('')}</select>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn violet" id="trAdd">＋ ${t('tr_add')}</button><button class="btn ghost" id="trPredict" ${total ? '' : 'disabled'}>${t('ml_predict')}</button></div>
+    <div class="muted" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:18px">${t('tr_counts')} · ${total}</div>
+    <div class="counts">${Object.keys(cnt).length ? Object.entries(cnt).map(([k, v]) => `<div class="bar"><span style="font-size:.8rem">${esc(labelOf(k))}</span><div class="track"><div class="fill" style="width:${v / max * 100}%;background:var(--violet)"></div></div><span class="n">${v}</span></div>`).join('') : `<div class="status">—</div>`}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button class="btn ghost sm" id="trExport">⬇ ${t('tr_export')}</button><label class="btn ghost sm" for="trImport">⬆ ${t('tr_import')}</label><input type="file" id="trImport" accept="application/json" class="hidden"><button class="btn danger sm" id="trClear">${t('tr_clear')}</button></div>`;
+  $('#trCrop').onchange = e => { cropId = e.target.value; store.set('crop', cropId); $('#cropSel').value = cropId; renderTrain(); };
+  $('#trAdd').onclick = () => addExample($('#trClass').value);
+  $('#trPredict').onclick = predictML;
+  $('#trExport').onclick = () => { const blob = new Blob([JSON.stringify(store.get('knn', {}))], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cropdoctor-knn-dataset.json'; a.click(); };
+  $('#trImport').onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { try { store.set('knn', JSON.parse(ev.target.result)); ML.knn.clearAllClasses(); restoreDataset(); renderTrain(); toast('Dataset imported', 'ok'); } catch { toast('Invalid file', 'bad'); } }; r.readAsText(f); };
+  $('#trClear').onclick = () => { if (!confirm('Clear all training examples?')) return; ML.knn.clearAllClasses(); store.set('knn', null); renderTrain(); renderMLBox(); };
+}
+const PROTOCOL = { en: ['Photograph one leaf per image on a plain background (white paper or dark cloth), in daylight, no flash, filling the frame.', 'Collect at least 30 images per class, from different plants, fields and times of day; include early and late stage symptoms.', 'Label only what an agronomist has confirmed. Keep an “unsure” folder out of training.', 'Hold back 20% of images for testing; never evaluate on training images.', 'Export the dataset regularly: localStorage holds roughly 300 examples.'],
+  ur: ['ہر تصویر میں ایک پتہ سادہ پس منظر (سفید کاغذ یا گہرا کپڑا) پر، دن کی روشنی میں، بغیر فلیش، پورے فریم میں۔', 'ہر کلاس کی کم از کم 30 تصاویر مختلف پودوں، کھیتوں اور اوقات سے؛ ابتدائی اور آخری مرحلے دونوں شامل کریں۔', 'صرف وہ لیبل لگائیں جس کی ماہر زراعت نے تصدیق کی ہو۔', '20 فیصد تصاویر جانچ کے لیے الگ رکھیں۔', 'ڈیٹا باقاعدگی سے برآمد کریں۔'] };
+
+// ---------- symptom wizard ----------
+const sy = { crop: 'cotton', part: 'leaf', sel: new Set() };
+function renderSymptoms() {
+  $('#syCrop').innerHTML = CROPS.map(c => `<button class="chip ${sy.crop === c.id ? 'on' : ''}" data-c="${c.id}">${esc(nm(c))}</button>`).join('');
+  $('#syPart').innerHTML = PARTS.map(p => `<button class="chip ${sy.part === p ? 'on' : ''}" data-p="${p}">${t('p_' + p)}</button>`).join('');
+  const relevant = new Set(DISEASES.filter(d => d.crops.includes(sy.crop)).flatMap(d => [...d.sym, ...d.sym2]));
+  $('#sySym').innerHTML = SYMPTOMS.filter(s => s.parts.includes(sy.part) && relevant.has(s.id)).map(s => `<button class="chip sym ${sy.sel.has(s.id) ? 'on' : ''}" data-s="${s.id}">${esc(nm(s))}</button>`).join('');
+  $$('#syCrop .chip').forEach(b => b.onclick = () => { sy.crop = b.dataset.c; sy.sel.clear(); renderSymptoms(); });
+  $$('#syPart .chip').forEach(b => b.onclick = () => { sy.part = b.dataset.p; renderSymptoms(); });
+  $$('#sySym .chip').forEach(b => b.onclick = () => { sy.sel.has(b.dataset.s) ? sy.sel.delete(b.dataset.s) : sy.sel.add(b.dataset.s); renderSymptoms(); });
+  const out = $('#syOut');
+  if (!sy.sel.size) { out.innerHTML = `<p class="muted">${t('sy_empty')}</p>`; return; }
+  const ranked = DISEASES.filter(d => d.crops.includes(sy.crop)).map(d => {
+    let got = 0, tot = d.sym.length * 2 + d.sym2.length; d.sym.forEach(s => { if (sy.sel.has(s)) got += 2; }); d.sym2.forEach(s => { if (sy.sel.has(s)) got += 1; });
+    const extra = [...sy.sel].filter(s => !d.sym.includes(s) && !d.sym2.includes(s)).length;
+    return { d, score: got / (tot + extra * 1.5), matched: [...sy.sel].filter(s => d.sym.includes(s) || d.sym2.includes(s)) };
+  }).filter(r => r.score > 0).sort((a, b) => b.score - a.score);
+  out.innerHTML = ranked.length ? ranked.map(r => `<div class="match" data-d="${r.d.id}"><div style="flex:1"><b>${esc(nm(r.d))}</b> <span class="pill sev${r.d.sev}">${t('severity')} ${r.d.sev}/3</span><div class="muted" style="font-size:.8rem;margin-top:3px">${r.matched.map(s => esc(nm(SYM[s]))).join(' · ')}</div><div class="track" style="margin-top:6px"><div class="fill" style="width:${Math.round(r.score * 100)}%;background:var(--violet)"></div></div></div><span class="pct">${Math.round(r.score * 100)}%</span></div>`).join('') : `<p class="muted">${t('sy_empty')}</p>`;
+  $$('.match', out).forEach(el => el.onclick = () => openDisease(el.dataset.d));
+}
+$('#syReset').onclick = () => { sy.sel.clear(); renderSymptoms(); };
+
+// ---------- library + modal ----------
+let libCrop = 'all';
+function renderLibrary() {
+  $('#libCrop').innerHTML = `<button class="chip ${libCrop === 'all' ? 'on' : ''}" data-c="all">${t('lib_all')}</button>` + CROPS.map(c => `<button class="chip ${libCrop === c.id ? 'on' : ''}" data-c="${c.id}">${esc(nm(c))}</button>`).join('');
+  $$('#libCrop .chip').forEach(b => b.onclick = () => { libCrop = b.dataset.c; renderLibrary(); });
+  const list = DISEASES.filter(d => libCrop === 'all' || d.crops.includes(libCrop));
+  $('#libGrid').innerHTML = list.map(d => `<article class="dcard" data-d="${d.id}"><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill">${d.crops.map(c => esc(nm(CROP[c]))).join(' · ')}</span><span class="pill sev${d.sev}">${t('severity')} ${d.sev}/3</span></div><h3>${esc(d.en)}</h3><div class="ur">${esc(d.ur)}</div><p>${d.sym.map(s => esc(SYM[s].en)).join(' · ')}</p></article>`).join('');
+  $$('.dcard').forEach(el => el.onclick = () => openDisease(el.dataset.d));
+}
+function openDisease(id) {
+  const d = DIS[id];
+  $('#mHead').innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><span class="pill">${d.crops.map(c => esc(nm(CROP[c]))).join(' · ')}</span><span class="pill sev${d.sev}">${t('severity')} ${d.sev}/3</span><span class="pill">${esc(d.type)}</span></div><h2>${esc(d.en)}</h2><div class="ur" style="color:var(--green-deep)">${esc(d.ur)}</div>`;
+  $('#mBody').innerHTML = `<h4>${t('conditions')}</h4><p style="margin:0">${esc(d.cond)}</p>
+    <h4>${t('sym_list')}</h4><ul>${d.sym.map(s => `<li><b>${esc(nm(SYM[s]))}</b></li>`).join('')}${d.sym2.map(s => `<li class="muted">${esc(nm(SYM[s]))}</li>`).join('')}</ul>
+    <h4>${t('treat')}</h4><ol>${d.treat.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+    <h4 style="display:flex;align-items:center;gap:10px">${t('treat_ur')} <button class="btn ghost sm" id="speak">🔊 ${t('listen')}</button></h4><div class="urbox ur"><ol>${d.treat_ur.map(s => `<li>${esc(s)}</li>`).join('')}</ol></div>
+    <h4>${t('prevent')}</h4><ul>${d.prevent.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+    <div style="margin-top:18px;display:flex;gap:8px"><button class="btn ghost sm" onclick="window.print()">🖨 ${t('print')}</button></div>`;
+  $('#speak').onclick = () => speakUrdu(d.treat_ur.join('۔ '));
+  $('#modalScrim').classList.add('on');
+}
+// TODO(student): Web Speech voices for ur-PK are missing on many devices. Record human Urdu audio per treatment card and ship it as small MP3/Opus files, falling back to TTS.
+function speakUrdu(text) {
+  if (!('speechSynthesis' in window)) return toast('Speech not supported', 'bad');
+  speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'ur-PK'; u.rate = .9;
+  const v = speechSynthesis.getVoices().find(v => /^ur/i.test(v.lang)) || speechSynthesis.getVoices().find(v => /^hi/i.test(v.lang)); if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+$('#mClose').onclick = () => $('#modalScrim').classList.remove('on');
+$('#modalScrim').onclick = e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('on'); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modalScrim').classList.remove('on'); });
+
+// ---------- history ----------
+function renderHistory() {
+  const hist = store.get('history', []);
+  $('#hist').innerHTML = hist.length ? hist.map(h => `<div class="hcard"><img src="${h.thumb}" alt=""><div class="b"><div style="display:flex;justify-content:space-between;align-items:center"><b>${esc(nm(CROP[h.crop]))}</b><span class="pill ${h.health >= 85 ? 'sev1' : h.health >= 60 ? 'sev2' : 'sev3'}">${h.health}</span></div><div class="muted">${new Date(h.ts).toLocaleString()}</div>${h.top ? `<div style="margin-top:4px">👁 ${esc(nm(DIS[h.top]))}</div>` : ''}${h.ml ? `<div>🧠 ${esc(labelOf(h.ml.label))} · ${Math.round(h.ml.confidence * 100)}%</div>` : ''}<button class="btn danger sm" style="margin-top:8px" data-del="${h.id}">${t('delete')}</button></div></div>`).join('') : `<p class="muted">${t('hi_empty')}</p>`;
+  $$('[data-del]').forEach(b => b.onclick = () => { store.set('history', store.get('history', []).filter(h => h.id !== b.dataset.del)); renderHistory(); });
+}
+$('#histExport').onclick = () => { const blob = new Blob([JSON.stringify(store.get('history', []), null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cropdoctor-history.json'; a.click(); };
+$('#histClear').onclick = () => { if (confirm('Delete all saved scans?')) { store.set('history', []); renderHistory(); } };
+
+// ---------- about ----------
+const TODOS = [
+  ['Real CNN model', 'Train a convolutional network on a labelled dataset (PlantVillage + your own field photos), convert with tensorflowjs_converter and load it with tf.loadGraphModel(). Replace the KNN head; report accuracy, confusion matrix and per-class recall.', 'ML'],
+  ['Leaf segmentation', 'The baseline uses a border-colour heuristic. Implement GrabCut-style or a tiny U-Net to isolate the leaf on cluttered field backgrounds.', 'CV'],
+  ['Field dataset app', 'Add GPS, date, crop stage and farmer consent to each capture; upload to a backend that an agronomist can label. This dataset is the real FYP contribution.', 'backend'],
+  ['Agronomist review queue', 'Let farmers submit uncertain scans to an expert; show the verdict back in History and feed it into training.', 'product'],
+  ['Outbreak map', 'Aggregate anonymised scans by tehsil on a Leaflet map to show where a disease is spreading week by week.', 'maps'],
+  ['Recorded Urdu audio', 'TTS voices for Urdu are unreliable; record treatment cards in Urdu, Sindhi and Punjabi and cache them for offline playback.', 'UX'],
+  ['Weather-aware alerts', 'Pull local temperature and humidity and warn when conditions favour rust, blast or late blight before symptoms appear.', 'data'],
+  ['Offline PWA', 'Service worker that caches the app and model weights so the scanner works in the field without signal.', 'platform'],
+];
+function renderAbout() {
+  $('#about').innerHTML = `<div class="card"><h2>${t('ab_title')}</h2>
+    <p class="muted">One agriculture extension officer serves thousands of farmers in Pakistan. By the time cotton leaf curl or wheat rust is diagnosed it has often spread across the field. Crop Doctor puts a first-line screening tool on any phone.</p>
+    <h4 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:14px 0 6px">Pipeline</h4>
+    <div class="steps"><div>Image intake: camera, upload, drag-drop, paste, or synthetic samples for demos.</div><div>Baseline analyzer (offline, no dependencies): background removal by border-colour reference, HSV classification of leaf pixels into green / yellow / brown / white, health index and colour-cue matching against the knowledge base.</div><div>Optional ML second opinion: MobileNet v2 features + KNN head trained in the browser; dataset persisted in localStorage and exportable as JSON.</div><div>Symptom wizard: weighted matching of observed symptoms against 19 diseases across 9 crops.</div><div>Bilingual treatment cards with spoken Urdu and print layout.</div></div>
+    <p class="muted" style="font-size:.85rem;margin-top:14px">Disclaimer: colour analysis is a screening aid, not a diagnosis. Pesticide names are examples; always follow the product label and local extension advice.</p></div>
+    <div><h3 style="margin:0 0 10px">${t('ab_todo')}</h3><div class="list">${TODOS.map(([h, b, tag]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div></div>`).join('')}</div></div>`;
+}
+
+// ---------- nav / i18n / boot ----------
+const PAGES = ['scan', 'symptoms', 'train', 'library', 'history', 'about'];
+function go(page) {
+  if (!PAGES.includes(page)) page = 'scan';
+  $$('section[data-page]').forEach(s => s.classList.toggle('on', s.dataset.page === page));
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.page === page));
+  mountStage(page === 'scan' ? 'stageSlot' : page === 'train' ? 'trainStageSlot' : 'stageParking'); if (page === 'train') renderTrain();
+  if (page === 'symptoms') renderSymptoms(); if (page === 'library') renderLibrary(); if (page === 'history') renderHistory(); if (page === 'about') renderAbout();
+  if (location.hash !== '#' + page) history.replaceState(null, '', '#' + page);
+}
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English';
+  $('#tabs').innerHTML = PAGES.map(p => `<button data-page="${p}">${t('nav_' + p)}</button>`).join('');
+  $$('#tabs button').forEach(b => b.onclick = () => go(b.dataset.page));
+  $('#cropSel').innerHTML = CROPS.map(c => `<option value="${c.id}" ${c.id === cropId ? 'selected' : ''}>${esc(nm(c))}</option>`).join('');
+  $('#protocol').innerHTML = PROTOCOL[lang].map(s => `<div>${esc(s)}</div>`).join('');
+  setCamUI(!!stream); renderResult(); go((location.hash || '#scan').slice(1));
+}
+$('#cropSel').onchange = e => { cropId = e.target.value; store.set('crop', cropId); renderResult(); };
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+applyLang();
+</script>
+</body>
+</html>
