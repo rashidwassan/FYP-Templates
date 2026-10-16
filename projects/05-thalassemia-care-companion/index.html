@@ -1,0 +1,1167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thalassemia Care Companion</title>
+<meta name="description" content="Transfusion log with next-transfusion prediction, ferritin and chelation tracking, daily adherence calendar, carrier screening tools and a printable clinician summary for thalassemia patients in Pakistan. Single-file FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: lavender, teal, calm clinical ---------- */
+:root{
+  --bg:#f5f3fb; --surface:#ffffff; --surface-2:#f0ecf9; --ink:#231d3b; --muted:#6c6684; --line:#e3deef;
+  --violet:#6d4fc2; --violet-deep:#51389c; --violet-soft:#ebe5fa; --violet-ink:#3f2b7d;
+  --teal:#128f80; --teal-deep:#0d6f63; --teal-soft:#dff3ef;
+  --ok:#2e7d4f; --ok-soft:#e2f3e8; --warn:#a9640a; --warn-soft:#fdf0d8; --bad:#c23b32; --bad-soft:#fbe4e1; --info:#3b5bdb; --info-soft:#e6eafb;
+  --rose:#b3457a; --amber:#c98a1c;
+  --radius:16px; --radius-sm:10px; --shadow:0 12px 32px -22px rgba(61,43,125,.35);
+  --font:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --font-ur:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--violet-deep)}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.01em}
+.ur{font-family:var(--font-ur);line-height:1.9;font-weight:400}
+.rtl{direction:rtl;text-align:right}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+.ic.lg{width:1.5em;height:1.5em}
+.kicon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--violet-soft);color:var(--violet-deep);flex:none}
+.kicon.teal{background:var(--teal-soft);color:var(--teal-deep)} .kicon.warn{background:var(--warn-soft);color:var(--warn)} .kicon.bad{background:var(--bad-soft);color:var(--bad)} .kicon.ok{background:var(--ok-soft);color:var(--ok)}
+.emptyic{width:48px;height:48px;border-radius:14px;background:var(--violet-soft);color:var(--violet-deep);display:grid;place-items:center;margin:0 auto 10px}
+.emptyic .ic{width:24px;height:24px}
+
+/* ---------- Motion kit ---------- */
+:root{--ease:cubic-bezier(.2,.8,.2,1);--dur:.35s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+.enter{animation:fadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}
+.fine{font-size:.8rem;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Top bar ---------- */
+.topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:10px 18px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--violet),var(--violet-deep));display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 8px 18px -10px rgba(109,79,194,.8)}
+.brand h1{font-size:1.05rem;font-weight:700;white-space:nowrap;color:var(--violet-ink)}
+.brand small{display:block;font-size:.74rem;color:var(--muted);font-weight:500}
+.brand h1.ur{font-size:1.05rem;line-height:2.2;font-weight:700;padding-top:6px} .brand small.ur{line-height:1.9;font-size:.78rem;padding-bottom:4px}
+.kpi .k .ur,.tabs a .ur,.btn .ur,.pill .ur,.chip .ur{line-height:1.6}
+.spacer{flex:1}
+.datebadge{font-size:.8rem;color:var(--muted);white-space:nowrap;background:var(--surface-2);border-radius:999px;padding:6px 12px}
+.lang{background:var(--violet);color:#fff;border:0;border-radius:10px;padding:8px 13px;font-weight:700;cursor:pointer;min-height:38px}
+.iconbtn{background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:7px 11px;cursor:pointer;min-height:38px;font-weight:600}
+
+/* ---------- Layout: patient rail + main ---------- */
+.layout{display:grid;grid-template-columns:268px minmax(0,1fr);gap:22px;max-width:1380px;margin:0 auto;padding:20px 18px 70px;min-width:0}
+.rail{position:sticky;top:76px;align-self:start;display:flex;flex-direction:column;gap:10px;min-width:0}
+.railhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px}
+.railhead h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.pcard{display:flex;gap:11px;align-items:center;background:var(--surface);border:1px solid var(--line);border-left:4px solid transparent;border-radius:14px;padding:11px 12px;cursor:pointer;text-align:left;width:100%;box-shadow:var(--shadow);transition:border-color .15s,transform .15s;min-width:0}
+.pcard:hover{transform:translateY(-1px);border-color:var(--violet-soft);border-left-color:var(--violet-soft)}
+.pcard.on{border-left-color:var(--violet);background:linear-gradient(90deg,var(--violet-soft),var(--surface) 70%)}
+.pcard .nm{font-weight:700;font-size:.97rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .sub{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .who{min-width:0;flex:1;display:flex;flex-direction:column}
+.pcard .nm,.pcard .sub{display:block}
+.pcard .dots{display:flex;gap:3px;margin-top:4px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot.bad{background:var(--bad)} .dot.warn{background:var(--warn)} .dot.info{background:var(--info)} .dot.ok{background:var(--ok)}
+.avatar{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--violet),var(--violet-deep));flex:none;font-size:.95rem}
+.avatar.f{background:linear-gradient(135deg,#c75d9b,var(--rose))}
+.avatar.big{width:56px;height:56px;border-radius:16px;font-size:1.2rem}
+.bgtag{display:inline-block;background:var(--violet-ink);color:#fff;border-radius:8px;padding:2px 8px;font-weight:700;font-size:.82rem;letter-spacing:.02em}
+.railnote{font-size:.8rem;color:var(--muted);padding:6px 4px}
+.railnote a{font-weight:600}
+
+/* ---------- Patient header + tabs ---------- */
+.phead{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow);margin-bottom:14px;flex-wrap:wrap}
+.phead h2{font-size:1.3rem;font-weight:700}
+.phead .meta{font-size:.86rem;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.phead .who{flex:1;min-width:200px}
+.phead .acts{display:flex;gap:8px;flex-wrap:wrap}
+.phead .meta .pill{white-space:normal;text-align:left}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:18px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{padding:10px 13px;white-space:nowrap;font-weight:600;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;font-size:.92rem;min-height:42px;display:inline-flex;align-items:center;gap:6px}
+.tabs a:hover{color:var(--violet-ink)}
+.tabs a.on{color:var(--violet-deep);border-bottom-color:var(--violet)}
+.tabs .sep{width:1px;background:var(--line);margin:8px 6px;flex:none}
+
+/* ---------- Components ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);min-width:0}
+.panel h3{font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.panel p.lead{margin:0 0 12px;color:var(--muted);font-size:.92rem}
+.panel+.panel,.stack>*+*{margin-top:14px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:16px;align-items:start}
+.two.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.two.wide{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 14px}
+.cols.tight{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpis.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);min-width:0}
+.kpi .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.kpi .v{font-size:1.55rem;font-weight:700;margin-top:4px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi .v small{font-size:.85rem;font-weight:600;color:var(--muted);letter-spacing:0}
+.kpi .s{font-size:.8rem;color:var(--muted);margin-top:4px}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:.75rem;font-weight:700;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.info{background:var(--info-soft);color:var(--info)} .pill.violet{background:var(--violet-soft);color:var(--violet-deep)} .pill.teal{background:var(--teal-soft);color:var(--teal-deep)}
+label.f{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin:10px 0 5px}
+select,input[type=number],input[type=text],input[type=date],input[type=time],input[type=tel],textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 11px;outline:0;min-height:40px}
+select:focus,input:focus,textarea:focus{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-soft)}
+textarea{min-height:70px;resize:vertical}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;background:var(--violet);color:#fff;display:inline-flex;align-items:center;gap:8px;min-height:40px;white-space:nowrap;text-decoration:none;transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s,filter .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px -12px rgba(61,43,125,.6)} .btn:active{transform:translateY(0) scale(.98)}
+.btn:focus-visible,.chip:focus-visible,.tabs a:focus-visible,.pcard:focus-visible,.heat .c:focus-visible{outline:3px solid var(--violet-soft);outline-offset:1px}
+.panel,.kpi{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 16px 36px -22px rgba(61,43,125,.5)}
+.fill,.riskbar span{transition:width .6s var(--ease),flex-basis .6s var(--ease)}
+.heat .c{transition:transform .15s var(--ease),filter .15s}
+.heat .c:not(.f):active{transform:scale(.9)}
+.tabs a{transition:color .15s,border-color .2s var(--ease)}
+.chip{transition:background .15s,color .15s,transform .15s var(--ease)} .chip:active{transform:scale(.97)}
+.btn.teal{background:var(--teal)} .btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)} .btn.danger{background:var(--bad-soft);color:var(--bad)} .btn.ok{background:var(--ok-soft);color:var(--ok)}
+.btn.sm{padding:6px 11px;font-size:.82rem;border-radius:8px;min-height:34px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:0;background:none;padding:8px 12px;cursor:pointer;font-weight:600;font-size:.85rem;min-height:40px}
+.seg button.on{background:var(--violet);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:7px 12px;font-size:.84rem;font-weight:600;cursor:pointer;min-height:36px}
+.chip.on{background:var(--violet);border-color:var(--violet);color:#fff}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:var(--surface);flex-wrap:wrap}
+.row.done{opacity:.6}
+.row .l{min-width:0;flex:1}
+.empty{padding:26px;text-align:center;color:var(--muted);background:var(--surface-2);border:1px dashed var(--line);border-radius:12px}
+.alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 12px;border-left:4px solid;font-size:.9rem}
+.alert.bad{background:var(--bad-soft);border-color:var(--bad)} .alert.warn{background:var(--warn-soft);border-color:var(--warn)} .alert.info{background:var(--info-soft);border-color:var(--info)} .alert.ok{background:var(--ok-soft);border-color:var(--ok)}
+.alert b{display:block}
+.note{background:var(--violet-soft);border-left:4px solid var(--violet);padding:10px 12px;border-radius:10px;font-size:.88rem}
+.warnbox{background:var(--warn-soft);border-left:4px solid var(--warn);padding:10px 12px;border-radius:10px;font-size:.88rem}
+.edu{background:linear-gradient(135deg,var(--violet-soft),var(--teal-soft));border-radius:14px;padding:14px 16px;margin-top:14px}
+.edu h4{font-size:.98rem;margin-bottom:4px;color:var(--violet-ink)}
+.edu p{margin:0;font-size:.9rem}
+.edu.ur h4{font-size:1.1rem}
+.edu.ur p{font-size:1rem}
+.todo{border:1px dashed var(--violet);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.todo h4{margin:0 0 4px;font-size:.95rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.todo .tag{font-size:.68rem;background:var(--violet);color:#fff;border-radius:6px;padding:2px 6px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.todo code{background:var(--surface-2);border-radius:5px;padding:1px 5px;font-size:.82rem}
+.bigstat{font-size:2rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+/* ---------- Tables ---------- */
+.tablewrap{overflow:auto;border-radius:12px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;background:var(--surface)}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line);font-size:.88rem;vertical-align:middle}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:var(--surface-2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---------- Charts ---------- */
+.chart{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 4px 2px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart svg text{font-family:var(--font)}
+.chart .tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:8px;padding:6px 9px;font-size:.78rem;transform:translate(-50%,-112%);white-space:nowrap;display:none;z-index:2;line-height:1.4}
+.chart .pt{transition:r .15s var(--ease)} .chart .pt.hot{r:7}
+td.bad{color:var(--bad);font-weight:700}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;margin:8px 4px 0;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.legend i.sq{border-radius:2px}
+.legend i.ln{width:14px;height:0;border-top:2px dashed var(--muted);border-radius:0}
+.heat{display:grid;gap:4px;align-items:center}
+.heat .hl,.heat .dl{font-size:.68rem;color:var(--muted);text-align:center;white-space:nowrap}
+.heat .dl{text-align:right;padding-right:4px}
+.heat .c{aspect-ratio:1;border-radius:5px;border:0;background:var(--surface-2);cursor:pointer;padding:0;min-width:0;width:100%}
+.heat .c.t{background:var(--teal)} .heat .c.m{background:var(--rose)} .heat .c.f{background:transparent;border:1px dashed var(--line);cursor:default} .heat .c.today{outline:2px solid var(--violet);outline-offset:1px}
+.heat .c:not(.f):hover{filter:brightness(.9)}
+.bar{display:grid;grid-template-columns:130px 1fr 36px;gap:10px;align-items:center;margin:8px 0;font-size:.88rem}
+.bar .lbl{display:flex;align-items:center;gap:7px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .lbl i{width:10px;height:10px;border-radius:3px;flex:none}
+.bar .track{height:14px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.bar .fill{height:100%;border-radius:999px}
+.bar .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+.punnett{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;max-width:360px;margin:10px 0}
+.punnett .h{display:grid;place-items:center;font-weight:700;color:var(--muted);font-size:.9rem;padding:6px}
+.punnett .cell{border-radius:12px;padding:12px 8px;text-align:center;font-weight:700;border:1px solid var(--line)}
+.punnett .cell small{display:block;font-weight:600;font-size:.74rem;color:var(--muted);margin-top:2px}
+.punnett .cell.AA{background:var(--ok-soft)} .punnett .cell.Aa{background:var(--warn-soft)} .punnett .cell.aa{background:var(--bad-soft)}
+.riskbar{display:flex;height:22px;border-radius:999px;overflow:hidden;margin-top:10px;gap:2px;background:var(--surface)}
+.riskbar span{display:grid;place-items:center;font-size:.72rem;font-weight:700;color:#fff;min-width:0}
+.riskbar .AA{background:var(--ok)} .riskbar .Aa{background:var(--warn)} .riskbar .aa{background:var(--bad)}
+.verdict{border-radius:14px;padding:14px 16px;margin-top:12px;border:1px solid var(--line)}
+.verdict.ok{background:var(--ok-soft)} .verdict.warn{background:var(--warn-soft)} .verdict.bad{background:var(--bad-soft)} .verdict.info{background:var(--info-soft)}
+.verdict .big{font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
+
+/* ---------- Summary sheet ---------- */
+.sheet{padding:24px 28px}
+.sheethead{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--violet);padding-bottom:12px;margin-bottom:14px}
+.sheet h3{font-size:.95rem;text-transform:uppercase;letter-spacing:.07em;color:var(--violet-ink);margin:18px 0 8px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px 16px}
+.facts div{font-size:.9rem} .facts .eyebrow{margin-bottom:2px}
+
+/* ---------- Modal / toasts ---------- */
+.scrim{position:fixed;inset:0;background:rgba(35,29,59,.45);backdrop-filter:blur(2px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
+.scrim.on{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:620px;max-height:92vh;overflow:auto;padding:22px;box-shadow:0 30px 80px -30px rgba(0,0,0,.5);transform:translateY(12px) scale(.97);transition:transform .3s var(--ease)}
+.scrim.on .modal{transform:none}
+.modal h3{font-size:1.2rem;margin-bottom:4px}
+.modal .acts{margin-top:16px;justify-content:flex-end}
+.share{white-space:pre-wrap;background:var(--surface-2);border-radius:12px;padding:12px 14px;font-size:.88rem;border:1px solid var(--line);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;max-width:calc(100vw - 32px)}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);animation:toastIn .3s var(--ease) both;font-size:.9rem;display:flex;align-items:center;gap:8px}
+.toast.ok{background:var(--teal)} .toast.bad{background:var(--bad)}
+.toast.out{animation:toastOut .3s var(--ease) forwards}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))} .kpis.four{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:14px;padding:14px 14px 60px}
+  .rail{position:static;flex-direction:row;overflow-x:auto;align-items:center;padding-bottom:6px;scrollbar-width:thin}
+  .railhead{flex:none;flex-direction:column;align-items:flex-start;gap:6px}
+  .railhead h3{display:none}
+  .pcard{flex:none;width:220px}
+  .railnote{display:none}
+  .two,.two.even,.two.wide{grid-template-columns:minmax(0,1fr)}
+  .kpis,.kpis.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .datebadge{display:none}
+  .brand small{display:none}
+  .brand h1{font-size:.95rem;white-space:normal}
+  .phead{padding:12px 14px}
+  .bar{grid-template-columns:110px 1fr 30px}
+  .sheet{padding:16px}
+}
+@media (max-width:480px){.kpi .v{font-size:1.3rem}}
+
+/* ---------- Print ---------- */
+@media print{
+  .topbar,.rail,.tabs,.phead .acts,#toasts,.scrim,.noprint{display:none!important}
+  .layout{display:block;padding:0;max-width:none}
+  body{background:#fff;font-size:12px;color:#000}
+  .panel,.kpi,.chart,.sheet,.tablewrap{box-shadow:none;border-color:#bbb;break-inside:avoid}
+  .phead{border:0;padding:0 0 8px;margin-bottom:8px}
+  .edu{background:#f3f3f3}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Inline SVG icon sprite (Lucide-style, 24×24, stroke 2). Render with ic('name'). -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+<symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.7a2 2 0 0 1 1.7 2z"/></symbol>
+<symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.3L4.6 18.4A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.7-2.6L14 9.3V3"/><path d="M7 15h10"/></symbol>
+<symbol id="i-calculator" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5a5.5 5.5 0 0 0-10 3.5c0 2.3 1.5 4 3 5.5l7 7Z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+<symbol id="i-trending-down" viewBox="0 0 24 24"><path d="m22 17-8.5-8.5-5 5L2 7M16 17h6v-6"/></symbol>
+<symbol id="i-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01M15 12h.01M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-3"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<!-- custom symbols in the same style -->
+<symbol id="i-magnet" viewBox="0 0 24 24"><path d="M6 15a6 6 0 0 0 12 0V4h-4v11a2 2 0 0 1-4 0V4H6Z"/><path d="M6 8h4M14 8h4"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H7a5 5 0 0 1-.6-9.96A7 7 0 0 1 20 11.5a3.75 3.75 0 0 1-2.5 7.5Z"/></symbol>
+<symbol id="i-ruler" viewBox="0 0 24 24"><path d="m3 17 14-14 4 4L7 21Z"/><path d="m7.5 12.5 1.5 1.5M10.5 9.5 12 11M13.5 6.5 15 8"/></symbol>
+<symbol id="i-dna" viewBox="0 0 24 24"><path d="M6 3c0 6 12 6 12 12M18 3c0 6-12 6-12 12M6 15c0 2 0 4 0 6M18 15c0 2 0 4 0 6M7 7h10M7 11h10M7 17h10"/></symbol>
+<symbol id="i-whatsapp" viewBox="0 0 24 24"><path d="M3 21l1.6-4.7A9 9 0 1 1 8 19.5Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1.2-1.4-1.8-1-1 .8a3.8 3.8 0 0 1-2.1-2.1l.8-1-1-1.8Z"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s-6 6.5-6 11a6 6 0 0 0 12 0c0-4.5-6-11-6-11Z"/><path d="M9.5 14.5c.5 1.5 1.5 2.3 2.5 2.3"/></svg></div>
+    <div><h1 id="brandTitle">Thalassemia Care Companion</h1><small id="brandTag">Transfusions · iron · adherence · screening</small></div>
+  </div>
+  <div class="spacer"></div>
+  <span class="datebadge" id="dateBadge"></span>
+  <button class="iconbtn noprint" id="printBtn" title="Print summary" aria-label="Print summary"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg></button>
+  <button class="lang" id="langBtn" title="Switch language">اردو</button>
+</header>
+
+<div class="layout">
+  <aside class="rail" id="rail" aria-label="Patients"></aside>
+  <main id="main">
+    <div id="phead"></div>
+    <nav class="tabs" id="tabs"></nav>
+    <section id="view" aria-live="polite"></section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Thalassemia Care Companion — single-file app
+   Sections: utils · i18n · domain · seed data · store · computations ·
+             charts · views · modals · reminders · router
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+
+// ---------- utils ----------
+const NS = 'thal:';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const toast = (msg, type = '') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = ic(type === 'ok' ? 'check-circle' : type === 'bad' ? 'alert-circle' : 'info') + `<span>${esc(msg)}</span>`; $('#toasts').append(t); setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 3200); };
+// motion helpers (all honour prefers-reduced-motion through the CSS block)
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i))); };
+const countUp = (el, to, { dur = 700, fmt = v => Math.round(v).toLocaleString('en-PK') } = {}) => { if (!el) return; const t0 = performance.now(); const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const drawPath = p => { try { const L = p.getTotalLength(); if (!L) return; p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; } catch { /* path not rendered yet */ } };
+const animateFills = root => { $$('.fill[data-w], .riskbar span[data-w]', root).forEach(el => { requestAnimationFrame(() => requestAnimationFrame(() => { el.style.width = el.dataset.w; })); }); };
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const DAY = 864e5;
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const pad = n => String(n).padStart(2, '0');
+const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseDate = k => { const [y, m, d] = String(k).split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const daysBetween = (a, b) => Math.round((b - a) / DAY);
+const TODAY = dateKey(today);
+const fmtDate = (k, o) => (k instanceof Date ? k : parseDate(k)).toLocaleDateString('en-GB', o || { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtShort = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+const r1 = n => Math.round(n * 10) / 10;
+const nf = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 });
+const initials = n => String(n).trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+const ageOf = dob => { const b = parseDate(dob); let y = today.getFullYear() - b.getFullYear(); const m = today.getMonth() - b.getMonth(); if (m < 0 || (m === 0 && today.getDate() < b.getDate())) y--; return Math.max(0, y); };
+const debounce = (fn, ms) => { let h; return (...a) => { clearTimeout(h); h = setTimeout(() => fn(...a), ms); }; };
+
+// ---------- i18n ----------
+// TODO(student): add more languages (Sindhi, Pashto, Punjabi/Shahmukhi, Balochi) as new keys here, e.g. L.sd = {...}.
+// Have every patient-facing education string reviewed by a clinician before release.
+const L = {
+  en: {
+    title: 'Thalassemia Care Companion', tagline: 'Transfusions · iron · adherence · screening',
+    nav_overview: 'Overview', nav_transfusions: 'Transfusions', nav_iron: 'Iron & chelation', nav_adherence: 'Adherence', nav_appointments: 'Appointments', nav_summary: 'Print summary', nav_screening: 'Screening', nav_about: 'About',
+    patients: 'Patients', addPatient: 'Add patient', editPatient: 'Edit patient', deletePatient: 'Delete patient', requestBlood: 'Request blood', print: 'Print', save: 'Save', cancel: 'Cancel', delete: 'Delete', add: 'Add', close: 'Close', edit: 'Edit', copy: 'Copy text', copied: 'Copied to clipboard', years: 'y', kg: 'kg', male: 'Male', female: 'Female',
+    noPatients: 'No patients yet', noPatients_t: 'Add a patient from the rail to start logging transfusions, ferritin and daily chelation.', railNote: 'Screening works without a patient',
+    confirmDelete: 'Delete this patient and all their records? This cannot be undone.', deleted: 'Patient deleted', saved: 'Saved', invalid: 'Please check the highlighted fields.',
+    f_name: 'Full name', f_dob: 'Date of birth', f_sex: 'Sex', f_type: 'Diagnosis', f_bg: 'Blood group', f_weight: 'Weight (kg)', f_target: 'Target pre-transfusion Hb (g/dL, 9–10.5)', f_chelator: 'Chelator', f_dose: 'Dose (mg/kg/day)', f_centre: 'Treatment centre', f_emName: 'Emergency contact (name)', f_emPhone: 'Emergency contact (phone)', f_notes: 'Clinical notes (splenectomy, hepatitis status, allergies…)',
+    k_preHb: 'Last pre-transfusion Hb', k_days: 'Days since last transfusion', k_next: 'Predicted next transfusion', k_ferritin: 'Latest ferritin', k_adherence: 'Adherence (30 days)', target: 'target', ago: 'ago', inDays: 'in {n} days', overdueBy: 'overdue by {n} days', tomorrow: 'tomorrow', todayW: 'today', noData: 'No data yet', ngml: 'ng/mL', gdl: 'g/dL',
+    band_low: 'Low iron load', band_mod: 'Moderate', band_high: 'High — needs review',
+    alerts: 'Alerts', noAlerts: 'All clear', noAlerts_t: 'No alerts for this patient today.',
+    al_ferritin: 'Ferritin above 2500 ng/mL', al_ferritin_t: 'Iron overload is high ({v} ng/mL). Chelation dose, adherence and MRI T2* should be reviewed by the treating doctor.',
+    al_hbLow: 'Pre-transfusion Hb below 7 g/dL', al_hbLow_t: 'Last pre-Hb was {v} g/dL. Very low Hb before transfusion needs urgent attention.',
+    al_overdue: 'Transfusion overdue', al_overdue_t: 'Predicted date passed {v} day(s) ago. Contact the centre to book a slot and arrange donors.',
+    al_adherence: 'Chelation adherence below 80%', al_adherence_t: 'Only {v}% of doses taken in the last 30 days. Check the missed-dose reasons in the Adherence tab.',
+    al_hyper: 'Annual transfusion requirement above 200 mL/kg', al_hyper_t: '{v} mL/kg/year. A rising requirement can suggest hypersplenism or alloantibodies — an informational flag for the doctor, not a diagnosis.',
+    upcoming: 'Upcoming appointments', noAppts: 'No upcoming appointments.', plan: 'Treatment plan', emergency: 'Emergency contact', perDay: 'per day', dividedDoses: 'in 3 divided doses', nights: '5–7 nights/week', chelNone: 'No chelator prescribed',
+    todayDose: "Today's chelation dose", taken: 'Taken', missed: 'Missed', notMarked: 'Not marked yet', markTaken: 'Mark taken', markMissed: 'Missed — why?', doseSaved: 'Dose recorded', undo: 'Undo',
+    edu_hb_t: 'Why keep pre-transfusion Hb between 9 and 10.5 g/dL?', edu_hb: 'If haemoglobin falls too low before each transfusion, the body makes its own faulty red cells, the spleen grows, bones weaken and children stop growing well. Regular transfusions every 2–4 weeks keep Hb steady and suppress that. The predictor below only estimates the date — your centre decides.',
+    tx_add: 'Log a transfusion', tx_date: 'Date', tx_vol: 'Volume', tx_ml: 'mL', tx_units: 'units', tx_pre: 'Pre-Hb (g/dL)', tx_post: 'Post-Hb (g/dL)', tx_centre: 'Hospital / centre', tx_notes: 'Reactions / notes', tx_saved: 'Transfusion logged', tx_invalid: 'Enter a valid date, volume and pre-Hb.', tx_chart: 'Haemoglobin per transfusion episode', tx_log: 'Transfusion log', tx_interval: 'Interval', tx_delta: 'Rise', export: 'Export CSV', exported: 'CSV downloaded', noTx: 'No transfusions logged yet.',
+    lg_pre: 'Pre-transfusion Hb', lg_post: 'Post-transfusion Hb', lg_band: 'Target band 9–10.5', lg_pred: 'Predicted', lg_decline: 'Hb decline between episodes',
+    pred_t: 'Next-transfusion predictor', pred_rate: 'Hb decline rate', pred_perDay: 'g/dL per day', pred_basis: 'average of last {n} interval(s)', pred_date: 'Predicted date', pred_interval: 'Mean interval', pred_days: 'days', pred_na: 'Need at least two episodes with post-Hb and pre-Hb to estimate the decline rate.', pred_note: 'Estimate only. Fever, growth spurts, bleeding or a developing antibody change the real rate.',
+    req_t: 'Annual transfusion requirement', req_basis: 'episodes in the last 365 days', req_flag: 'Above 200 mL/kg/year — possible hypersplenism or alloimmunisation. Informational flag; discuss with the treating haematologist.', req_ok: 'Within the usual range (100–200 mL/kg/year).', req_unit: 'mL/kg/year', req_assume: '1 unit counted as {ml} mL packed red cells.',
+    fer_add: 'Log ferritin', fer_value: 'Serum ferritin (ng/mL)', fer_saved: 'Ferritin logged', fer_invalid: 'Enter a valid date and value.', fer_chart: 'Serum ferritin trend', fer_log: 'Ferritin readings', fer_none: 'No ferritin readings yet.', fer_thr1: '1000 · chelation target', fer_thr2: '2500 · high risk', fer_trend_up: 'Rising since last reading', fer_trend_down: 'Falling since last reading',
+    dose_t: 'Chelator dose helper', dose_lead: 'Shows the usual mg/kg/day range for the prescribed chelator at the current weight. Informational only — the prescriber decides the dose.', dose_current: 'Prescribed', dose_range: 'Usual range', dose_total: 'That is about', dose_below: 'Below the usual range', dose_above: 'Above the usual range', dose_in: 'Within the usual range', dose_disclaimer: 'Informational, not a prescription. Doses are adjusted to ferritin, MRI iron, kidney/liver tests and side effects by the treating doctor.',
+    rem_t: 'Daily reminder', rem_lead: 'A browser notification while this page is open, or a toast if notifications are blocked.', rem_time: 'Reminder time', rem_on: 'Reminder on', rem_enable: 'Enable browser notifications', rem_granted: 'Notifications enabled', rem_denied: 'Notifications blocked — in-app reminder only', rem_unsupported: 'This browser does not support notifications', rem_msg: 'time for the chelation dose',
+    mri_t: 'MRI T2* iron (liver & heart)', mri_na: 'Not built yet — student extension. Log liver iron concentration and cardiac T2* here and plot them against ferritin.',
+    edu_chel_t: 'Why take the chelator every single day?', edu_chel: 'Each unit of blood leaves roughly 200 mg of iron that the body cannot remove by itself. It settles in the heart, liver and glands and slowly damages them. Chelation medicine pulls that iron out through urine and stool — but only on the days it is taken. A missed day means that day\'s iron stays inside.',
+    adh_streak: 'Current streak', adh_30: '30-day adherence', adh_84: '12-week adherence', adh_missed: 'Missed doses (12 weeks)', adh_days: 'days', adh_heat: '12-week dose calendar', adh_hint: 'Tap a day to cycle: taken → missed → clear. Set a reason with the form.', adh_mark: 'Mark a day', adh_status: 'Status', adh_reason: 'Reason', adh_reasons: 'Why doses were missed', adh_noMiss: 'No missed doses recorded in the last 12 weeks.', clear: 'Clear',
+    edu_adh_t: 'Missed a dose?', edu_adh: 'If only a few hours have passed, take it when you remember; otherwise skip it and take the next dose on time — never double up. If side effects (stomach pain, joint pain, rash) are the reason, do not stop on your own: tell the doctor, because changing the dose or the medicine usually fixes it. Running out? Ask the centre about free supply programmes.',
+    ap_add: 'Add appointment', ap_type: 'Type', ap_date: 'Date', ap_note: 'Note', ap_saved: 'Appointment added', ap_upcoming: 'Upcoming', ap_past: 'Past', ap_done: 'Done', ap_markDone: 'Mark done', ap_reopen: 'Reopen', ap_none: 'Nothing scheduled.', ap_predicted: 'Use predicted transfusion date',
+    rb_t: 'Request blood', rb_lead: 'Generates a message for family WhatsApp groups and donor networks. Nothing is sent automatically.', rb_units: 'Units needed', rb_date: 'Needed by', rb_centre: 'Centre', rb_contact: 'Contact number', rb_open: 'Open WhatsApp', rb_khoon: 'This message is designed for the sibling Khoon blood-donor network; posting it there automatically is a student extension.',
+    sum_title: 'Clinical summary', sum_hint: 'Formatted for A4. Use the browser print dialog to save as PDF.', generated: 'Generated', sum_profile: 'Profile', sum_tx: 'Last 6 transfusions', sum_fer: 'Ferritin trend', sum_adh: 'Chelation adherence', sum_pred: 'Transfusion predictor', sum_alerts: 'Active alerts', sum_disc: 'Patient-entered data from the Thalassemia Care Companion app. Verify against centre records before clinical decisions.',
+    scr_t: 'Carrier screening tools', scr_lead: 'Pakistan has one of the world\'s largest β-thalassemia burdens: roughly 100,000 transfusion-dependent patients and 5–8% of people carrying the trait without knowing it. These tools help interpret a routine CBC and explain inheritance.',
+    mz_t: 'Mentzer index from a CBC', mz_hb: 'Haemoglobin (g/dL)', mz_mcv: 'MCV (fL)', mz_mch: 'MCH (pg)', mz_rbc: 'RBC count (×10¹²/L)', mz_calc: 'Interpret', mz_index: 'Mentzer index (MCV ÷ RBC)', mz_low: 'Suggests thalassemia trait', mz_high: 'Suggests iron deficiency', mz_border: 'Borderline — either is possible', mz_normal: 'MCV is not microcytic; the index is less informative', mz_sl: 'Shine & Lal index', mz_confirm: 'Confirm with Hb electrophoresis or HPLC: HbA2 above 3.5% indicates β-thalassemia trait. Iron deficiency can lower HbA2, so correct iron first if both are suspected. A screening index is never a diagnosis.', mz_invalid: 'Enter MCV and RBC count.',
+    pq_t: 'Inheritance: Punnett square', pq_lead: 'Thalassemia is autosomal recessive. Pick each parent\'s status to see the chance for every pregnancy.', pq_mother: 'Mother', pq_father: 'Father', st_normal: 'Unaffected', st_carrier: 'Carrier (trait)', st_affected: 'Thalassemia major', pq_major: 'major', pq_carrier: 'carrier', pq_unaffected: 'unaffected', pq_each: 'Chance in each pregnancy',
+    law_t: 'Pre-marital screening', law: 'Sindh (2013) and Punjab have enacted thalassemia prevention laws that promote carrier testing before marriage, and the federal capital has followed. A carrier is completely healthy; the risk arises only when two carriers marry. Couples who are both carriers can have prenatal diagnosis (CVS at 10–12 weeks) and genetic counselling at any major thalassemia centre.',
+    edu_scr_t: 'What a carrier should know', edu_scr: 'Carrying the thalassemia trait is not a disease: no treatment is needed and life is normal. It matters only when choosing a partner — if both are carriers, each child has a 1 in 4 chance of thalassemia major. A simple blood test before marriage, or before the first pregnancy, lets families decide with full information.',
+    ab_title: 'About this project', ab_problem: 'The problem', ab_problem_t: 'Pakistan has an estimated 100,000 β-thalassemia major patients and 5–8% carrier prevalence. Patients need a transfusion every 2–4 weeks for life plus daily iron chelation. Records are kept on paper cards, chelation adherence is poor, and few couples are screened before marriage.',
+    ab_how: 'How the predictor works', ab_how_t: 'For consecutive episodes the Hb decline rate is (post-Hb of the previous episode − pre-Hb of the current one) ÷ days between them. The last three rates are averaged, and the predicted date is the last transfusion date plus (last post-Hb − target pre-Hb) ÷ rate. Annual requirement is total mL in the last 365 days ÷ weight.',
+    ab_disc: 'Disclaimers', ab_disc_t: 'This is a record-keeping and education tool built as a student template. Dose ranges, thresholds and indices are textbook values for illustration; they do not replace the treating haematologist. Seed patients are fictional.', ab_stack: 'Stack: one HTML file, vanilla JS, hand-drawn SVG charts, localStorage. No build step.', ab_todo: 'Left for students to build',
+    reset: 'Reset demo data', resetConfirm: 'Replace all saved data with the demo patients?'
+  },
+  ur: {
+    title: 'تھیلیسیمیا کیئر کمپینین', tagline: 'انتقالِ خون · آئرن · دوا کی پابندی · اسکریننگ',
+    nav_overview: 'خلاصہ', nav_transfusions: 'انتقالِ خون', nav_iron: 'آئرن اور چیلیشن', nav_adherence: 'دوا کی پابندی', nav_appointments: 'ملاقاتیں', nav_summary: 'پرنٹ خلاصہ', nav_screening: 'اسکریننگ', nav_about: 'تعارف',
+    patients: 'مریض', addPatient: 'نیا مریض', editPatient: 'مریض میں ترمیم', deletePatient: 'مریض حذف کریں', requestBlood: 'خون کی درخواست', print: 'پرنٹ', save: 'محفوظ کریں', cancel: 'منسوخ', delete: 'حذف', add: 'شامل کریں', close: 'بند', edit: 'ترمیم', copy: 'متن کاپی کریں', copied: 'کاپی ہو گیا', years: 'سال', kg: 'کلو', male: 'لڑکا / مرد', female: 'لڑکی / عورت',
+    noPatients: 'ابھی کوئی مریض نہیں', noPatients_t: 'انتقالِ خون، فیریٹین اور روزانہ دوا کا ریکارڈ رکھنے کے لیے پہلے مریض شامل کریں۔', railNote: 'اسکریننگ بغیر مریض کے بھی چلتی ہے',
+    confirmDelete: 'یہ مریض اور اس کا سارا ریکارڈ حذف کر دیا جائے؟ یہ واپس نہیں ہو سکتا۔', deleted: 'مریض حذف ہو گیا', saved: 'محفوظ ہو گیا', invalid: 'نشان زدہ خانے درست کریں۔',
+    f_name: 'پورا نام', f_dob: 'تاریخ پیدائش', f_sex: 'جنس', f_type: 'تشخیص', f_bg: 'بلڈ گروپ', f_weight: 'وزن (کلو)', f_target: 'ہدف پری-ٹرانسفیوژن Hb (9 سے 10.5)', f_chelator: 'آئرن نکالنے کی دوا', f_dose: 'خوراک (ملی گرام فی کلو روزانہ)', f_centre: 'علاج کا سینٹر', f_emName: 'ہنگامی رابطہ (نام)', f_emPhone: 'ہنگامی رابطہ (فون)', f_notes: 'طبی نوٹ (تلی کا آپریشن، ہیپاٹائٹس، الرجی…)',
+    k_preHb: 'آخری پری-ٹرانسفیوژن Hb', k_days: 'آخری انتقال سے دن', k_next: 'اگلا متوقع انتقال', k_ferritin: 'تازہ فیریٹین', k_adherence: 'دوا کی پابندی (30 دن)', target: 'ہدف', ago: 'پہلے', inDays: '{n} دن میں', overdueBy: '{n} دن تاخیر', tomorrow: 'کل', todayW: 'آج', noData: 'ابھی ڈیٹا نہیں', ngml: 'ng/mL', gdl: 'g/dL',
+    band_low: 'آئرن کم', band_mod: 'درمیانہ', band_high: 'زیادہ — جائزہ ضروری',
+    alerts: 'الرٹس', noAlerts: 'سب ٹھیک ہے', noAlerts_t: 'آج اس مریض کے لیے کوئی الرٹ نہیں۔',
+    al_ferritin: 'فیریٹین 2500 سے زیادہ', al_ferritin_t: 'آئرن کا بوجھ زیادہ ہے ({v} ng/mL)۔ دوا کی خوراک، پابندی اور MRI T2* کا جائزہ ڈاکٹر سے کروائیں۔',
+    al_hbLow: 'پری-ٹرانسفیوژن Hb 7 سے کم', al_hbLow_t: 'آخری پری-Hb {v} g/dL تھا۔ خون لگنے سے پہلے اتنا کم Hb فوری توجہ چاہتا ہے۔',
+    al_overdue: 'انتقالِ خون کا وقت گزر گیا', al_overdue_t: 'متوقع تاریخ {v} دن پہلے گزر گئی۔ سینٹر سے رابطہ کریں اور ڈونر کا بندوبست کریں۔',
+    al_adherence: 'دوا کی پابندی 80% سے کم', al_adherence_t: 'پچھلے 30 دنوں میں صرف {v}% خوراکیں لی گئیں۔ وجوہات "دوا کی پابندی" میں دیکھیں۔',
+    al_hyper: 'سالانہ خون کی ضرورت 200 mL/kg سے زیادہ', al_hyper_t: '{v} mL/kg/سال۔ بڑھتی ضرورت تلی بڑھنے یا اینٹی باڈی کی طرف اشارہ ہو سکتی ہے — یہ ڈاکٹر کے لیے معلوماتی نشان ہے، تشخیص نہیں۔',
+    upcoming: 'آنے والی ملاقاتیں', noAppts: 'کوئی آنے والی ملاقات نہیں۔', plan: 'علاج کا منصوبہ', emergency: 'ہنگامی رابطہ', perDay: 'روزانہ', dividedDoses: '3 خوراکوں میں', nights: 'ہفتے میں 5 سے 7 راتیں', chelNone: 'کوئی چیلیٹر تجویز نہیں',
+    todayDose: 'آج کی دوا', taken: 'لے لی', missed: 'چھوٹ گئی', notMarked: 'ابھی نشان نہیں لگا', markTaken: 'لے لی — نشان لگائیں', markMissed: 'چھوٹ گئی — کیوں؟', doseSaved: 'خوراک درج ہو گئی', undo: 'واپس',
+    edu_hb_t: 'پری-ٹرانسفیوژن Hb کو 9 سے 10.5 کے درمیان کیوں رکھتے ہیں؟', edu_hb: 'اگر ہر بار خون لگنے سے پہلے ہیموگلوبن بہت کم ہو جائے تو جسم اپنا خراب خون بنانے لگتا ہے، تلی بڑھ جاتی ہے، ہڈیاں کمزور ہوتی ہیں اور بچے کی نشوونما رک جاتی ہے۔ ہر 2 سے 4 ہفتے بعد باقاعدہ خون لگوانا Hb کو مستحکم رکھتا ہے۔ نیچے دی گئی پیش گوئی صرف اندازہ ہے — فیصلہ آپ کا سینٹر کرتا ہے۔',
+    tx_add: 'انتقالِ خون درج کریں', tx_date: 'تاریخ', tx_vol: 'مقدار', tx_ml: 'mL', tx_units: 'بوتلیں', tx_pre: 'پری-Hb (g/dL)', tx_post: 'پوسٹ-Hb (g/dL)', tx_centre: 'ہسپتال / سینٹر', tx_notes: 'ری ایکشن / نوٹ', tx_saved: 'انتقالِ خون درج ہو گیا', tx_invalid: 'درست تاریخ، مقدار اور پری-Hb درج کریں۔', tx_chart: 'ہر انتقال پر ہیموگلوبن', tx_log: 'انتقالِ خون کا ریکارڈ', tx_interval: 'وقفہ', tx_delta: 'اضافہ', export: 'CSV ڈاؤن لوڈ', exported: 'CSV ڈاؤن لوڈ ہو گئی', noTx: 'ابھی کوئی انتقالِ خون درج نہیں۔',
+    lg_pre: 'خون لگنے سے پہلے Hb', lg_post: 'خون لگنے کے بعد Hb', lg_band: 'ہدف 9 سے 10.5', lg_pred: 'متوقع', lg_decline: 'دو انتقالوں کے درمیان Hb کی کمی',
+    pred_t: 'اگلے انتقالِ خون کی پیش گوئی', pred_rate: 'Hb کمی کی رفتار', pred_perDay: 'g/dL روزانہ', pred_basis: 'آخری {n} وقفوں کی اوسط', pred_date: 'متوقع تاریخ', pred_interval: 'اوسط وقفہ', pred_days: 'دن', pred_na: 'رفتار نکالنے کے لیے کم از کم دو انتقال (پوسٹ-Hb اور پری-Hb کے ساتھ) درکار ہیں۔', pred_note: 'صرف اندازہ۔ بخار، تیز نشوونما، خون بہنا یا اینٹی باڈی بننا اصل رفتار بدل دیتے ہیں۔',
+    req_t: 'سالانہ خون کی ضرورت', req_basis: 'پچھلے 365 دنوں میں انتقال', req_flag: '200 mL/kg/سال سے زیادہ — تلی بڑھنے یا اینٹی باڈی کا امکان۔ معلوماتی نشان؛ ماہرِ امراضِ خون سے بات کریں۔', req_ok: 'معمول کی حد میں (100 سے 200 mL/kg/سال)۔', req_unit: 'mL/kg/سال', req_assume: '1 بوتل = {ml} mL پیکڈ ریڈ سیلز شمار کی گئی۔',
+    fer_add: 'فیریٹین درج کریں', fer_value: 'سیرم فیریٹین (ng/mL)', fer_saved: 'فیریٹین درج ہو گیا', fer_invalid: 'درست تاریخ اور قدر درج کریں۔', fer_chart: 'سیرم فیریٹین کا رجحان', fer_log: 'فیریٹین ریڈنگز', fer_none: 'ابھی کوئی فیریٹین ریڈنگ نہیں۔', fer_thr1: '1000 · چیلیشن کا ہدف', fer_thr2: '2500 · زیادہ خطرہ', fer_trend_up: 'پچھلی ریڈنگ سے بڑھ رہا ہے', fer_trend_down: 'پچھلی ریڈنگ سے کم ہو رہا ہے',
+    dose_t: 'چیلیٹر خوراک مددگار', dose_lead: 'موجودہ وزن پر تجویز کردہ دوا کی معمول کی حد (ملی گرام فی کلو روزانہ) دکھاتا ہے۔ صرف معلومات کے لیے — خوراک کا فیصلہ ڈاکٹر کرتا ہے۔', dose_current: 'تجویز کردہ', dose_range: 'معمول کی حد', dose_total: 'یعنی تقریباً', dose_below: 'معمول کی حد سے کم', dose_above: 'معمول کی حد سے زیادہ', dose_in: 'معمول کی حد میں', dose_disclaimer: 'یہ معلومات ہیں، نسخہ نہیں۔ خوراک فیریٹین، MRI آئرن، گردے/جگر کے ٹیسٹ اور سائیڈ ایفیکٹس دیکھ کر ڈاکٹر طے کرتا ہے۔',
+    rem_t: 'روزانہ یاد دہانی', rem_lead: 'صفحہ کھلا ہو تو براؤزر نوٹیفکیشن، ورنہ ایپ کے اندر پیغام۔', rem_time: 'یاد دہانی کا وقت', rem_on: 'یاد دہانی آن', rem_enable: 'براؤزر نوٹیفکیشن فعال کریں', rem_granted: 'نوٹیفکیشن فعال ہو گئے', rem_denied: 'نوٹیفکیشن بلاک ہیں — صرف ایپ کے اندر یاد دہانی', rem_unsupported: 'یہ براؤزر نوٹیفکیشن سپورٹ نہیں کرتا', rem_msg: 'آئرن کی دوا کا وقت ہو گیا',
+    mri_t: 'MRI T2* آئرن (جگر اور دل)', mri_na: 'ابھی نہیں بنا — طلبہ کے لیے۔ یہاں جگر کا آئرن اور دل کا T2* درج کر کے فیریٹین کے ساتھ دکھائیں۔',
+    edu_chel_t: 'آئرن کی دوا ہر روز کیوں ضروری ہے؟', edu_chel: 'خون کی ہر بوتل جسم میں تقریباً 200 ملی گرام آئرن چھوڑ جاتی ہے جو جسم خود نہیں نکال سکتا۔ یہ آئرن دل، جگر اور غدود میں جمع ہو کر آہستہ آہستہ نقصان کرتا ہے۔ چیلیشن کی دوا یہ آئرن پیشاب اور پاخانے کے ذریعے باہر نکالتی ہے — مگر صرف اُن دنوں جب دوا لی جائے۔ ایک دن چھوڑنے کا مطلب ہے اُس دن کا آئرن اندر ہی رہ گیا۔',
+    adh_streak: 'موجودہ تسلسل', adh_30: '30 دن کی پابندی', adh_84: '12 ہفتے کی پابندی', adh_missed: 'چھوٹی خوراکیں (12 ہفتے)', adh_days: 'دن', adh_heat: '12 ہفتے کا دوا کیلنڈر', adh_hint: 'دن پر ٹیپ کریں: لے لی ← چھوٹ گئی ← صاف۔ وجہ نیچے فارم سے لگائیں۔', adh_mark: 'دن نشان زد کریں', adh_status: 'حالت', adh_reason: 'وجہ', adh_reasons: 'خوراک کیوں چھوٹی', adh_noMiss: 'پچھلے 12 ہفتوں میں کوئی خوراک چھوٹی نہیں۔', clear: 'صاف',
+    edu_adh_t: 'خوراک چھوٹ گئی؟', edu_adh: 'اگر چند گھنٹے ہی گزرے ہوں تو یاد آنے پر لے لیں؛ ورنہ چھوڑ دیں اور اگلی خوراک وقت پر لیں — کبھی دگنی نہ لیں۔ اگر وجہ سائیڈ ایفیکٹس ہیں (پیٹ درد، جوڑوں کا درد، خارش) تو خود دوا بند نہ کریں: ڈاکٹر کو بتائیں، اکثر خوراک یا دوا بدلنے سے مسئلہ حل ہو جاتا ہے۔ دوا ختم ہو گئی؟ سینٹر سے مفت سپلائی پروگرام کا پوچھیں۔',
+    ap_add: 'ملاقات شامل کریں', ap_type: 'قسم', ap_date: 'تاریخ', ap_note: 'نوٹ', ap_saved: 'ملاقات شامل ہو گئی', ap_upcoming: 'آنے والی', ap_past: 'گزشتہ', ap_done: 'ہو گئی', ap_markDone: 'ہو گئی', ap_reopen: 'دوبارہ کھولیں', ap_none: 'کچھ طے نہیں۔', ap_predicted: 'متوقع انتقال کی تاریخ لگائیں',
+    rb_t: 'خون کی درخواست', rb_lead: 'خاندان کے واٹس ایپ گروپ اور ڈونر نیٹ ورک کے لیے پیغام بناتا ہے۔ کچھ خود بخود نہیں بھیجا جاتا۔', rb_units: 'بوتلیں درکار', rb_date: 'کب تک', rb_centre: 'سینٹر', rb_contact: 'رابطہ نمبر', rb_open: 'واٹس ایپ کھولیں', rb_khoon: 'یہ پیغام "خون" ڈونر نیٹ ورک پروجیکٹ کے لیے بنایا گیا ہے؛ وہاں خود بخود پوسٹ کرنا طلبہ کا کام ہے۔',
+    sum_title: 'طبی خلاصہ', sum_hint: 'A4 کے لیے ترتیب دیا گیا۔ PDF کے لیے براؤزر کا پرنٹ استعمال کریں۔', generated: 'تیار کیا گیا', sum_profile: 'پروفائل', sum_tx: 'آخری 6 انتقالِ خون', sum_fer: 'فیریٹین کا رجحان', sum_adh: 'دوا کی پابندی', sum_pred: 'انتقالِ خون کی پیش گوئی', sum_alerts: 'فعال الرٹس', sum_disc: 'یہ ڈیٹا مریض نے تھیلیسیمیا کیئر کمپینین ایپ میں خود درج کیا ہے۔ طبی فیصلے سے پہلے سینٹر کے ریکارڈ سے تصدیق کریں۔',
+    scr_t: 'کیریئر اسکریننگ کے اوزار', scr_lead: 'پاکستان میں بیٹا تھیلیسیمیا کا بوجھ دنیا میں سب سے زیادہ ہے: تقریباً ایک لاکھ مریض جنہیں خون لگتا ہے، اور ہر 100 میں سے 5 سے 8 لوگ انجانے میں کیریئر ہیں۔ یہ اوزار عام CBC رپورٹ سمجھنے اور وراثت کی وضاحت میں مدد دیتے ہیں۔',
+    mz_t: 'CBC سے مینٹزر انڈیکس', mz_hb: 'ہیموگلوبن (g/dL)', mz_mcv: 'MCV (fL)', mz_mch: 'MCH (pg)', mz_rbc: 'RBC تعداد (×10¹²/L)', mz_calc: 'نتیجہ دیکھیں', mz_index: 'مینٹزر انڈیکس (MCV ÷ RBC)', mz_low: 'تھیلیسیمیا ٹریٹ کا شبہ', mz_high: 'آئرن کی کمی کا شبہ', mz_border: 'سرحدی — دونوں ممکن ہیں', mz_normal: 'MCV کم نہیں؛ انڈیکس زیادہ معنی نہیں رکھتا', mz_sl: 'شائن اینڈ لال انڈیکس', mz_confirm: 'تصدیق Hb الیکٹروفوریسس یا HPLC سے کریں: HbA2 اگر 3.5% سے زیادہ ہو تو بیٹا تھیلیسیمیا ٹریٹ ہے۔ آئرن کی کمی HbA2 کم کر سکتی ہے، اس لیے دونوں کا شبہ ہو تو پہلے آئرن درست کریں۔ اسکریننگ انڈیکس کبھی تشخیص نہیں ہوتا۔', mz_invalid: 'MCV اور RBC درج کریں۔',
+    pq_t: 'وراثت: پنیٹ اسکوائر', pq_lead: 'تھیلیسیمیا والدین دونوں سے ملنے والے جین سے ہوتا ہے۔ ہر والدین کی حالت چنیں اور ہر حمل میں امکان دیکھیں۔', pq_mother: 'ماں', pq_father: 'باپ', st_normal: 'غیر متاثر', st_carrier: 'کیریئر (ٹریٹ)', st_affected: 'تھیلیسیمیا میجر', pq_major: 'میجر', pq_carrier: 'کیریئر', pq_unaffected: 'غیر متاثر', pq_each: 'ہر حمل میں امکان',
+    law_t: 'شادی سے پہلے اسکریننگ', law: 'سندھ (2013) اور پنجاب میں تھیلیسیمیا کی روک تھام کے قوانین بن چکے ہیں جو شادی سے پہلے کیریئر ٹیسٹ کی حوصلہ افزائی کرتے ہیں، اور اسلام آباد نے بھی یہی راہ لی ہے۔ کیریئر مکمل صحت مند ہوتا ہے؛ خطرہ صرف تب ہے جب دو کیریئر آپس میں شادی کریں۔ ایسے جوڑے حمل کے دوران (10 سے 12 ہفتے پر CVS) تشخیص اور کسی بڑے تھیلیسیمیا سینٹر سے جینیاتی مشورہ لے سکتے ہیں۔',
+    edu_scr_t: 'کیریئر کو کیا جاننا چاہیے', edu_scr: 'تھیلیسیمیا ٹریٹ کوئی بیماری نہیں: نہ علاج چاہیے نہ زندگی پر اثر۔ یہ صرف شریکِ حیات چنتے وقت اہم ہے — اگر دونوں کیریئر ہوں تو ہر بچے کو تھیلیسیمیا میجر کا 4 میں سے 1 امکان ہے۔ شادی سے پہلے یا پہلے حمل سے پہلے ایک سادہ خون کا ٹیسٹ خاندان کو پوری معلومات کے ساتھ فیصلہ کرنے دیتا ہے۔',
+    ab_title: 'اس پروجیکٹ کا تعارف', ab_problem: 'مسئلہ', ab_problem_t: 'پاکستان میں تقریباً ایک لاکھ بیٹا تھیلیسیمیا میجر کے مریض ہیں اور 5 سے 8 فیصد لوگ کیریئر ہیں۔ مریضوں کو زندگی بھر ہر 2 سے 4 ہفتے خون اور روزانہ آئرن نکالنے کی دوا چاہیے۔ ریکارڈ کاغذ کے کارڈ پر رہتا ہے، دوا کی پابندی کم ہے اور شادی سے پہلے ٹیسٹ بہت کم جوڑے کرواتے ہیں۔',
+    ab_how: 'پیش گوئی کیسے کام کرتی ہے', ab_how_t: 'لگاتار دو انتقالوں کے لیے Hb کمی کی رفتار = (پچھلے انتقال کا پوسٹ-Hb − موجودہ کا پری-Hb) ÷ درمیانی دن۔ آخری تین رفتاروں کی اوسط لی جاتی ہے، اور متوقع تاریخ = آخری انتقال کی تاریخ + (آخری پوسٹ-Hb − ہدف پری-Hb) ÷ رفتار۔ سالانہ ضرورت = پچھلے 365 دنوں کے کل mL ÷ وزن۔',
+    ab_disc: 'انتباہ', ab_disc_t: 'یہ ریکارڈ رکھنے اور معلومات کا طلبہ کا بنایا ہوا ٹیمپلیٹ ہے۔ خوراک کی حدیں، تھریش ہولڈ اور انڈیکس کتابی مثالیں ہیں؛ یہ ماہرِ امراضِ خون کی جگہ نہیں لے سکتے۔ نمونہ مریض فرضی ہیں۔', ab_stack: 'ٹیکنالوجی: ایک HTML فائل، سادہ جاوا اسکرپٹ، ہاتھ سے بنے SVG چارٹ، لوکل اسٹوریج۔', ab_todo: 'طلبہ کے لیے باقی کام',
+    reset: 'ڈیمو ڈیٹا بحال کریں', resetConfirm: 'سارا محفوظ ڈیٹا ہٹا کر نمونہ مریض دوبارہ لگائے جائیں؟'
+  }
+};
+let lang = store.get('lang', 'en');
+const t = (k, vars) => { let s = L[lang][k] ?? L.en[k] ?? k; if (vars) Object.entries(vars).forEach(([a, b]) => { s = s.replace('{' + a + '}', b); }); return s; };
+// T() is for HTML contexts: wraps Urdu strings so they render in Nastaliq. Use esc(t()) inside attributes.
+const T = (k, vars) => lang === 'ur' ? `<span class="ur">${esc(t(k, vars))}</span>` : esc(t(k, vars));
+const nm = o => lang === 'ur' ? (o.ur || o.en) : o.en;
+const NM = o => lang === 'ur' ? `<span class="ur">${esc(nm(o))}</span>` : esc(nm(o));
+const edu = (titleKey, bodyKey, icon = 'lightbulb') => `<div class="edu ${lang === 'ur' ? 'ur rtl' : ''}"><h4>${ic(icon)} ${esc(t(titleKey))}</h4><p>${esc(t(bodyKey))}</p></div>`;
+
+// ---------- domain ----------
+const TYPES = {
+  major: { en: 'β-thalassemia major', ur: 'بیٹا تھیلیسیمیا میجر' },
+  intermedia: { en: 'β-thalassemia intermedia', ur: 'بیٹا تھیلیسیمیا انٹرمیڈیا' },
+  hbe: { en: 'HbE / β-thalassemia', ur: 'HbE / بیٹا تھیلیسیمیا' }
+};
+const GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+// Usual adult/paediatric dose ranges quoted in TIF guidelines — informational only.
+const CHELATORS = {
+  deferasirox: { en: 'Deferasirox (film-coated tablet)', ur: 'ڈیفیراسیروکس (گولی)', min: 14, max: 28, how: 'perDay', route_en: 'oral, once daily', route_ur: 'منہ سے، دن میں ایک بار' },
+  deferiprone: { en: 'Deferiprone', ur: 'ڈیفیری پرون', min: 75, max: 99, how: 'dividedDoses', route_en: 'oral, 3 divided doses', route_ur: 'منہ سے، 3 خوراکوں میں' },
+  desferrioxamine: { en: 'Desferrioxamine (s.c. pump)', ur: 'ڈیسفیریوکسامین (انجکشن پمپ)', min: 20, max: 40, how: 'nights', route_en: 'subcutaneous 8–12 h infusion, 5–7 nights/week', route_ur: 'جلد کے نیچے 8 سے 12 گھنٹے، ہفتے میں 5 سے 7 راتیں' },
+  none: { en: 'None', ur: 'کوئی نہیں', min: 0, max: 0 }
+};
+const REASONS = {
+  side: { en: 'Side effects', ur: 'سائیڈ ایفیکٹس', c: '#b3457a' },
+  forgot: { en: 'Forgot', ur: 'بھول گئے', c: '#6d4fc2' },
+  stock: { en: 'Out of stock', ur: 'دوا ختم', c: '#128f80' },
+  cost: { en: 'Cost', ur: 'قیمت / پیسے نہیں', c: '#c98a1c' }
+};
+const APPT = {
+  transfusion: { en: 'Transfusion', ur: 'انتقالِ خون', ic: 'droplet' },
+  clinic: { en: 'Clinic review', ur: 'کلینک', ic: 'stethoscope' },
+  lab: { en: 'Lab tests', ur: 'لیب ٹیسٹ', ic: 'flask' },
+  mri: { en: 'MRI T2*', ur: 'ایم آر آئی T2*', ic: 'magnet' }
+};
+const CENTRES = ['Fatimid Foundation, Karachi', 'Kashif Iqbal Thalassaemia Care Centre, Karachi', 'Husaini Blood Bank, Karachi', 'Sundas Foundation, Lahore', 'Thalassaemia Federation Pakistan, Lahore', 'Pakistan Thalassaemia Welfare Society, Rawalpindi', 'PIMS Thalassaemia Centre, Islamabad', 'Frontier Foundation, Peshawar', 'Hamza Foundation, Peshawar', 'Thalassemia Care Centre, Quetta', 'Fatimid Foundation, Multan'];
+const UNIT_ML = 250; // assumed mL of packed red cells per unit for the annual-requirement calculation
+const TARGET_BAND = [9, 10.5];
+
+// ---------- seed data (deterministic, relative to today) ----------
+function seedDemo() {
+  const r = rng(20261016);
+  const pick = (arr) => arr[Math.floor(r() * arr.length)];
+  const NOTES = ['', '', '', '', '', 'Leucodepleted unit', 'Mild urticaria — antihistamine given', '', 'Fever 38.1 °C after 1st unit, settled', '', 'Pre-medicated with paracetamol', ''];
+  const p1 = { id: 'p_ahmed', name: 'Ahmed Raza', dob: '2017-03-12', sex: 'M', type: 'major', bg: 'B+', weight: 26, targetHb: 9.5, chelator: 'deferasirox', dose: 20, centre: 'Fatimid Foundation, Karachi', emName: 'Raza Ahmed (father)', emPhone: '0300-2345678', notes: 'Spleen intact. HCV negative (Jan 2026). Hepatitis B vaccinated.' };
+  const p2 = { id: 'p_fatima', name: 'Fatima Noor', dob: '2010-06-05', sex: 'F', type: 'major', bg: 'O+', weight: 42, targetHb: 9.5, chelator: 'deferiprone', dose: 80, centre: 'Sundas Foundation, Lahore', emName: 'Noor Muhammad (father)', emPhone: '0321-7654321', notes: 'Alloantibody screen pending. Joint pains on deferiprone reported Aug 2026.' };
+  const gen = ({ interval, jitter, vol, unit, pre, post, lastDaysAgo, n, centre }) => {
+    const out = []; let d = addDays(today, -lastDaysAgo);
+    for (let i = 0; i < n; i++) {
+      out.unshift({ id: uid(), date: dateKey(d), vol, unit, pre: r1(pre + (r() - .5) * 1.2), post: r1(post + (r() - .5) * 1.0), centre, notes: pick(NOTES) });
+      d = addDays(d, -(interval + Math.round((r() - .5) * jitter)));
+    }
+    return out;
+  };
+  const tx = {
+    p_ahmed: gen({ interval: 21, jitter: 4, vol: 280, unit: 'mL', pre: 9.0, post: 12.6, lastDaysAgo: 15, n: 20, centre: p1.centre }),
+    p_fatima: gen({ interval: 17, jitter: 3, vol: 2, unit: 'units', pre: 8.4, post: 12.2, lastDaysAgo: 14, n: 24, centre: p2.centre })
+  };
+  const ferSeries = (vals, lastDaysAgo, step) => vals.map((v, i) => ({ id: uid(), date: dateKey(addDays(today, -lastDaysAgo - (vals.length - 1 - i) * step)), value: v }));
+  const fer = {
+    p_ahmed: ferSeries([2150, 1980, 1870, 1720, 1610, 1540, 1480, 1450], 20, 90),
+    p_fatima: ferSeries([2350, 2480, 2620, 2790, 2950, 3080, 3220], 10, 90)
+  };
+  const doseLog = (pTaken, weights) => {
+    const out = {}; const keys = Object.keys(weights);
+    for (let i = 1; i <= 100; i++) {
+      const k = dateKey(addDays(today, -i));
+      if (r() < pTaken) out[k] = { t: true };
+      else { let x = r(); let reason = keys[0]; for (const key of keys) { if (x < weights[key]) { reason = key; break; } x -= weights[key]; } out[k] = { t: false, r: reason }; }
+    }
+    return out;
+  };
+  const doses = { p_ahmed: doseLog(.9, { forgot: .5, side: .2, stock: .2, cost: .1 }), p_fatima: doseLog(.7, { side: .4, forgot: .3, cost: .2, stock: .1 }) };
+  const ap = (off, type, note, done = false) => ({ id: uid(), date: dateKey(addDays(today, off)), type, note, done });
+  const appts = {
+    p_ahmed: [ap(3, 'transfusion', 'Day-care bay, bring transfusion card'), ap(17, 'clinic', 'Dr Sana Jamil — ferritin & dose review'), ap(17, 'lab', 'Ferritin, LFT, creatinine, urine protein'), ap(-15, 'transfusion', '', true), ap(-36, 'transfusion', '', true)],
+    p_fatima: [ap(1, 'transfusion', '2 units, cross-match sample sent'), ap(5, 'clinic', 'Chelation review — joint pains, consider switch'), ap(35, 'mri', 'MRI T2* liver & cardiac — AKUH'), ap(-14, 'transfusion', '', true), ap(-20, 'lab', 'Ferritin 3220', true)]
+  };
+  store.set('patients', [p1, p2]); store.set('tx', tx); store.set('fer', fer); store.set('doses', doses); store.set('appts', appts);
+  store.set('rem', { p_ahmed: { time: '21:00', on: true }, p_fatima: { time: '08:00', on: false } });
+  store.set('current', 'p_ahmed'); store.set('seeded', 1);
+}
+if (!store.get('seeded', 0)) seedDemo();
+
+// ---------- store accessors ----------
+const patients = () => store.get('patients', []);
+const byDate = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+const listOf = (k, pid) => (store.get(k, {})[pid] || []).slice().sort(byDate);
+const setList = (k, pid, arr) => { const m = store.get(k, {}); m[pid] = arr; store.set(k, m); };
+const txOf = pid => listOf('tx', pid);
+const ferOf = pid => listOf('fer', pid);
+const apptOf = pid => listOf('appts', pid);
+const dosesOf = pid => store.get('doses', {})[pid] || {};
+const setDose = (pid, day, val) => { const m = store.get('doses', {}); m[pid] = m[pid] || {}; if (val == null) delete m[pid][day]; else m[pid][day] = val; store.set('doses', m); };
+const current = () => { const list = patients(); if (!list.length) return null; return list.find(p => p.id === store.get('current', '')) || list[0]; };
+const volMl = e => e.unit === 'units' ? e.vol * UNIT_ML : e.vol;
+const volLabel = e => e.unit === 'units' ? `${e.vol} ${t('tx_units')}` : `${nf.format(e.vol)} mL`;
+
+// ---------- computations ----------
+/** Hb decline rate from consecutive episodes, averaged over the last 3; predicted date = last date + (last post − target) / rate */
+function predictor(eps, target) {
+  const rates = [];
+  for (let i = 1; i < eps.length; i++) {
+    const a = eps[i - 1], b = eps[i];
+    if (a.post == null || b.pre == null) continue;
+    const d = daysBetween(parseDate(a.date), parseDate(b.date));
+    if (d > 0 && a.post > b.pre) rates.push({ r: (a.post - b.pre) / d, d });
+  }
+  const last = eps[eps.length - 1];
+  if (!last || last.post == null || !rates.length) return null;
+  const use = rates.slice(-3);
+  const rate = use.reduce((s, x) => s + x.r, 0) / use.length;
+  const days = Math.max(0, (last.post - target) / rate);
+  return { rate, days, predicted: addDays(parseDate(last.date), Math.round(days)), n: use.length, avgInterval: use.reduce((s, x) => s + x.d, 0) / use.length, last };
+}
+function annualReq(p) {
+  const eps = txOf(p.id).filter(e => daysBetween(parseDate(e.date), today) <= 365);
+  if (!eps.length || !p.weight) return null;
+  const ml = eps.reduce((s, e) => s + volMl(e), 0);
+  return { ml, perKg: ml / p.weight, n: eps.length };
+}
+const ferBand = v => v < 1000 ? 'low' : v <= 2500 ? 'mod' : 'high';
+const bandCls = { low: 'ok', mod: 'warn', high: 'bad' };
+function adherenceStats(pid) {
+  const d = dosesOf(pid); const keys = Object.keys(d).sort();
+  const out = { pct30: null, pct84: null, streak: 0, reasons: {}, missed84: 0, todayMarked: !!d[TODAY], today: d[TODAY] || null };
+  if (!keys.length) return out;
+  const end = out.todayMarked ? 0 : 1; // if today is not ticked yet, do not count it as missed
+  const span = Math.max(1, Math.min(30, daysBetween(parseDate(keys[0]), today) + 1 - end));
+  let taken = 0; for (let i = end; i < end + span; i++) { const v = d[dateKey(addDays(today, -i))]; if (v && v.t) taken++; }
+  out.pct30 = Math.round(taken / span * 100);
+  for (let i = end; i < 4000; i++) { const v = d[dateKey(addDays(today, -i))]; if (v && v.t) out.streak++; else break; }
+  const span84 = Math.max(1, Math.min(84, daysBetween(parseDate(keys[0]), today) + 1 - end)); let t84 = 0;
+  for (let i = end; i < end + span84; i++) { const v = d[dateKey(addDays(today, -i))]; if (v && v.t) t84++; else if (v && v.t === false) { out.missed84++; out.reasons[v.r || 'forgot'] = (out.reasons[v.r || 'forgot'] || 0) + 1; } }
+  out.pct84 = Math.round(t84 / span84 * 100);
+  return out;
+}
+function alertsFor(p) {
+  const a = []; const eps = txOf(p.id), last = eps[eps.length - 1]; const f = ferOf(p.id), lf = f[f.length - 1];
+  if (lf && lf.value > 2500) a.push({ lvl: 'bad', k: 'al_ferritin', v: nf.format(lf.value), ic: 'alert' });
+  if (last && last.pre != null && last.pre < 7) a.push({ lvl: 'bad', k: 'al_hbLow', v: last.pre, ic: 'droplet' });
+  const pr = predictor(eps, p.targetHb); if (pr && pr.predicted < today) a.push({ lvl: 'warn', k: 'al_overdue', v: daysBetween(pr.predicted, today), ic: 'clock' });
+  const ad = adherenceStats(p.id); if (ad.pct30 != null && ad.pct30 < 80) a.push({ lvl: 'warn', k: 'al_adherence', v: ad.pct30, ic: 'pill' });
+  const req = annualReq(p); if (req && req.perKg > 200) a.push({ lvl: 'info', k: 'al_hyper', v: Math.round(req.perKg), ic: 'info' });
+  return a;
+}
+const relDays = d => { const n = daysBetween(today, d); if (n === 0) return t('todayW'); if (n === 1) return t('tomorrow'); if (n > 1) return t('inDays', { n }); return t('overdueBy', { n: -n }); };
+const doseTotal = p => p.chelator && p.chelator !== 'none' && p.weight && p.dose ? Math.round(p.dose * p.weight) : null;
+
+// ---------- SVG charts (hand-drawn, no library) ----------
+const chartWidth = el => Math.max(300, (el.clientWidth || 600) - 10);
+function monthTicks(t0, t1, x, H, P, s) {
+  const months = (t1 - t0) / (30.4 * DAY); const every = months > 14 ? 3 : months > 7 ? 2 : 1;
+  const d = new Date(t0); d.setDate(1); d.setMonth(d.getMonth() + 1); let i = 0; let out = '';
+  while (d.getTime() <= t1) { if (i % every === 0) out += `<text x="${x(d.getTime()).toFixed(1)}" y="${H - 8}" font-size="11" text-anchor="middle" fill="#6c6684">${d.toLocaleDateString('en-GB', { month: 'short' })}${d.getMonth() === 0 ? ' ' + d.getFullYear() : ''}</text>`; d.setMonth(d.getMonth() + 1); i++; }
+  return out;
+}
+function attachHover(el, items, W, H, render) {
+  const svgEl = $('svg', el), tip = $('.tip', el), marks = $$('[data-hit]', el);
+  if (!svgEl || !tip) return;
+  const show = ev => {
+    const rect = svgEl.getBoundingClientRect(); const px = (ev.clientX - rect.left) / rect.width * W;
+    let best = 0, bd = 1e9; items.forEach((it, i) => { const d = Math.abs(it.x - px); if (d < bd) { bd = d; best = i; } });
+    const it = items[best]; marks.forEach(m => m.classList.toggle('hot', +m.dataset.hit === best));
+    tip.style.display = 'block'; tip.style.left = (it.x / W * rect.width) + 'px'; tip.style.top = (it.y / H * rect.height) + 'px'; tip.innerHTML = render(it);
+  };
+  svgEl.addEventListener('mousemove', show);
+  svgEl.addEventListener('touchmove', e => { show(e.touches[0]); e.preventDefault(); }, { passive: false });
+  svgEl.addEventListener('touchstart', e => show(e.touches[0]), { passive: true });
+  svgEl.addEventListener('mouseleave', () => { tip.style.display = 'none'; marks.forEach(m => m.classList.remove('hot')); });
+}
+/** Hb chart: pre/post points per episode, target band, decline connectors, prediction */
+function hbChart(el, eps, target, pred) {
+  const inYear = eps.filter(e => daysBetween(parseDate(e.date), today) <= 365);
+  const data = inYear.length >= 3 ? inYear : eps.slice(-12);
+  if (!data.length) { el.innerHTML = `<div class="empty"><div class="emptyic">${ic('droplet')}</div>${T('noTx')}</div>`; return; }
+  const W = chartWidth(el), H = 250, P = { l: 36, r: 18, t: 18, b: 30 };
+  const t0 = parseDate(data[0].date).getTime() - 3 * DAY; let t1 = today.getTime() + 3 * DAY;
+  if (pred && pred.predicted > today) t1 = pred.predicted.getTime() + 4 * DAY;
+  const x = ts => P.l + (ts - t0) / ((t1 - t0) || 1) * (W - P.l - P.r);
+  const vals = data.flatMap(e => [e.pre, e.post]).filter(v => v != null);
+  const lo = Math.min(6, Math.floor(Math.min(...vals)) - 1), hi = Math.max(14, Math.ceil(Math.max(...vals)) + 1);
+  const y = v => P.t + (1 - (v - lo) / (hi - lo)) * (H - P.t - P.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(t('tx_chart'))}">`;
+  for (let g = lo; g <= hi; g += 2) s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="#e3deef"/><text x="${P.l - 8}" y="${y(g) + 4}" font-size="11" text-anchor="end" fill="#6c6684">${g}</text>`;
+  s += `<rect x="${P.l}" y="${y(TARGET_BAND[1])}" width="${W - P.l - P.r}" height="${y(TARGET_BAND[0]) - y(TARGET_BAND[1])}" fill="#128f80" opacity=".10"/>`;
+  s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(target)}" y2="${y(target)}" stroke="#128f80" stroke-width="1.5"/><text x="${P.l + 6}" y="${y(TARGET_BAND[1]) - 5}" font-size="10.5" text-anchor="start" fill="#6c6684">${esc(t('target'))} ${target} · ${TARGET_BAND[0]}–${TARGET_BAND[1]}</text>`;
+  s += monthTicks(t0, t1, x, H, P);
+  const tx = x(today.getTime()); s += `<line x1="${tx}" x2="${tx}" y1="${P.t}" y2="${H - P.b}" stroke="#c9c2dd" stroke-width="1"/><text x="${tx}" y="${P.t - 6}" font-size="10" text-anchor="middle" fill="#6c6684">${esc(t('todayW'))}</text>`;
+  const items = data.map((e, i) => ({ e, i, x: x(parseDate(e.date).getTime()), y: y(e.post ?? e.pre), prev: data[i - 1] }));
+  let decl = '';
+  items.forEach(it => { if (it.prev && it.prev.post != null && it.e.pre != null) decl += `M${x(parseDate(it.prev.date).getTime()).toFixed(1)} ${y(it.prev.post).toFixed(1)} L${it.x.toFixed(1)} ${y(it.e.pre).toFixed(1)} `; });
+  s += `<path class="draw" d="${decl}" fill="none" stroke="#9b93b8" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+  items.forEach(it => { if (it.e.pre != null && it.e.post != null) s += `<line x1="${it.x}" x2="${it.x}" y1="${y(it.e.pre)}" y2="${y(it.e.post)}" stroke="#6d4fc2" stroke-width="2" opacity=".55"/>`; });
+  if (pred) {
+    const px = x(pred.predicted.getTime()), py = y(target), lx = x(parseDate(pred.last.date).getTime()), ly = y(pred.last.post);
+    s += `<path class="draw" d="M${lx} ${ly} L${px} ${py}" fill="none" stroke="#6d4fc2" stroke-width="2" stroke-dasharray="5 4"/><circle cx="${px}" cy="${py}" r="6" fill="#fff" stroke="#6d4fc2" stroke-width="2"/><text x="${px}" y="${py + 20}" font-size="10.5" text-anchor="middle" fill="#6c6684">${esc(t('lg_pred'))} ${fmtShort(pred.predicted)}</text>`;
+  }
+  items.forEach(it => { if (it.e.pre != null) s += `<circle data-hit="${it.i}" class="pt" cx="${it.x}" cy="${y(it.e.pre)}" r="4.5" fill="#6d4fc2" stroke="#fff" stroke-width="2"/>`; if (it.e.post != null) s += `<circle data-hit="${it.i}" class="pt" cx="${it.x}" cy="${y(it.e.post)}" r="4.5" fill="#128f80" stroke="#fff" stroke-width="2"/>`; });
+  s += `</svg><div class="tip"></div>`;
+  el.innerHTML = s;
+  $$('path.draw', el).forEach(drawPath);
+  attachHover(el, items, W, H, it => `<b>${fmtDate(it.e.date)}</b><br>${esc(t('tx_pre'))}: ${it.e.pre ?? '—'} · ${esc(t('tx_post'))}: ${it.e.post ?? '—'}<br>${volLabel(it.e)}${it.prev ? ` · ${esc(t('tx_interval'))} ${daysBetween(parseDate(it.prev.date), parseDate(it.e.date))} ${esc(t('pred_days'))}` : ''}`);
+}
+/** Ferritin line chart with 1000 / 2500 thresholds */
+function ferritinChart(el, rows, compact = false) {
+  if (!rows.length) { el.innerHTML = `<div class="empty"><div class="emptyic">${ic('flask')}</div>${T('fer_none')}</div>`; return; }
+  const W = chartWidth(el), H = compact ? 190 : 240, P = { l: 40, r: 16, t: 16, b: 30 };
+  const t0 = parseDate(rows[0].date).getTime() - 10 * DAY, t1 = Math.max(today.getTime(), parseDate(rows[rows.length - 1].date).getTime()) + 10 * DAY;
+  const x = ts => P.l + (ts - t0) / ((t1 - t0) || 1) * (W - P.l - P.r);
+  const hi = Math.max(3000, Math.ceil(Math.max(...rows.map(r => r.value)) * 1.15 / 500) * 500);
+  const y = v => P.t + (1 - v / hi) * (H - P.t - P.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(t('fer_chart'))}">`;
+  for (let g = 0; g <= hi; g += 1000) s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(g)}" y2="${y(g)}" stroke="#e3deef"/><text x="${P.l - 8}" y="${y(g) + 4}" font-size="11" text-anchor="end" fill="#6c6684">${g ? g / 1000 + 'K' : '0'}</text>`;
+  s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(1000)}" y2="${y(1000)}" stroke="#c98a1c" stroke-width="1.5"/><text x="${W - P.r}" y="${y(1000) - 5}" font-size="10.5" text-anchor="end" fill="#6c6684">${esc(t('fer_thr1'))}</text>`;
+  s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(2500)}" y2="${y(2500)}" stroke="#c23b32" stroke-width="1.5"/><text x="${W - P.r}" y="${y(2500) - 5}" font-size="10.5" text-anchor="end" fill="#6c6684">${esc(t('fer_thr2'))}</text>`;
+  s += monthTicks(t0, t1, x, H, P);
+  const pts = rows.map((r, i) => ({ r, i, x: x(parseDate(r.date).getTime()), y: y(r.value) }));
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ');
+  s += `<path d="${d} L${pts[pts.length - 1].x.toFixed(1)} ${y(0)} L${pts[0].x.toFixed(1)} ${y(0)} Z" fill="#6d4fc2" opacity=".08"/>`;
+  s += `<path class="draw" d="${d}" fill="none" stroke="#6d4fc2" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  pts.forEach(p => { s += `<circle data-hit="${p.i}" class="pt" cx="${p.x}" cy="${p.y}" r="4.5" fill="#6d4fc2" stroke="#fff" stroke-width="2"/>`; });
+  const lp = pts[pts.length - 1]; s += `<text x="${lp.x}" y="${lp.y - 10}" font-size="11" font-weight="700" text-anchor="middle" fill="#231d3b">${nf.format(lp.r.value)}</text>`;
+  s += `</svg><div class="tip"></div>`;
+  el.innerHTML = s;
+  $$('path.draw', el).forEach(drawPath);
+  attachHover(el, pts, W, H, p => `<b>${fmtDate(p.r.date)}</b><br>${nf.format(p.r.value)} ng/mL · ${esc(t('band_' + ferBand(p.r.value)))}`);
+}
+/** 12-week dose calendar (CSS grid heatmap) */
+function heatmap(pid, weeks = 12) {
+  const d = dosesOf(pid); const dow = (today.getDay() + 6) % 7; const start = addDays(today, -dow - (weeks - 1) * 7);
+  let h = `<div class="heat" style="grid-template-columns:auto repeat(${weeks},minmax(0,1fr))"><div></div>`;
+  for (let w = 0; w < weeks; w++) { const ds = addDays(start, w * 7); h += `<div class="hl">${w % 3 === 0 ? fmtShort(ds) : ''}</div>`; }
+  const DN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  for (let r = 0; r < 7; r++) {
+    h += `<div class="dl">${r % 2 === 0 ? DN[r] : ''}</div>`;
+    for (let w = 0; w < weeks; w++) {
+      const day = addDays(start, w * 7 + r), k = dateKey(day), fut = day > today, v = d[k];
+      const cls = fut ? 'f' : v ? (v.t ? 't' : 'm') : 'n';
+      const title = `${fmtDate(k)}${v ? ': ' + (v.t ? t('taken') : t('missed') + (v.r ? ' · ' + nm(REASONS[v.r] || REASONS.forgot) : '')) : ''}`;
+      h += `<button type="button" class="c ${cls} ${k === TODAY ? 'today' : ''}" data-day="${k}" ${fut ? 'disabled tabindex="-1"' : ''} title="${esc(title)}" aria-label="${esc(title)}"></button>`;
+    }
+  }
+  return h + '</div>';
+}
+/** Missed-dose reason bars */
+function reasonBars(reasons) {
+  const total = Object.values(reasons).reduce((a, b) => a + b, 0); if (!total) return `<div class="empty">${T('adh_noMiss')}</div>`;
+  const max = Math.max(...Object.values(reasons));
+  return Object.entries(REASONS).sort((a, b) => (reasons[b[0]] || 0) - (reasons[a[0]] || 0)).map(([k, r]) => { const n = reasons[k] || 0; return `<div class="bar"><span class="lbl"><i style="background:${r.c}"></i>${NM(r)}</span><div class="track"><div class="fill" data-w="${n / max * 100}%" style="width:0;background:${r.c}"></div></div><span class="n">${n}</span></div>`; }).join('');
+}
+/** Dose range bar for the chelator helper */
+function doseBar(ch, dose) {
+  const W = 360, H = 58, max = ch.max * 1.35, x = v => 10 + Math.min(1, v / max) * (W - 20);
+  const cls = dose < ch.min ? 'warn' : dose > ch.max ? 'bad' : 'ok';
+  const col = { ok: '#2e7d4f', warn: '#a9640a', bad: '#c23b32' }[cls];
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto;display:block" aria-hidden="true">
+    <line x1="10" x2="${W - 10}" y1="34" y2="34" stroke="#e3deef" stroke-width="8" stroke-linecap="round"/>
+    <line x1="${x(ch.min)}" x2="${x(ch.max)}" y1="34" y2="34" stroke="#128f80" stroke-width="8" stroke-linecap="round" opacity=".8"/>
+    <text x="${x(ch.min)}" y="54" font-size="11" text-anchor="middle" fill="#6c6684">${ch.min}</text><text x="${x(ch.max)}" y="54" font-size="11" text-anchor="middle" fill="#6c6684">${ch.max}</text>
+    <circle cx="${x(dose)}" cy="34" r="8" fill="${col}" stroke="#fff" stroke-width="3"/>
+    <text x="${x(dose)}" y="16" font-size="12" font-weight="700" text-anchor="middle" fill="#231d3b">${dose} mg/kg</text></svg>`;
+}
+
+// ---------- views: rail, header, tabs ----------
+const view = $('#view');
+const TABS = [['overview', 'activity'], ['transfusions', 'droplet'], ['iron', 'pill'], ['adherence', 'calendar'], ['appointments', 'clock'], ['summary', 'printer'], ['screening', 'search'], ['about', 'info']];
+const PATIENT_TABS = ['overview', 'transfusions', 'iron', 'adherence', 'appointments', 'summary'];
+let cur = 'overview';
+const patientMeta = p => `${ageOf(p.dob)} ${t('years')} · ${t(p.sex === 'F' ? 'female' : 'male')} · ${nm(TYPES[p.type] || TYPES.major)}`;
+
+function renderRail() {
+  const list = patients(), c = current();
+  $('#rail').innerHTML = `<div class="railhead"><h3>${T('patients')} <span class="muted">(${list.length})</span></h3><button class="btn sm" id="addP">${ic('plus')} ${T('addPatient')}</button></div>
+    <div class="stagger" style="display:contents">${list.map(p => { const al = alertsFor(p); return `<button class="pcard ${c && c.id === p.id ? 'on' : ''}" data-p="${p.id}"><span class="avatar ${p.sex === 'F' ? 'f' : ''}">${esc(initials(p.name))}</span><span class="who"><span class="nm">${esc(p.name)}</span><span class="sub">${esc(patientMeta(p))}</span><span class="dots">${al.length ? al.map(a => `<i class="dot ${a.lvl}" title="${esc(t(a.k))}"></i>`).join('') : `<i class="dot ok" title="${esc(t('noAlerts'))}"></i>`}</span></span><span class="bgtag">${p.bg}</span></button>`; }).join('')}</div>
+    <div class="railnote">${ic('search')} <a href="#screening">${T('railNote')}</a></div>`;
+  $('#addP').onclick = () => patientForm(null);
+  $$('.pcard').forEach(b => b.onclick = () => { store.set('current', b.dataset.p); if (!PATIENT_TABS.includes(cur)) location.hash = 'overview'; else route(); });
+  animateIn($('#rail'));
+}
+function renderHead() {
+  const p = current(), el = $('#phead');
+  if (!p || !PATIENT_TABS.includes(cur)) { el.innerHTML = ''; return; }
+  const total = doseTotal(p), ch = CHELATORS[p.chelator] || CHELATORS.none;
+  el.innerHTML = `<div class="phead enter"><span class="avatar big ${p.sex === 'F' ? 'f' : ''}">${esc(initials(p.name))}</span>
+    <div class="who"><h2>${esc(p.name)}</h2><div class="meta"><span>${esc(patientMeta(p))}</span><span class="bgtag">${p.bg}</span><span>${p.weight} ${t('kg')}</span>${p.chelator !== 'none' ? `<span class="pill violet">${ic('pill')} ${NM(ch)} ${p.dose} mg/kg${total ? ` ≈ ${total} mg` : ''}</span>` : ''}<span class="muted">${esc(p.centre || '')}</span></div></div>
+    <div class="acts"><button class="btn teal sm" id="reqBlood">${ic('droplet')} ${T('requestBlood')}</button><button class="btn ghost sm" id="editP">${ic('edit')} ${T('edit')}</button><button class="btn danger sm" id="delP" aria-label="${esc(t('deletePatient'))}">${ic('trash')}</button></div></div>`;
+  $('#reqBlood').onclick = () => requestBloodModal(p);
+  $('#editP').onclick = () => patientForm(p);
+  $('#delP').onclick = () => { if (confirm(t('confirmDelete'))) { store.set('patients', patients().filter(x => x.id !== p.id)); ['tx', 'fer', 'appts', 'doses', 'rem'].forEach(k => { const m = store.get(k, {}); delete m[p.id]; store.set(k, m); }); toast(t('deleted')); route(); } };
+}
+function renderTabs() {
+  $('#tabs').innerHTML = TABS.map(([id, icon], i) => `${i === PATIENT_TABS.length ? '<span class="sep"></span>' : ''}<a href="#${id}" class="${cur === id ? 'on' : ''}">${ic(icon)} ${T('nav_' + id)}</a>`).join('');
+  const on = $('#tabs a.on'); if (on && on.scrollIntoView) try { on.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch { /* older browsers */ }
+}
+function renderEmpty() {
+  view.innerHTML = `<div class="empty" style="padding:48px 20px"><div class="emptyic">${ic('users')}</div><h3>${T('noPatients')}</h3><p class="muted" style="max-width:420px;margin:8px auto 16px">${T('noPatients_t')}</p><button class="btn" id="emptyAdd">${ic('plus')} ${T('addPatient')}</button></div>`;
+  $('#emptyAdd').onclick = () => patientForm(null);
+}
+const kpi = (icon, cls, k, v, sub, id) => `<div class="kpi"><div style="display:flex;gap:10px;align-items:center"><span class="kicon ${cls}">${ic(icon)}</span><div class="k">${T(k)}</div></div><div class="v" ${id ? `id="${id}"` : ''}>${v}</div><div class="s">${sub}</div></div>`;
+
+// ---------- view: overview ----------
+function renderOverview(p) {
+  const eps = txOf(p.id), last = eps[eps.length - 1], fer = ferOf(p.id), lf = fer[fer.length - 1], pred = predictor(eps, p.targetHb), ad = adherenceStats(p.id), als = alertsFor(p);
+  const upcoming = apptOf(p.id).filter(a => !a.done && a.date >= TODAY).slice(0, 4);
+  const since = last ? daysBetween(parseDate(last.date), today) : null;
+  const band = lf ? ferBand(lf.value) : null, ch = CHELATORS[p.chelator] || CHELATORS.none, total = doseTotal(p);
+  view.innerHTML = `<div class="kpis stagger">
+    ${kpi('droplet', '', 'k_preHb', last && last.pre != null ? `<span data-count="${last.pre}" data-dec="1">0</span> <small>g/dL</small>` : `<small>${T('noData')}</small>`, last ? `${esc(t('target'))} ${p.targetHb} · ${fmtDate(last.date)}` : '')}
+    ${kpi('clock', since != null && pred && pred.predicted < today ? 'warn' : 'teal', 'k_days', since != null ? `<span data-count="${since}">0</span> <small>${T('adh_days')}</small>` : `<small>${T('noData')}</small>`, last ? `${volLabel(last)} · ${esc(last.centre || '')}` : '')}
+    ${kpi('calendar', pred && pred.predicted < today ? 'warn' : '', 'k_next', pred ? fmtDate(pred.predicted, { day: 'numeric', month: 'short' }) : `<small>${T('noData')}</small>`, pred ? `${relDays(pred.predicted)} · ${pred.rate.toFixed(2)} ${esc(t('pred_perDay'))}` : esc(t('pred_na')))}
+    ${kpi('flask', band ? bandCls[band] : '', 'k_ferritin', lf ? `<span data-count="${lf.value}">0</span> <small>ng/mL</small>` : `<small>${T('noData')}</small>`, lf ? `<span class="pill ${bandCls[band]}">${T('band_' + band)}</span> ${fmtDate(lf.date)}` : '')}
+    ${kpi('pill', ad.pct30 == null ? '' : ad.pct30 >= 80 ? 'ok' : 'warn', 'k_adherence', ad.pct30 != null ? `<span data-count="${ad.pct30}">0</span><small>%</small>` : `<small>${T('noData')}</small>`, ad.pct30 != null ? `${T('adh_streak')}: ${ad.streak} ${T('adh_days')}` : '')}
+  </div>
+  <div class="two">
+    <div class="stack">
+      <div class="panel"><h3>${ic('bell')} ${T('alerts')}</h3>
+        <div class="list stagger">${als.length ? als.map(a => `<div class="alert ${a.lvl}">${ic(a.ic)}<div><b>${T(a.k)}</b><span class="muted" style="font-size:.85rem">${T(a.k + '_t', { v: a.v })}</span></div></div>`).join('') : `<div class="alert ok">${ic('check-circle')}<div><b>${T('noAlerts')}</b><span class="muted" style="font-size:.85rem">${T('noAlerts_t')}</span></div></div>`}</div></div>
+      <div class="panel" id="todayDose"></div>
+      ${edu('edu_hb_t', 'edu_hb', 'droplet')}
+    </div>
+    <div class="stack">
+      <div class="panel"><h3>${ic('calendar')} ${T('upcoming')}</h3>
+        <div class="list stagger">${upcoming.length ? upcoming.map(a => `<div class="row"><div class="l"><b>${ic(APPT[a.type].ic)} ${NM(APPT[a.type])}</b><div class="muted" style="font-size:.85rem">${esc(a.note || '')}</div></div><span class="pill violet">${fmtDate(a.date, { day: 'numeric', month: 'short' })} · ${relDays(parseDate(a.date))}</span></div>`).join('') : `<div class="empty">${T('noAppts')}</div>`}</div>
+        <div style="margin-top:10px"><a class="btn ghost sm" href="#appointments">${ic('plus')} ${T('ap_add')}</a></div></div>
+      <div class="panel"><h3>${ic('stethoscope')} ${T('plan')}</h3>
+        <div class="cols tight">
+          <div><div class="eyebrow">${T('f_chelator')}</div><b>${p.chelator === 'none' ? T('chelNone') : NM(ch)}</b>${p.chelator !== 'none' ? `<div class="muted" style="font-size:.85rem">${p.dose} mg/kg/${esc(t('pred_days').replace(/s$/, ''))} ≈ <b>${total ?? '—'} mg</b> ${T(ch.how || 'perDay')}</div>` : ''}</div>
+          <div><div class="eyebrow">${T('f_target')}</div><b>${p.targetHb} g/dL</b><div class="muted" style="font-size:.85rem">${T('lg_band')}</div></div>
+          <div><div class="eyebrow">${T('f_centre')}</div><b>${esc(p.centre || '—')}</b></div>
+          <div><div class="eyebrow">${T('emergency')}</div><b>${esc(p.emName || '—')}</b><div class="muted" style="font-size:.85rem">${p.emPhone ? `<a href="tel:${esc(p.emPhone)}">${ic('phone')} ${esc(p.emPhone)}</a>` : ''}</div></div>
+        </div>${p.notes ? `<div class="note" style="margin-top:12px">${esc(p.notes)}</div>` : ''}
+        <!-- TODO(student): growthChart(p) — plot height/weight-for-age against WHO percentile tables here; thalassemia children often track below the 3rd percentile. -->
+      </div>
+    </div>
+  </div>`;
+  renderTodayDose(p, $('#todayDose'));
+  $$('[data-count]', view).forEach(el => countUp(el, +el.dataset.count, { fmt: v => el.dataset.dec ? v.toFixed(1) : Math.round(v).toLocaleString('en-PK') }));
+}
+function renderTodayDose(p, el) {
+  if (!el) return; const ad = adherenceStats(p.id); const v = ad.today;
+  el.innerHTML = `<h3>${ic('pill')} ${T('todayDose')} <span class="muted" style="font-weight:500;font-size:.85rem">· ${fmtDate(TODAY)}</span></h3>
+    ${v ? `<div class="alert ${v.t ? 'ok' : 'warn'}">${ic(v.t ? 'check-circle' : 'alert-circle')}<div><b>${v.t ? T('taken') : T('missed')}</b>${!v.t && v.r ? `<span class="muted" style="font-size:.85rem">${NM(REASONS[v.r])}</span>` : ''}</div><button class="btn ghost sm" id="undoDose" style="margin-left:auto">${ic('x')} ${T('undo')}</button></div>`
+      : `<p class="lead" style="margin-bottom:10px">${T('notMarked')}</p><div class="acts"><button class="btn teal" id="takenBtn">${ic('check')} ${T('markTaken')}</button><button class="btn ghost" id="missedBtn">${ic('x')} ${T('markMissed')}</button></div><div class="chips hidden" id="reasonChips" style="margin-top:10px">${Object.entries(REASONS).map(([k, r]) => `<button class="chip" data-r="${k}"><i class="dot" style="background:${r.c};margin-right:6px"></i>${NM(r)}</button>`).join('')}</div>`}`;
+  const done = () => { toast(t('doseSaved'), 'ok'); route(); };
+  if ($('#takenBtn')) $('#takenBtn').onclick = () => { setDose(p.id, TODAY, { t: true }); done(); };
+  if ($('#missedBtn')) $('#missedBtn').onclick = () => $('#reasonChips').classList.toggle('hidden');
+  $$('#reasonChips .chip').forEach(c => c.onclick = () => { setDose(p.id, TODAY, { t: false, r: c.dataset.r }); done(); });
+  if ($('#undoDose')) $('#undoDose').onclick = () => { setDose(p.id, TODAY, null); route(); };
+}
+
+// ---------- view: transfusions ----------
+function renderTransfusions(p) {
+  const eps = txOf(p.id), pred = predictor(eps, p.targetHb), req = annualReq(p);
+  const lastUnit = eps.length ? eps[eps.length - 1].unit : 'mL';
+  view.innerHTML = `<div class="two">
+    <div class="stack">
+      <div class="panel"><h3>${ic('plus')} ${T('tx_add')}</h3>
+        <label class="f" for="txDate">${T('tx_date')}</label><input id="txDate" type="date" value="${TODAY}" max="${TODAY}">
+        <label class="f">${T('tx_vol')}</label><div style="display:grid;grid-template-columns:1fr auto;gap:8px"><input id="txVol" type="number" min="1" step="1" value="${lastUnit === 'units' ? 2 : Math.round(p.weight * 12)}" aria-label="${esc(t('tx_vol'))}"><div class="seg" id="txUnit"><button type="button" class="${lastUnit === 'mL' ? 'on' : ''}" data-u="mL">mL</button><button type="button" class="${lastUnit === 'units' ? 'on' : ''}" data-u="units">${T('tx_units')}</button></div></div>
+        <div class="cols tight"><div><label class="f" for="txPre">${T('tx_pre')}</label><input id="txPre" type="number" min="3" max="16" step=".1" placeholder="8.9"></div><div><label class="f" for="txPost">${T('tx_post')}</label><input id="txPost" type="number" min="3" max="18" step=".1" placeholder="12.5"></div></div>
+        <label class="f" for="txCentre">${T('tx_centre')}</label><input id="txCentre" type="text" list="centres" value="${esc(p.centre || '')}">
+        <label class="f" for="txNotes">${T('tx_notes')}</label><input id="txNotes" type="text" maxlength="160">
+        <div class="acts" style="margin-top:14px"><button class="btn" id="txSave">${ic('check')} ${T('save')}</button></div></div>
+      <div class="panel"><h3>${ic('activity')} ${T('pred_t')}</h3>
+        ${pred ? `<div class="bigstat">${fmtDate(pred.predicted)}</div><div class="pill ${pred.predicted < today ? 'warn' : 'teal'}" style="margin-top:4px">${relDays(pred.predicted)}</div>
+          <div class="cols tight" style="margin-top:12px"><div><div class="eyebrow">${T('pred_rate')}</div><b class="num">${pred.rate.toFixed(3)}</b> <span class="muted">${T('pred_perDay')}</span><div class="fine">${T('pred_basis', { n: pred.n })}</div></div><div><div class="eyebrow">${T('pred_interval')}</div><b class="num">${Math.round(pred.avgInterval)}</b> <span class="muted">${T('pred_days')}</span></div><div><div class="eyebrow">${T('tx_post')} → ${T('target')}</div><b class="num">${pred.last.post} → ${p.targetHb}</b> <span class="muted">g/dL</span></div></div>` : `<p class="lead">${T('pred_na')}</p>`}
+        <p class="fine" style="margin:12px 0 0">${ic('info')} ${T('pred_note')}</p></div>
+      <div class="panel"><h3>${ic('bar-chart')} ${T('req_t')}</h3>
+        ${req ? `<div class="bigstat">${Math.round(req.perKg)} <span class="muted" style="font-size:1rem;font-weight:600">${T('req_unit')}</span></div><div class="fine">${nf.format(req.ml)} mL · ${req.n} ${T('req_basis')} · ${T('req_assume', { ml: UNIT_ML })}</div>
+          <div class="${req.perKg > 200 ? 'warnbox' : 'note'}" style="margin-top:10px">${ic(req.perKg > 200 ? 'alert' : 'check-circle')} ${T(req.perKg > 200 ? 'req_flag' : 'req_ok')}</div>` : `<p class="lead">${T('noTx')}</p>`}</div>
+    </div>
+    <div class="stack">
+      <div class="panel"><h3>${ic('droplet')} ${T('tx_chart')}</h3><div class="chart" id="hbChart"></div>
+        <div class="legend"><span><i style="background:#6d4fc2"></i>${T('lg_pre')}</span><span><i style="background:#128f80"></i>${T('lg_post')}</span><span><i class="sq" style="background:#128f80;opacity:.25"></i>${T('lg_band')}</span><span><i class="ln"></i>${T('lg_decline')}</span><span><i style="background:#fff;border:2px solid #6d4fc2;width:8px;height:8px"></i>${T('lg_pred')}</span></div></div>
+      <div class="panel"><div class="toolbar" style="margin-bottom:10px"><h3 style="margin:0">${ic('list')} ${T('tx_log')} <span class="muted" style="font-weight:500">(${eps.length})</span></h3><span class="spacer"></span><button class="btn ghost sm" id="txCsv" ${eps.length ? '' : 'disabled'}>${ic('download')} ${T('export')}</button></div>
+        ${eps.length ? `<div class="tablewrap"><table><thead><tr><th>${T('tx_date')}</th><th class="num">${T('tx_interval')}</th><th class="num">${T('tx_vol')}</th><th class="num">Pre</th><th class="num">Post</th><th class="num">${T('tx_delta')}</th><th>${T('tx_centre')}</th><th></th></tr></thead><tbody>
+          ${eps.slice().reverse().map((e, i, arr) => { const prev = arr[i + 1]; return `<tr><td><b>${fmtDate(e.date)}</b>${e.notes ? `<div class="fine">${esc(e.notes)}</div>` : ''}</td><td class="num">${prev ? daysBetween(parseDate(prev.date), parseDate(e.date)) + ' d' : '—'}</td><td class="num">${volLabel(e)}</td><td class="num ${e.pre != null && e.pre < 7 ? 'bad' : ''}">${e.pre ?? '—'}</td><td class="num">${e.post ?? '—'}</td><td class="num">${e.pre != null && e.post != null ? '+' + r1(e.post - e.pre) : '—'}</td><td class="muted" style="font-size:.82rem">${esc(e.centre || '')}</td><td><button class="btn danger sm" data-del="${e.id}" aria-label="${esc(t('delete'))}">${ic('trash')}</button></td></tr>`; }).join('')}
+        </tbody></table></div>` : `<div class="empty"><div class="emptyic">${ic('droplet')}</div>${T('noTx')}</div>`}</div>
+    </div></div>`;
+  hbChart($('#hbChart'), eps, p.targetHb, pred);
+  $$('#txUnit button').forEach(b => b.onclick = () => { $$('#txUnit button').forEach(x => x.classList.remove('on')); b.classList.add('on'); $('#txVol').value = b.dataset.u === 'units' ? 2 : Math.round(p.weight * 12); });
+  $('#txSave').onclick = () => {
+    const date = $('#txDate').value, vol = +$('#txVol').value, pre = $('#txPre').value === '' ? null : +$('#txPre').value, post = $('#txPost').value === '' ? null : +$('#txPost').value;
+    if (!date || date > TODAY || !(vol > 0) || pre == null || pre < 3 || pre > 16) return toast(t('tx_invalid'), 'bad');
+    const list = txOf(p.id); list.push({ id: uid(), date, vol, unit: $('#txUnit .on').dataset.u, pre, post, centre: $('#txCentre').value.trim(), notes: $('#txNotes').value.trim() });
+    setList('tx', p.id, list); toast(t('tx_saved'), 'ok'); route();
+  };
+  $$('[data-del]').forEach(b => b.onclick = () => { setList('tx', p.id, txOf(p.id).filter(e => e.id !== b.dataset.del)); route(); });
+  if ($('#txCsv')) $('#txCsv').onclick = () => exportCSV(p);
+}
+function exportCSV(p) {
+  const rows = [['date', 'volume', 'unit', 'volume_ml', 'pre_hb', 'post_hb', 'centre', 'notes'], ...txOf(p.id).map(e => [e.date, e.vol, e.unit, volMl(e), e.pre ?? '', e.post ?? '', e.centre || '', e.notes || ''])];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); a.download = `${p.name.replace(/\s+/g, '_')}_transfusions.csv`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast(t('exported'), 'ok');
+}
+// TODO(student): exportToEMR(p) — emit an HL7 FHIR bundle (Patient, Procedure for each transfusion, Observation for Hb/ferritin) and POST it to the centre's records system.
+function exportToEMR() { throw new Error('exportToEMR() is not implemented — student extension'); }
+
+// ---------- view: iron & chelation ----------
+function renderIron(p) {
+  const fer = ferOf(p.id), lf = fer[fer.length - 1], prev = fer[fer.length - 2], ch = CHELATORS[p.chelator] || CHELATORS.none, total = doseTotal(p);
+  const rem = store.get('rem', {})[p.id] || { time: '21:00', on: false };
+  const doseState = p.chelator === 'none' ? null : p.dose < ch.min ? 'dose_below' : p.dose > ch.max ? 'dose_above' : 'dose_in';
+  view.innerHTML = `<div class="two">
+    <div class="stack">
+      <div class="panel"><h3>${ic('plus')} ${T('fer_add')}</h3>
+        <div class="cols tight"><div><label class="f" for="feDate">${T('tx_date')}</label><input id="feDate" type="date" value="${TODAY}" max="${TODAY}"></div><div><label class="f" for="feVal">${T('fer_value')}</label><input id="feVal" type="number" min="10" max="20000" step="1" placeholder="1500"></div></div>
+        <div class="acts" style="margin-top:14px"><button class="btn" id="feSave">${ic('check')} ${T('save')}</button></div></div>
+      <div class="panel"><h3>${ic('pill')} ${T('dose_t')}</h3><p class="lead">${T('dose_lead')}</p>
+        ${p.chelator === 'none' ? `<div class="empty">${T('chelNone')}</div>` : `<div class="eyebrow">${T('dose_current')}</div><b>${NM(ch)}</b> <span class="muted">· ${esc(lang === 'ur' ? ch.route_ur : ch.route_en)}</span>
+          ${doseBar(ch, p.dose)}
+          <div class="cols tight" style="margin-top:8px"><div><div class="eyebrow">${T('dose_range')}</div><b>${ch.min}–${ch.max}</b> <span class="muted">mg/kg/${esc(t('pred_days').replace(/s$/, ''))}</span></div><div><div class="eyebrow">${T('dose_total')}</div><b>${total} mg</b> <span class="muted">${T('perDay')}${ch.how === 'dividedDoses' ? ` (≈ ${Math.round(total / 3)} mg × 3)` : ''}</span></div><div><div class="eyebrow">${T('f_weight')}</div><b>${p.weight} ${t('kg')}</b></div></div>
+          <div class="pill ${doseState === 'dose_in' ? 'ok' : doseState === 'dose_below' ? 'warn' : 'bad'}" style="margin-top:10px">${ic(doseState === 'dose_in' ? 'check-circle' : 'alert-circle')} ${T(doseState)}</div>`}
+        <div class="warnbox" style="margin-top:12px">${ic('alert')} ${T('dose_disclaimer')}</div></div>
+      <div class="panel"><h3>${ic('bell')} ${T('rem_t')}</h3><p class="lead">${T('rem_lead')}</p>
+        <div class="cols tight" style="align-items:end"><div><label class="f" for="remTime">${T('rem_time')}</label><input id="remTime" type="time" value="${esc(rem.time)}"></div><div><label class="f">&nbsp;</label><label class="chip ${rem.on ? 'on' : ''}" style="display:inline-flex;align-items:center;gap:8px;min-height:40px"><input type="checkbox" id="remOn" ${rem.on ? 'checked' : ''} style="width:16px;height:16px;accent-color:#fff"> ${T('rem_on')}</label></div></div>
+        <div class="acts" style="margin-top:12px"><button class="btn ghost sm" id="remPerm">${ic('bell')} ${T('rem_enable')}</button><span class="fine" id="remStatus">${'Notification' in window ? `${t('rem_enable')}: ${Notification.permission}` : esc(t('rem_unsupported'))}</span></div></div>
+    </div>
+    <div class="stack">
+      <div class="panel"><h3>${ic('flask')} ${T('fer_chart')}</h3><div class="chart" id="ferChart"></div>
+        ${lf ? `<div class="toolbar" style="margin:10px 0 0"><span class="pill ${bandCls[ferBand(lf.value)]}">${nf.format(lf.value)} ng/mL · ${T('band_' + ferBand(lf.value))}</span>${prev ? `<span class="pill ${lf.value > prev.value ? 'warn' : 'ok'}">${ic(lf.value > prev.value ? 'trending-up' : 'trending-down')} ${lf.value > prev.value ? '+' : ''}${nf.format(lf.value - prev.value)} · ${T(lf.value > prev.value ? 'fer_trend_up' : 'fer_trend_down')}</span>` : ''}</div>` : ''}</div>
+      <div class="panel"><h3>${ic('list')} ${T('fer_log')}</h3>
+        ${fer.length ? `<div class="tablewrap"><table><thead><tr><th>${T('tx_date')}</th><th class="num">ng/mL</th><th></th><th></th></tr></thead><tbody>${fer.slice().reverse().map((r, i, arr) => { const pv = arr[i + 1]; return `<tr><td><b>${fmtDate(r.date)}</b></td><td class="num"><b>${nf.format(r.value)}</b>${pv ? ` <span class="muted" style="font-size:.78rem">(${r.value > pv.value ? '+' : ''}${nf.format(r.value - pv.value)})</span>` : ''}</td><td><span class="pill ${bandCls[ferBand(r.value)]}">${T('band_' + ferBand(r.value))}</span></td><td style="text-align:right"><button class="btn danger sm" data-del="${r.id}" aria-label="${esc(t('delete'))}">${ic('trash')}</button></td></tr>`; }).join('')}</tbody></table></div>` : `<div class="empty">${T('fer_none')}</div>`}</div>
+      <div class="todo"><h4>${ic('magnet')} ${T('mri_t')} <span class="tag">student</span></h4><div class="muted" style="font-size:.88rem">${T('mri_na')}</div></div>
+      ${edu('edu_chel_t', 'edu_chel', 'pill')}
+    </div></div>`;
+  // TODO(student): mriSection(p) — log liver iron concentration (LIC, mg Fe/g dw) and cardiac T2* (ms) per scan, chart them beside ferritin and flag cardiac T2* < 20 ms.
+  ferritinChart($('#ferChart'), fer);
+  $('#feSave').onclick = () => { const date = $('#feDate').value, v = +$('#feVal').value; if (!date || date > TODAY || !(v >= 10)) return toast(t('fer_invalid'), 'bad'); const list = ferOf(p.id); list.push({ id: uid(), date, value: Math.round(v) }); setList('fer', p.id, list); toast(t('fer_saved'), 'ok'); route(); };
+  $$('[data-del]').forEach(b => b.onclick = () => { setList('fer', p.id, ferOf(p.id).filter(r => r.id !== b.dataset.del)); route(); });
+  const saveRem = () => { const m = store.get('rem', {}); m[p.id] = { time: $('#remTime').value || '21:00', on: $('#remOn').checked }; store.set('rem', m); $('#remOn').closest('.chip').classList.toggle('on', $('#remOn').checked); toast(t('saved'), 'ok'); };
+  $('#remTime').onchange = saveRem; $('#remOn').onchange = saveRem;
+  $('#remPerm').onclick = async () => {
+    if (!('Notification' in window)) return toast(t('rem_unsupported'), 'bad');
+    try { const res = await Notification.requestPermission(); $('#remStatus').textContent = `${t('rem_enable')}: ${res}`; toast(res === 'granted' ? t('rem_granted') : t('rem_denied'), res === 'granted' ? 'ok' : 'bad'); } catch { toast(t('rem_denied'), 'bad'); }
+  };
+}
+
+// ---------- view: adherence ----------
+function renderAdherence(p) {
+  const ad = adherenceStats(p.id);
+  view.innerHTML = `<div class="kpis four stagger">
+    ${kpi('activity', 'teal', 'adh_streak', `<span data-count="${ad.streak}">0</span> <small>${T('adh_days')}</small>`, '')}
+    ${kpi('pill', ad.pct30 == null ? '' : ad.pct30 >= 80 ? 'ok' : 'warn', 'adh_30', ad.pct30 != null ? `<span data-count="${ad.pct30}">0</span><small>%</small>` : `<small>${T('noData')}</small>`, ad.pct30 != null && ad.pct30 < 80 ? `<span class="pill warn">${T('al_adherence')}</span>` : '')}
+    ${kpi('calendar', ad.pct84 == null ? '' : ad.pct84 >= 80 ? 'ok' : 'warn', 'adh_84', ad.pct84 != null ? `<span data-count="${ad.pct84}">0</span><small>%</small>` : `<small>${T('noData')}</small>`, '')}
+    ${kpi('alert-circle', ad.missed84 ? 'warn' : 'ok', 'adh_missed', `<span data-count="${ad.missed84}">0</span>`, '')}
+  </div>
+  <div class="two wide">
+    <div class="stack">
+      <div class="panel"><h3>${ic('calendar')} ${T('adh_heat')}</h3><p class="lead">${T('adh_hint')}</p>${heatmap(p.id)}
+        <div class="legend"><span><i class="sq" style="background:var(--teal)"></i>${T('taken')}</span><span><i class="sq" style="background:var(--rose)"></i>${T('missed')}</span><span><i class="sq" style="background:var(--surface-2)"></i>${T('notMarked')}</span></div></div>
+      <div class="panel" id="todayDose"></div>
+    </div>
+    <div class="stack">
+      <div class="panel"><h3>${ic('edit')} ${T('adh_mark')}</h3>
+        <div class="cols tight"><div><label class="f" for="mkDate">${T('tx_date')}</label><input id="mkDate" type="date" value="${TODAY}" max="${TODAY}"></div><div><label class="f" for="mkStatus">${T('adh_status')}</label><select id="mkStatus"><option value="t">${esc(t('taken'))}</option><option value="m">${esc(t('missed'))}</option><option value="c">${esc(t('clear'))}</option></select></div></div>
+        <label class="f" for="mkReason">${T('adh_reason')}</label><select id="mkReason" disabled>${Object.entries(REASONS).map(([k, r]) => `<option value="${k}">${esc(nm(r))}</option>`).join('')}</select>
+        <div class="acts" style="margin-top:14px"><button class="btn" id="mkSave">${ic('check')} ${T('save')}</button></div></div>
+      <div class="panel"><h3>${ic('bar-chart')} ${T('adh_reasons')}</h3>${reasonBars(ad.reasons)}</div>
+      ${edu('edu_adh_t', 'edu_adh', 'lightbulb')}
+    </div></div>`;
+  renderTodayDose(p, $('#todayDose'));
+  animateFills(view);
+  $$('[data-count]', view).forEach(el => countUp(el, +el.dataset.count));
+  $$('.heat .c:not(.f)').forEach(c => c.onclick = () => { const k = c.dataset.day, v = dosesOf(p.id)[k]; setDose(p.id, k, !v ? { t: true } : v.t ? { t: false, r: 'forgot' } : null); renderAdherence(p); renderRail(); });
+  $('#mkStatus').onchange = e => { $('#mkReason').disabled = e.target.value !== 'm'; };
+  $('#mkSave').onclick = () => { const k = $('#mkDate').value, s = $('#mkStatus').value; if (!k || k > TODAY) return toast(t('invalid'), 'bad'); setDose(p.id, k, s === 'c' ? null : s === 't' ? { t: true } : { t: false, r: $('#mkReason').value }); toast(t('doseSaved'), 'ok'); renderAdherence(p); renderRail(); };
+}
+
+// ---------- view: appointments ----------
+function renderAppointments(p) {
+  const all = apptOf(p.id), up = all.filter(a => !a.done && a.date >= TODAY), past = all.filter(a => a.done || a.date < TODAY).reverse(), pred = predictor(txOf(p.id), p.targetHb);
+  const row = a => `<div class="row ${a.done ? 'done' : ''}"><div class="l"><b>${ic(APPT[a.type].ic)} ${NM(APPT[a.type])}</b> <span class="pill ${a.done ? 'ok' : a.date < TODAY ? 'warn' : 'violet'}">${fmtDate(a.date)}${!a.done ? ' · ' + relDays(parseDate(a.date)) : ''}</span><div class="muted" style="font-size:.85rem">${esc(a.note || '')}</div></div><div class="acts"><button class="btn ${a.done ? 'ghost' : 'ok'} sm" data-done="${a.id}">${ic(a.done ? 'x' : 'check')} ${T(a.done ? 'ap_reopen' : 'ap_markDone')}</button><button class="btn danger sm" data-del="${a.id}" aria-label="${esc(t('delete'))}">${ic('trash')}</button></div></div>`;
+  view.innerHTML = `<div class="two">
+    <div class="panel"><h3>${ic('plus')} ${T('ap_add')}</h3>
+      <label class="f" for="apType">${T('ap_type')}</label><select id="apType">${Object.entries(APPT).map(([k, a]) => `<option value="${k}">${esc(nm(a))}</option>`).join('')}</select>
+      <label class="f" for="apDate">${T('ap_date')}</label><input id="apDate" type="date" value="${TODAY}" min="${dateKey(addDays(today, -365))}">
+      ${pred && pred.predicted >= today ? `<button class="btn ghost sm" id="apPred" style="margin-top:8px">${ic('calendar')} ${T('ap_predicted')}: ${fmtDate(pred.predicted)}</button>` : ''}
+      <label class="f" for="apNote">${T('ap_note')}</label><input id="apNote" type="text" maxlength="140">
+      <div class="acts" style="margin-top:14px"><button class="btn" id="apSave">${ic('check')} ${T('add')}</button></div></div>
+    <div class="stack">
+      <div class="panel"><h3>${ic('calendar')} ${T('ap_upcoming')} <span class="muted" style="font-weight:500">(${up.length})</span></h3><div class="list stagger">${up.length ? up.map(row).join('') : `<div class="empty"><div class="emptyic">${ic('calendar')}</div>${T('ap_none')}</div>`}</div></div>
+      <div class="panel"><h3>${ic('check-circle')} ${T('ap_past')} <span class="muted" style="font-weight:500">(${past.length})</span></h3><div class="list">${past.length ? past.slice(0, 8).map(row).join('') : `<div class="empty">${T('ap_none')}</div>`}</div></div>
+    </div></div>`;
+  if ($('#apPred')) $('#apPred').onclick = () => { $('#apDate').value = dateKey(pred.predicted); $('#apType').value = 'transfusion'; };
+  $('#apSave').onclick = () => { const date = $('#apDate').value; if (!date) return toast(t('invalid'), 'bad'); const list = apptOf(p.id); list.push({ id: uid(), date, type: $('#apType').value, note: $('#apNote').value.trim(), done: false }); setList('appts', p.id, list); toast(t('ap_saved'), 'ok'); route(); };
+  $$('[data-done]').forEach(b => b.onclick = () => { const list = apptOf(p.id); const a = list.find(x => x.id === b.dataset.done); a.done = !a.done; setList('appts', p.id, list); route(); });
+  $$('[data-del]').forEach(b => b.onclick = () => { setList('appts', p.id, apptOf(p.id).filter(a => a.id !== b.dataset.del)); route(); });
+}
+
+// ---------- view: print summary ----------
+function renderSummary(p) {
+  const eps = txOf(p.id), last6 = eps.slice(-6).reverse(), fer = ferOf(p.id), ad = adherenceStats(p.id), pred = predictor(eps, p.targetHb), req = annualReq(p), als = alertsFor(p), ch = CHELATORS[p.chelator] || CHELATORS.none;
+  view.innerHTML = `<div class="toolbar noprint"><button class="btn" id="doPrint">${ic('printer')} ${T('print')}</button><span class="fine">${T('sum_hint')}</span></div>
+  <article class="panel sheet">
+    <header class="sheethead"><div><div class="eyebrow">${T('sum_title')}</div><h2 style="font-size:1.5rem">${esc(p.name)}</h2><div class="muted">${esc(patientMeta(p))} · <b>${p.bg}</b> · ${p.weight} kg · DOB ${fmtDate(p.dob)}</div></div><div class="muted" style="text-align:right;font-size:.85rem">${T('generated')} ${fmtDate(TODAY)}<br>${esc(p.centre || '')}</div></header>
+    <h3>${T('sum_profile')}</h3>
+    <div class="facts">
+      <div><div class="eyebrow">${T('f_chelator')}</div>${p.chelator === 'none' ? T('chelNone') : `<b>${NM(ch)}</b> ${p.dose} mg/kg/day ≈ ${doseTotal(p)} mg`}</div>
+      <div><div class="eyebrow">${T('f_target')}</div><b>${p.targetHb} g/dL</b></div>
+      <div><div class="eyebrow">${T('emergency')}</div><b>${esc(p.emName || '—')}</b> ${esc(p.emPhone || '')}</div>
+      <div><div class="eyebrow">${T('req_t')}</div>${req ? `<b>${Math.round(req.perKg)}</b> ${T('req_unit')} (${req.n} ${T('req_basis')})` : '—'}</div>
+      ${p.notes ? `<div style="grid-column:1/-1"><div class="eyebrow">${T('f_notes')}</div>${esc(p.notes)}</div>` : ''}
+    </div>
+    <h3>${T('sum_tx')}</h3>
+    ${last6.length ? `<div class="tablewrap"><table><thead><tr><th>${T('tx_date')}</th><th class="num">${T('tx_interval')}</th><th class="num">${T('tx_vol')}</th><th class="num">Pre-Hb</th><th class="num">Post-Hb</th><th>${T('tx_centre')}</th><th>${T('tx_notes')}</th></tr></thead><tbody>${last6.map((e, i) => { const prev = eps[eps.length - 1 - i - 1]; return `<tr><td>${fmtDate(e.date)}</td><td class="num">${prev ? daysBetween(parseDate(prev.date), parseDate(e.date)) + ' d' : '—'}</td><td class="num">${volLabel(e)}</td><td class="num">${e.pre ?? '—'}</td><td class="num">${e.post ?? '—'}</td><td>${esc(e.centre || '')}</td><td class="fine">${esc(e.notes || '')}</td></tr>`; }).join('')}</tbody></table></div>` : `<p class="muted">${T('noTx')}</p>`}
+    <div class="two even" style="margin-top:6px">
+      <div><h3>${T('sum_fer')}</h3><div class="chart" id="sumFer"></div>${fer.length ? `<div class="fine" style="margin-top:6px">${fer.slice(-6).reverse().map(r => `${fmtDate(r.date, { month: 'short', year: '2-digit' })}: <b>${nf.format(r.value)}</b>`).join(' · ')}</div>` : ''}</div>
+      <div><h3>${T('sum_adh')}</h3><div class="facts" style="margin-bottom:10px"><div><div class="eyebrow">${T('adh_30')}</div><b>${ad.pct30 ?? '—'}%</b></div><div><div class="eyebrow">${T('adh_84')}</div><b>${ad.pct84 ?? '—'}%</b></div><div><div class="eyebrow">${T('adh_streak')}</div><b>${ad.streak}</b> ${T('adh_days')}</div><div><div class="eyebrow">${T('adh_missed')}</div><b>${ad.missed84}</b>${Object.keys(ad.reasons).length ? ` <span class="fine">(${Object.entries(ad.reasons).map(([k, n]) => `${nm(REASONS[k])} ${n}`).join(', ')})</span>` : ''}</div></div>${heatmap(p.id, 12)}</div>
+    </div>
+    <h3>${T('sum_pred')}</h3>
+    <p style="margin:0">${pred ? `${T('pred_rate')}: <b>${pred.rate.toFixed(3)}</b> ${T('pred_perDay')} (${T('pred_basis', { n: pred.n })}) · ${T('pred_interval')}: <b>${Math.round(pred.avgInterval)}</b> ${T('pred_days')} · ${T('pred_date')}: <b>${fmtDate(pred.predicted)}</b> (${relDays(pred.predicted)})` : T('pred_na')}</p>
+    <h3>${T('sum_alerts')}</h3>
+    <div class="list">${als.length ? als.map(a => `<div class="alert ${a.lvl}">${ic(a.ic)}<div><b>${T(a.k)}</b><span class="muted" style="font-size:.85rem">${T(a.k + '_t', { v: a.v })}</span></div></div>`).join('') : `<div class="alert ok">${ic('check-circle')}<div><b>${T('noAlerts')}</b></div></div>`}</div>
+    <p class="fine" style="margin:18px 0 0;border-top:1px solid var(--line);padding-top:10px">${T('sum_disc')}</p>
+  </article>`;
+  ferritinChart($('#sumFer'), fer, true);
+  $$('.heat .c', view).forEach(c => { c.disabled = true; c.style.cursor = 'default'; });
+  $('#doPrint').onclick = () => window.print();
+}
+
+// ---------- view: screening (public-health module, no patient needed) ----------
+const scr = Object.assign({ hb: 11.2, mcv: 64, mch: 20.5, rbc: 5.6, mother: 'carrier', father: 'carrier' }, store.get('screen', {}));
+const ALLELES = { normal: ['A', 'A'], carrier: ['A', 'a'], affected: ['a', 'a'] };
+function renderScreening() {
+  view.innerHTML = `<div class="panel" style="margin-bottom:16px"><h3>${ic('search')} ${T('scr_t')}</h3><p class="lead" style="margin:0">${T('scr_lead')}</p></div>
+  <div class="two even">
+    <div class="stack">
+      <div class="panel"><h3>${ic('calculator')} ${T('mz_t')}</h3>
+        <div class="cols tight">
+          <div><label class="f" for="mzHb">${T('mz_hb')}</label><input id="mzHb" type="number" step=".1" min="2" max="20" value="${scr.hb}"></div>
+          <div><label class="f" for="mzMcv">${T('mz_mcv')}</label><input id="mzMcv" type="number" step=".1" min="40" max="130" value="${scr.mcv}"></div>
+          <div><label class="f" for="mzMch">${T('mz_mch')}</label><input id="mzMch" type="number" step=".1" min="10" max="45" value="${scr.mch}"></div>
+          <div><label class="f" for="mzRbc">${T('mz_rbc')}</label><input id="mzRbc" type="number" step=".01" min="1" max="9" value="${scr.rbc}"></div>
+        </div>
+        <div class="acts" style="margin-top:14px"><button class="btn" id="mzGo">${ic('calculator')} ${T('mz_calc')}</button></div>
+        <div id="mzOut"></div>
+        <div class="note" style="margin-top:12px">${ic('flask')} ${T('mz_confirm')}</div></div>
+      ${edu('edu_scr_t', 'edu_scr', 'shield-check')}
+    </div>
+    <div class="stack">
+      <div class="panel"><h3>${ic('dna')} ${T('pq_t')}</h3><p class="lead">${T('pq_lead')}</p>
+        <div class="cols tight"><div><label class="f" for="pqM">${T('pq_mother')}</label><select id="pqM">${['normal', 'carrier', 'affected'].map(s => `<option value="${s}" ${scr.mother === s ? 'selected' : ''}>${esc(t('st_' + s))}</option>`).join('')}</select></div><div><label class="f" for="pqF">${T('pq_father')}</label><select id="pqF">${['normal', 'carrier', 'affected'].map(s => `<option value="${s}" ${scr.father === s ? 'selected' : ''}>${esc(t('st_' + s))}</option>`).join('')}</select></div></div>
+        <div id="pqOut"></div></div>
+      <div class="panel"><h3>${ic('shield-check')} ${T('law_t')}</h3><p class="${lang === 'ur' ? 'ur rtl' : ''}" style="margin:0;font-size:${lang === 'ur' ? '1rem' : '.92rem'}">${esc(t('law'))}</p></div>
+    </div></div>`;
+  const mentzer = () => {
+    const hb = +$('#mzHb').value, mcv = +$('#mzMcv').value, mch = +$('#mzMch').value, rbc = +$('#mzRbc').value;
+    Object.assign(scr, { hb, mcv, mch, rbc }); store.set('screen', scr);
+    if (!(mcv > 0) || !(rbc > 0)) { $('#mzOut').innerHTML = `<div class="warnbox" style="margin-top:12px">${T('mz_invalid')}</div>`; return; }
+    const mi = mcv / rbc, sl = mcv * mcv * mch / 100;
+    const cls = mcv >= 80 ? 'info' : mi < 12.5 ? 'warn' : mi > 13.5 ? 'bad' : 'info';
+    const verdict = mcv >= 80 ? 'mz_normal' : mi < 12.5 ? 'mz_low' : mi > 13.5 ? 'mz_high' : 'mz_border';
+    $('#mzOut').innerHTML = `<div class="verdict ${cls} enter"><div class="eyebrow">${T('mz_index')}</div><div class="big num" id="mzVal">0</div><div><b>${T(verdict)}</b></div>
+      <div class="cols tight" style="margin-top:10px;font-size:.88rem"><div><div class="eyebrow">${T('mz_sl')}</div><b class="num">${nf.format(sl)}</b> <span class="muted">${sl < 1530 ? '< 1530 → ' + esc(t('mz_low').toLowerCase()) : '≥ 1530'}</span></div><div><div class="eyebrow">MCV / MCH</div><b>${mcv} fL / ${mch} pg</b> <span class="muted">${mcv < 80 ? 'microcytic' : 'normocytic'}${mch < 27 ? ', hypochromic' : ''}</span></div><div><div class="eyebrow">Hb</div><b>${hb} g/dL</b></div></div></div>`;
+    countUp($('#mzVal'), mi, { fmt: v => v.toFixed(1) });
+  };
+  $('#mzGo').onclick = mentzer; $$('#mzHb,#mzMcv,#mzMch,#mzRbc').forEach(el => el.addEventListener('change', mentzer)); mentzer();
+  const punnett = () => {
+    scr.mother = $('#pqM').value; scr.father = $('#pqF').value; store.set('screen', scr);
+    const m = ALLELES[scr.mother], f = ALLELES[scr.father]; const counts = { AA: 0, Aa: 0, aa: 0 }; const cells = [];
+    m.forEach(a => f.forEach(b => { const g = [a, b].sort().join(''); const key = g === 'AA' ? 'AA' : g === 'aa' ? 'aa' : 'Aa'; counts[key]++; cells.push(key); }));
+    const lbl = { AA: 'pq_unaffected', Aa: 'pq_carrier', aa: 'pq_major' };
+    $('#pqOut').innerHTML = `<div class="punnett"><div></div><div class="h">${f[0]}</div><div class="h">${f[1]}</div>
+      ${[0, 1].map(i => `<div class="h">${m[i]}</div>${[0, 1].map(j => `<div class="cell ${cells[i * 2 + j]}">${cells[i * 2 + j] === 'AA' ? 'AA' : cells[i * 2 + j] === 'aa' ? 'aa' : 'Aa'}<small>${T(lbl[cells[i * 2 + j]])}</small></div>`).join('')}`).join('')}</div>
+      <div class="eyebrow">${T('pq_each')}</div>
+      <div class="riskbar">${['aa', 'Aa', 'AA'].filter(k => counts[k]).map(k => `<span class="${k}" data-w="${counts[k] * 25}%" style="width:0" title="${esc(t(lbl[k]))}">${counts[k] * 25}%</span>`).join('')}</div>
+      <div class="legend" style="margin-top:8px"><span><i class="sq" style="background:var(--bad)"></i>${T('pq_major')} ${counts.aa * 25}%</span><span><i class="sq" style="background:var(--warn)"></i>${T('pq_carrier')} ${counts.Aa * 25}%</span><span><i class="sq" style="background:var(--ok)"></i>${T('pq_unaffected')} ${counts.AA * 25}%</span></div>`;
+    animateFills($('#pqOut'));
+  };
+  $('#pqM').onchange = punnett; $('#pqF').onchange = punnett; punnett();
+}
+
+// ---------- view: about ----------
+const TODOS = [
+  ['Cloud sync + doctor portal', 'backend', 'syncToCloud()', 'Push the localStorage DB to Firebase/Supabase and add a clinician view listing every patient of a centre with their alerts.'],
+  ['MRI T2* iron tracking', 'clinical', 'renderIron() → mriSection()', 'Log liver iron concentration and cardiac T2* per scan, chart them next to ferritin and flag cardiac T2* under 20 ms.'],
+  ['WHO growth charts', 'clinical', 'growthChart() in renderOverview()', 'Plot height- and weight-for-age against WHO percentile tables; thalassemia children often fall below the 3rd percentile.'],
+  ['Push notification backend', 'notifications', 'checkReminders()', 'Browser notifications only fire while the page is open. Move reminders to FCM/OneSignal or an SMS gateway so they reach a locked phone.'],
+  ['Khoon donor network API', 'integration', 'requestBloodViaKhoon()', 'Post the blood request to the sibling Khoon project and show matched, eligible donors inline instead of a WhatsApp text.'],
+  ['More languages', 'i18n', 'L dictionary', 'Add Sindhi, Pashto, Punjabi (Shahmukhi) and Balochi; have a clinician review every education string.'],
+  ['EMR export', 'integration', 'exportToEMR()', 'Emit HL7 FHIR Patient / Procedure / Observation bundles for the centre\'s records system.'],
+];
+function renderAbout() {
+  view.innerHTML = `<div class="two">
+    <div class="stack">
+      <div class="panel"><h3>${ic('info')} ${T('ab_title')}</h3>
+        <h4 style="margin:14px 0 6px">${T('ab_problem')}</h4><p class="muted ${lang === 'ur' ? 'ur rtl' : ''}" style="margin:0">${esc(t('ab_problem_t'))}</p>
+        <h4 style="margin:14px 0 6px">${T('ab_how')}</h4><p class="muted ${lang === 'ur' ? 'ur rtl' : ''}" style="margin:0">${esc(t('ab_how_t'))}</p>
+        <h4 style="margin:14px 0 6px">${T('ab_disc')}</h4><p class="muted ${lang === 'ur' ? 'ur rtl' : ''}" style="margin:0">${esc(t('ab_disc_t'))}</p>
+        <p class="fine" style="margin:14px 0 0">${T('ab_stack')}</p>
+        <div class="acts" style="margin-top:14px"><button class="btn ghost sm" id="resetDemo">${ic('layers')} ${T('reset')}</button></div></div>
+    </div>
+    <div><h3 style="margin:0 0 10px;font-size:1.05rem">${ic('cpu')} ${T('ab_todo')}</h3><div class="list stagger">${TODOS.map(([h, tag, hook, b]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div><div class="fine" style="margin-top:6px">Start here: <code>${esc(hook)}</code></div></div>`).join('')}</div></div>
+  </div>`;
+  $('#resetDemo').onclick = () => { if (confirm(t('resetConfirm'))) { seedDemo(); toast(t('saved'), 'ok'); location.hash = 'overview'; route(); } };
+}
+// TODO(student): syncToCloud() — serialise store.get('patients'|'tx'|'fer'|'doses'|'appts') and sync with a backend; add conflict handling for two phones editing the same patient.
+function syncToCloud() { throw new Error('syncToCloud() is not implemented — student extension'); }
+
+// ---------- modals ----------
+function openModal(html) { $('#modal').innerHTML = html; $('#scrim').classList.add('on'); const first = $('#modal input, #modal select, #modal button'); if (first) setTimeout(() => first.focus(), 50); }
+function closeModal() { $('#scrim').classList.remove('on'); }
+$('#scrim').addEventListener('click', e => { if (e.target === $('#scrim')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function patientForm(p) {
+  const m = p || { sex: 'M', type: 'major', bg: 'B+', targetHb: 9.5, chelator: 'deferasirox', dose: 20, weight: '' };
+  const opt = (arr, v, label = x => x) => arr.map(x => `<option value="${x}" ${x === v ? 'selected' : ''}>${esc(label(x))}</option>`).join('');
+  openModal(`<h3>${ic(p ? 'edit' : 'plus')} ${T(p ? 'editPatient' : 'addPatient')}</h3>
+    <label class="f" for="pfName">${T('f_name')}</label><input id="pfName" type="text" value="${esc(m.name || '')}" maxlength="80">
+    <div class="cols tight"><div><label class="f" for="pfDob">${T('f_dob')}</label><input id="pfDob" type="date" value="${m.dob || ''}" max="${TODAY}"></div><div><label class="f" for="pfSex">${T('f_sex')}</label><select id="pfSex">${opt(['M', 'F'], m.sex, x => t(x === 'F' ? 'female' : 'male'))}</select></div><div><label class="f" for="pfBg">${T('f_bg')}</label><select id="pfBg">${opt(GROUPS, m.bg)}</select></div></div>
+    <div class="cols tight"><div><label class="f" for="pfType">${T('f_type')}</label><select id="pfType">${opt(Object.keys(TYPES), m.type, x => nm(TYPES[x]))}</select></div><div><label class="f" for="pfWt">${T('f_weight')}</label><input id="pfWt" type="number" min="2" max="150" step=".5" value="${m.weight}"></div><div><label class="f" for="pfTarget">${T('f_target')}</label><input id="pfTarget" type="number" min="9" max="10.5" step=".1" value="${m.targetHb}"></div></div>
+    <div class="cols tight"><div><label class="f" for="pfChel">${T('f_chelator')}</label><select id="pfChel">${opt(Object.keys(CHELATORS), m.chelator, x => nm(CHELATORS[x]))}</select></div><div><label class="f" for="pfDose">${T('f_dose')}</label><input id="pfDose" type="number" min="0" max="150" step="1" value="${m.dose ?? ''}"></div></div>
+    <label class="f" for="pfCentre">${T('f_centre')}</label><input id="pfCentre" type="text" list="centres" value="${esc(m.centre || '')}" maxlength="120">
+    <div class="cols tight"><div><label class="f" for="pfEm">${T('f_emName')}</label><input id="pfEm" type="text" value="${esc(m.emName || '')}" maxlength="80"></div><div><label class="f" for="pfEmPh">${T('f_emPhone')}</label><input id="pfEmPh" type="tel" value="${esc(m.emPhone || '')}" placeholder="03xx-xxxxxxx"></div></div>
+    <label class="f" for="pfNotes">${T('f_notes')}</label><textarea id="pfNotes" maxlength="400">${esc(m.notes || '')}</textarea>
+    <div class="acts"><button class="btn ghost" id="pfCancel">${T('cancel')}</button><button class="btn" id="pfSave">${ic('check')} ${T('save')}</button></div>`);
+  $('#pfCancel').onclick = closeModal;
+  $('#pfChel').onchange = e => { const c = CHELATORS[e.target.value]; if (c.max) $('#pfDose').value = Math.round((c.min + c.max) / 2); else $('#pfDose').value = 0; };
+  $('#pfSave').onclick = () => {
+    const name = $('#pfName').value.trim(), dob = $('#pfDob').value, weight = +$('#pfWt').value, targetHb = +$('#pfTarget').value, chelator = $('#pfChel').value, dose = +$('#pfDose').value;
+    let bad = false; const mark = (id, ok) => { $(id).style.borderColor = ok ? '' : 'var(--bad)'; if (!ok) bad = true; };
+    mark('#pfName', !!name); mark('#pfDob', !!dob && dob <= TODAY); mark('#pfWt', weight > 0); mark('#pfTarget', targetHb >= 9 && targetHb <= 10.5); mark('#pfDose', chelator === 'none' || dose >= 0);
+    if (bad) return toast(t('invalid'), 'bad');
+    const rec = { id: p ? p.id : 'p_' + uid(), name, dob, sex: $('#pfSex').value, type: $('#pfType').value, bg: $('#pfBg').value, weight, targetHb: r1(targetHb), chelator, dose: chelator === 'none' ? 0 : dose, centre: $('#pfCentre').value.trim(), emName: $('#pfEm').value.trim(), emPhone: $('#pfEmPh').value.trim(), notes: $('#pfNotes').value.trim() };
+    const list = patients(); const i = list.findIndex(x => x.id === rec.id); if (i >= 0) list[i] = rec; else list.push(rec);
+    store.set('patients', list); store.set('current', rec.id); closeModal(); toast(t('saved'), 'ok');
+    if (!PATIENT_TABS.includes(cur)) location.hash = 'overview'; else route();
+  };
+}
+function requestBloodModal(p) {
+  const pred = predictor(txOf(p.id), p.targetHb); const need = pred && pred.predicted > today ? dateKey(pred.predicted) : dateKey(addDays(today, 2));
+  openModal(`<h3>${ic('droplet')} ${T('rb_t')}</h3><p class="lead">${T('rb_lead')}</p>
+    <div class="cols tight"><div><label class="f" for="rbUnits">${T('rb_units')}</label><input id="rbUnits" type="number" min="1" max="10" value="${p.weight >= 35 ? 2 : 1}"></div><div><label class="f" for="rbDate">${T('rb_date')}</label><input id="rbDate" type="date" value="${need}" min="${TODAY}"></div></div>
+    <label class="f" for="rbCentre">${T('rb_centre')}</label><input id="rbCentre" type="text" value="${esc(p.centre || '')}" list="centres">
+    <label class="f" for="rbPhone">${T('rb_contact')}</label><input id="rbPhone" type="tel" value="${esc(p.emPhone || '')}">
+    <label class="f">WhatsApp</label><pre class="share" id="rbText"></pre>
+    <p class="fine" style="margin:10px 0 0">${ic('info')} ${T('rb_khoon')}</p>
+    <div class="acts"><button class="btn ghost" id="rbCopy">${ic('copy')} ${T('copy')}</button><a class="btn teal" id="rbWa" href="#" target="_blank" rel="noopener">${ic('whatsapp')} ${T('rb_open')}</a></div>`);
+  const build = () => {
+    const text = `Blood needed for thalassemia transfusion\nPatient: ${initials(p.name)} (${ageOf(p.dob)} y, ${nm(TYPES[p.type] || TYPES.major)})\nBlood group: ${p.bg}\nUnits: ${$('#rbUnits').value} packed red cells (leucodepleted preferred)\nCentre: ${$('#rbCentre').value.trim()}\nNeeded by: ${fmtDate($('#rbDate').value || TODAY)}\nContact: ${$('#rbPhone').value.trim() || '—'}\n— Thalassemia Care Companion · donors via Khoon`;
+    $('#rbText').textContent = text; $('#rbWa').href = 'https://wa.me/?text=' + encodeURIComponent(text); return text;
+  };
+  $$('#rbUnits,#rbDate,#rbCentre,#rbPhone').forEach(el => el.addEventListener('input', build)); build();
+  $('#rbCopy').onclick = async () => { const text = build(); try { await navigator.clipboard.writeText(text); toast(t('copied'), 'ok'); } catch { const ta = document.createElement('textarea'); ta.value = text; document.body.append(ta); ta.select(); try { document.execCommand('copy'); toast(t('copied'), 'ok'); } catch { toast(t('invalid'), 'bad'); } ta.remove(); } };
+  // TODO(student): requestBloodViaKhoon(p, units, date) — POST the request to the Khoon donor-network API and list matched, eligible donors here.
+}
+
+// ---------- reminders ----------
+function checkReminders() {
+  const rem = store.get('rem', {}), fired = store.get('remFired', {}), now = new Date();
+  patients().forEach(p => {
+    const r = rem[p.id]; if (!r || !r.on) return;
+    const [h, m] = (r.time || '21:00').split(':').map(Number); const due = new Date(today); due.setHours(h, m, 0, 0);
+    if (now < due || fired[p.id] === TODAY || dosesOf(p.id)[TODAY]) return;
+    fired[p.id] = TODAY; store.set('remFired', fired);
+    const msg = `${p.name}: ${t('rem_msg')}`;
+    if ('Notification' in window && Notification.permission === 'granted') { try { new Notification(t('title'), { body: msg }); } catch { toast(msg); } } else toast(msg);
+  });
+  // TODO(student): scheduleReminder(p) — register a service worker + push subscription (FCM/OneSignal) or an SMS gateway so reminders fire when the page is closed.
+}
+
+// ---------- router / boot ----------
+const VIEWS = { overview: renderOverview, transfusions: renderTransfusions, iron: renderIron, adherence: renderAdherence, appointments: renderAppointments, summary: renderSummary, screening: renderScreening, about: renderAbout };
+function route() {
+  let tab = (location.hash.slice(1) || 'overview').split('?')[0];
+  if (!VIEWS[tab]) tab = 'overview';
+  cur = tab; document.body.dataset.tab = tab;
+  renderRail(); renderHead(); renderTabs();
+  const p = current();
+  if (PATIENT_TABS.includes(tab)) { if (!p) renderEmpty(); else VIEWS[tab](p); } else VIEWS[tab]();
+  animateIn(view);
+  window.scrollTo({ top: 0 });
+}
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English';
+  $('#brandTitle').textContent = t('title'); $('#brandTitle').className = lang === 'ur' ? 'ur' : '';
+  $('#brandTag').textContent = t('tagline'); $('#brandTag').className = lang === 'ur' ? 'ur' : '';
+  $('#dateBadge').textContent = today.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  route();
+}
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+$('#printBtn').onclick = () => { if (cur !== 'summary' && current()) { location.hash = 'summary'; setTimeout(() => window.print(), 400); } else window.print(); };
+window.addEventListener('hashchange', route);
+window.addEventListener('resize', debounce(() => { if (['transfusions', 'iron', 'summary'].includes(cur)) route(); }, 250));
+document.body.insertAdjacentHTML('beforeend', `<datalist id="centres">${CENTRES.map(c => `<option value="${esc(c)}">`).join('')}</datalist>`);
+applyLang();
+checkReminders();
+setInterval(checkReminders, 60000);
+</script>
+</body>
+</html>

@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LHW Field Visit Assistant</title>
+<meta name="description" content="Offline-first visit planner for Pakistan's Lady Health Workers: ANC schedule with auto danger-sign flags, printable referral slips, postnatal checks, EPI immunization card, growth screening and a monthly report. Single-file FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: field-app high contrast — orange, deep teal, cream ---------- */
+:root{
+  --bg:#fbf4ea; --surface:#ffffff; --surface-2:#f6ebdc; --ink:#1d1a16; --muted:#665c52; --line:#e6d8c4;
+  --orange:#e8590c; --orange-deep:#b8430a; --orange-soft:#fde4d3; --teal:#0b525b; --teal-deep:#073a41; --teal-soft:#d9eef0;
+  --red:#b42318; --red-soft:#fde3e0; --amber:#a35a00; --amber-soft:#fdebc8; --green:#1b7a3e; --green-soft:#dcf2e3;
+  --radius:18px; --radius-sm:12px; --shadow:0 10px 26px -18px rgba(29,26,22,.45);
+  --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif; --font-ur:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--teal)}
+h1,h2,h3,h4{margin:0;line-height:1.2}
+.ur{font-family:var(--font-ur);direction:rtl;text-align:right;line-height:2;font-size:1.02rem}
+html[lang=ur] .i18n{font-family:var(--font-ur);line-height:1.9}
+html[lang=ur] .task .t span,html[lang=ur] .pitem .t span,html[lang=ur] .pagehead p{unicode-bidi:plaintext}
+.muted{color:var(--muted)} .hidden{display:none!important} .small{font-size:.85rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+.ic.lg{width:1.5em;height:1.5em} .ic.xl{width:2.2em;height:2.2em}
+
+/* ---------- Motion kit (all under prefers-reduced-motion) ---------- */
+:root{--ease:cubic-bezier(.2,.8,.2,1);--dur:.35s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.enter{animation:fadeUp var(--dur) var(--ease) both}
+.stagger>*{animation:fadeUp .45s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
+.spin{animation:spin .9s linear infinite}
+.eyebrow{font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--muted)}
+
+/* ---------- Shell: left rail (desktop) → bottom tabs (phone) ---------- */
+.shell{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.rail{background:var(--teal-deep);color:#e8f4f5;padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 8px 18px}
+.brand .logo{width:44px;height:44px;border-radius:14px;background:var(--orange);display:grid;place-items:center;color:#fff;flex:none}
+.brand h1{font-size:1.05rem;font-weight:700} .brand small{display:block;font-size:.72rem;opacity:.75}
+.rail a.nav{display:flex;align-items:center;gap:12px;min-height:46px;padding:8px 12px;border-radius:12px;color:#cfe3e6;text-decoration:none;font-weight:700;font-size:.95rem}
+.rail a.nav:hover{background:rgba(255,255,255,.08);color:#fff} .rail a.nav.on{background:var(--orange);color:#fff}
+.rail a.nav .ic{width:24px;text-align:center;font-size:1.1rem} .rail a.nav .n{margin-left:auto;background:#fff;color:var(--orange-deep);border-radius:999px;font-size:.72rem;padding:1px 8px;font-weight:700}
+.rail .foot{margin-top:auto;display:grid;gap:8px}
+.profile{background:rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;font-size:.82rem;line-height:1.35}
+.profile b{display:block;font-size:.95rem}
+.lang{border:0;background:#fff;color:var(--teal-deep);border-radius:12px;min-height:44px;padding:8px 12px;font-weight:700;cursor:pointer}
+.content{min-width:0;display:flex;flex-direction:column}
+.topbar{display:none;position:sticky;top:0;z-index:30;background:var(--teal-deep);color:#fff;align-items:center;gap:10px;padding:10px 14px}
+.topbar .brand{padding:0;flex:1;min-width:0} .topbar .brand .logo{width:38px;height:38px} .topbar .brand h1{font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .lang{min-height:40px;padding:6px 10px}
+.iconbtn{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:12px;width:44px;height:44px;display:grid;place-items:center;cursor:pointer;text-decoration:none;font-size:1.2rem;font-weight:700}
+main{padding:24px 26px 100px;max-width:1180px;width:100%}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.pagehead h2{font-size:1.55rem;font-weight:700;letter-spacing:-.01em} .pagehead p{margin:4px 0 0;color:var(--muted)}
+.backbtn{display:none;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:0;background:var(--surface-2);border-radius:12px;font-weight:700;cursor:pointer;margin-bottom:12px;text-decoration:none;color:var(--ink)}
+
+/* ---------- Cards, buttons, chips ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.card,.kpi,.pitem,.task,.epi,.row,.todo{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s,background .2s}
+.card:hover,.kpi:hover{transform:translateY(-2px);box-shadow:0 14px 30px -18px rgba(29,26,22,.5)}
+.pitem:active,.task:active,.check:active{transform:scale(.99)}
+.check{transition:border-color .2s,background .2s,transform .12s}
+.card h3{font-size:1.05rem;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card + .card{margin-top:14px}
+.stack{display:grid;gap:14px}
+.btn{border:0;border-radius:14px;min-height:48px;padding:10px 18px;font-weight:700;cursor:pointer;background:var(--orange);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-size:1rem;line-height:1.2}
+.btn{transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s}
+.btn:hover{background:var(--orange-deep);transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.btn.teal{background:var(--teal)} .btn.teal:hover{background:var(--teal-deep)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)} .btn.ghost:hover{background:#efe1cd}
+.btn.danger{background:var(--red-soft);color:var(--red)} .btn.danger:hover{background:#f9cfcb}
+.btn.sm{min-height:40px;padding:6px 12px;font-size:.9rem;border-radius:12px}
+.btn.block{width:100%} .btn:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 11px;font-size:.78rem;font-weight:700;background:var(--surface-2);color:var(--muted);white-space:nowrap;line-height:1.3}
+.chip.red{background:var(--red-soft);color:var(--red)} .chip.amber{background:var(--amber-soft);color:var(--amber)} .chip.green{background:var(--green-soft);color:var(--green)} .chip.teal{background:var(--teal-soft);color:var(--teal)} .chip.orange{background:var(--orange-soft);color:var(--orange-deep)}
+.chip.lg{font-size:.9rem;padding:6px 14px} .chip.wrap{white-space:normal;text-align:left;line-height:1.5}
+.alert{border-radius:14px;padding:14px 16px;border:2px solid var(--line);display:flex;gap:12px;align-items:flex-start;background:var(--surface-2)}
+.alert .ic{font-size:1.3rem;flex:none;line-height:1.2} .alert > div{flex:1;min-width:0}
+.alert.red{background:var(--red-soft);border-color:var(--red)} .alert.amber{background:var(--amber-soft);border-color:#e8a23a} .alert.green{background:var(--green-soft);border-color:var(--green)} .alert.teal{background:var(--teal-soft);border-color:var(--teal)}
+.alert .ur{margin-top:4px;font-size:.98rem}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .v{font-size:1.9rem;font-weight:700;letter-spacing:-.02em;margin-top:2px;line-height:1.1} .kpi .s{font-size:.8rem;color:var(--muted);margin-top:4px}
+.kpi.orange .v{color:var(--orange)} .kpi.teal .v{color:var(--teal)} .kpi.red .v{color:var(--red)} .kpi.green .v{color:var(--green)}
+
+/* ---------- Forms ---------- */
+label.f{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+select,input[type=text],input[type=number],input[type=date],input[type=tel],input[type=search],input[type=month],textarea{width:100%;min-height:48px;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;outline:0;font-size:1rem}
+textarea{min-height:72px;resize:vertical}
+select:focus,input:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 14px} .cols>*{min-width:0} input,select,textarea{min-width:0;max-width:100%}
+.cols.tight{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:16px;align-items:start}
+.check{display:flex;gap:12px;align-items:center;min-height:56px;padding:10px 14px;border:2px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer}
+.check input{width:24px;height:24px;flex:none;accent-color:var(--orange);margin:0}
+.check .en{flex:1;font-weight:700;font-size:.95rem} .check .ur{flex:1;line-height:1.8;font-size:.98rem}
+.check.on{border-color:var(--red);background:var(--red-soft)} .check.ok.on{border-color:var(--green);background:var(--green-soft)} .check.teal.on{border-color:var(--teal);background:var(--teal-soft)}
+.checks{display:grid;gap:8px}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:0;background:none;min-height:44px;padding:6px 16px;cursor:pointer;font-weight:700} .seg button.on{background:var(--teal);color:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.row.click{cursor:pointer} .row.click:hover{border-color:var(--orange)}
+.list{display:grid;gap:10px}
+.note{background:var(--teal-soft);border-left:5px solid var(--teal);padding:10px 14px;border-radius:10px;font-size:.9rem}
+.todo{border:2px dashed var(--teal);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.todo h4{font-size:.98rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px} .todo .tag{font-size:.68rem;background:var(--teal);color:#fff;border-radius:6px;padding:2px 7px;font-weight:700}
+.todo code{background:var(--surface-2);padding:1px 6px;border-radius:6px;font-size:.85em}
+
+/* ---------- Split list + detail ---------- */
+.split{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:18px;align-items:start}
+.col-list{position:sticky;top:18px}
+.plist{display:grid;gap:8px;max-height:calc(100vh - 170px);overflow:auto;padding:2px}
+.pitem{display:flex;gap:12px;align-items:center;min-height:64px;padding:10px 14px;border:2px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;text-decoration:none;color:var(--ink)}
+.pitem:hover{border-color:var(--orange)} .pitem.on{border-color:var(--orange);background:var(--orange-soft)}
+.pitem .av{width:42px;height:42px;border-radius:12px;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;font-weight:700;flex:none}
+.pitem .av.girl{background:#fbe0ea;color:#a8325f} .pitem .av.boy{background:#dbe9f7;color:#1f4f8a}
+.pitem .t{flex:1;min-width:0} .pitem .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .pitem .t span{font-size:.82rem;color:var(--muted)}
+.detailhead{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.detailhead .big{width:58px;height:58px;border-radius:16px;background:var(--orange-soft);color:var(--orange-deep);display:grid;place-items:center;font-size:1.4rem;font-weight:700;flex:none}
+.detailhead h2{font-size:1.4rem} .detailhead .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+
+/* ---------- Timeline, planner, EPI, growth ---------- */
+.tl{display:grid;gap:8px}
+.tl .c{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;border:1px solid var(--line);border-left:6px solid var(--line);background:var(--surface)}
+.tl .c.done{border-left-color:var(--green)} .tl .c.due{border-left-color:var(--amber);background:#fff9ee} .tl .c.overdue{border-left-color:var(--red);background:#fff4f2} .tl .c.upcoming{opacity:.85} .tl .c.missed{border-left-color:#b9ab98;background:var(--surface-2)}
+.tl .wk{font-size:1.2rem;font-weight:700;line-height:1} .tl .wk small{display:block;font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase}
+.task{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;border:1px solid var(--line);border-left:6px solid var(--teal);background:var(--surface)}
+.task.overdue{border-left-color:var(--red)} .task.due{border-left-color:var(--amber)} .task.alert{border-left-color:var(--red);background:var(--red-soft)}
+.task .t{flex:1;min-width:0} .task .t b{display:block} .task .t span{font-size:.84rem;color:var(--muted)}
+.task .btn{flex:none}
+.epi{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.epi header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-2);flex-wrap:wrap}
+.epi header b{font-size:1rem} .epi header span.d{font-size:.82rem;color:var(--muted)}
+.epi .vx{display:flex;gap:10px;align-items:center;padding:8px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
+.epi .vx .nm{flex:1;min-width:120px;font-weight:700} .epi .vx input[type=date]{min-height:40px;width:auto;flex:none;padding:4px 8px;font-size:.9rem}
+.epi.given header{background:var(--green-soft)} .epi.overdue header{background:var(--red-soft)} .epi.due header{background:var(--amber-soft)}
+.chart{position:relative;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:8px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;margin:8px 2px 0} .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:.9rem;vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:var(--surface-2)}
+tr:last-child td{border-bottom:0} td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{overflow:auto;border-radius:14px}
+.progress{height:14px;background:var(--surface-2);border-radius:999px;overflow:hidden;border:1px solid var(--line)} .progress i{display:block;height:100%;background:var(--teal);transition:width .3s}
+
+/* ---------- Referral slip ---------- */
+.slip{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:22px 24px;max-width:720px}
+.slip header{display:flex;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:12px;flex-wrap:wrap}
+.slip header h2{font-size:1.25rem} .slip header .ur{font-size:1.1rem}
+.slip .urgency{display:inline-block;border:2px solid currentColor;border-radius:8px;padding:4px 10px;font-weight:700;margin:6px 0}
+.slip dl{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;margin:0} .slip dt{font-weight:700;color:var(--muted);font-size:.85rem} .slip dd{margin:0}
+.slip .sig{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px} .slip .sig div{border-top:1px solid var(--ink);padding-top:6px;font-size:.82rem;color:var(--muted)}
+
+/* ---------- Toasts / bottom nav ---------- */
+#toasts{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);display:grid;gap:8px;z-index:60;width:max-content;max-width:92vw}
+.toast{background:var(--teal-deep);color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);animation:toastIn .3s var(--ease) both;display:flex;align-items:center;gap:10px}
+.toast.out{animation:toastOut .3s var(--ease) forwards}
+.toast.ok{background:var(--green)} .toast.bad{background:var(--red)}
+.progress i{transition:width .6s var(--ease)}
+.sheet-scrim{position:fixed;inset:0;background:rgba(7,58,65,.45);z-index:50;animation:fadeIn .25s var(--ease) both;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);border-radius:22px 22px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-width:560px;max-height:88vh;overflow:auto;animation:sheetUp .35s var(--ease) both;box-shadow:0 -20px 60px -20px rgba(0,0,0,.4)}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet-scrim.closing{animation:fadeOut .22s var(--ease) forwards} .sheet-scrim.closing .sheet{animation:sheetDown .22s var(--ease) forwards}
+@keyframes fadeOut{to{opacity:0}} @keyframes sheetDown{to{transform:translateY(30px);opacity:0}}
+@media (min-width:901px){.sheet-scrim{align-items:center}.sheet{border-radius:22px;animation:popIn .3s var(--ease) both}.sheet-scrim.closing .sheet{animation:fadeOut .2s var(--ease) forwards}}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);z-index:35;padding:4px 2px calc(4px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px -16px rgba(0,0,0,.35)}
+.bottomnav a{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--muted);font-size:.66rem;font-weight:700;border-radius:12px;position:relative}
+.bottomnav a.on{color:var(--orange-deep);background:var(--orange-soft)} .bottomnav a span.ic{font-size:1.25rem;line-height:1}
+.bottomnav a .n{position:absolute;top:4px;right:calc(50% - 22px);background:var(--red);color:#fff;border-radius:999px;font-size:.62rem;padding:0 5px;line-height:1.4}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr} .rail{display:none} .topbar{display:flex}
+  .bottomnav{display:flex}
+  main{padding:14px 16px 96px}
+  .two{grid-template-columns:minmax(0,1fr)}
+  .split{grid-template-columns:minmax(0,1fr)} .col-list{position:static} .plist{max-height:none;overflow:visible}
+  .split.detail-open .col-list{display:none} .split:not(.detail-open) .col-detail{display:none}
+  .backbtn{display:inline-flex}
+  .pagehead h2{font-size:1.3rem}
+  .card{padding:16px}
+  .tl .c{grid-template-columns:52px minmax(0,1fr)} .tl .c .chip{grid-column:2}
+  .slip dl{grid-template-columns:120px 1fr}
+  .check{flex-wrap:wrap} .check .en{min-width:60%} .check .ur{flex-basis:100%;text-align:right}
+  .kpi .v{font-size:1.6rem}
+  .actions .btn{flex:1 1 auto}
+}
+@media (max-width:420px){ .bottomnav a{font-size:.6rem} }
+@media print{
+  .rail,.topbar,.bottomnav,#toasts,.no-print,.backbtn{display:none!important}
+  body{background:#fff;color:#000} main{padding:0;max-width:none} .shell{display:block}
+  .card,.kpi,.slip{box-shadow:none;break-inside:avoid}
+  .slip{border-radius:0;max-width:none}
+}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+<symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5a5.5 5.5 0 0 0-10 3.5c0 2.3 1.5 4 3 5.5l7 7Z"/></symbol>
+<symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
+<symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01M15 12h.01M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.7a2 2 0 0 1 1.7 2z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+<symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-3"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+<symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></symbol>
+<symbol id="i-siren" viewBox="0 0 24 24"><path d="M7 18v-6a5 5 0 1 1 10 0v6M5 21a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v1H5zM21 12h1M2 12h1M12 2v1M4.9 4.9l.7.7M18.4 5.6l.7-.7"/></symbol>
+<symbol id="i-cloud-off" viewBox="0 0 24 24"><path d="M7.7 7.7A5 5 0 0 1 12 5a6 6 0 0 1 5.9 5h1.6a3.5 3.5 0 0 1 1.3 6.8M3.5 3.5l17 17M9 19h8.5M5 19a4 4 0 0 1-1.2-7.8"/></symbol>
+<symbol id="i-cloud-check" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/><path d="m9 13 2 2 4-4"/></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M5 21h14M3 7l9-4 9 4"/><path d="m3 7 3 7a3 3 0 0 0 6 0L9 7M15 7l3 7a3 3 0 0 0 6 0l-3-7"/></symbol>
+<symbol id="i-syringe" viewBox="0 0 24 24"><path d="m18 2 4 4M17 7l3-3M19 9 8.7 19.3a2.4 2.4 0 0 1-3.4 0l-.6-.6a2.4 2.4 0 0 1 0-3.4L15 5M9 11l4 4M5 19l-3 3M14 4l6 6"/></symbol>
+<symbol id="i-languages" viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+<symbol id="i-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-sticky-note" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9l7-7V5a2 2 0 0 0-2-2z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+</svg>
+<div class="shell">
+  <aside class="rail">
+    <div class="brand"><div class="logo" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10Z"/><path d="M12 8v6M9 11h6"/></svg></div><div><h1 class="i18n" data-i18n="title">LHW Field Visit</h1><small class="i18n" data-i18n="tagline">Assistant for Lady Health Workers</small></div></div>
+    <nav id="railnav" style="display:contents"></nav>
+    <div class="foot">
+      <div class="profile" id="profileBox"></div>
+      <button class="lang" id="langBtn" title="Switch language">اردو</button>
+    </div>
+  </aside>
+  <div class="content">
+    <header class="topbar">
+      <div class="brand"><div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10Z"/><path d="M12 8v6M9 11h6"/></svg></div><div><h1 class="i18n" data-i18n="title">LHW Field Visit</h1></div></div>
+      <a class="iconbtn" href="#about" aria-label="About"><svg class="ic lg" aria-hidden="true"><use href="#i-info"/></svg></a>
+      <button class="lang" id="langBtn2" title="Switch language">اردو</button>
+    </header>
+    <main id="view" aria-live="polite"></main>
+  </div>
+</div>
+<nav class="bottomnav" id="bottomnav"></nav>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   LHW Field Visit Assistant — single-file, offline-first app
+   Sections: utils · i18n · clinical reference data · store & seed ·
+   clinical logic (GA, ANC schedule, flags, EPI, growth) · planner ·
+   views (today, households, pregnancy, children, report, sync, about) · router
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+
+// ---------- utils ----------
+const NS = 'lhw:';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } },
+  del(k) { try { localStorage.removeItem(NS + k); } catch {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const toast = (msg, type = '', icon) => { const t = document.createElement('div'); t.className = 'toast ' + type; t.innerHTML = ic(icon || (type === 'ok' ? 'check-circle' : type === 'bad' ? 'alert-circle' : 'info')) + '<span></span>'; t.lastChild.textContent = msg; $('#toasts').append(t); setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 3000); };
+// motion helpers (see KIT): page enter, stagger, count-up, path draw-in
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); $$('.stagger', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', Math.min(i, 12)))); };
+const countUp = (el, to, { dur = 650, fmt = v => Math.round(v).toLocaleString('en-PK') } = {}) => { const t0 = performance.now(); const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const drawPath = p => { try { const L = p.getTotalLength(); if (!L) return; p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; } catch {} };
+const animateBars = root => $$('[data-grow]', root).forEach(el => { const to = el.dataset.grow; el.style.transition = 'none'; el.style.width = '0%'; el.getBoundingClientRect(); el.style.transition = 'width .7s var(--ease)'; el.style.width = to; });
+
+// dates: local-time ISO strings (YYYY-MM-DD) to avoid UTC day shifts in PKT
+const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
+const pad2 = n => String(n).padStart(2, '0');
+const iso = d => { const x = d instanceof Date ? d : parse(d); return `${x.getFullYear()}-${pad2(x.getMonth() + 1)}-${pad2(x.getDate())}`; };
+const parse = s => { if (s instanceof Date) return s; const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); };
+const addDays = (d, n) => { const x = new Date(parse(d)); x.setDate(x.getDate() + n); return x; };
+const diffDays = (a, b) => Math.round((parse(b) - parse(a)) / 864e5); // b - a in days
+const T_ISO = iso(TODAY);
+const fmtD = d => d ? parse(d).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const fmtS = d => d ? parse(d).toLocaleDateString('en-PK', { day: 'numeric', month: 'short' }) : '—';
+const monthKey = d => iso(d).slice(0, 7);
+const fmtMonth = k => parse(k + '-01').toLocaleDateString('en-PK', { month: 'long', year: 'numeric' });
+const relDays = d => { const n = diffDays(T_ISO, d); return n === 0 ? t('today') : n === 1 ? t('tomorrow') : n === -1 ? t('yesterday') : n > 0 ? `${t('in')} ${n} ${t('days')}` : `${-n} ${t('daysAgo')}`; };
+
+// ---------- i18n (UI chrome). Clinical content below is always bilingual. ----------
+const L = {
+  en: {
+    title: 'LHW Field Visit', tagline: 'Assistant for Lady Health Workers', nav_today: 'Today', nav_households: 'Homes', nav_pregnancies: 'Mothers', nav_children: 'Children', nav_report: 'Report', nav_sync: 'Sync', nav_about: 'About',
+    today: 'today', tomorrow: 'tomorrow', yesterday: 'yesterday', in: 'in', days: 'days', daysAgo: 'days ago', back: 'Back', save: 'Save', cancel: 'Cancel', delete: 'Delete', edit: 'Edit', print: 'Print', close: 'Close', search: 'Search name, head of household, mohalla…',
+    td_title: 'Today\'s plan', td_alerts: 'Needs attention', td_due: 'Due today & this week', td_overdue: 'Overdue', td_none: 'Nothing due this week. Use the time for a household round.', td_start: 'Start visit', td_open: 'Open', td_weigh: 'Weigh', td_vacc: 'Vaccinate', td_pnc: 'PNC visit', td_anc: 'ANC contact', td_kpi_preg: 'Active pregnancies', td_kpi_due: 'Visits due this week', td_kpi_over: 'Overdue items', td_kpi_unsynced: 'Unsynced records', td_kpi_children: 'Children under 2',
+    hh_title: 'Households', hh_lead: 'Every family in your catchment. Tap a household to see mothers, pregnancies and children.', hh_new: 'New household', hh_head: 'Head of household', hh_mohalla: 'Mohalla / village', hh_phone: 'Phone', hh_notes: 'Notes', hh_women: 'Women of reproductive age', hh_children: 'Children', hh_addWoman: 'Add woman', hh_addChild: 'Add child', hh_pick: 'Pick a household from the list, or register a new one.', hh_none: 'No households match.', hh_gps: 'Capture GPS', hh_saved: 'Household saved', hh_members: 'members', hh_regPreg: 'Register pregnancy', hh_woman_name: 'Name', hh_age: 'Age (years)', hh_dob: 'Date of birth', hh_sex: 'Sex', hh_bw: 'Birth weight (kg)', boy: 'Boy', girl: 'Girl', hh_deleteConfirm: 'Delete this household and all its records?',
+    pg_title: 'Pregnancies', pg_lead: 'Active pregnancies first. Each one shows gestational age, next contact and open alerts.', pg_pick: 'Pick a mother from the list.', pg_none: 'No pregnancies registered yet. Open a household and tap “Register pregnancy”.', pg_ga: 'Gestational age', pg_edd: 'EDD', pg_lmp: 'LMP (first day of last period)', pg_gravida: 'Gravida (total pregnancies)', pg_para: 'Para (births)', pg_risk: 'Risk factors', pg_risk_none: 'No risk factors recorded', pg_status: 'Status', pg_active: 'Active', pg_delivered: 'Delivered', pg_lost: 'Lost', pg_schedule: 'ANC contact schedule', pg_history: 'Visit history', pg_noVisits: 'No visits recorded yet.', pg_newVisit: 'New ANC visit', pg_pnc: 'Postnatal visit', pg_delivery: 'Record delivery', pg_slip: 'Referral slip', pg_who: 'WHO contact', pg_pk: 'PK MNCH mandatory', pg_done: 'Done', pg_missed: 'Missed', pg_due: 'Due now', pg_overdue: 'Overdue', pg_upcoming: 'Upcoming', pg_saved: 'Pregnancy saved', pg_highrisk: 'High risk', pg_lmpHelp: 'EDD = LMP + 280 days (Naegele\'s rule)', pg_register: 'Register pregnancy', pg_pncSchedule: 'Postnatal schedule', pg_day: 'Day', pg_outcome: 'Delivery outcome', pg_place: 'Place of delivery', pg_mode: 'Mode', pg_date: 'Date of delivery', pg_babySex: 'Baby sex', pg_babyName: 'Baby name (optional)', pg_live: 'Live birth', pg_still: 'Stillbirth', pg_lostPreg: 'Pregnancy lost / miscarriage', pg_normal: 'Normal vaginal', pg_csec: 'C-section', pg_home: 'Home', pg_deliverySaved: 'Delivery recorded. Postnatal schedule started.',
+    v_title: 'ANC visit', v_date: 'Visit date', v_bp: 'Blood pressure (mmHg)', v_sys: 'Systolic', v_dia: 'Diastolic', v_weight: 'Weight (kg)', v_hb: 'Hb (g/dL)', v_fh: 'Fundal height (cm)', v_fm: 'Fetal movement felt?', v_yes: 'Yes', v_no: 'No / reduced', v_na: 'Not yet (< 20 wk)', v_complaints: 'Complaints', v_danger: 'Danger signs — ask and look', v_tt: 'TT dose given today', v_ttNone: 'None', v_iron: 'Iron / folic acid given', v_counsel: 'Counselling done', v_assess: 'Assessment', v_noFlags: 'No automatic flags from these readings.', v_referral: 'Referral', v_refTo: 'Refer to', v_refReason: 'Reason (shown on slip)', v_save: 'Save visit', v_saved: 'Visit saved', v_savedRef: 'Visit saved — referral slip ready', v_voice: 'Voice note', v_needDate: 'Enter a valid visit date on or after the LMP.', v_mother: 'Mother danger signs', v_newborn: 'Newborn danger signs', v_bf: 'Baby breastfeeding well?', v_pncDay: 'Postnatal day', v_pncTitle: 'Postnatal visit',
+    s_title: 'Referral slip', s_program: 'National Programme for FP & PHC — Lady Health Worker', s_patient: 'Patient', s_age: 'Age', s_household: 'Household', s_ga: 'Gestational age', s_findings: 'Findings', s_signs: 'Danger signs', s_reason: 'Reason for referral', s_urgency: 'Urgency', s_dest: 'Referred to', s_lhw: 'LHW', s_date: 'Date', s_sig: 'LHW signature', s_recv: 'Receiving facility — signature & stamp', s_sms: 'Send SMS to LHS', s_none: 'No referral on record for this visit.',
+    ch_title: 'Children', ch_lead: 'Immunization card, growth screening and newborn danger signs for every child under five.', ch_pick: 'Pick a child from the list.', ch_none: 'No children registered. Add one from a household.', ch_card: 'Immunization card (Pakistan EPI)', ch_given: 'Given', ch_due: 'Due', ch_overdue: 'Overdue', ch_upcoming: 'Upcoming', ch_giveToday: 'Give today', ch_undo: 'Undo', ch_growth: 'Growth — weight for age', ch_weights: 'Weights', ch_addWeight: 'Add weight', ch_kg: 'Weight (kg)', ch_median: 'median', ch_normal: 'Normal weight', ch_under: 'Underweight (< 80% of median)', ch_severe: 'Severely underweight (< 70% of median) — refer', ch_lbw: 'Low birth weight (< 2.5 kg)', ch_ruleNote: 'Simplified screening rule: percentage of the WHO median weight for age. Not a z-score — see TODO(student).', ch_newborn: 'Newborn danger-sign check', ch_newbornLead: 'For babies under 3 months. Tick anything present; any sign means refer today.', ch_noSigns: 'No newborn danger signs ticked.', ch_age: 'Age', ch_born: 'Born', ch_muac: 'MUAC (cm)', ch_weightSaved: 'Weight saved', ch_vaxSaved: 'Vaccine recorded', ch_checkSaved: 'Check saved', ch_saveCheck: 'Save check', ch_over24: 'Over 24 months — outside the embedded table', ch_coverage: 'Vaccines complete',
+    r_title: 'Monthly report', r_lead: 'Counts for the LHW monthly register. Pick a month, export CSV or print.', r_month: 'Month', r_newreg: 'New registrations', r_anc: 'ANC visits', r_ref: 'Referrals', r_del: 'Deliveries', r_imm: 'Immunizations given', r_weighed: 'Children weighed', r_pnc: 'PNC visits', r_trend: 'Last 6 months', r_lines: 'Line list', r_csv: 'Export CSV', r_dhis: 'DHIS2 export', r_noLines: 'No visits in this month.', r_type: 'Type', r_name: 'Name', r_date: 'Date', r_detail: 'Detail',
+    sy_title: 'Sync', sy_lead: 'Records are saved on this phone first. When there is signal, push them to the district server.', sy_queue: 'Waiting to sync', sy_now: 'Sync now', sy_syncing: 'Syncing…', sy_done: 'All records synced', sy_last: 'Last sync', sy_never: 'never', sy_ok: 'Sync complete (simulated)', sy_export: 'Export JSON backup', sy_import: 'Import JSON', sy_reset: 'Reset to seed data', sy_resetConfirm: 'Replace all data on this device with the demo seed?', sy_imported: 'Backup imported', sy_badFile: 'Could not read that file.', sy_records: 'records', sy_type_households: 'Households', sy_type_women: 'Women', sy_type_pregnancies: 'Pregnancies', sy_type_anc: 'ANC visits', sy_type_pnc: 'PNC visits', sy_type_children: 'Children',
+    ab_title: 'About this project', ab_todo: 'Left for students to build', ab_profile: 'LHW profile', ab_name: 'LHW name', ab_code: 'LHW code', ab_village: 'Catchment village / mohalla', ab_bhu: 'BHU', ab_rhc: 'RHC', ab_dhq: 'DHQ hospital', ab_lhs: 'Lady Health Supervisor phone', ab_saved: 'Profile saved'
+  },
+  ur: {
+    title: 'ایل ایچ ڈبلیو فیلڈ وزٹ', tagline: 'لیڈی ہیلتھ ورکرز کی معاون', nav_today: 'آج', nav_households: 'گھرانے', nav_pregnancies: 'مائیں', nav_children: 'بچے', nav_report: 'رپورٹ', nav_sync: 'سنک', nav_about: 'تعارف',
+    today: 'آج', tomorrow: 'کل', yesterday: 'گزشتہ کل', in: '', days: 'دن بعد', daysAgo: 'دن پہلے', back: 'واپس', save: 'محفوظ کریں', cancel: 'منسوخ', delete: 'حذف', edit: 'ترمیم', print: 'پرنٹ', close: 'بند', search: 'نام، سربراہ یا محلہ تلاش کریں…',
+    td_title: 'آج کا منصوبہ', td_alerts: 'فوری توجہ', td_due: 'آج اور اس ہفتے', td_overdue: 'تاخیر شدہ', td_none: 'اس ہفتے کچھ باقی نہیں۔ گھرانوں کا دورہ کریں۔', td_start: 'وزٹ شروع', td_open: 'کھولیں', td_weigh: 'وزن', td_vacc: 'ٹیکہ', td_pnc: 'زچگی بعد وزٹ', td_anc: 'حمل چیک اپ', td_kpi_preg: 'جاری حمل', td_kpi_due: 'اس ہفتے کے وزٹ', td_kpi_over: 'تاخیر شدہ', td_kpi_unsynced: 'غیر سنک ریکارڈ', td_kpi_children: '2 سال سے کم بچے',
+    hh_title: 'گھرانے', hh_lead: 'آپ کے علاقے کے تمام گھرانے۔ مائیں، حمل اور بچے دیکھنے کے لیے گھرانے پر کلک کریں۔', hh_new: 'نیا گھرانہ', hh_head: 'سربراہ خانہ', hh_mohalla: 'محلہ / گاؤں', hh_phone: 'فون', hh_notes: 'نوٹ', hh_women: 'خواتین', hh_children: 'بچے', hh_addWoman: 'خاتون شامل کریں', hh_addChild: 'بچہ شامل کریں', hh_pick: 'فہرست سے گھرانہ چنیں یا نیا درج کریں۔', hh_none: 'کوئی گھرانہ نہیں ملا۔', hh_gps: 'جی پی ایس', hh_saved: 'گھرانہ محفوظ ہو گیا', hh_members: 'افراد', hh_regPreg: 'حمل درج کریں', hh_woman_name: 'نام', hh_age: 'عمر (سال)', hh_dob: 'تاریخ پیدائش', hh_sex: 'جنس', hh_bw: 'پیدائشی وزن (کلو)', boy: 'لڑکا', girl: 'لڑکی', hh_deleteConfirm: 'یہ گھرانہ اور تمام ریکارڈ حذف کریں؟',
+    pg_title: 'حمل', pg_lead: 'جاری حمل پہلے۔ ہر ایک میں حمل کی مدت، اگلا چیک اپ اور الرٹ دکھائے جاتے ہیں۔', pg_pick: 'فہرست سے ماں چنیں۔', pg_none: 'ابھی کوئی حمل درج نہیں۔ گھرانہ کھول کر "حمل درج کریں" دبائیں۔', pg_ga: 'حمل کی مدت', pg_edd: 'متوقع تاریخ', pg_lmp: 'آخری ماہواری کا پہلا دن', pg_gravida: 'کل حمل', pg_para: 'زچگیاں', pg_risk: 'خطرے کے عوامل', pg_risk_none: 'کوئی خطرے کا عامل درج نہیں', pg_status: 'حالت', pg_active: 'جاری', pg_delivered: 'زچگی ہو گئی', pg_lost: 'ضائع', pg_schedule: 'چیک اپ شیڈول', pg_history: 'وزٹ کی تاریخ', pg_noVisits: 'ابھی کوئی وزٹ نہیں۔', pg_newVisit: 'نیا چیک اپ', pg_pnc: 'زچگی بعد وزٹ', pg_delivery: 'زچگی درج کریں', pg_slip: 'ریفرل پرچی', pg_who: 'ڈبلیو ایچ او', pg_pk: 'لازمی (پاکستان)', pg_done: 'ہو گیا', pg_missed: 'رہ گیا', pg_due: 'اب', pg_overdue: 'تاخیر', pg_upcoming: 'آنے والا', pg_saved: 'حمل محفوظ ہو گیا', pg_highrisk: 'زیادہ خطرہ', pg_lmpHelp: 'متوقع تاریخ = آخری ماہواری + 280 دن', pg_register: 'حمل درج کریں', pg_pncSchedule: 'زچگی بعد شیڈول', pg_day: 'دن', pg_outcome: 'زچگی کا نتیجہ', pg_place: 'زچگی کی جگہ', pg_mode: 'طریقہ', pg_date: 'زچگی کی تاریخ', pg_babySex: 'بچے کی جنس', pg_babyName: 'بچے کا نام (اختیاری)', pg_live: 'زندہ پیدائش', pg_still: 'مردہ پیدائش', pg_lostPreg: 'حمل ضائع', pg_normal: 'نارمل', pg_csec: 'بڑا آپریشن', pg_home: 'گھر', pg_deliverySaved: 'زچگی درج ہو گئی۔ زچگی بعد شیڈول شروع۔',
+    v_title: 'حمل چیک اپ', v_date: 'وزٹ کی تاریخ', v_bp: 'بلڈ پریشر', v_sys: 'اوپر والا', v_dia: 'نیچے والا', v_weight: 'وزن (کلو)', v_hb: 'خون (Hb)', v_fh: 'پیٹ کی پیمائش (سینٹی میٹر)', v_fm: 'بچے کی حرکت محسوس؟', v_yes: 'ہاں', v_no: 'نہیں / کم', v_na: 'ابھی نہیں (20 ہفتے سے کم)', v_complaints: 'شکایات', v_danger: 'خطرے کی علامات — پوچھیں اور دیکھیں', v_tt: 'آج ٹیٹنس ٹیکہ', v_ttNone: 'نہیں', v_iron: 'آئرن / فولک ایسڈ دیا', v_counsel: 'مشورہ دیا', v_assess: 'جائزہ', v_noFlags: 'ان پیمائشوں سے کوئی خودکار الرٹ نہیں۔', v_referral: 'ریفرل', v_refTo: 'کہاں بھیجیں', v_refReason: 'وجہ (پرچی پر)', v_save: 'وزٹ محفوظ کریں', v_saved: 'وزٹ محفوظ ہو گیا', v_savedRef: 'وزٹ محفوظ — ریفرل پرچی تیار', v_voice: 'آواز', v_needDate: 'درست تاریخ درج کریں۔', v_mother: 'ماں کی خطرے کی علامات', v_newborn: 'نومولود کی خطرے کی علامات', v_bf: 'بچہ ٹھیک دودھ پی رہا ہے؟', v_pncDay: 'زچگی بعد دن', v_pncTitle: 'زچگی بعد وزٹ',
+    s_title: 'ریفرل پرچی', s_program: 'نیشنل پروگرام برائے خاندانی منصوبہ بندی و بنیادی صحت — لیڈی ہیلتھ ورکر', s_patient: 'مریضہ', s_age: 'عمر', s_household: 'گھرانہ', s_ga: 'حمل کی مدت', s_findings: 'معائنہ', s_signs: 'خطرے کی علامات', s_reason: 'ریفرل کی وجہ', s_urgency: 'فوری نوعیت', s_dest: 'بھیجا گیا', s_lhw: 'ایل ایچ ڈبلیو', s_date: 'تاریخ', s_sig: 'دستخط', s_recv: 'وصول کنندہ مرکز — دستخط و مہر', s_sms: 'سپروائزر کو ایس ایم ایس', s_none: 'اس وزٹ کا کوئی ریفرل نہیں۔',
+    ch_title: 'بچے', ch_lead: 'پانچ سال سے کم ہر بچے کا ٹیکہ کارڈ، وزن کی جانچ اور نومولود کی خطرے کی علامات۔', ch_pick: 'فہرست سے بچہ چنیں۔', ch_none: 'کوئی بچہ درج نہیں۔ گھرانے سے شامل کریں۔', ch_card: 'ٹیکہ کارڈ (پاکستان ای پی آئی)', ch_given: 'لگ گیا', ch_due: 'باقی', ch_overdue: 'تاخیر', ch_upcoming: 'آنے والا', ch_giveToday: 'آج لگایا', ch_undo: 'واپس', ch_growth: 'وزن بلحاظ عمر', ch_weights: 'وزن', ch_addWeight: 'وزن شامل کریں', ch_kg: 'وزن (کلو)', ch_median: 'میڈین', ch_normal: 'وزن ٹھیک', ch_under: 'کم وزن (میڈین کا 80% سے کم)', ch_severe: 'شدید کم وزن (70% سے کم) — ریفر کریں', ch_lbw: 'کم پیدائشی وزن (2.5 کلو سے کم)', ch_ruleNote: 'سادہ جانچ: عمر کے حساب سے ڈبلیو ایچ او میڈین وزن کا فیصد۔ یہ زیڈ اسکور نہیں۔', ch_newborn: 'نومولود خطرے کی علامات', ch_newbornLead: '3 ماہ سے کم بچوں کے لیے۔ جو علامت ہو نشان لگائیں؛ کوئی بھی ہو تو آج ہی ریفر کریں۔', ch_noSigns: 'کوئی علامت نشان زد نہیں۔', ch_age: 'عمر', ch_born: 'پیدائش', ch_muac: 'بازو کی پیمائش (سینٹی میٹر)', ch_weightSaved: 'وزن محفوظ', ch_vaxSaved: 'ٹیکہ درج ہو گیا', ch_checkSaved: 'جانچ محفوظ', ch_saveCheck: 'جانچ محفوظ کریں', ch_over24: '24 ماہ سے زیادہ — جدول سے باہر', ch_coverage: 'ٹیکے مکمل',
+    r_title: 'ماہانہ رپورٹ', r_lead: 'ایل ایچ ڈبلیو ماہانہ رجسٹر کے اعداد۔ مہینہ چنیں، CSV نکالیں یا پرنٹ کریں۔', r_month: 'مہینہ', r_newreg: 'نئی رجسٹریشن', r_anc: 'حمل چیک اپ', r_ref: 'ریفرل', r_del: 'زچگیاں', r_imm: 'ٹیکے لگائے', r_weighed: 'بچوں کا وزن', r_pnc: 'زچگی بعد وزٹ', r_trend: 'پچھلے 6 ماہ', r_lines: 'تفصیلی فہرست', r_csv: 'CSV نکالیں', r_dhis: 'DHIS2 ایکسپورٹ', r_noLines: 'اس مہینے کوئی وزٹ نہیں۔', r_type: 'قسم', r_name: 'نام', r_date: 'تاریخ', r_detail: 'تفصیل',
+    sy_title: 'سنک', sy_lead: 'ریکارڈ پہلے اس فون میں محفوظ ہوتے ہیں۔ سگنل آنے پر ضلعی سرور پر بھیجیں۔', sy_queue: 'سنک کے منتظر', sy_now: 'ابھی سنک کریں', sy_syncing: 'سنک ہو رہا ہے…', sy_done: 'سب ریکارڈ سنک ہو گئے', sy_last: 'آخری سنک', sy_never: 'کبھی نہیں', sy_ok: 'سنک مکمل (نمونہ)', sy_export: 'JSON بیک اپ', sy_import: 'JSON درآمد', sy_reset: 'نمونہ ڈیٹا بحال کریں', sy_resetConfirm: 'اس فون کا سارا ڈیٹا نمونہ ڈیٹا سے بدل دیں؟', sy_imported: 'بیک اپ درآمد ہو گیا', sy_badFile: 'فائل پڑھی نہیں جا سکی۔', sy_records: 'ریکارڈ', sy_type_households: 'گھرانے', sy_type_women: 'خواتین', sy_type_pregnancies: 'حمل', sy_type_anc: 'حمل چیک اپ', sy_type_pnc: 'زچگی بعد وزٹ', sy_type_children: 'بچے',
+    ab_title: 'اس پروجیکٹ کا تعارف', ab_todo: 'طلبہ کے لیے باقی کام', ab_profile: 'ایل ایچ ڈبلیو پروفائل', ab_name: 'نام', ab_code: 'کوڈ', ab_village: 'علاقہ / محلہ', ab_bhu: 'بی ایچ یو', ab_rhc: 'آر ایچ سی', ab_dhq: 'ڈی ایچ کیو ہسپتال', ab_lhs: 'سپروائزر کا فون', ab_saved: 'پروفائل محفوظ'
+  }
+};
+let lang = store.get('lang', 'en');
+const t = k => L[lang][k] ?? L.en[k] ?? k;
+const bi = o => lang === 'ur' ? (o.ur || o.en) : o.en; // pick one language for compact chips
+const both = (o, cls = '') => `<span class="en">${esc(o.en)}</span><span class="ur ${cls}">${esc(o.ur)}</span>`; // always both, for clinical content
+
+// ---------- clinical reference data (always bilingual) ----------
+// WHO 2016: eight ANC contacts. Pakistan MNCH programme: four mandatory visits (<16, 24–28, 32, 36 wk) — 32 wk is added as a mandatory row.
+const CONTACTS = [
+  { wk: 12, who: 1, pk: 1 }, { wk: 20, who: 2 }, { wk: 26, who: 3, pk: 2 }, { wk: 30, who: 4 }, { wk: 32, pk: 3 }, { wk: 34, who: 5 }, { wk: 36, who: 6, pk: 4 }, { wk: 38, who: 7 }, { wk: 40, who: 8 }
+];
+const PNC_DAYS = [1, 3, 7, 42];
+// urg: 3 = emergency (refer now), 2 = same day, 1 = next clinic day
+const PREG_DANGER = [
+  { id: 'bleed', en: 'Vaginal bleeding', ur: 'اندام نہانی سے خون آنا', urg: 3 },
+  { id: 'headache', en: 'Severe headache or blurred vision', ur: 'شدید سر درد یا نظر کا دھندلا پن', urg: 2 },
+  { id: 'swelling', en: 'Swelling of face and hands', ur: 'چہرے اور ہاتھوں پر سوجن', urg: 2 },
+  { id: 'fits', en: 'Convulsions / fits', ur: 'جھٹکے یا دورے پڑنا', urg: 3 },
+  { id: 'fever', en: 'High fever', ur: 'تیز بخار', urg: 2 },
+  { id: 'abdpain', en: 'Severe abdominal pain', ur: 'پیٹ میں شدید درد', urg: 3 },
+  { id: 'water', en: 'Water breaking before 37 weeks', ur: '37 ہفتوں سے پہلے پانی کی تھیلی پھٹنا', urg: 3 },
+  { id: 'fm', en: 'Reduced or absent fetal movement', ur: 'بچے کی حرکت کم یا بند ہونا', urg: 2 },
+  { id: 'breath', en: 'Difficulty breathing', ur: 'سانس لینے میں دشواری', urg: 3 }
+];
+const PNC_DANGER = [
+  { id: 'pph', en: 'Heavy bleeding (soaking more than 1 pad an hour)', ur: 'بہت زیادہ خون آنا (ایک گھنٹے میں ایک پیڈ سے زیادہ)', urg: 3 },
+  { id: 'fever', en: 'Fever or foul-smelling discharge', ur: 'بخار یا بدبودار پانی آنا', urg: 2 },
+  { id: 'fits', en: 'Fits, severe headache or blurred vision', ur: 'دورے، شدید سر درد یا نظر دھندلی', urg: 3 },
+  { id: 'breast', en: 'Painful, red, hot breast', ur: 'چھاتی میں درد، سرخی اور گرمی', urg: 1 },
+  { id: 'leg', en: 'Calf pain or difficulty breathing', ur: 'پنڈلی میں درد یا سانس میں دشواری', urg: 3 },
+  { id: 'mood', en: 'Very low mood, not able to care for the baby', ur: 'بہت زیادہ اداسی، بچے کی دیکھ بھال نہ کر پانا', urg: 1 }
+];
+const NB_DANGER = [
+  { id: 'nofeed', en: 'Not feeding or unable to suck', ur: 'دودھ نہیں پی رہا یا چوس نہیں سکتا', urg: 3 },
+  { id: 'fits', en: 'Convulsions', ur: 'جھٹکے یا دورے', urg: 3 },
+  { id: 'fastbreath', en: 'Fast breathing (more than 60 breaths a minute)', ur: 'تیز سانس (ایک منٹ میں 60 سے زیادہ)', urg: 3 },
+  { id: 'indraw', en: 'Chest indrawing', ur: 'سانس لیتے وقت پسلیاں اندر دھنسنا', urg: 3 },
+  { id: 'temp', en: 'Fever, or cold to touch', ur: 'بخار، یا جسم چھونے پر ٹھنڈا', urg: 3 },
+  { id: 'jaundice', en: 'Jaundice of palms or soles', ur: 'ہتھیلیوں یا تلووں کا پیلا پن', urg: 2 },
+  { id: 'umbil', en: 'Umbilical redness or pus', ur: 'ناف کے گرد سرخی یا پیپ', urg: 2 },
+  { id: 'small', en: 'Very small baby (under 2.5 kg)', ur: 'بہت چھوٹا بچہ (2.5 کلو سے کم)', urg: 2 }
+];
+const COUNSEL_ANC = [
+  { id: 'diet', en: 'Eat one extra meal a day: daal, eggs, green vegetables, milk', ur: 'روزانہ ایک اضافی کھانا: دال، انڈے، ہری سبزیاں، دودھ' },
+  { id: 'iron', en: 'Iron/folic acid tablet every night; dark stools are normal', ur: 'آئرن اور فولک ایسڈ کی گولی ہر رات؛ کالا پاخانہ معمول ہے' },
+  { id: 'danger', en: 'Knows the danger signs and where to go immediately', ur: 'خطرے کی علامات اور فوراً کہاں جانا ہے، معلوم ہے' },
+  { id: 'birthplan', en: 'Birth plan: skilled attendant, transport, money, blood donor', ur: 'زچگی کا منصوبہ: تربیت یافتہ دائی، سواری، رقم، خون دینے والا' },
+  { id: 'rest', en: 'Rest, no heavy lifting, sleep under a mosquito net', ur: 'آرام، بھاری وزن نہ اٹھائیں، مچھر دانی میں سوئیں' },
+  { id: 'bf', en: 'Breastfeed within one hour of birth; only breast milk for 6 months', ur: 'پیدائش کے ایک گھنٹے میں دودھ پلائیں؛ 6 ماہ صرف ماں کا دودھ' }
+];
+const COUNSEL_PNC = [
+  { id: 'ebf', en: 'Exclusive breastfeeding on demand, day and night', ur: 'دن رات جب بچہ مانگے صرف ماں کا دودھ' },
+  { id: 'warm', en: 'Keep baby warm: skin-to-skin, cap, no bath for 24 hours', ur: 'بچے کو گرم رکھیں: سینے سے لگائیں، ٹوپی، 24 گھنٹے غسل نہیں' },
+  { id: 'cord', en: 'Keep the cord dry and clean; apply nothing', ur: 'ناف خشک اور صاف رکھیں؛ کچھ نہ لگائیں' },
+  { id: 'epi', en: 'BCG, OPV-0 and Hep B at birth; next vaccines at 6 weeks', ur: 'پیدائش پر بی سی جی، پولیو، ہیپاٹائٹس بی؛ اگلے ٹیکے 6 ہفتے پر' },
+  { id: 'fp', en: 'Discuss family planning before 6 weeks', ur: '6 ہفتوں سے پہلے خاندانی منصوبہ بندی پر بات' },
+  { id: 'hyg', en: 'Wash hands before handling the baby', ur: 'بچے کو اٹھانے سے پہلے ہاتھ دھوئیں' }
+];
+const RISKS = [
+  { id: 'age', en: 'Age under 18 or over 35', ur: 'عمر 18 سے کم یا 35 سے زیادہ' }, { id: 'csec', en: 'Previous C-section', ur: 'پہلے بڑا آپریشن (سیزیرین)' },
+  { id: 'still', en: 'Previous stillbirth or haemorrhage', ur: 'پہلے مردہ بچہ یا زیادہ خون بہنا' }, { id: 'anaemia', en: 'Anaemia', ur: 'خون کی کمی' },
+  { id: 'htn', en: 'Hypertension', ur: 'بلند فشار خون' }, { id: 'dm', en: 'Diabetes', ur: 'ذیابیطس' },
+  { id: 'twins', en: 'Twins / multiple pregnancy', ur: 'جڑواں بچے' }, { id: 'height', en: 'Height under 145 cm', ur: 'قد 145 سینٹی میٹر سے کم' }
+];
+const URG = {
+  0: { en: 'No referral needed', ur: 'ریفرل کی ضرورت نہیں', cls: 'green' },
+  1: { en: 'Refer on the next clinic day', ur: 'اگلے کلینک کے دن بھیجیں', cls: 'teal' },
+  2: { en: 'Refer the same day', ur: 'آج ہی بھیجیں', cls: 'amber' },
+  3: { en: 'EMERGENCY — refer now, arrange transport', ur: 'ایمرجنسی — فوراً بھیجیں، سواری کا بندوبست کریں', cls: 'red' }
+};
+const DEST = ['BHU', 'RHC', 'DHQ'];
+// Pakistan EPI schedule (2024 card). days = age at which the dose is due.
+const EPI = [
+  { id: 'birth', en: 'Birth', ur: 'پیدائش', days: 0, vaccines: ['BCG', 'OPV-0', 'Hep B-0'] },
+  { id: 'w6', en: '6 weeks', ur: '6 ہفتے', days: 42, vaccines: ['Pentavalent-1', 'OPV-1', 'PCV-1', 'Rota-1'] },
+  { id: 'w10', en: '10 weeks', ur: '10 ہفتے', days: 70, vaccines: ['Pentavalent-2', 'OPV-2', 'PCV-2', 'Rota-2'] },
+  { id: 'w14', en: '14 weeks', ur: '14 ہفتے', days: 98, vaccines: ['Pentavalent-3', 'OPV-3', 'PCV-3', 'IPV-1'] },
+  { id: 'm9', en: '9 months', ur: '9 ماہ', days: 274, vaccines: ['MR-1', 'TCV', 'IPV-2'] },
+  { id: 'm15', en: '15 months', ur: '15 ماہ', days: 456, vaccines: ['MR-2'] }
+];
+const ALL_VACCINES = EPI.flatMap(g => g.vaccines);
+// Approximate WHO weight-for-age MEDIANS (kg) by completed month, 0–24. Screening only; z-scores are a student TODO.
+const WFA = {
+  boy: [3.3, 4.5, 5.6, 6.4, 7.0, 7.5, 7.9, 8.3, 8.6, 8.9, 9.2, 9.4, 9.6, 9.9, 10.1, 10.3, 10.5, 10.7, 10.9, 11.1, 11.3, 11.5, 11.8, 12.0, 12.2],
+  girl: [3.2, 4.2, 5.1, 5.8, 6.4, 6.9, 7.3, 7.6, 7.9, 8.2, 8.5, 8.7, 8.9, 9.2, 9.4, 9.6, 9.8, 10.0, 10.2, 10.4, 10.6, 10.9, 11.1, 11.3, 11.5]
+};
+
+// ---------- store: six tables in localStorage, every record {id, createdAt, updatedAt, synced} ----------
+const TABLES = ['households', 'women', 'pregnancies', 'anc', 'pnc', 'children'];
+const DB = {};
+const DEFAULT_PROFILE = { name: 'Shamim Bibi', code: 'LHW-SWL-0417', village: 'Chak 89/6-R, Tehsil Sahiwal', bhu: 'BHU Chak 89/6-R', rhc: 'RHC Noor Shah', dhq: 'DHQ Hospital Sahiwal', lhs: '0300-7654321' };
+let profile = Object.assign({}, DEFAULT_PROFILE, store.get('profile', {}));
+function load() { TABLES.forEach(k => DB[k] = store.get(k, null) || []); if (!store.get('seeded')) seed(); }
+const save = k => store.set(k, DB[k]);
+const byId = (table, id) => DB[table].find(r => r.id === id);
+function put(table, rec) {
+  rec.id = rec.id || uid(); rec.createdAt = rec.createdAt || T_ISO; rec.updatedAt = Date.now(); rec.synced = false;
+  const i = DB[table].findIndex(r => r.id === rec.id); if (i >= 0) DB[table][i] = rec; else DB[table].push(rec);
+  save(table); return rec;
+}
+function remove(table, id) { DB[table] = DB[table].filter(r => r.id !== id); save(table); }
+const unsynced = () => TABLES.flatMap(k => DB[k].filter(r => !r.synced).map(r => ({ table: k, rec: r })));
+
+// Seed: one village, 3 households, 2 active pregnancies (one high-risk with a recent high-BP visit), 1 delivered + newborn, 3 older children.
+function seed() {
+  const d = (n, from = T_ISO) => iso(addDays(from, n));
+  const S = (o, created, synced = true) => Object.assign(o, { createdAt: created, updatedAt: parse(created).getTime(), synced });
+  DB.households = [
+    S({ id: 'h1', head: 'Muhammad Aslam', mohalla: 'Noorpura', phone: '0301-4567890', notes: 'Near the masjid, blue gate. Husband works in Sahiwal.' }, d(-240)),
+    S({ id: 'h2', head: 'Ghulam Rasool', mohalla: 'Noorpura', phone: '0345-2211009', notes: 'Joint family, 9 members.' }, d(-200)),
+    S({ id: 'h3', head: 'Allah Ditta', mohalla: 'Noorpura', phone: '', notes: 'No phone; contact via neighbour Aslam.' }, d(-320))
+  ];
+  DB.women = [
+    S({ id: 'w1', householdId: 'h1', name: 'Saima Bibi', age: 36, phone: '0301-4567890' }, d(-240)),
+    S({ id: 'w2', householdId: 'h2', name: 'Rukhsana', age: 19, phone: '0345-2211009' }, d(-60)),
+    S({ id: 'w3', householdId: 'h3', name: 'Nasreen', age: 28, phone: '' }, d(-320)),
+    S({ id: 'w4', householdId: 'h2', name: 'Kausar Parveen', age: 31, phone: '0345-2211009' }, d(-200))
+  ];
+  // p1: LMP 12 Mar 2026 → 31 wk on 16 Oct 2026; G4 P3, age >35 + previous C-section; last visit 3 days ago with BP 146/94 and swelling → alert
+  const lmp1 = iso(addDays(T_ISO, -218)), lmp2 = iso(addDays(T_ISO, -88)), lmp3 = iso(addDays(T_ISO, -340));
+  DB.pregnancies = [
+    S({ id: 'p1', womanId: 'w1', lmp: lmp1, edd: d(280, lmp1), gravida: 4, para: 3, risks: ['age', 'csec'], status: 'active' }, d(-135)),
+    S({ id: 'p2', womanId: 'w2', lmp: lmp2, edd: d(280, lmp2), gravida: 1, para: 0, risks: [], status: 'active' }, d(-6), false),
+    S({ id: 'p3', womanId: 'w3', lmp: lmp3, edd: d(280, lmp3), gravida: 3, para: 2, risks: [], status: 'delivered', delivery: { date: d(-63), place: 'BHU', mode: 'normal', outcome: 'live', childId: 'c1' } }, d(-300))
+  ];
+  DB.anc = [
+    S({ id: 'a1', pregnancyId: 'p1', date: d(84, lmp1), sys: 118, dia: 76, weight: 58, hb: 10.4, fh: null, fm: 'na', complaints: 'Nausea in the mornings', signs: [], tt: 'TT1', iron: true, counsel: ['diet', 'iron', 'danger'], referral: null }, d(84, lmp1)),
+    S({ id: 'a2', pregnancyId: 'p1', date: d(147, lmp1), sys: 124, dia: 80, weight: 61.5, hb: 10.1, fh: 21, fm: 'yes', complaints: '', signs: [], tt: 'TT2', iron: true, counsel: ['diet', 'iron', 'birthplan', 'rest'], referral: null }, d(147, lmp1)),
+    S({ id: 'a3', pregnancyId: 'p1', date: d(-3), sys: 146, dia: 94, weight: 66, hb: 9.8, fh: 31, fm: 'yes', complaints: 'Swollen feet and hands since 2 days, mild headache', signs: ['swelling'], tt: '', iron: true, counsel: ['danger', 'birthplan'], referral: { urg: 2, dest: 'RHC', reason: 'BP 146/94 with swelling of face and hands at 31 wk — pre-eclampsia alert; previous C-section' } }, d(-3), false),
+    S({ id: 'a4', pregnancyId: 'p3', date: d(98, lmp3), sys: 110, dia: 70, weight: 55, hb: 11.2, fh: null, fm: 'na', complaints: '', signs: [], tt: 'TT3', iron: true, counsel: ['diet', 'iron'], referral: null }, d(98, lmp3)),
+    S({ id: 'a5', pregnancyId: 'p3', date: d(182, lmp3), sys: 112, dia: 72, weight: 59, hb: 11.0, fh: 26, fm: 'yes', complaints: '', signs: [], tt: '', iron: true, counsel: ['danger', 'birthplan'], referral: null }, d(182, lmp3)),
+    S({ id: 'a6', pregnancyId: 'p3', date: d(252, lmp3), sys: 116, dia: 74, weight: 63, hb: 10.8, fh: 36, fm: 'yes', complaints: '', signs: [], tt: '', iron: true, counsel: ['birthplan', 'bf'], referral: null }, d(252, lmp3))
+  ];
+  DB.pnc = [
+    S({ id: 'n1', pregnancyId: 'p3', day: 1, date: d(-62), motherSigns: [], babySigns: ['small'], bf: 'yes', counsel: ['ebf', 'warm', 'cord'], referral: null }, d(-62)),
+    S({ id: 'n2', pregnancyId: 'p3', day: 3, date: d(-60), motherSigns: [], babySigns: [], bf: 'yes', counsel: ['ebf', 'warm', 'hyg'], referral: null }, d(-60)),
+    S({ id: 'n3', pregnancyId: 'p3', day: 7, date: d(-56), motherSigns: [], babySigns: [], bf: 'yes', counsel: ['ebf', 'epi'], referral: null }, d(-56)),
+    S({ id: 'n4', pregnancyId: 'p3', day: 42, date: d(-20), motherSigns: [], babySigns: [], bf: 'yes', counsel: ['fp', 'epi'], referral: null }, d(-20))
+  ];
+  const dob1 = d(-63), dob2 = d(-318), dob3 = d(-544), dob4 = d(-202);
+  const vx = (dob, groups, slip = 1) => Object.fromEntries(EPI.filter(g => groups.includes(g.id)).flatMap(g => g.vaccines.map(v => [v, d(g.days + (g.days ? slip : 1), dob)])));
+  DB.children = [
+    S({ id: 'c1', householdId: 'h3', motherId: 'w3', name: 'Hassan', dob: dob1, sex: 'boy', birthWeight: 2.4, weights: [{ date: dob1, kg: 2.4 }, { date: d(30, dob1), kg: 3.1 }, { date: d(-6), kg: 4.1 }], immunizations: vx(dob1, ['birth', 'w6'], 3), checks: [] }, dob1, false),
+    S({ id: 'c2', householdId: 'h1', motherId: 'w1', name: 'Ayesha', dob: dob2, sex: 'girl', birthWeight: 3.0, weights: [{ date: dob2, kg: 3.0 }, { date: d(91, dob2), kg: 5.5 }, { date: d(183, dob2), kg: 7.1 }, { date: d(275, dob2), kg: 7.9 }], immunizations: vx(dob2, ['birth', 'w6', 'w10', 'w14'], 2), checks: [] }, dob2),
+    S({ id: 'c3', householdId: 'h2', motherId: 'w4', name: 'Bilal', dob: dob3, sex: 'boy', birthWeight: 3.4, weights: [{ date: dob3, kg: 3.4 }, { date: d(122, dob3), kg: 6.9 }, { date: d(244, dob3), kg: 8.6 }, { date: d(366, dob3), kg: 9.5 }, { date: d(-15), kg: 9.8 }], immunizations: vx(dob3, ['birth', 'w6', 'w10', 'w14', 'm9'], 4), checks: [] }, dob3),
+    S({ id: 'c4', householdId: 'h3', motherId: 'w3', name: 'Zainab', dob: dob4, sex: 'girl', birthWeight: 2.9, weights: [{ date: dob4, kg: 2.9 }, { date: d(61, dob4), kg: 4.9 }, { date: d(122, dob4), kg: 6.0 }, { date: d(-6), kg: 6.3 }], immunizations: vx(dob4, ['birth', 'w6', 'w10'], 2), checks: [] }, dob4)
+  ];
+  TABLES.forEach(save); store.set('seeded', true); store.set('lastSync', null);
+}
+
+// ---------- clinical logic ----------
+const ga = (lmp, date = T_ISO) => { const days = diffDays(lmp, date); return { days, w: Math.floor(days / 7), d: days % 7 }; };
+const gaStr = (lmp, date = T_ISO) => { const g = ga(lmp, date); return g.days < 0 ? '—' : `${g.w}w ${g.d}d`; };
+const eddOf = lmp => iso(addDays(lmp, 280));
+const womanOf = p => byId('women', p.womanId) || { name: '?', age: '' };
+const hhOf = w => byId('households', w.householdId) || { head: '?', mohalla: '' };
+const visitsOf = p => DB.anc.filter(v => v.pregnancyId === p.id).sort((a, b) => a.date < b.date ? -1 : 1);
+const pncOf = p => DB.pnc.filter(v => v.pregnancyId === p.id).sort((a, b) => a.day - b.day);
+function riskList(p) { const w = womanOf(p); const r = new Set(p.risks || []); if (w.age && (w.age < 18 || w.age > 35)) r.add('age'); return [...r]; }
+/** Contact schedule: each contact has a window [due-7, due+14]. Covered if any visit falls in it. */
+function schedule(p) {
+  const vs = visitsOf(p), today = ga(p.lmp).days;
+  return CONTACTS.map(c => {
+    const due = c.wk * 7, dueDate = iso(addDays(p.lmp, due));
+    const visit = vs.find(v => { const g = ga(p.lmp, v.date).days; return g >= due - 7 && g <= due + 14; });
+    let status = 'upcoming';
+    const laterVisit = vs.some(v => ga(p.lmp, v.date).days > due + 14);
+    if (visit) status = 'done'; else if (p.status !== 'active') status = 'skipped'; else if (today > due + 42 || (today > due + 14 && laterVisit)) status = 'missed'; else if (today > due + 14) status = 'overdue'; else if (today >= due - 7) status = 'due';
+    return { ...c, dueDate, visit, status };
+  });
+}
+function pncSchedule(p) {
+  if (!p.delivery) return [];
+  const vs = pncOf(p);
+  return PNC_DAYS.map(day => { const dueDate = iso(addDays(p.delivery.date, day)); const visit = vs.find(v => v.day === day); const late = diffDays(dueDate, T_ISO); const status = visit ? 'done' : late > 3 ? 'overdue' : late >= -1 ? 'due' : 'upcoming'; return { day, dueDate, visit, status }; });
+}
+/** Auto flags for an ANC visit draft. Returns {flags:[{cls,en,ur}], urg:0-3} */
+function assessAnc(p, v) {
+  const flags = []; let urg = 0; const signs = new Set(v.signs || []); const g = ga(p.lmp, v.date).w;
+  const F = (cls, en, ur, u) => { flags.push({ cls, en, ur }); urg = Math.max(urg, u); };
+  if (v.sys >= 140 || v.dia >= 90) {
+    const severe = v.sys >= 160 || v.dia >= 110 || signs.has('headache') || signs.has('swelling') || signs.has('fits');
+    if (severe) F('red', `BP ${v.sys}/${v.dia} with headache, vision change, swelling or fits — severe pre-eclampsia risk. Urgent referral.`, `بلڈ پریشر ${v.sys}/${v.dia} اور سر درد، نظر، سوجن یا دورے — شدید پری ایکلیمپسیا کا خطرہ۔ فوری ریفرل۔`, 3);
+    else F('amber', `BP ${v.sys}/${v.dia} (≥ 140/90) — pre-eclampsia alert. Rest 15 min and recheck; refer the same day if still high or protein in urine.`, `بلڈ پریشر ${v.sys}/${v.dia} — پری ایکلیمپسیا الرٹ۔ 15 منٹ آرام کے بعد دوبارہ چیک کریں؛ زیادہ رہے تو آج ہی ریفر کریں۔`, 2);
+  }
+  if (v.hb != null && v.hb !== '' && !isNaN(v.hb)) {
+    if (v.hb < 7) F('red', `Hb ${v.hb} g/dL — severe anaemia. Refer for treatment.`, `خون ${v.hb} — شدید خون کی کمی۔ علاج کے لیے ریفر کریں۔`, 2);
+    else if (v.hb < 11) F('amber', `Hb ${v.hb} g/dL — anaemia. Daily iron/folate, diet counselling, recheck in 4 weeks.`, `خون ${v.hb} — خون کی کمی۔ روزانہ آئرن/فولیٹ، خوراک کا مشورہ، 4 ہفتے بعد دوبارہ چیک۔`, 1);
+  }
+  if (g >= 24 && v.fh) { const diff = v.fh - g; if (Math.abs(diff) > 3) F('amber', `Fundal height ${v.fh} cm vs ${g} wk (${diff > 0 ? '+' : ''}${diff} cm) — size–dates mismatch. Check LMP; refer for ultrasound (twins, fluid, growth restriction).`, `پیٹ کی پیمائش ${v.fh} سینٹی میٹر بمقابلہ ${g} ہفتے — فرق زیادہ ہے۔ تاریخ چیک کریں؛ الٹراساؤنڈ کے لیے ریفر کریں۔`, 1); }
+  if (g >= 28 && (v.fm === 'no' || signs.has('fm'))) F('red', 'Reduced or absent fetal movement after 28 weeks — same-day referral for fetal assessment.', '28 ہفتوں کے بعد بچے کی حرکت کم یا بند — آج ہی ریفر کریں۔', 2);
+  if (signs.has('water') && g >= 37) F('amber', 'Membranes ruptured at term — send to facility for delivery today.', 'پانی کی تھیلی پھٹ گئی (مکمل مدت) — زچگی کے لیے آج مرکز بھیجیں۔', 2);
+  PREG_DANGER.forEach(s => { if (signs.has(s.id) && !(s.id === 'fm' && g >= 28) && !(s.id === 'water' && g >= 37)) { urg = Math.max(urg, s.urg); } });
+  if (urg === 3 && !flags.some(f => f.cls === 'red')) F('red', 'Emergency danger sign present — refer now.', 'ایمرجنسی خطرے کی علامت موجود — فوراً ریفر کریں۔', 3);
+  return { flags, urg, signs: [...signs] };
+}
+function assessSigns(list, chosen) { let urg = 0; list.forEach(s => { if (chosen.includes(s.id)) urg = Math.max(urg, s.urg); }); return urg; }
+const destFor = urg => urg >= 3 ? 'DHQ' : urg === 2 ? 'RHC' : 'BHU';
+const destName = code => ({ BHU: profile.bhu, RHC: profile.rhc, DHQ: profile.dhq })[code] || code;
+
+// EPI
+const ageDays = (c, date = T_ISO) => diffDays(c.dob, date);
+const ageMonths = (c, date = T_ISO) => ageDays(c, date) / 30.4375;
+function ageStr(c, date = T_ISO) { const days = ageDays(c, date); if (days < 0) return '—'; if (days < 14) return `${days} d`; if (days < 90) return `${Math.floor(days / 7)} wk`; const m = Math.floor(days / 30.4375); return m < 24 ? `${m} mo` : `${Math.floor(m / 12)} y ${m % 12} mo`; }
+function vaxGroups(c) {
+  return EPI.map(g => {
+    const dueDate = iso(addDays(c.dob, g.days)); const given = g.vaccines.filter(v => c.immunizations?.[v]);
+    const late = diffDays(dueDate, T_ISO);
+    const status = given.length === g.vaccines.length ? 'given' : late > 14 ? 'overdue' : late >= 0 ? 'due' : 'upcoming';
+    return { ...g, dueDate, given, status, partial: given.length > 0 && given.length < g.vaccines.length };
+  });
+}
+// Growth
+function median(sex, months) { const arr = WFA[sex] || WFA.boy; const m = Math.max(0, Math.min(24, months)); const i = Math.floor(m); return i >= 24 ? arr[24] : arr[i] + (arr[i + 1] - arr[i]) * (m - i); }
+function growthStatus(c, w) {
+  const m = ageMonths(c, w.date); if (m > 24) return { cls: '', key: 'ch_over24', pct: null, med: null };
+  const med = median(c.sex, m), pct = w.kg / med * 100;
+  return pct < 70 ? { cls: 'red', key: 'ch_severe', pct, med } : pct < 80 ? { cls: 'amber', key: 'ch_under', pct, med } : { cls: 'green', key: 'ch_normal', pct, med };
+}
+const lastWeight = c => (c.weights || []).slice().sort((a, b) => a.date < b.date ? 1 : -1)[0];
+// TODO(student): WHO z-scores. Replace median()/growthStatus() with LMS tables (L, M, S per sex and age in days) and compute z = ((kg/M)^L − 1)/(L·S); flag < −2 SD (underweight) and < −3 SD (severe). Also add length/height-for-age and weight-for-length.
+function zScore(/* child, weightEntry */) { return null; }
+// TODO(student): MUAC screening. Record mid-upper-arm circumference for children 6–59 months; < 11.5 cm = SAM (refer to OTP/stabilisation centre), 11.5–12.4 cm = MAM. Add a MUAC input beside weight in renderChild().
+function muacStatus(/* cm */) { return null; }
+
+// ---------- planner: what is due today / this week / overdue ----------
+function planner() {
+  const items = [];
+  DB.pregnancies.filter(p => p.status === 'active').forEach(p => {
+    const w = womanOf(p); const sch = schedule(p);
+    const last = visitsOf(p).slice(-1)[0];
+    if (last && last.referral && diffDays(last.date, T_ISO) <= 14) items.push({ kind: 'alert', urg: last.referral.urg, name: w.name, sub: `${t('td_anc')} ${fmtS(last.date)} · ${esc(last.referral.reason)}`, date: last.date, href: `#pregnancy/${p.id}`, action: 'td_open', icon: 'alert' });
+    const next = sch.find(c => c.status === 'due') || sch.find(c => c.status === 'overdue');
+    if (next) items.push({ kind: next.status, name: w.name, sub: `${t('td_anc')} ${next.wk} wk${next.pk ? ' · ' + t('pg_pk') : ''} · ${gaStr(p.lmp)} · ${relDays(next.dueDate)}`, date: next.dueDate, href: `#pregnancy/${p.id}/visit`, action: 'td_start', icon: 'stethoscope' });
+    else { const up = sch.find(c => c.status === 'upcoming' && diffDays(T_ISO, c.dueDate) <= 14); if (up) items.push({ kind: 'upcoming', name: w.name, sub: `${t('td_anc')} ${up.wk} wk · ${relDays(up.dueDate)}`, date: up.dueDate, href: `#pregnancy/${p.id}`, action: 'td_open', icon: 'calendar' }); }
+  });
+  DB.pregnancies.filter(p => p.status === 'delivered' && p.delivery).forEach(p => {
+    const w = womanOf(p); const next = pncSchedule(p).find(s => s.status === 'due' || s.status === 'overdue');
+    if (next) items.push({ kind: next.status, name: w.name, sub: `${t('td_pnc')} · ${t('pg_day')} ${next.day} · ${relDays(next.dueDate)}`, date: next.dueDate, href: `#pregnancy/${p.id}/pnc`, action: 'td_start', icon: 'baby' });
+  });
+  DB.children.forEach(c => {
+    const g = vaxGroups(c).find(x => x.status === 'due' || x.status === 'overdue' || (x.status === 'upcoming' && diffDays(T_ISO, x.dueDate) <= 7));
+    if (g) items.push({ kind: g.status, name: c.name, sub: `${t('td_vacc')} · ${bi(g)}: ${g.vaccines.filter(v => !c.immunizations?.[v]).join(', ')} · ${relDays(g.dueDate)}`, date: g.dueDate, href: `#children/${c.id}`, action: 'td_open', icon: 'syringe' });
+    const lw = lastWeight(c);
+    if (ageMonths(c) < 24 && (!lw || diffDays(lw.date, T_ISO) > 30)) items.push({ kind: lw && diffDays(lw.date, T_ISO) > 60 ? 'overdue' : 'due', name: c.name, sub: `${t('td_weigh')} · ${lw ? fmtS(lw.date) + ' · ' + lw.kg + ' kg' : '—'}`, date: lw ? iso(addDays(lw.date, 30)) : T_ISO, href: `#children/${c.id}`, action: 'td_open', icon: 'scale' });
+    const st = lw && growthStatus(c, lw); if (st && st.cls === 'red') items.push({ kind: 'alert', urg: 2, name: c.name, sub: `${t('ch_severe')} · ${lw.kg} kg`, date: lw.date, href: `#children/${c.id}`, action: 'td_open', icon: 'alert' });
+  });
+  return items;
+}
+
+// ---------- shared UI helpers ----------
+const view = $('#view');
+const chipFor = status => ({ done: ['green', 'pg_done'], missed: ['', 'pg_missed'], given: ['green', 'ch_given'], due: ['amber', 'pg_due'], overdue: ['red', 'pg_overdue'], upcoming: ['', 'pg_upcoming'], skipped: ['', '—'] })[status] || ['', status];
+const chip = (status, extra = '') => { const [cls, k] = chipFor(status); return `<span class="chip ${cls}">${k === '—' ? '—' : t(k)}${extra}</span>`; };
+const pagehead = (title, lead, right = '') => `<div class="pagehead"><div><h2>${title}</h2>${lead ? `<p>${lead}</p>` : ''}</div>${right}</div>`;
+const backBtn = href => `<a class="backbtn" href="${href}">${ic('arrow-left')} ${t('back')}</a>`;
+const field = (label, inner) => `<div><label class="f">${label}</label>${inner}</div>`;
+const checklist = (list, chosen = [], cls = '', name = 'sign') => list.map(s => `<label class="check ${cls} ${chosen.includes(s.id) ? 'on' : ''}"><input type="checkbox" data-${name}="${s.id}" ${chosen.includes(s.id) ? 'checked' : ''}>${both(s)}</label>`).join('');
+const wireChecks = (root, cb) => $$('.check input', root).forEach(i => i.addEventListener('change', () => { i.closest('.check').classList.toggle('on', i.checked); cb && cb(); }));
+const picked = (root, name) => $$(`.check input[data-${name}]:checked`, root).map(i => i.dataset[name]);
+const urgBanner = (urg, extra = '') => { const u = URG[urg]; return `<div class="alert ${u.cls}"><span class="ic-wrap">${ic(urg >= 3 ? 'siren' : urg === 2 ? 'alert' : urg === 1 ? 'clock' : 'check-circle', 'lg')}</span><div><b>${esc(u.en)}</b><div class="ur">${esc(u.ur)}</div>${extra}</div></div>`; };
+/** Bottom sheet on phones, centred modal on desktop. Escape / scrim closes. */
+function openSheet(html, onMount) {
+  closeSheet(true);
+  const scrim = document.createElement('div'); scrim.className = 'sheet-scrim'; scrim.id = 'sheet';
+  scrim.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  document.body.append(scrim);
+  scrim.addEventListener('click', e => { if (e.target === scrim) closeSheet(); });
+  $$('[data-close]', scrim).forEach(b => b.onclick = () => closeSheet());
+  const first = $('input,select,textarea', scrim); if (first) setTimeout(() => first.focus(), 60);
+  onMount && onMount(scrim);
+}
+function closeSheet(now) { const s = $('#sheet'); if (!s) return; if (now) return s.remove(); s.classList.add('closing'); setTimeout(() => s.remove(), 230); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+const sheetHead = title => `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><h3 style="font-size:1.15rem;flex:1">${title}</h3><button class="btn ghost sm" data-close aria-label="${t('close')}">${ic('x')}</button></div>`;
+const avatar = name => esc((name || '?').trim().charAt(0).toUpperCase());
+
+// ---------- Today ----------
+function renderToday() {
+  const items = planner();
+  const alerts = items.filter(i => i.kind === 'alert').sort((a, b) => b.urg - a.urg);
+  const overdue = items.filter(i => i.kind === 'overdue').sort((a, b) => a.date < b.date ? -1 : 1);
+  const due = items.filter(i => i.kind === 'due' || i.kind === 'upcoming').sort((a, b) => a.date < b.date ? -1 : 1);
+  const active = DB.pregnancies.filter(p => p.status === 'active').length, kids = DB.children.filter(c => ageMonths(c) < 24).length, q = unsynced().length;
+  const kpi = (cls, k, v, icon) => `<div class="kpi ${cls}"><div class="eyebrow">${ic(icon)} ${t(k)}</div><div class="v" data-count="${v}">0</div></div>`;
+  const task = i => `<div class="task ${i.kind}">${ic(i.icon, 'lg')}<div class="t"><b>${esc(i.name)}</b><span>${i.sub}</span></div><a class="btn ${i.kind === 'overdue' || i.kind === 'alert' ? '' : 'teal'} sm" href="${i.href}">${i.action === 'td_start' ? ic('arrow-right') : ic('eye')} ${t(i.action)}</a></div>`;
+  view.innerHTML = pagehead(t('td_title'), `${TODAY.toLocaleDateString(lang === 'ur' ? 'ur-PK' : 'en-PK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${esc(profile.village)}`) +
+    `<div class="kpis stagger" style="margin-bottom:16px">${kpi('orange', 'td_kpi_preg', active, 'heart')}${kpi('teal', 'td_kpi_due', due.length, 'calendar')}${kpi(overdue.length ? 'red' : 'green', 'td_kpi_over', overdue.length, 'clock')}${kpi('teal', 'td_kpi_children', kids, 'baby')}${kpi(q ? 'orange' : 'green', 'td_kpi_unsynced', q, 'upload')}</div>
+    <div class="two">
+      <div class="stack">
+        ${alerts.length ? `<section class="card" style="border-color:var(--red)"><h3 style="color:var(--red)">${ic('siren')} ${t('td_alerts')}</h3><div class="list stagger">${alerts.map(task).join('')}</div></section>` : ''}
+        <section class="card"><h3>${ic('calendar')} ${t('td_due')} <span class="chip amber">${due.length}</span></h3>${due.length ? `<div class="list stagger">${due.map(task).join('')}</div>` : `<div class="note">${t('td_none')}</div>`}</section>
+      </div>
+      <div class="stack">
+        <section class="card"><h3>${ic('clock')} ${t('td_overdue')} <span class="chip ${overdue.length ? 'red' : 'green'}">${overdue.length}</span></h3>${overdue.length ? `<div class="list stagger">${overdue.map(task).join('')}</div>` : `<div class="note">${ic('check-circle')} ${lang === 'ur' ? 'کوئی تاخیر شدہ کام نہیں۔' : 'Nothing overdue. Well done.'}</div>`}</section>
+        <section class="card"><h3>${ic('plus')} ${lang === 'ur' ? 'فوری کام' : 'Quick actions'}</h3><div class="actions" style="margin-top:0"><a class="btn teal" href="#households/new">${ic('home')} ${t('hh_new')}</a><a class="btn ghost" href="#report">${ic('bar-chart')} ${t('r_title')}</a><a class="btn ghost" href="#sync">${ic('refresh')} ${t('sy_title')}${q ? ` <span class="chip orange">${q}</span>` : ''}</a></div></section>
+      </div>
+    </div>`;
+  $$('[data-count]', view).forEach(el => countUp(el, +el.dataset.count));
+}
+
+// ---------- Households ----------
+let hhQuery = '';
+function hhMatches(h, q) { if (!q) return true; q = q.toLowerCase(); return [h.head, h.mohalla, ...DB.women.filter(w => w.householdId === h.id).map(w => w.name), ...DB.children.filter(c => c.householdId === h.id).map(c => c.name)].some(s => (s || '').toLowerCase().includes(q)); }
+function renderHouseholds(id) {
+  const list = DB.households.filter(h => hhMatches(h, hhQuery)).sort((a, b) => a.head.localeCompare(b.head));
+  const sel = id && id !== 'new' ? byId('households', id) : null;
+  view.innerHTML = pagehead(t('hh_title'), t('hh_lead'), `<a class="btn no-print" href="#households/new">${ic('plus')} ${t('hh_new')}</a>`) +
+    `<div class="split ${id ? 'detail-open' : ''}">
+      <div class="col-list"><div style="position:relative;margin-bottom:10px"><input id="hhQ" type="search" placeholder="${t('search')}" value="${esc(hhQuery)}" aria-label="${t('search')}" style="padding-left:42px"><span style="position:absolute;left:14px;top:14px;color:var(--muted)">${ic('search')}</span></div>
+        <div class="plist stagger">${list.length ? list.map(h => { const w = DB.women.filter(x => x.householdId === h.id), c = DB.children.filter(x => x.householdId === h.id); const preg = DB.pregnancies.filter(p => p.status === 'active' && w.some(x => x.id === p.womanId)).length; return `<a class="pitem ${sel && sel.id === h.id ? 'on' : ''}" href="#households/${h.id}"><div class="av">${ic('home')}</div><div class="t"><b>${esc(h.head)}</b><span>${esc(h.mohalla)} · ${w.length} ${bi({ en: 'women', ur: 'خواتین' })} · ${c.length} ${bi({ en: 'children', ur: 'بچے' })}${preg ? ` · <span class="chip orange" style="padding:1px 7px">${preg} ${bi({ en: 'pregnant', ur: 'حاملہ' })}</span>` : ''}</span></div>${ic('chevron-right')}</a>`; }).join('') : `<div class="card muted">${t('hh_none')}</div>`}</div></div>
+      <div class="col-detail" id="hhDetail"></div></div>`;
+  $('#hhQ').addEventListener('input', e => { hhQuery = e.target.value; const keep = $('#hhQ'); renderHouseholds(id); $('#hhQ').focus(); $('#hhQ').setSelectionRange(keep.value.length, keep.value.length); });
+  const det = $('#hhDetail');
+  if (id === 'new') renderHouseholdForm(det);
+  else if (sel) renderHouseholdDetail(det, sel);
+  else det.innerHTML = `<div class="card" style="text-align:center;padding:40px 20px"><div style="color:var(--teal)">${ic('home', 'xl')}</div><p class="muted">${t('hh_pick')}</p></div>`;
+}
+function renderHouseholdForm(det, h = {}) {
+  det.innerHTML = backBtn('#households') + `<div class="card"><h3>${ic(h.id ? 'edit' : 'plus')} ${h.id ? t('edit') : t('hh_new')}</h3>
+    ${field(t('hh_head'), `<input id="fHead" type="text" value="${esc(h.head || '')}" maxlength="60">`)}
+    <div class="cols">${field(t('hh_mohalla'), `<input id="fMoh" type="text" value="${esc(h.mohalla || '')}" maxlength="60" list="mohallas"><datalist id="mohallas">${[...new Set(DB.households.map(x => x.mohalla))].map(m => `<option value="${esc(m)}">`).join('')}</datalist>`)}${field(t('hh_phone'), `<input id="fPhone" type="tel" value="${esc(h.phone || '')}" placeholder="03xx-xxxxxxx" maxlength="15">`)}</div>
+    ${field(t('hh_notes'), `<textarea id="fNotes" rows="2" maxlength="300">${esc(h.notes || '')}</textarea>`)}
+    <div class="actions"><button class="btn" id="fSave">${ic('check')} ${t('save')}</button><button class="btn ghost" id="fGps">${ic('map-pin')} ${t('hh_gps')}</button>${h.id ? `<button class="btn danger" id="fDel">${ic('trash')} ${t('delete')}</button>` : ''}</div></div>`;
+  $('#fSave').onclick = () => { const head = $('#fHead').value.trim(); if (!head) return toast(t('hh_head'), 'bad'); const rec = put('households', Object.assign(h, { head, mohalla: $('#fMoh').value.trim() || profile.village, phone: $('#fPhone').value.trim(), notes: $('#fNotes').value.trim() })); toast(t('hh_saved'), 'ok'); location.hash = `households/${rec.id}`; };
+  // TODO(student): GPS mapping of households. Use navigator.geolocation (needs HTTPS or localhost), store {lat,lng,accuracy} on the household, and draw a catchment map (Leaflet, loaded lazily) with visit-due colours so the LHW can plan a walking route.
+  $('#fGps').onclick = () => toast('GPS capture is a student extension (see About)', '', 'map-pin');
+  if (h.id) $('#fDel').onclick = () => { if (!confirm(t('hh_deleteConfirm'))) return; const ws = DB.women.filter(w => w.householdId === h.id).map(w => w.id); const ps = DB.pregnancies.filter(p => ws.includes(p.womanId)).map(p => p.id); DB.anc = DB.anc.filter(v => !ps.includes(v.pregnancyId)); DB.pnc = DB.pnc.filter(v => !ps.includes(v.pregnancyId)); DB.pregnancies = DB.pregnancies.filter(p => !ps.includes(p.id)); DB.women = DB.women.filter(w => w.householdId !== h.id); DB.children = DB.children.filter(c => c.householdId !== h.id); TABLES.forEach(save); remove('households', h.id); toast(t('delete'), 'ok'); location.hash = 'households'; };
+}
+function renderHouseholdDetail(det, h) {
+  const women = DB.women.filter(w => w.householdId === h.id), kids = DB.children.filter(c => c.householdId === h.id).sort((a, b) => a.dob < b.dob ? 1 : -1);
+  det.innerHTML = backBtn('#households') + `<div class="card"><div class="detailhead"><div class="big">${ic('home', 'lg')}</div><div style="flex:1;min-width:0"><div class="eyebrow">${t('hh_head')}</div><h2>${esc(h.head)}</h2><div class="meta"><span class="chip teal">${ic('map-pin')} ${esc(h.mohalla)}</span>${h.phone ? `<a class="chip" href="tel:${esc(h.phone)}">${ic('phone')} ${esc(h.phone)}</a>` : ''}<span class="chip">${women.length + kids.length} ${t('hh_members')}</span></div></div><button class="btn ghost sm no-print" id="hhEdit">${ic('edit')} ${t('edit')}</button></div>${h.notes ? `<p class="muted" style="margin:12px 0 0">${ic('sticky-note')} ${esc(h.notes)}</p>` : ''}</div>
+    <div class="card"><h3>${ic('users')} ${t('hh_women')}<button class="btn teal sm no-print" id="addWoman" style="margin-left:auto">${ic('plus')} ${t('hh_addWoman')}</button></h3>
+      <div class="list stagger">${women.length ? women.map(w => { const p = DB.pregnancies.filter(x => x.womanId === w.id).sort((a, b) => a.lmp < b.lmp ? 1 : -1)[0]; const act = p && p.status === 'active'; return `<div class="row"><div style="min-width:0"><b>${esc(w.name)}</b> <span class="muted">· ${w.age} ${bi({ en: 'y', ur: 'سال' })}</span><div class="small muted" style="margin-top:2px">${act ? `${t('pg_active')} · ${gaStr(p.lmp)} · ${t('pg_edd')} ${fmtS(p.edd)}${riskList(p).length ? ` · <span class="chip red" style="padding:1px 7px">${t('pg_highrisk')}</span>` : ''}` : p ? `${t('pg_' + p.status)} ${p.delivery ? fmtS(p.delivery.date) : ''}` : bi({ en: 'No pregnancy registered', ur: 'کوئی حمل درج نہیں' })}</div></div><div style="display:flex;gap:6px;flex:none">${act ? `<a class="btn sm" href="#pregnancy/${p.id}">${ic('heart')} ${t('td_open')}</a>` : `<button class="btn teal sm" data-reg="${w.id}">${ic('plus')} ${t('hh_regPreg')}</button>`}</div></div>`; }).join('') : `<div class="muted small">—</div>`}</div></div>
+    <div class="card"><h3>${ic('baby')} ${t('hh_children')}<button class="btn teal sm no-print" id="addChild" style="margin-left:auto">${ic('plus')} ${t('hh_addChild')}</button></h3>
+      <div class="list stagger">${kids.length ? kids.map(c => { const g = vaxGroups(c); const od = g.filter(x => x.status === 'overdue').length, du = g.filter(x => x.status === 'due').length; const lw = lastWeight(c), st = lw && growthStatus(c, lw); return `<a class="row click" href="#children/${c.id}" style="text-decoration:none;color:inherit"><div style="min-width:0"><b>${esc(c.name)}</b> <span class="muted">· ${t(c.sex)} · ${ageStr(c)}</span><div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${od ? `<span class="chip red">${od} ${t('ch_overdue')}</span>` : du ? `<span class="chip amber">${du} ${t('ch_due')}</span>` : `<span class="chip green">${ic('shield-check')} ${t('ch_coverage')}</span>`}${st && st.cls !== 'green' && st.cls ? `<span class="chip ${st.cls}">${ic('scale')} ${Math.round(st.pct)}%</span>` : ''}</div></div>${ic('chevron-right')}</a>`; }).join('') : `<div class="muted small">—</div>`}</div></div>`;
+  $('#hhEdit').onclick = () => renderHouseholdForm(det, h);
+  $('#addWoman').onclick = () => openSheet(sheetHead(t('hh_addWoman')) + field(t('hh_woman_name'), `<input id="wName" type="text" maxlength="60">`) + `<div class="cols">${field(t('hh_age'), `<input id="wAge" type="number" min="12" max="60">`)}${field(t('hh_phone'), `<input id="wPhone" type="tel" value="${esc(h.phone || '')}">`)}</div><div class="actions"><button class="btn block" id="wSave">${ic('check')} ${t('save')}</button></div>`, s => { $('#wSave', s).onclick = () => { const name = $('#wName', s).value.trim(), age = +$('#wAge', s).value; if (!name || !age) return toast(t('hh_woman_name') + ' / ' + t('hh_age'), 'bad'); put('women', { householdId: h.id, name, age, phone: $('#wPhone', s).value.trim() }); closeSheet(); toast(t('save'), 'ok'); renderHouseholdDetail(det, h); }; });
+  $('#addChild').onclick = () => openChildSheet(h, () => renderHouseholdDetail(det, h));
+  $$('[data-reg]').forEach(b => b.onclick = () => openPregnancySheet(byId('women', b.dataset.reg)));
+}
+function openChildSheet(h, after) {
+  const mothers = DB.women.filter(w => w.householdId === h.id);
+  openSheet(sheetHead(t('hh_addChild')) + field(t('hh_woman_name'), `<input id="cName" type="text" maxlength="60">`) + `<div class="cols">${field(t('hh_dob'), `<input id="cDob" type="date" value="${T_ISO}" max="${T_ISO}">`)}${field(t('hh_sex'), `<select id="cSex"><option value="boy">${t('boy')}</option><option value="girl">${t('girl')}</option></select>`)}</div><div class="cols">${field(t('hh_bw'), `<input id="cBw" type="number" step=".1" min=".5" max="6">`)}${field(bi({ en: 'Mother', ur: 'ماں' }), `<select id="cMom"><option value="">—</option>${mothers.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('')}</select>`)}</div><div class="actions"><button class="btn block" id="cSave">${ic('check')} ${t('save')}</button></div>`,
+    s => { $('#cSave', s).onclick = () => { const name = $('#cName', s).value.trim(), dob = $('#cDob', s).value; if (!name || !dob || dob > T_ISO) return toast(t('hh_woman_name') + ' / ' + t('hh_dob'), 'bad'); const bw = +$('#cBw', s).value || null; put('children', { householdId: h.id, motherId: $('#cMom', s).value || null, name, dob, sex: $('#cSex', s).value, birthWeight: bw, weights: bw ? [{ date: dob, kg: bw }] : [], immunizations: {}, checks: [] }); closeSheet(); toast(t('save'), 'ok'); after(); }; });
+}
+function openPregnancySheet(w) {
+  openSheet(sheetHead(`${t('pg_register')} — ${esc(w.name)}`) + field(t('pg_lmp'), `<input id="pLmp" type="date" max="${T_ISO}" value="${iso(addDays(T_ISO, -56))}">`) + `<div class="note" id="pEdd" style="margin-top:8px"></div><div class="cols">${field(t('pg_gravida'), `<input id="pG" type="number" min="1" max="15" value="1">`)}${field(t('pg_para'), `<input id="pP" type="number" min="0" max="15" value="0">`)}</div><label class="f">${t('pg_risk')}</label><div class="checks">${checklist(RISKS.filter(r => r.id !== 'age'), [], 'teal', 'risk')}</div><div class="actions"><button class="btn block" id="pSave">${ic('check')} ${t('save')}</button></div>`,
+    s => { const upd = () => { const lmp = $('#pLmp', s).value; $('#pEdd', s).innerHTML = lmp ? `${t('pg_edd')}: <b>${fmtD(eddOf(lmp))}</b> · ${t('pg_ga')}: <b>${gaStr(lmp)}</b><br><span class="small muted">${t('pg_lmpHelp')}</span>` : t('pg_lmpHelp'); }; $('#pLmp', s).addEventListener('input', upd); upd(); wireChecks(s); $('#pSave', s).onclick = () => { const lmp = $('#pLmp', s).value; if (!lmp || lmp > T_ISO || diffDays(lmp, T_ISO) > 310) return toast(t('pg_lmp'), 'bad'); const rec = put('pregnancies', { womanId: w.id, lmp, edd: eddOf(lmp), gravida: +$('#pG', s).value || 1, para: +$('#pP', s).value || 0, risks: picked(s, 'risk'), status: 'active' }); closeSheet(); toast(t('pg_saved'), 'ok'); location.hash = `pregnancy/${rec.id}`; }; });
+}
+
+// ---------- Pregnancies: list + detail, ANC visit form, postnatal form, delivery, referral slip ----------
+function pregnancyList(selId) {
+  const ps = DB.pregnancies.slice().sort((a, b) => (a.status === 'active' ? 0 : 1) - (b.status === 'active' ? 0 : 1) || (a.edd < b.edd ? -1 : 1));
+  return ps.length ? ps.map(p => { const w = womanOf(p); const sch = schedule(p); const next = sch.find(c => c.status === 'due' || c.status === 'overdue'); const last = visitsOf(p).slice(-1)[0]; const alert = last && last.referral && diffDays(last.date, T_ISO) <= 14; return `<a class="pitem ${selId === p.id ? 'on' : ''}" href="#pregnancy/${p.id}"><div class="av">${avatar(w.name)}</div><div class="t"><b>${esc(w.name)}</b><span>${p.status === 'active' ? `${gaStr(p.lmp)} · ${t('pg_edd')} ${fmtS(p.edd)}` : `${t('pg_' + p.status)}${p.delivery ? ' · ' + fmtS(p.delivery.date) : ''}`}</span></div>${alert ? `<span class="chip red">${ic('alert')}</span>` : next ? chip(next.status) : p.status === 'active' ? `<span class="chip green">${ic('check')}</span>` : ''}</a>`; }).join('') : `<div class="card muted">${t('pg_none')}</div>`;
+}
+function renderPregnancies(id, sub, vid) {
+  const p = id ? byId('pregnancies', id) : null;
+  view.innerHTML = pagehead(t('pg_title'), t('pg_lead')) + `<div class="split ${id ? 'detail-open' : ''}"><div class="col-list"><div class="plist stagger">${pregnancyList(id)}</div></div><div class="col-detail" id="pgDetail"></div></div>`;
+  const det = $('#pgDetail');
+  if (!p) { det.innerHTML = `<div class="card" style="text-align:center;padding:40px 20px"><div style="color:var(--orange)">${ic('heart', 'xl')}</div><p class="muted">${t('pg_pick')}</p></div>`; return; }
+  if (sub === 'visit') renderAncForm(det, p); else if (sub === 'pnc') renderPncForm(det, p); else if (sub === 'delivery') renderDeliveryForm(det, p); else if (sub === 'slip') renderSlip(det, p, vid); else renderPregnancyDetail(det, p);
+}
+function renderPregnancyDetail(det, p) {
+  const w = womanOf(p), h = hhOf(w), risks = riskList(p), sch = schedule(p), vs = visitsOf(p).slice().reverse(), pn = pncSchedule(p);
+  const last = vs[0]; const alert = last && last.referral && diffDays(last.date, T_ISO) <= 14;
+  det.innerHTML = backBtn('#pregnancy') + `<div class="card"><div class="detailhead"><div class="big">${avatar(w.name)}</div><div style="flex:1;min-width:0"><div class="eyebrow">${esc(h.head)} · ${esc(h.mohalla)}</div><h2>${esc(w.name)} <span class="muted" style="font-size:1rem;font-weight:400">· ${w.age} ${bi({ en: 'years', ur: 'سال' })} · G${p.gravida} P${p.para}</span></h2>
+      <div class="meta"><span class="chip ${p.status === 'active' ? 'orange' : p.status === 'delivered' ? 'green' : ''} lg">${t('pg_' + p.status)}</span>${p.status === 'active' ? `<span class="chip teal lg">${ic('clock')} ${gaStr(p.lmp)}</span><span class="chip lg">${t('pg_edd')} ${fmtD(p.edd)}</span>` : p.delivery ? `<span class="chip lg">${t('pg_date')} ${fmtD(p.delivery.date)} · ${esc(p.delivery.place)}</span>` : ''}${risks.length ? `<span class="chip red lg">${ic('alert')} ${t('pg_highrisk')}</span>` : ''}</div></div></div>
+      <div class="actions no-print">${p.status === 'active' ? `<a class="btn" href="#pregnancy/${p.id}/visit">${ic('stethoscope')} ${t('pg_newVisit')}</a><a class="btn teal" href="#pregnancy/${p.id}/delivery">${ic('baby')} ${t('pg_delivery')}</a>` : ''}${p.status === 'delivered' ? `<a class="btn" href="#pregnancy/${p.id}/pnc">${ic('baby')} ${t('pg_pnc')}</a>${p.delivery?.childId && byId('children', p.delivery.childId) ? `<a class="btn ghost" href="#children/${p.delivery.childId}">${ic('shield-check')} ${esc(byId('children', p.delivery.childId).name)}</a>` : ''}` : ''}${last && last.referral ? `<a class="btn ghost" href="#pregnancy/${p.id}/slip/${last.id}">${ic('printer')} ${t('pg_slip')}</a>` : ''}</div></div>
+    ${alert ? `<div class="alert red" style="margin-top:14px">${ic('siren', 'lg')}<div><b>${esc(URG[last.referral.urg].en)} · ${fmtS(last.date)} · ${esc(destName(last.referral.dest))}</b><div class="small">${esc(last.referral.reason)}</div><div class="ur">${esc(URG[last.referral.urg].ur)}</div></div></div>` : ''}
+    <div class="card"><h3>${ic('alert-circle')} ${t('pg_risk')}<button class="btn ghost sm no-print" id="editRisk" style="margin-left:auto">${ic('edit')} ${t('edit')}</button></h3>${risks.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap">${risks.map(r => { const o = RISKS.find(x => x.id === r); return `<span class="chip red lg wrap" title="${esc(o.ur)}">${esc(o.en)} · <span class="ur" style="display:inline;line-height:1.4">${esc(o.ur)}</span></span>`; }).join('')}</div>` : `<div class="muted small">${t('pg_risk_none')}</div>`}</div>
+    ${p.status === 'active' || vs.length ? `<div class="card"><h3>${ic('calendar')} ${t('pg_schedule')}</h3><div class="tl stagger">${sch.map(c => `<div class="c ${c.status}"><div class="wk">${c.wk}<small>wk</small></div><div style="min-width:0"><b>${c.visit ? `${fmtD(c.visit.date)} · ${gaStr(p.lmp, c.visit.date)}` : fmtD(c.dueDate)}</b><div class="small muted">${c.who ? `${t('pg_who')} ${c.who}` : ''}${c.who && c.pk ? ' · ' : ''}${c.pk ? `<span class="chip orange" style="padding:1px 7px">${t('pg_pk')} ${c.pk}</span>` : ''}${c.visit ? ` · BP ${c.visit.sys}/${c.visit.dia}${c.visit.hb ? ' · Hb ' + c.visit.hb : ''}` : ''}</div></div>${chip(c.status)}</div>`).join('')}</div></div>` : ''}
+    ${p.delivery ? `<div class="card"><h3>${ic('baby')} ${t('pg_pncSchedule')}</h3><div class="tl stagger">${pn.map(s => `<div class="c ${s.status}"><div class="wk">${s.day}<small>${t('pg_day')}</small></div><div><b>${s.visit ? fmtD(s.visit.date) : fmtD(s.dueDate)}</b><div class="small muted">${s.visit ? (s.visit.motherSigns.length + s.visit.babySigns.length ? `${s.visit.motherSigns.length + s.visit.babySigns.length} ${bi({ en: 'danger sign(s)', ur: 'خطرے کی علامات' })}` : bi({ en: 'No danger signs', ur: 'کوئی خطرے کی علامت نہیں' })) : relDays(s.dueDate)}</div></div>${chip(s.status)}</div>`).join('')}</div></div>` : ''}
+    <div class="card"><h3>${ic('list')} ${t('pg_history')}</h3>${vs.length ? `<div class="list stagger">${vs.map(v => { const a = assessAnc(p, v); return `<div class="row" style="align-items:flex-start;flex-wrap:wrap"><div style="min-width:0;flex:1"><b>${fmtD(v.date)}</b> <span class="muted">· ${gaStr(p.lmp, v.date)}</span><div class="small" style="margin-top:4px">BP <b>${v.sys}/${v.dia}</b> · ${v.weight ? v.weight + ' kg · ' : ''}${v.hb ? 'Hb <b>' + v.hb + '</b> · ' : ''}${v.fh ? 'FH ' + v.fh + ' cm · ' : ''}FM ${t('v_' + (v.fm || 'na'))}${v.tt ? ' · ' + v.tt : ''}${v.iron ? ' · Fe/FA' : ''}</div>${v.signs.length ? `<div class="small" style="margin-top:4px;color:var(--red)">${v.signs.map(s => esc(PREG_DANGER.find(x => x.id === s)?.en || s)).join(' · ')}</div>` : ''}${v.complaints ? `<div class="small muted" style="margin-top:2px">${esc(v.complaints)}</div>` : ''}</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${a.flags.map(f => `<span class="chip ${f.cls}">${ic('alert')}</span>`).join('')}${v.referral ? `<a class="btn ghost sm" href="#pregnancy/${p.id}/slip/${v.id}">${ic('printer')} ${t('pg_slip')}</a>` : `<span class="chip green">${ic('check')}</span>`}<button class="btn danger sm no-print" data-delv="${v.id}" aria-label="${t('delete')}">${ic('trash')}</button></div></div>`; }).join('')}</div>` : `<div class="muted small">${t('pg_noVisits')}</div>`}</div>`;
+  $('#editRisk').onclick = () => openSheet(sheetHead(t('pg_risk')) + `<div class="checks">${checklist(RISKS.filter(r => r.id !== 'age'), p.risks || [], 'teal', 'risk')}</div><div class="cols" style="margin-top:8px">${field(t('pg_lmp'), `<input id="eLmp" type="date" value="${p.lmp}" max="${T_ISO}">`)}${field(t('pg_gravida'), `<input id="eG" type="number" min="1" value="${p.gravida}">`)}${field(t('pg_para'), `<input id="eP" type="number" min="0" value="${p.para}">`)}</div><div class="actions"><button class="btn block" id="eSave">${ic('check')} ${t('save')}</button></div>`, s => { wireChecks(s); $('#eSave', s).onclick = () => { const lmp = $('#eLmp', s).value; if (!lmp || lmp > T_ISO) return toast(t('pg_lmp'), 'bad'); put('pregnancies', Object.assign(p, { risks: picked(s, 'risk'), lmp, edd: eddOf(lmp), gravida: +$('#eG', s).value || 1, para: +$('#eP', s).value || 0 })); closeSheet(); toast(t('pg_saved'), 'ok'); renderPregnancyDetail(det, p); }; });
+  $$('[data-delv]').forEach(b => b.onclick = () => { if (!confirm(t('delete') + '?')) return; remove('anc', b.dataset.delv); renderPregnancyDetail(det, p); });
+}
+function renderAncForm(det, p) {
+  const w = womanOf(p);
+  det.innerHTML = backBtn(`#pregnancy/${p.id}`) + `<div class="two"><div class="card"><h3>${ic('stethoscope')} ${t('v_title')} — ${esc(w.name)} <span class="chip teal">${gaStr(p.lmp)}</span></h3>
+      <div class="cols">${field(t('v_date'), `<input id="vDate" type="date" value="${T_ISO}" max="${T_ISO}" min="${p.lmp}">`)}${field(t('v_weight'), `<input id="vWt" type="number" step=".1" min="30" max="150" inputmode="decimal">`)}</div>
+      <label class="f">${t('v_bp')}</label><div class="cols tight"><input id="vSys" type="number" min="60" max="250" placeholder="${t('v_sys')}" inputmode="numeric" aria-label="${t('v_sys')}"><input id="vDia" type="number" min="30" max="150" placeholder="${t('v_dia')}" inputmode="numeric" aria-label="${t('v_dia')}"></div>
+      <div class="cols">${field(t('v_hb'), `<input id="vHb" type="number" step=".1" min="3" max="18" inputmode="decimal">`)}${field(t('v_fh'), `<input id="vFh" type="number" min="10" max="50" inputmode="numeric">`)}</div>
+      <label class="f">${t('v_fm')}</label><div class="seg" id="vFm"><button data-v="yes">${t('v_yes')}</button><button data-v="no">${t('v_no')}</button><button data-v="na" class="on">${t('v_na')}</button></div>
+      <label class="f">${t('v_complaints')}</label><div style="display:flex;gap:8px"><input id="vComp" type="text" maxlength="200"><button class="btn ghost" id="vVoice" aria-label="${t('v_voice')}" title="${t('v_voice')}">${ic('mic')}</button></div>
+      <label class="f" style="color:var(--red)">${ic('alert')} ${t('v_danger')}</label><div class="checks" id="vSigns">${checklist(PREG_DANGER, [], '', 'sign')}</div>
+      <div class="cols">${field(t('v_tt'), `<select id="vTt"><option value="">${t('v_ttNone')}</option>${['TT1', 'TT2', 'TT3', 'TT4', 'TT5'].map(x => `<option>${x}</option>`).join('')}</select>`)}<div><label class="f">${t('v_iron')}</label><label class="check ok teal" style="min-height:48px"><input type="checkbox" id="vIron" checked><span class="en">${t('v_iron')}</span></label></div></div>
+      <label class="f">${t('v_counsel')}</label><div class="checks" id="vCounsel">${checklist(COUNSEL_ANC, [], 'ok', 'counsel')}</div>
+    </div>
+    <div style="position:sticky;top:14px"><div class="card" id="vAssess"></div><div class="actions"><button class="btn block" id="vSave" style="font-size:1.1rem;min-height:56px">${ic('check')} ${t('v_save')}</button></div></div></div>`;
+  let fm = 'na', urgOverride = null;
+  const draft = () => ({ date: $('#vDate').value, sys: +$('#vSys').value || 0, dia: +$('#vDia').value || 0, weight: +$('#vWt').value || null, hb: $('#vHb').value === '' ? null : +$('#vHb').value, fh: +$('#vFh').value || null, fm, complaints: $('#vComp').value.trim(), signs: picked(det, 'sign'), tt: $('#vTt').value, iron: $('#vIron').checked, counsel: picked(det, 'counsel') });
+  const assess = () => {
+    const v = draft(); const a = assessAnc(p, v); const urg = urgOverride ?? a.urg; const cur = $('#vDest')?.value, reason = $('#vReason')?.value;
+    $('#vAssess').innerHTML = `<h3>${ic('activity')} ${t('v_assess')}</h3>${a.flags.length ? `<div class="list stagger">${a.flags.map(f => `<div class="alert ${f.cls}">${ic(f.cls === 'red' ? 'siren' : 'alert')}<div><b>${esc(f.en)}</b><div class="ur">${esc(f.ur)}</div></div></div>`).join('')}</div>` : `<div class="note">${ic('check-circle')} ${t('v_noFlags')}</div>`}
+      <label class="f">${t('v_referral')}</label>${urgBanner(urg)}
+      <div class="seg" id="vUrg" style="margin-top:8px;flex-wrap:wrap">${[0, 1, 2, 3].map(u => `<button data-u="${u}" class="${u === urg ? 'on' : ''}">${u === 0 ? bi({ en: 'None', ur: 'نہیں' }) : u === 1 ? bi({ en: 'Next clinic', ur: 'اگلا کلینک' }) : u === 2 ? bi({ en: 'Same day', ur: 'آج ہی' }) : bi({ en: 'Emergency', ur: 'ایمرجنسی' })}</button>`).join('')}</div>
+      ${urg ? `<div class="cols">${field(t('v_refTo'), `<select id="vDest">${DEST.map(d => `<option value="${d}" ${(cur || destFor(urg)) === d ? 'selected' : ''}>${d} · ${esc(destName(d))}</option>`).join('')}</select>`)}</div>${field(t('v_refReason'), `<textarea id="vReason" rows="2" maxlength="300">${esc(reason ?? [...a.flags.map(f => f.en.split(' — ')[0].split('. ')[0]), ...v.signs.map(s => PREG_DANGER.find(x => x.id === s)?.en)].filter(Boolean).join('; '))}</textarea>`)}` : ''}`;
+    $$('#vUrg button').forEach(b => b.onclick = () => { urgOverride = +b.dataset.u; assess(); });
+  };
+  $$('#vFm button').forEach(b => b.onclick = () => { $$('#vFm button').forEach(x => x.classList.remove('on')); b.classList.add('on'); fm = b.dataset.v; urgOverride = null; assess(); });
+  $$('#vSys,#vDia,#vHb,#vFh,#vDate,#vWt').forEach(el => el.addEventListener('input', () => { urgOverride = null; assess(); }));
+  wireChecks($('#vSigns'), () => { urgOverride = null; assess(); }); wireChecks($('#vCounsel'));
+  // TODO(student): Urdu / Sindhi voice input. Use the Web Speech API (webkitSpeechRecognition, lang 'ur-PK') or an offline Vosk model to dictate complaints and notes; fall back to this toast when unsupported.
+  $('#vVoice').onclick = () => toast('Voice input is a student extension (see About)', '', 'mic');
+  $('#vSave').onclick = () => {
+    const v = draft(); if (!v.date || v.date > T_ISO || v.date < p.lmp) return toast(t('v_needDate'), 'bad');
+    if (!v.sys || !v.dia) return toast(t('v_bp'), 'bad');
+    const a = assessAnc(p, v); const urg = urgOverride ?? a.urg;
+    v.referral = urg ? { urg, dest: $('#vDest').value, reason: $('#vReason').value.trim() } : null;
+    const rec = put('anc', Object.assign(v, { pregnancyId: p.id }));
+    if (v.signs.includes('bleed') || v.signs.includes('fits')) { /* nothing extra — urgency already max */ }
+    toast(v.referral ? t('v_savedRef') : t('v_saved'), 'ok');
+    location.hash = v.referral ? `pregnancy/${p.id}/slip/${rec.id}` : `pregnancy/${p.id}`;
+  };
+  assess();
+}
+function renderPncForm(det, p) {
+  const w = womanOf(p), sch = pncSchedule(p), next = sch.find(s => s.status !== 'done') || sch[sch.length - 1];
+  const baby = p.delivery?.childId && byId('children', p.delivery.childId);
+  det.innerHTML = backBtn(`#pregnancy/${p.id}`) + `<div class="two"><div class="card"><h3>${ic('baby')} ${t('v_pncTitle')} — ${esc(w.name)}</h3>
+      <div class="cols">${field(t('v_pncDay'), `<select id="nDay">${PNC_DAYS.map(d => `<option value="${d}" ${d === next.day ? 'selected' : ''}>${t('pg_day')} ${d} · ${fmtS(iso(addDays(p.delivery.date, d)))}</option>`).join('')}</select>`)}${field(t('v_date'), `<input id="nDate" type="date" value="${T_ISO}" max="${T_ISO}" min="${p.delivery.date}">`)}</div>
+      <label class="f" style="color:var(--red)">${ic('alert')} ${t('v_mother')}</label><div class="checks" id="nMother">${checklist(PNC_DANGER, [], '', 'msign')}</div>
+      ${p.delivery.outcome === 'live' ? `<label class="f" style="color:var(--red)">${ic('alert')} ${t('v_newborn')}${baby ? ` — ${esc(baby.name)}` : ''}</label><div class="checks" id="nBaby">${checklist(NB_DANGER, baby && baby.birthWeight && baby.birthWeight < 2.5 && ageDays(baby) < 28 ? ['small'] : [], '', 'bsign')}</div>
+      <label class="f">${t('v_bf')}</label><div class="seg" id="nBf"><button data-v="yes" class="on">${t('v_yes')}</button><button data-v="no">${t('v_no')}</button></div>` : ''}
+      <label class="f">${t('v_counsel')}</label><div class="checks" id="nCounsel">${checklist(COUNSEL_PNC, [], 'ok', 'counsel')}</div></div>
+    <div style="position:sticky;top:14px"><div class="card" id="nAssess"></div><div class="actions"><button class="btn block" id="nSave" style="font-size:1.1rem;min-height:56px">${ic('check')} ${t('v_save')}</button></div></div></div>`;
+  let bf = 'yes';
+  const assess = () => { const ms = picked(det, 'msign'), bs = picked(det, 'bsign'); const urg = Math.max(assessSigns(PNC_DANGER, ms), assessSigns(NB_DANGER, bs), bf === 'no' ? 2 : 0); const cur = $('#nDest')?.value; $('#nAssess').innerHTML = `<h3>${ic('activity')} ${t('v_assess')}</h3>${urgBanner(urg)}${urg ? `<div class="cols">${field(t('v_refTo'), `<select id="nDest">${DEST.map(d => `<option value="${d}" ${(cur || destFor(urg)) === d ? 'selected' : ''}>${d} · ${esc(destName(d))}</option>`).join('')}</select>`)}</div>` : ''}`; };
+  wireChecks(det, assess); $$('#nBf button').forEach(b => b.onclick = () => { $$('#nBf button').forEach(x => x.classList.remove('on')); b.classList.add('on'); bf = b.dataset.v; assess(); });
+  $('#nSave').onclick = () => { const date = $('#nDate').value; if (!date || date > T_ISO || date < p.delivery.date) return toast(t('v_needDate'), 'bad'); const ms = picked(det, 'msign'), bs = picked(det, 'bsign'); const urg = Math.max(assessSigns(PNC_DANGER, ms), assessSigns(NB_DANGER, bs), bf === 'no' ? 2 : 0); const rec = put('pnc', { pregnancyId: p.id, day: +$('#nDay').value, date, motherSigns: ms, babySigns: bs, bf, counsel: picked(det, 'counsel'), referral: urg ? { urg, dest: $('#nDest').value, reason: [...ms.map(s => PNC_DANGER.find(x => x.id === s).en), ...bs.map(s => 'Baby: ' + NB_DANGER.find(x => x.id === s).en), bf === 'no' ? 'Baby not breastfeeding well' : ''].filter(Boolean).join('; ') } : null }); if (baby && bs.length) { baby.checks = baby.checks || []; baby.checks.push({ date, signs: bs, urg }); put('children', baby); } toast(urg ? t('v_savedRef') : t('v_saved'), 'ok'); location.hash = urg ? `pregnancy/${p.id}/slip/${rec.id}` : `pregnancy/${p.id}`; };
+  assess();
+}
+function renderDeliveryForm(det, p) {
+  const w = womanOf(p), h = hhOf(w);
+  det.innerHTML = backBtn(`#pregnancy/${p.id}`) + `<div class="card" style="max-width:640px"><h3>${ic('baby')} ${t('pg_delivery')} — ${esc(w.name)}</h3>
+    <div class="cols">${field(t('pg_date'), `<input id="dDate" type="date" value="${T_ISO}" max="${T_ISO}" min="${p.lmp}">`)}${field(t('pg_outcome'), `<select id="dOut"><option value="live">${t('pg_live')}</option><option value="still">${t('pg_still')}</option><option value="lost">${t('pg_lostPreg')}</option></select>`)}</div>
+    <div class="cols">${field(t('pg_place'), `<select id="dPlace"><option value="Home">${t('pg_home')}</option><option value="BHU">BHU</option><option value="RHC">RHC</option><option value="DHQ">DHQ</option><option value="Private">Private</option></select>`)}${field(t('pg_mode'), `<select id="dMode"><option value="normal">${t('pg_normal')}</option><option value="csec">${t('pg_csec')}</option></select>`)}</div>
+    <div id="dBaby"><div class="cols">${field(t('pg_babyName'), `<input id="dName" type="text" maxlength="60" placeholder="${bi({ en: 'Baby of', ur: 'بچہ' })} ${esc(w.name)}">`)}${field(t('pg_babySex'), `<select id="dSex"><option value="boy">${t('boy')}</option><option value="girl">${t('girl')}</option></select>`)}${field(t('hh_bw'), `<input id="dBw" type="number" step=".1" min=".5" max="6" inputmode="decimal">`)}</div></div>
+    <div class="actions"><button class="btn" id="dSave">${ic('check')} ${t('save')}</button><a class="btn ghost" href="#pregnancy/${p.id}">${t('cancel')}</a></div></div>`;
+  $('#dOut').onchange = e => $('#dBaby').classList.toggle('hidden', e.target.value !== 'live');
+  $('#dSave').onclick = () => {
+    const date = $('#dDate').value, out = $('#dOut').value; if (!date || date > T_ISO || date < p.lmp) return toast(t('v_needDate'), 'bad');
+    let childId = null;
+    if (out === 'live') { const bw = +$('#dBw').value || null; const c = put('children', { householdId: w.householdId, motherId: w.id, name: $('#dName').value.trim() || `${bi({ en: 'Baby of', ur: 'بچہ' })} ${w.name}`, dob: date, sex: $('#dSex').value, birthWeight: bw, weights: bw ? [{ date, kg: bw }] : [], immunizations: {}, checks: [] }); childId = c.id; }
+    put('pregnancies', Object.assign(p, { status: out === 'lost' ? 'lost' : 'delivered', delivery: { date, place: $('#dPlace').value, mode: $('#dMode').value, outcome: out, childId } }));
+    if (out === 'still' || $('#dMode').value === 'csec') { p.risks = [...new Set([...(p.risks || []), out === 'still' ? 'still' : 'csec'])]; put('pregnancies', p); }
+    toast(t('pg_deliverySaved'), 'ok'); location.hash = `pregnancy/${p.id}`;
+  };
+}
+function renderSlip(det, p, vid) {
+  const v = byId('anc', vid) || byId('pnc', vid); const w = womanOf(p), h = hhOf(w);
+  if (!v || !v.referral) { det.innerHTML = backBtn(`#pregnancy/${p.id}`) + `<div class="card muted">${t('s_none')}</div>`; return; }
+  const r = v.referral, u = URG[r.urg]; const isAnc = 'sys' in v;
+  const signs = isAnc ? v.signs.map(s => PREG_DANGER.find(x => x.id === s)).filter(Boolean) : [...v.motherSigns.map(s => PNC_DANGER.find(x => x.id === s)), ...v.babySigns.map(s => NB_DANGER.find(x => x.id === s))].filter(Boolean);
+  const findings = isAnc ? [`BP ${v.sys}/${v.dia} mmHg`, v.weight && `${v.weight} kg`, v.hb && `Hb ${v.hb} g/dL`, v.fh && `FH ${v.fh} cm`, `FM: ${t('v_' + (v.fm || 'na'))}`, v.complaints].filter(Boolean) : [`${t('pg_day')} ${v.day} ${bi({ en: 'postnatal', ur: 'زچگی بعد' })}`, `${t('v_bf')} ${t('v_' + v.bf)}`];
+  const smsText = `REFERRAL ${u.en.split(' — ')[0]}: ${w.name} (${w.age}y) ${isAnc ? 'GA ' + gaStr(p.lmp, v.date) : 'PNC day ' + v.day}, ${findings.join(', ')}. Reason: ${r.reason}. To ${destName(r.dest)}. LHW ${profile.name} ${profile.code} ${fmtS(v.date)}`;
+  det.innerHTML = backBtn(`#pregnancy/${p.id}`) + `<div class="actions no-print" style="margin:0 0 14px"><button class="btn" onclick="window.print()">${ic('printer')} ${t('print')}</button><button class="btn teal" id="sSms">${ic('send')} ${t('s_sms')}</button><a class="btn ghost" href="tel:${esc(profile.lhs)}">${ic('phone')} LHS</a></div>
+    <article class="slip"><header><div><div class="eyebrow">${esc(t('s_program'))}</div><h2>${t('s_title')} · <span class="ur" style="display:inline">ریفرل پرچی</span></h2></div><div style="text-align:right"><div class="eyebrow">${t('s_date')}</div><b>${fmtD(v.date)}</b></div></header>
+      <div class="urgency" style="color:var(--${u.cls === 'teal' ? 'teal' : u.cls})">${esc(u.en)} · <span class="ur" style="display:inline">${esc(u.ur)}</span></div>
+      <dl><dt>${t('s_patient')}</dt><dd><b>${esc(w.name)}</b>, ${t('s_age')} ${w.age} · G${p.gravida} P${p.para}</dd>
+      <dt>${t('s_household')}</dt><dd>${esc(h.head)}, ${esc(h.mohalla)}${h.phone ? ' · ' + esc(h.phone) : ''}</dd>
+      ${isAnc ? `<dt>${t('s_ga')}</dt><dd>${gaStr(p.lmp, v.date)} · ${t('pg_edd')} ${fmtD(p.edd)}${riskList(p).length ? ` · ${t('pg_risk')}: ${riskList(p).map(x => RISKS.find(y => y.id === x).en).join(', ')}` : ''}</dd>` : `<dt>${t('pg_date')}</dt><dd>${fmtD(p.delivery.date)} · ${esc(p.delivery.place)} · ${t('pg_' + p.delivery.mode)}</dd>`}
+      <dt>${t('s_findings')}</dt><dd>${findings.map(esc).join(' · ')}</dd>
+      <dt>${t('s_signs')}</dt><dd>${signs.length ? signs.map(s => `<div><b>${esc(s.en)}</b> — <span class="ur" style="display:inline">${esc(s.ur)}</span></div>`).join('') : '—'}</dd>
+      <dt>${t('s_reason')}</dt><dd>${esc(r.reason)}</dd>
+      <dt>${t('s_dest')}</dt><dd><b>${esc(destName(r.dest))}</b> (${r.dest})</dd>
+      <dt>${t('s_lhw')}</dt><dd>${esc(profile.name)} · ${esc(profile.code)} · ${esc(profile.village)} · LHS ${esc(profile.lhs)}</dd></dl>
+      <div class="sig"><div>${t('s_sig')}</div><div>${t('s_recv')}</div></div></article>`;
+  // TODO(student): SMS referral. Send smsText to the Lady Health Supervisor / receiving facility through an SMS gateway (e.g. a Twilio/Telenor API behind your backend) or the device's sms: URI, and log delivery status on the visit record.
+  $('#sSms').onclick = () => { if (navigator.share) navigator.share({ text: smsText }).catch(() => {}); else { location.href = `sms:${encodeURIComponent(profile.lhs)}?body=${encodeURIComponent(smsText)}`; toast('SMS gateway is a student extension — opening device SMS app', '', 'send'); } };
+}
+
+// ---------- Children: immunization card, growth chart, newborn check ----------
+function renderChildren(id) {
+  const kids = DB.children.slice().sort((a, b) => a.dob < b.dob ? 1 : -1); const sel = id ? byId('children', id) : null;
+  view.innerHTML = pagehead(t('ch_title'), t('ch_lead')) + `<div class="split ${id ? 'detail-open' : ''}"><div class="col-list"><div class="plist stagger">${kids.length ? kids.map(c => { const g = vaxGroups(c); const od = g.filter(x => x.status === 'overdue').length, du = g.filter(x => x.status === 'due').length; const lw = lastWeight(c), st = lw && growthStatus(c, lw); return `<a class="pitem ${sel && sel.id === c.id ? 'on' : ''}" href="#children/${c.id}"><div class="av ${c.sex}">${ic('baby')}</div><div class="t"><b>${esc(c.name)}</b><span>${t(c.sex)} · ${ageStr(c)} · ${esc(hhOf(c).head)}</span></div>${od ? `<span class="chip red">${od}</span>` : du ? `<span class="chip amber">${du}</span>` : st && st.cls === 'red' ? `<span class="chip red">${ic('scale')}</span>` : `<span class="chip green">${ic('check')}</span>`}</a>`; }).join('') : `<div class="card muted">${t('ch_none')}</div>`}</div></div><div class="col-detail" id="chDetail"></div></div>`;
+  const det = $('#chDetail');
+  if (sel) renderChild(det, sel); else det.innerHTML = `<div class="card" style="text-align:center;padding:40px 20px"><div style="color:var(--teal)">${ic('baby', 'xl')}</div><p class="muted">${t('ch_pick')}</p></div>`;
+}
+function renderChild(det, c) {
+  const h = hhOf(c), groups = vaxGroups(c), ws = (c.weights || []).slice().sort((a, b) => a.date < b.date ? -1 : 1), lw = ws[ws.length - 1], st = lw && growthStatus(c, lw);
+  const given = ALL_VACCINES.filter(v => c.immunizations?.[v]).length, pct = Math.round(given / ALL_VACCINES.length * 100);
+  const newborn = ageDays(c) < 90; /* IMNCI young-infant check, shown through the third month */ const lastCheck = (c.checks || []).slice(-1)[0];
+  det.innerHTML = backBtn('#children') + `<div class="card"><div class="detailhead"><div class="big" style="${c.sex === 'girl' ? 'background:#fbe0ea;color:#a8325f' : 'background:#dbe9f7;color:#1f4f8a'}">${ic('baby', 'lg')}</div><div style="flex:1;min-width:0"><div class="eyebrow">${esc(h.head)} · ${esc(h.mohalla)}${c.motherId && byId('women', c.motherId) ? ' · ' + esc(byId('women', c.motherId).name) : ''}</div><h2>${esc(c.name)}</h2><div class="meta"><span class="chip teal lg">${t(c.sex)} · ${ageStr(c)}</span><span class="chip lg">${t('ch_born')} ${fmtD(c.dob)}</span>${c.birthWeight ? `<span class="chip ${c.birthWeight < 2.5 ? 'red' : ''} lg">${c.birthWeight} kg${c.birthWeight < 2.5 ? ' · ' + t('ch_lbw') : ''}</span>` : ''}</div></div></div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:12px"><div class="progress" style="flex:1"><i data-grow="${pct}%" style="width:0"></i></div><b style="white-space:nowrap">${given}/${ALL_VACCINES.length} ${t('ch_coverage')}</b></div></div>
+    <div class="card"><h3>${ic('syringe')} ${t('ch_card')}</h3><div class="list stagger">${groups.map(g => `<div class="epi ${g.status}"><header><div><b>${esc(g.en)} · <span class="ur" style="display:inline">${esc(g.ur)}</span></b><span class="d" style="display:block">${t('ch_due')} ${fmtD(g.dueDate)}${g.status !== 'given' && g.status !== 'upcoming' ? ` · ${relDays(g.dueDate)}` : ''}</span></div>${chip(g.status)}</header>
+      ${g.vaccines.map(v => { const d = c.immunizations?.[v]; return `<div class="vx"><span class="nm">${v}</span>${d ? `<span class="chip green">${ic('check')} ${fmtS(d)}</span><button class="btn ghost sm no-print" data-undo="${esc(v)}" aria-label="${t('ch_undo')}">${ic('x')}</button>` : g.status === 'upcoming' ? `<span class="chip">${t('ch_upcoming')}</span>` : `<input type="date" value="${T_ISO}" max="${T_ISO}" min="${c.dob}" data-vdate="${esc(v)}" aria-label="${t('r_date')}"><button class="btn sm no-print" data-give="${esc(v)}">${ic('check')} ${t('ch_giveToday')}</button>`}</div>`; }).join('')}</div>`).join('')}</div></div>
+    <div class="card"><h3>${ic('scale')} ${t('ch_growth')}${st ? `<span class="chip ${st.cls} lg" style="margin-left:auto">${st.pct != null ? Math.round(st.pct) + '% ' + t('ch_median') + ' · ' : ''}${t(st.key)}</span>` : ''}</h3>
+      <div class="chart" id="gChart"></div><div class="legend"><span><i style="background:var(--teal)"></i>WHO ${t('ch_median')}</span><span><i style="background:var(--amber)"></i>80%</span><span><i style="background:var(--red)"></i>70%</span><span><i style="background:var(--orange);height:8px;width:8px;border-radius:50%"></i>${esc(c.name)}</span></div>
+      <p class="small muted" style="margin:8px 0 0">${t('ch_ruleNote')}</p>
+      <div class="two" style="margin-top:12px"><div><div class="eyebrow" style="margin-bottom:6px">${t('ch_weights')}</div><div class="list">${ws.length ? ws.slice().reverse().slice(0, 6).map(w => { const s = growthStatus(c, w); return `<div class="row" style="padding:8px 12px"><span>${fmtD(w.date)} <span class="muted small">· ${ageStr(c, w.date)}</span></span><span><b>${w.kg} kg</b> ${s.pct != null ? `<span class="chip ${s.cls}">${Math.round(s.pct)}%</span>` : ''}</span></div>`; }).join('') : '<div class="muted small">—</div>'}</div></div>
+      <div class="no-print"><div class="eyebrow" style="margin-bottom:6px">${t('ch_addWeight')}</div><div class="cols tight"><input id="gDate" type="date" value="${T_ISO}" max="${T_ISO}" min="${c.dob}" aria-label="${t('r_date')}"><input id="gKg" type="number" step=".05" min=".5" max="30" placeholder="${t('ch_kg')}" inputmode="decimal" aria-label="${t('ch_kg')}"></div><div class="cols tight" style="margin-top:8px"><input id="gMuac" type="number" step=".1" min="5" max="25" placeholder="${t('ch_muac')}" inputmode="decimal" aria-label="${t('ch_muac')}" ${ageMonths(c) < 6 ? 'disabled' : ''}><button class="btn" id="gSave">${ic('plus')} ${t('ch_addWeight')}</button></div></div></div></div>
+    ${newborn ? `<div class="card" style="border-color:var(--red)"><h3 style="color:var(--red)">${ic('alert')} ${t('ch_newborn')}</h3><p class="muted small" style="margin:0 0 10px">${t('ch_newbornLead')}${lastCheck ? ` · ${bi({ en: 'Last check', ur: 'آخری جانچ' })} ${fmtS(lastCheck.date)}` : ''}</p><div class="checks" id="nbSigns">${checklist(NB_DANGER, c.birthWeight && c.birthWeight < 2.5 && ageDays(c) < 28 ? ['small'] : [], '', 'nb')}</div><div id="nbOut" style="margin-top:12px"></div><div class="actions no-print"><button class="btn" id="nbSave">${ic('check')} ${t('ch_saveCheck')}</button></div></div>` : ''}`;
+  requestAnimationFrame(() => animateBars(det));
+  growthChart($('#gChart'), c, ws);
+  $$('[data-give]').forEach(b => b.onclick = () => { const v = b.dataset.give; const d = $(`[data-vdate="${v}"]`).value || T_ISO; c.immunizations = c.immunizations || {}; c.immunizations[v] = d; put('children', c); toast(t('ch_vaxSaved'), 'ok'); renderChild(det, c); });
+  $$('[data-undo]').forEach(b => b.onclick = () => { delete c.immunizations[b.dataset.undo]; put('children', c); renderChild(det, c); });
+  $('#gSave').onclick = () => { const kg = +$('#gKg').value, date = $('#gDate').value; if (!kg || !date || date > T_ISO || date < c.dob) return toast(t('ch_kg'), 'bad'); c.weights = (c.weights || []).filter(w => w.date !== date); c.weights.push({ date, kg, muac: +$('#gMuac').value || null }); put('children', c); const s = growthStatus(c, { date, kg }); toast(s.cls === 'green' || !s.cls ? t('ch_weightSaved') : t(s.key), s.cls === 'red' ? 'bad' : 'ok'); renderChild(det, c); };
+  if (newborn) { const nbA = () => { const s = picked($('#nbSigns'), 'nb'); const urg = assessSigns(NB_DANGER, s); $('#nbOut').innerHTML = s.length ? urgBanner(urg, `<div class="small" style="margin-top:4px">${t('v_refTo')}: <b>${esc(destName(destFor(urg)))}</b></div>`) : `<div class="note">${ic('check-circle')} ${t('ch_noSigns')}</div>`; }; wireChecks($('#nbSigns'), nbA); nbA(); $('#nbSave').onclick = () => { const s = picked($('#nbSigns'), 'nb'); c.checks = c.checks || []; c.checks.push({ date: T_ISO, signs: s, urg: assessSigns(NB_DANGER, s) }); put('children', c); toast(t('ch_checkSaved'), 'ok'); renderChild(det, c); }; }
+}
+/** Weight-for-age SVG: median line + 80%/70% screening lines + the child's points. */
+function growthChart(el, c, ws) {
+  const W = 520, H = 230, P = { l: 36, r: 12, t: 12, b: 28 }, maxM = 24, maxKg = 14;
+  const x = m => P.l + m / maxM * (W - P.l - P.r), y = kg => P.t + (1 - kg / maxKg) * (H - P.t - P.b);
+  const line = (f, color, dash = '') => `<path class="draw" d="${Array.from({ length: 25 }, (_, m) => `${m ? 'L' : 'M'}${x(m).toFixed(1)} ${y(median(c.sex, m) * f).toFixed(1)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" ${dash ? `stroke-dasharray="${dash}"` : ''}/>`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('ch_growth')}">`;
+  for (let kg = 2; kg <= maxKg; kg += 2) s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(kg)}" y2="${y(kg)}" stroke="#e6d8c4"/><text x="${P.l - 6}" y="${y(kg) + 4}" font-size="13" text-anchor="end" fill="#665c52">${kg}</text>`;
+  for (let m = 0; m <= maxM; m += 3) s += `<text x="${x(m)}" y="${H - 8}" font-size="13" text-anchor="middle" fill="#665c52">${m}${m === 24 ? ' mo' : ''}</text>`;
+  s += line(1, '#0b525b') + line(.8, '#a35a00', '5 4') + line(.7, '#b42318', '3 4');
+  const pts = ws.filter(w => ageMonths(c, w.date) <= maxM).map(w => [x(ageMonths(c, w.date)), y(Math.min(w.kg, maxKg))]);
+  if (pts.length > 1) s += `<path class="draw" d="${pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ')}" fill="none" stroke="#e8590c" stroke-width="2.5"/>`;
+  pts.forEach(p => s += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5" fill="#e8590c" stroke="#fff" stroke-width="2"/>`);
+  el.innerHTML = s + '</svg>';
+  $$('.draw', el).forEach(drawPath);
+}
+
+// ---------- Monthly report ----------
+let reportMonth = monthKey(T_ISO);
+// TODO(student): supervisor dashboard. Expose monthCounts()/planner() per LHW through the sync backend and build an LHS view that aggregates 20–30 LHWs: 4-visit coverage, referral follow-up, immunization drop-out (Penta-1 → Penta-3), overdue map.
+function monthCounts(mk) {
+  const inM = d => d && d.slice(0, 7) === mk;
+  const anc = DB.anc.filter(v => inM(v.date)), pnc = DB.pnc.filter(v => inM(v.date));
+  const imm = DB.children.reduce((n, c) => n + Object.values(c.immunizations || {}).filter(inM).length, 0);
+  const weighed = DB.children.filter(c => (c.weights || []).some(w => inM(w.date))).length;
+  return { newreg: DB.households.filter(h => inM(h.createdAt)).length + DB.women.filter(w => inM(w.createdAt)).length + DB.pregnancies.filter(p => inM(p.createdAt)).length + DB.children.filter(c => inM(c.createdAt)).length, anc: anc.length, pnc: pnc.length, ref: anc.filter(v => v.referral).length + pnc.filter(v => v.referral).length, del: DB.pregnancies.filter(p => p.delivery && inM(p.delivery.date)).length, imm, weighed };
+}
+function lineList(mk) {
+  const inM = d => d && d.slice(0, 7) === mk; const rows = [];
+  DB.anc.filter(v => inM(v.date)).forEach(v => { const p = byId('pregnancies', v.pregnancyId); if (p) rows.push({ type: 'ANC', name: womanOf(p).name, date: v.date, detail: `${gaStr(p.lmp, v.date)} · BP ${v.sys}/${v.dia}${v.hb ? ' · Hb ' + v.hb : ''}${v.referral ? ' · REFERRED ' + v.referral.dest : ''}` }); });
+  DB.pnc.filter(v => inM(v.date)).forEach(v => { const p = byId('pregnancies', v.pregnancyId); if (p) rows.push({ type: 'PNC', name: womanOf(p).name, date: v.date, detail: `Day ${v.day}${v.referral ? ' · REFERRED ' + v.referral.dest : ''}` }); });
+  DB.pregnancies.filter(p => p.delivery && inM(p.delivery.date)).forEach(p => rows.push({ type: 'Delivery', name: womanOf(p).name, date: p.delivery.date, detail: `${p.delivery.place} · ${p.delivery.mode} · ${p.delivery.outcome}` }));
+  DB.children.forEach(c => { Object.entries(c.immunizations || {}).filter(([, d]) => inM(d)).forEach(([v, d]) => rows.push({ type: 'Vaccine', name: c.name, date: d, detail: v })); (c.weights || []).filter(w => inM(w.date)).forEach(w => rows.push({ type: 'Weight', name: c.name, date: w.date, detail: `${w.kg} kg` })); });
+  return rows.sort((a, b) => a.date < b.date ? -1 : 1);
+}
+function renderReport() {
+  const cnt = monthCounts(reportMonth), rows = lineList(reportMonth);
+  const months = Array.from({ length: 6 }, (_, i) => { const d = new Date(TODAY.getFullYear(), TODAY.getMonth() - 5 + i, 1); return monthKey(d); });
+  const kpi = (k, v, icon, cls = 'teal') => `<div class="kpi ${cls}"><div class="eyebrow">${ic(icon)} ${t(k)}</div><div class="v" data-count="${v}">0</div></div>`;
+  view.innerHTML = pagehead(t('r_title'), t('r_lead'), `<div class="no-print" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="month" id="rMonth" value="${reportMonth}" max="${monthKey(T_ISO)}" style="width:auto" aria-label="${t('r_month')}"><button class="btn teal" id="rCsv">${ic('download')} ${t('r_csv')}</button><button class="btn ghost" onclick="window.print()">${ic('printer')} ${t('print')}</button><button class="btn ghost" id="rDhis">${ic('upload')} ${t('r_dhis')}</button></div>`) +
+    `<div class="card" style="margin-bottom:14px"><div class="eyebrow">${esc(profile.name)} · ${esc(profile.code)} · ${esc(profile.village)}</div><h3 style="font-size:1.3rem;margin-top:4px">${fmtMonth(reportMonth)}</h3>
+    <div class="kpis stagger">${kpi('r_newreg', cnt.newreg, 'plus', 'orange')}${kpi('r_anc', cnt.anc, 'stethoscope')}${kpi('r_pnc', cnt.pnc, 'baby')}${kpi('r_ref', cnt.ref, 'siren', cnt.ref ? 'red' : 'green')}${kpi('r_del', cnt.del, 'heart', 'orange')}${kpi('r_imm', cnt.imm, 'syringe')}${kpi('r_weighed', cnt.weighed, 'scale')}</div></div>
+    <div class="two"><div class="card"><h3>${ic('bar-chart')} ${t('r_trend')}</h3><div class="chart" id="rChart"></div><div class="legend"><span><i style="background:var(--teal);height:10px"></i>${t('r_anc')} + ${t('r_pnc')}</span><span><i style="background:var(--orange);height:10px"></i>${t('r_imm')}</span><span><i style="background:var(--red);height:10px"></i>${t('r_ref')}</span></div></div>
+    <div class="card"><h3>${ic('list')} ${t('r_lines')} <span class="chip">${rows.length}</span></h3>${rows.length ? `<div class="tablewrap"><table><thead><tr><th>${t('r_date')}</th><th>${t('r_type')}</th><th>${t('r_name')}</th><th>${t('r_detail')}</th></tr></thead><tbody>${rows.map(r => `<tr><td style="white-space:nowrap">${fmtS(r.date)}</td><td><span class="chip ${r.type === 'ANC' ? 'teal' : r.type === 'Vaccine' ? 'orange' : r.type === 'Delivery' ? 'green' : ''}">${r.type}</span></td><td>${esc(r.name)}</td><td class="small">${esc(r.detail)}</td></tr>`).join('')}</tbody></table></div>` : `<div class="muted small">${t('r_noLines')}</div>`}</div></div>`;
+  $$('[data-count]', view).forEach(el => countUp(el, +el.dataset.count));
+  barChart($('#rChart'), months.map(m => ({ label: parse(m + '-01').toLocaleDateString('en-PK', { month: 'short' }), c: monthCounts(m) })));
+  $('#rMonth').onchange = e => { if (e.target.value) { reportMonth = e.target.value; renderReport(); } };
+  $('#rCsv').onclick = () => { const c = cnt; const head = `LHW monthly report,${fmtMonth(reportMonth)}\nLHW,${profile.name} (${profile.code})\nArea,${profile.village}\n\nIndicator,Count\nNew registrations,${c.newreg}\nANC visits,${c.anc}\nPNC visits,${c.pnc}\nReferrals,${c.ref}\nDeliveries,${c.del}\nImmunizations given,${c.imm}\nChildren weighed,${c.weighed}\n\nDate,Type,Name,Detail\n`; const q = s => `"${String(s).replace(/"/g, '""')}"`; download(`lhw-report-${reportMonth}.csv`, head + rows.map(r => [r.date, r.type, r.name, r.detail].map(q).join(',')).join('\n'), 'text/csv'); toast(t('r_csv'), 'ok', 'download'); };
+  // TODO(student): DHIS2 export. Map these indicators to the provincial DHIS2 dataElement UIDs and POST a dataValueSet {dataSet, period: 'YYYYMM', orgUnit, dataValues:[{dataElement, value}]} to /api/dataValueSets with the LHS credentials.
+  $('#rDhis').onclick = () => toast('DHIS2 export is a student extension (see About)', '', 'upload');
+}
+function barChart(el, data) {
+  const W = 520, H = 220, P = { l: 30, r: 8, t: 14, b: 28 }, n = data.length, gw = (W - P.l - P.r) / n, bw = gw * .22;
+  const series = [['anc', '#0b525b', d => d.c.anc + d.c.pnc], ['imm', '#e8590c', d => d.c.imm], ['ref', '#b42318', d => d.c.ref]];
+  const mx = Math.max(2, ...data.flatMap(d => series.map(s => s[2](d)))); const y = v => P.t + (1 - v / mx) * (H - P.t - P.b);
+  let s = `<svg viewBox="0 0 ${W} ${H}">`;
+  [0, .5, 1].forEach(f => s += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(mx * f)}" y2="${y(mx * f)}" stroke="#e6d8c4"/><text x="${P.l - 6}" y="${y(mx * f) + 4}" font-size="13" fill="#665c52" text-anchor="end">${Math.round(mx * f)}</text>`);
+  data.forEach((d, i) => { const x0 = P.l + i * gw + gw * .14; series.forEach(([, col, f], k) => { const v = f(d); s += `<rect class="bar" x="${(x0 + k * (bw + 3)).toFixed(1)}" y="${y(v)}" width="${bw}" height="${Math.max(0, H - P.b - y(v))}" rx="3" fill="${col}" style="transform-origin:${(x0 + k * (bw + 3) + bw / 2).toFixed(1)}px ${H - P.b}px"><title>${d.label}: ${v}</title></rect>`; }); s += `<text x="${(x0 + gw * .36).toFixed(1)}" y="${H - 9}" font-size="13" fill="#665c52" text-anchor="middle">${d.label}</text>`; });
+  el.innerHTML = s + '</svg>';
+  $$('rect.bar', el).forEach((r, i) => { r.style.transform = 'scaleY(0)'; r.style.transition = `transform .6s var(--ease) ${i * 25}ms`; requestAnimationFrame(() => requestAnimationFrame(() => r.style.transform = 'scaleY(1)')); });
+}
+function download(name, text, type = 'application/json') { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+
+// ---------- Sync (simulated) ----------
+let syncing = false;
+function renderSync() {
+  const q = unsynced(); const last = store.get('lastSync', null);
+  const groups = TABLES.map(k => [k, q.filter(x => x.table === k).length]).filter(([, n]) => n);
+  view.innerHTML = pagehead(t('sy_title'), t('sy_lead')) + `<div class="two"><div class="card"><div class="detailhead"><div class="big" style="${q.length ? '' : 'background:var(--green-soft);color:var(--green)'}">${ic(q.length ? 'cloud-off' : 'cloud-check', 'lg')}</div><div style="flex:1"><div class="eyebrow">${t('sy_queue')}</div><h2 id="syCount">${q.length}</h2><div class="small muted">${t('sy_last')}: ${last ? new Date(last).toLocaleString('en-PK') : t('sy_never')}</div></div></div>
+      <div class="progress" style="margin:14px 0 6px"><i id="syBar" style="width:${q.length ? 0 : 100}%"></i></div><div class="small muted" id="syMsg">${q.length ? '' : t('sy_done')}</div>
+      <div class="actions"><button class="btn" id="syNow" ${q.length ? '' : 'disabled'}>${ic('refresh')} ${t('sy_now')}</button><button class="btn ghost" id="syExport">${ic('download')} ${t('sy_export')}</button><label class="btn ghost" style="cursor:pointer">${ic('upload')} ${t('sy_import')}<input type="file" id="syImport" accept="application/json" class="hidden"></label><button class="btn danger" id="syReset">${ic('trash')} ${t('sy_reset')}</button></div>
+      <div class="note" style="margin-top:14px">${lang === 'ur' ? 'یہ سنک نمونہ ہے: ریکارڈ 2 سیکنڈ بعد "سنک شدہ" نشان زد ہو جاتے ہیں۔ حقیقی سرور طلبہ کا کام ہے (تعارف دیکھیں)۔' : 'This sync is simulated: records are marked synced after a short delay. The real server, conflict handling and retry queue are a student extension (see About).'}</div></div>
+    <div class="card"><h3>${ic('list')} ${t('sy_queue')}</h3>${q.length ? `<div class="list stagger">${groups.map(([k, n]) => `<div class="row"><b>${t('sy_type_' + k)}</b><span class="chip orange">${n} ${t('sy_records')}</span></div>`).join('')}${q.slice(0, 12).map(({ table, rec }) => `<div class="row" style="padding:8px 12px"><span class="small">${ic('file')} ${t('sy_type_' + table)} · <code>${rec.id}</code></span><span class="small muted">${new Date(rec.updatedAt).toLocaleDateString('en-PK')}</span></div>`).join('')}${q.length > 12 ? `<div class="small muted">… +${q.length - 12}</div>` : ''}</div>` : `<div class="note">${ic('check-circle')} ${t('sy_done')}</div>`}</div></div>`;
+  $('#syNow').onclick = syncNow;
+  $('#syExport').onclick = () => { download(`lhw-backup-${T_ISO}.json`, JSON.stringify(Object.fromEntries(TABLES.map(k => [k, DB[k]])), null, 1)); toast(t('sy_export'), 'ok', 'download'); };
+  $('#syImport').onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (!TABLES.every(k => Array.isArray(d[k]))) throw 0; TABLES.forEach(k => { DB[k] = d[k]; save(k); }); toast(t('sy_imported'), 'ok'); route(); } catch { toast(t('sy_badFile'), 'bad'); } }; r.readAsText(f); };
+  $('#syReset').onclick = () => { if (!confirm(t('sy_resetConfirm'))) return; seed(); toast(t('sy_reset'), 'ok'); route(); };
+}
+// TODO(student): real sync backend. Replace this simulation with PouchDB → CouchDB replication (or a REST endpoint) that pushes unsynced records, pulls changes from the LHS/district server, resolves conflicts by updatedAt (or a merge policy per table), retries with exponential back-off, and runs automatically when `navigator.onLine` becomes true.
+async function syncNow() {
+  if (syncing) return; syncing = true; const q = unsynced(); const btn = $('#syNow'); btn.disabled = true; btn.innerHTML = `${ic('refresh', 'spin')} ${t('sy_syncing')}`;
+  for (let i = 0; i < q.length; i++) { await new Promise(r => setTimeout(r, Math.min(300, 1800 / q.length))); q[i].rec.synced = true; if ($('#syBar')) { $('#syBar').style.width = `${(i + 1) / q.length * 100}%`; $('#syCount').textContent = q.length - i - 1; $('#syMsg').textContent = `${i + 1}/${q.length}`; } }
+  TABLES.forEach(save); store.set('lastSync', Date.now()); syncing = false; toast(t('sy_ok'), 'ok', 'cloud-check'); renderSync(); renderNav();
+}
+
+// ---------- About + LHW profile ----------
+const TODOS = [
+  ['Real sync backend', 'Replace the simulated syncNow() with PouchDB/CouchDB replication or a REST API: push unsynced records, pull changes, resolve conflicts by updatedAt, retry on navigator.onLine.', 'backend', 'syncNow()'],
+  ['SMS referral to LHS / BHU', 'Send the referral slip text to the Lady Health Supervisor and the receiving facility via an SMS gateway and log delivery status on the visit.', 'messaging', 'renderSlip() → #sSms'],
+  ['GPS mapping of households', 'Capture coordinates with navigator.geolocation on registration and draw a Leaflet catchment map coloured by visits due, to plan the walking route.', 'maps', 'renderHouseholdForm() → #fGps'],
+  ['Supervisor dashboard', 'A separate LHS view that aggregates many LHWs: coverage of the 4 mandatory ANC visits, referral follow-up, immunization drop-out rate, map of overdue children.', 'product', 'monthCounts() as the data source'],
+  ['WHO z-score growth standards', 'Replace the percent-of-median screen with LMS tables (weight-for-age, length-for-age, weight-for-length) and plot −2/−3 SD curves on the chart.', 'clinical', 'zScore(), growthStatus(), growthChart()'],
+  ['MUAC malnutrition screening', 'Classify 6–59-month children by mid-upper-arm circumference (SAM < 11.5 cm, MAM 11.5–12.4) and route SAM cases to the OTP site on the referral slip.', 'clinical', 'muacStatus(), renderChild()'],
+  ['Urdu / Sindhi voice input', 'Dictate complaints and notes with the Web Speech API (ur-PK) or an offline Vosk model; many LHWs type slowly on small phones.', 'UX', 'renderAncForm() → #vVoice'],
+  ['DHIS2 report export', 'Map the monthly indicators to DHIS2 data elements and POST a dataValueSet for the period and org unit; add a “submitted” stamp to the report.', 'reporting', 'renderReport() → #rDhis']
+];
+function renderAbout() {
+  view.innerHTML = pagehead(t('ab_title')) + `<div class="two"><div class="stack">
+    <div class="card"><h3>${ic('info')} LHW Field Visit Assistant</h3><p class="muted" style="margin:0 0 10px">${lang === 'ur' ? 'پاکستان کی تقریباً ایک لاکھ لیڈی ہیلتھ ورکرز ماؤں اور بچوں کے وزٹ کاغذی رجسٹر میں لکھتی ہیں؛ خطرے کی علامات رہ جاتی ہیں، تاریخیں غلط نکلتی ہیں، ریفرل غیر رسمی ہوتے ہیں اور ماہانہ رپورٹ ہاتھ سے بنتی ہے۔ یہ ایپ فون پر، بغیر انٹرنیٹ، یہ سب کام سنبھالتی ہے۔' : 'Pakistan\'s ~100,000 Lady Health Workers record maternal and child visits in paper registers. Danger signs are missed, due dates are miscalculated, referrals are informal and the monthly report is compiled by hand. This offline-first app plans visits, flags danger signs automatically, prints referral slips, tracks the EPI card and growth, and compiles the monthly counts.'}</p>
+      <p class="muted small" style="margin:0">Clinical rules: Naegele EDD (LMP + 280 d) · WHO 2016 eight ANC contacts + Pakistan MNCH four mandatory visits · pre-eclampsia (BP ≥ 140/90), anaemia (Hb &lt; 7 / &lt; 11), fundal height ±3 cm after 24 wk, fetal movement after 28 wk · WHO/IMNCI pregnancy, postnatal and newborn danger signs · Pakistan EPI 2024 schedule · weight-for-age screening as % of WHO median (not z-scores). A decision aid for trained LHWs, not a replacement for clinical judgement or the official register.</p>
+      <p class="muted small" style="margin:10px 0 0">Stack: one HTML file, vanilla JS, hand-drawn SVG charts, localStorage (<code>lhw:</code>). Works from file:// with no network.</p></div>
+    <div class="card"><h3>${ic('settings')} ${t('ab_profile')}</h3><div class="cols">${field(t('ab_name'), `<input id="pfName" value="${esc(profile.name)}">`)}${field(t('ab_code'), `<input id="pfCode" value="${esc(profile.code)}">`)}</div>${field(t('ab_village'), `<input id="pfVillage" value="${esc(profile.village)}">`)}<div class="cols">${field(t('ab_bhu'), `<input id="pfBhu" value="${esc(profile.bhu)}">`)}${field(t('ab_rhc'), `<input id="pfRhc" value="${esc(profile.rhc)}">`)}${field(t('ab_dhq'), `<input id="pfDhq" value="${esc(profile.dhq)}">`)}${field(t('ab_lhs'), `<input id="pfLhs" type="tel" value="${esc(profile.lhs)}">`)}</div><div class="actions"><button class="btn" id="pfSave">${ic('check')} ${t('save')}</button></div></div></div>
+    <div><h3 style="margin:0 0 10px">${ic('code')} ${t('ab_todo')}</h3><div class="list stagger">${TODOS.map(([h, b, tag, where]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted small">${esc(b)}</div><div class="small" style="margin-top:6px">Start here: <code>${esc(where)}</code></div></div>`).join('')}</div></div></div>`;
+  $('#pfSave').onclick = () => { profile = { name: $('#pfName').value.trim() || DEFAULT_PROFILE.name, code: $('#pfCode').value.trim(), village: $('#pfVillage').value.trim(), bhu: $('#pfBhu').value.trim(), rhc: $('#pfRhc').value.trim(), dhq: $('#pfDhq').value.trim(), lhs: $('#pfLhs').value.trim() }; store.set('profile', profile); toast(t('ab_saved'), 'ok'); renderNav(); };
+}
+
+// ---------- nav / router / boot ----------
+const NAV = [['today', 'calendar'], ['households', 'home'], ['pregnancy', 'heart'], ['children', 'baby'], ['report', 'bar-chart'], ['sync', 'refresh']];
+const navKey = p => p === 'pregnancy' ? 'nav_pregnancies' : 'nav_' + p;
+function renderNav() {
+  const cur = (location.hash.slice(1) || 'today').split('/')[0]; const q = unsynced().length; const od = planner().filter(i => i.kind === 'overdue' || i.kind === 'alert').length;
+  const badge = p => p === 'sync' && q ? `<span class="n">${q}</span>` : p === 'today' && od ? `<span class="n">${od}</span>` : '';
+  $('#railnav').innerHTML = NAV.map(([p, i]) => `<a class="nav ${cur === p ? 'on' : ''}" href="#${p}"><span class="ic">${ic(i)}</span>${t(navKey(p))}${badge(p)}</a>`).join('') + `<a class="nav ${cur === 'about' ? 'on' : ''}" href="#about"><span class="ic">${ic('info')}</span>${t('nav_about')}</a>`;
+  $('#bottomnav').innerHTML = NAV.map(([p, i]) => `<a class="${cur === p ? 'on' : ''}" href="#${p}"><span class="ic">${ic(i)}</span>${t(navKey(p))}${badge(p)}</a>`).join('');
+  $('#profileBox').innerHTML = `<b>${esc(profile.name)}</b>${esc(profile.code)}<br>${esc(profile.village)}`;
+}
+function route() {
+  closeSheet(true);
+  const [page, id, sub, vid] = (location.hash.slice(1) || 'today').split('/');
+  renderNav();
+  const fn = { today: renderToday, households: () => renderHouseholds(id), pregnancy: () => renderPregnancies(id, sub, vid), children: () => renderChildren(id), report: renderReport, sync: renderSync, about: renderAbout }[page];
+  (fn || renderToday)();
+  animateIn(view); window.scrollTo({ top: 0 });
+}
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  $$('#langBtn,#langBtn2').forEach(b => b.textContent = lang === 'en' ? 'اردو' : 'English');
+  route();
+}
+$$('#langBtn,#langBtn2').forEach(b => b.onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); });
+window.addEventListener('hashchange', route);
+load(); applyLang();
+</script>
+</body>
+</html>
