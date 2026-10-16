@@ -351,7 +351,7 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 .turn.on .signrow button{border-color:var(--teal)}
 
 /* ---------- progress ---------- */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center;min-width:0}
 .kpi .icw{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none}
 .kpi .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
@@ -426,6 +426,12 @@ input[type=range]{width:100%;accent-color:var(--teal)}
   main{padding:16px 14px 90px}
   .pagehead h2{font-size:1.4rem}
   .heat{grid-template-columns:60px repeat(5,minmax(0,1fr))}
+}
+/* narrow phones: the logo alone carries the brand so the chips fit on one row */
+@media (max-width:440px){
+  .brand>div:last-child{display:none}
+  .iconbtn{width:38px;height:38px}
+  .top .in{flex-wrap:nowrap}
 }
 @media print{
   .top,.bottomnav,#toasts,.actions,.btn,.sheet,.tour{display:none!important}
@@ -2805,6 +2811,7 @@ function startSpellGame(mode) {
     return { word: w, letters: spellOf(w.ur), opts: shuffle([w, ...others]), picked: [] };
   });
   fsGame = { mode, i: 0, qs, results: [] };
+  spellView = 'game';
   renderSpell();
 }
 
