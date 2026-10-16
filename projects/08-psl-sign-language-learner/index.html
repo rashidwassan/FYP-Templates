@@ -162,9 +162,12 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tbl{width:100%;border-collapse:collapse;font-size:.88rem}
 .tbl th,.tbl td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.tbl.wrap td{white-space:normal}
 .tbl th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:3px;border-radius:7px;padding:1px 8px;font-family:ui-monospace,monospace;font-size:.8rem;background:var(--surface-2)}
 .empty{text-align:center;padding:26px 14px;color:var(--muted)}
+.hero{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;margin:0 auto 10px}
+.hero.round{border-radius:50%;width:72px;height:72px}
 .empty .icw{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;margin:0 auto 10px;background:var(--surface-2);color:var(--teal)}
 .switch{position:relative;width:46px;height:26px;flex:none}
 .switch input{opacity:0;width:0;height:0;position:absolute}
@@ -181,8 +184,8 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 /* ---------- sign schematic ---------- */
 .sign-svg{width:100%;height:auto;display:block}
 .sign-svg .body{fill:var(--surface-2);stroke:var(--line);stroke-width:2}
-.sign-svg .hand{fill:var(--teal);stroke:var(--teal-deep);stroke-width:1.5}
-.sign-svg .hand.other{fill:#8fc9d6;stroke:var(--teal-deep)}
+.hand{fill:var(--teal);stroke:var(--teal-deep);stroke-width:1.5}
+.hand.other{fill:#8fc9d6;stroke:var(--teal-deep)}
 .sign-svg .mv{transform-box:fill-box;transform-origin:center}
 @keyframes mvForward{0%,100%{transform:scale(1)}50%{transform:scale(1.14) translateY(5px)}}
 @keyframes mvDown{0%,100%{transform:translateY(0)}50%{transform:translateY(14px)}}
@@ -232,6 +235,7 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 .shapes{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
 .shape{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:12px;padding:6px 10px 6px 6px;font-size:.84rem;font-weight:600}
 .shape svg{width:34px;height:40px}
+.shape svg.ic{width:1.15em;height:1.15em}
 .desc{background:var(--surface-2);border-radius:14px;padding:12px 14px;font-size:.95rem}
 .desc .ur{margin-top:6px;color:var(--ink)}
 .welcome{background:linear-gradient(135deg,var(--teal),var(--teal-deep));color:#fff;border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
@@ -312,6 +316,7 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 .ltile{border:2px solid var(--line);background:var(--surface);border-radius:12px;min-width:48px;height:52px;padding:0 10px;font-family:var(--font-ur);font-size:1.4rem;cursor:pointer;display:grid;place-items:center}
 .ltile:hover{border-color:var(--teal)}
 .ltile.used{opacity:.3;pointer-events:none}
+.ltile svg{width:40px;height:46px}
 .bigletter{font-family:var(--font-ur);font-size:4rem;line-height:1.4;color:var(--teal-deep);text-align:center}
 
 /* ---------- sentence builder ---------- */
@@ -426,6 +431,8 @@ input[type=range]{width:100%;accent-color:var(--teal)}
   main{padding:16px 14px 90px}
   .pagehead h2{font-size:1.4rem}
   .heat{grid-template-columns:60px repeat(5,minmax(0,1fr))}
+  #dshapes{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+  #dshapes .chip{flex:none}
 }
 /* narrow phones: the logo alone carries the brand so the chips fit on one row */
 @media (max-width:440px){
@@ -455,7 +462,6 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
 <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
 <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
-<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
 <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M3 21v-5h5"/></symbol>
@@ -477,7 +483,6 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
 <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
-<symbol id="i-languages" viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></symbol>
 <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
 <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
 <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.8-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/></symbol>
@@ -489,22 +494,14 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 <symbol id="i-graduation" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
 <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
 <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
-<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
 <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
-<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
-<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5Z"/></symbol>
 <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
 <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
 <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
-<symbol id="i-trending-up" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17M16 7h6v6"/></symbol>
-<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
-<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
 <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
 <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
 <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></symbol>
-<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
-<symbol id="i-timer" viewBox="0 0 24 24"><path d="M10 2h4M12 14l3-3"/><circle cx="12" cy="14" r="8"/></symbol>
 <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
 <symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
 <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
@@ -515,7 +512,7 @@ input[type=range]{width:100%;accent-color:var(--teal)}
 <symbol id="i-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></symbol>
 <symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></symbol>
 <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5a5.5 5.5 0 0 0-10 3.5c0 2.3 1.5 4 3 5.5l7 7Z"/></symbol>
-<symbol id="i-hash" viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
 <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M8 16h8"/></symbol>
 <symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"/><path d="M17.3 5H6.7a4 4 0 0 0-4 3.5L2 17.1a2.6 2.6 0 0 0 4.5 2l2.1-2.1h6.8l2.1 2.1a2.6 2.6 0 0 0 4.5-2l-.7-8.6a4 4 0 0 0-4-3.5Z"/></symbol>
 <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
@@ -699,6 +696,8 @@ const DAY = 864e5;
 const now = () => Date.now();
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const uid = () => Math.random().toString(36).slice(2, 10) + now().toString(36);
+// big centred icon used on start / result / lock cards
+const heroIcon = (name, bg, fg, extra = '') => `<div class="hero ${extra}" style="background:${bg};color:${fg}">${ic(name)}</div>`;
 const fmtDate = ts => new Date(ts).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 function toast(m, type = '', icon = '') {
@@ -1633,14 +1632,25 @@ const BADGES = [
   ['b11', () => Object.keys(convState().done).length >= SCENARIOS.length, 'message'],
   ['b12', () => streak() >= 7, 'calendar'],
 ];
+const earnedBadges = () => BADGES.filter(([, fn]) => fn()).map(([k]) => k);
+
+// every new badge goes to the inbox; one toast summarises them
 function checkBadges() {
   P.badges = P.badges || [];
-  BADGES.forEach(([k, fn]) => {
-    if (P.badges.includes(k) || !fn()) return;
+  const fresh = earnedBadges().filter(k => !P.badges.includes(k));
+  if (!fresh.length) return;
+  fresh.forEach(k => {
     P.badges.push(k);
     notify('badge:' + k, 'badge', `${t('badgeUnlocked')}: ${t(k)}`, t(k + 'd'));
-    toast(`${t('badgeUnlocked')}: ${t(k)}`, 'ok', 'award');
   });
+  toast(`${t('badgeUnlocked')}: ${fresh.map(k => t(k)).join(', ')}`, 'ok', 'award');
+  save();
+}
+
+// saves from before badges were tracked: record what is already earned, silently
+function syncBadgesSilently() {
+  if (Array.isArray(store.get('progress', {}).badges)) return;
+  P.badges = earnedBadges();
   save();
 }
 
@@ -1876,7 +1886,7 @@ function finishLesson(L) {
   confetti();
   notify('lesson:' + L.cat, 'lesson', `${t('complete')} ${t('cat_' + L.cat)}`, `${L.ids.length} ${t('signs')}`);
   $('#learnBody').innerHTML = `<div class="card enter" style="text-align:center;max-width:520px;margin:30px auto">
-      <div style="display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:var(--sun-soft);color:var(--sun-ink);margin:0 auto 10px">${ic('trophy')}</div>
+      ${heroIcon('trophy', 'var(--sun-soft)', 'var(--sun-ink)', 'round')}
       <h2>${t('complete')}</h2>
       <p class="muted">${t('cat_' + L.cat)} · ${L.ids.length} ${t('signs')} · +${L.ids.length * 10} ${t('earned')}</p>
       <div class="row" style="justify-content:center">
@@ -1940,7 +1950,7 @@ function renderQuizIntro(body) {
   const due = dueIds().length;
   const acc = P.quiz.asked ? `${Math.round(P.quiz.correct / P.quiz.asked * 100)}% ${t('q_correct')} · ${P.quiz.asked} Q` : '';
   body.innerHTML = `<div class="card enter" style="text-align:center">
-      <div style="display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:var(--violet-soft);color:var(--violet);margin:0 auto 10px">${ic('target')}</div>
+      ${heroIcon('target', 'var(--violet-soft)', 'var(--violet)')}
       <h3>${pool.length} ${t('signs')} · <span style="color:var(--coral)">${due}</span> ${t('q_due')}</h3>
       <p class="muted">${acc}</p>
       <div class="row" style="justify-content:center">
@@ -2497,16 +2507,24 @@ function sessionBars() {
     </i>`).join('')}</div>`;
 }
 
+function sessionRows() {
+  const shortDate = ts => new Date(ts).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+  return CAM.sessions.slice(0, 8).map(s => {
+    const mode = s.mode === 'self' ? t('p_selfShort') : t('camera');
+    const result = s.pass ? `<span class="pill mint">${t('passed')}</span>` : `<span class="pill coral">${t('missed')}</span>`;
+    return `<tr><td>${shortDate(s.ts)}</td><td>${esc(s.en)}<div class="muted small">${mode}</div></td>
+      <td>${result}</td><td>${s.ms ? (s.ms / 1000).toFixed(1) + ' s' : '–'}</td></tr>`;
+  }).join('');
+}
+
 function analyticsHtml() {
   const ses = CAM.sessions;
+  if (!ses.length) return `<div class="empty"><div class="icw">${ic('activity')}</div>${t('noSessions')}</div>`;
   const camSes = ses.filter(s => s.mode === 'cam');
   const passes = camSes.filter(s => s.pass);
   const passRate = camSes.length ? Math.round(passes.length / camSes.length * 100) : 0;
   const avgMs = passes.length ? Math.round(passes.reduce((a, s) => a + s.ms, 0) / passes.length / 100) / 10 : 0;
-  const rows = ses.slice(0, 8).map(s => `<tr><td>${fmtDate(s.ts)}</td><td>${esc(s.en)}</td><td>${s.mode === 'self' ? t('p_selfShort') : t('camera')}</td>
-      <td>${s.pass ? `<span class="pill mint">${t('passed')}</span>` : `<span class="pill coral">${t('missed')}</span>`}</td>
-        <td>${s.ms ? (s.ms / 1000).toFixed(1) + ' s' : '–'}</td></tr>`).join('');
-  if (!ses.length) return `<div class="empty"><div class="icw">${ic('activity')}</div>${t('noSessions')}</div>`;
+  const weak = worstFinger();
   return `<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
       <div class="kpi"><div><div class="k">${t('sessions')}</div><div class="v">${ses.length}</div></div></div>
       <div class="kpi"><div><div class="k">${t('passRate')}</div><div class="v">${passRate}%</div></div></div>
@@ -2514,11 +2532,11 @@ function analyticsHtml() {
     </div>
     <div class="two">
       <div><b class="small">${t('fingerHeat')}</b>
-        <p class="muted small" style="margin:2px 0 8px">${t('fingerHeatHint')} ${worstFinger() ? `<b>${t('weakest')}: ${worstFinger()}</b>` : ''}</p>${heatmapHtml()}</div>
-      <div><b class="small">${t('sessions14')}</b>${sessionBars()}<div class="tblwrap" style="margin-top:10px"><table class="tbl"><thead><tr>
-        <th>${t('date')}</th><th>${t('sign')}</th><th>${t('mode')}</th><th>${t('result')}</th><th>${t('time')}</th></tr></thead><tbody>${rows}</tbody></table>
-        </div></div>
-    </div>`;
+        <p class="muted small" style="margin:2px 0 8px">${t('fingerHeatHint')} ${weak ? `<b>${t('weakest')}: ${weak}</b>` : ''}</p>${heatmapHtml()}</div>
+      <div><b class="small">${t('sessions14')}</b>${sessionBars()}</div>
+    </div>
+    <div class="tblwrap" style="margin-top:14px"><table class="tbl wrap"><thead><tr>
+      <th>${t('date')}</th><th>${t('sign')}</th><th>${t('result')}</th><th>${t('time')}</th></tr></thead><tbody>${sessionRows()}</tbody></table></div>`;
 }
 
 function renderPracExtra() {
@@ -2818,7 +2836,7 @@ function startSpellGame(mode) {
 function renderSpellGame(body) {
   if (!fsGame) {
     body.innerHTML = `<div class="card enter" style="text-align:center">
-        <div style="display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:var(--violet-soft);color:var(--violet);margin:0 auto 10px">${ic('gamepad')}</div>
+        ${heroIcon('gamepad', 'var(--violet-soft)', 'var(--violet)')}
         <h3>${t('fs_gameTitle')}</h3><p class="muted">${t('fs_gameLead')}</p>
         <div class="row" style="justify-content:center">
           <button class="btn lg" id="fsRead">${ic('eye')} ${t('fs_modeRead')}</button>
@@ -2866,7 +2884,7 @@ function spellQuestionHtml(q) {
   q.bank = q.bank || shuffle([...q.letters, ...distract]);
   return `<h3>${t('fs_spellQ')} <span class="ur" style="color:var(--teal)">${esc(q.word.ur)}</span> <span class="muted" style="font-size:1rem">(${esc(q.word.en)})</span></h3>
     <p class="muted small" style="margin:0 0 10px">${t('fs_spellHint')}</p>
-    <div class="seq" id="fsAnswer" style="min-height:90px">${q.picked.map(ch => glyphTile(ch, { showLetter: false })).join('')}</div>
+    <div class="seq" id="fsAnswer" style="min-height:90px">${q.picked.map(i => glyphTile(q.bank[i], { showLetter: false })).join('')}</div>
     <div class="tiles" id="fsBank" style="margin-top:12px">${q.bank.map((ch, i) => `<button class="ltile ${q.picked.includes(i) ? 'used' : ''}" data-i="${i}" aria-label="${esc(LETTER[ch].name)}">${letterSvg(LETTER[ch], { still: true })}</button>`).join('')}</div>
     <div class="row" style="margin-top:12px">
       <button class="btn" id="fsCheck" ${q.picked.length !== q.letters.length ? 'disabled' : ''}>${ic('check')} ${t('check')}</button>
@@ -2998,14 +3016,19 @@ function loadSentence(i) {
   if (sent.bank.map(x => x.id).join() === sx.order.join() && sx.order.length > 1) sent.bank.reverse();
   sent.checked = false;
   sent.revealed = false;
+  sent.loadedFor = sx.id;
+}
+
+function sentHeader() {
+  const doneN = Object.keys(sentState().done).length;
+  $('#sentActions').innerHTML = `<span class="pill teal">${ic('check-circle')} ${doneN}/${SENTENCES.length} ${t('sb_done')}</span>`;
+  return doneN;
 }
 
 function renderSentences() {
-  const st = sentState();
-  const doneN = Object.keys(st.done).length;
-  $('#sentActions').innerHTML = `<span class="pill teal">${ic('check-circle')} ${doneN}/${SENTENCES.length} ${t('sb_done')}</span>`;
+  const doneN = sentHeader();
   const list = sentList();
-  if (!list[sent.idx] || !sent.bank.length) loadSentence(sent.idx);
+  if (!list[sent.idx] || sent.loadedFor !== list[sent.idx].id) loadSentence(sent.idx);
   const body = $('#sentBody');
   body.innerHTML = `<details class="card" style="margin-bottom:14px" ${doneN === 0 ? 'open' : ''}>
     <summary style="cursor:pointer;font-weight:600">${ic('lightbulb')} ${t('sb_rules')}</summary>
@@ -3078,7 +3101,8 @@ function moveToken(k, from, to, beforeK = null) {
   renderExercise();
 }
 
-function wireExercise(sx) {
+// tap moves a tile between zones; HTML5 drag-and-drop reorders within / across zones
+function wireTiles() {
   $$('.tile').forEach(el => {
     const k = +el.dataset.k;
     const zone = el.dataset.zone;
@@ -3115,6 +3139,10 @@ function wireExercise(sx) {
       if (dragTok) moveToken(dragTok.k, dragTok.zone, z.dataset.zone);
     };
   });
+}
+
+function wireExercise(sx) {
+  wireTiles();
   $('#sPrev').onclick = () => {
     loadSentence(sent.idx - 1);
     renderExercise();
@@ -3165,7 +3193,7 @@ function checkSentence(sx) {
   }
   store.set('sent', st);
   renderExercise();
-  renderSentences();
+  sentHeader();
   if (!sent.correct) $('#ansZone').classList.add('shake');
 }
 
@@ -3355,7 +3383,10 @@ function renderProgress() {
   animateIn($('#progBody'));
 }
 
-$('#exportBtn').onclick = () => download('ishara-progress.json', JSON.stringify({ progress: P, edits: edits(), cam: CAM, fs: fsStats(), sent: sentState(), conv: convState() }, null, 2));
+$('#exportBtn').onclick = () => {
+  const data = { progress: P, edits: edits(), cam: CAM, fs: fsStats(), sent: sentState(), conv: convState() };
+  download('ishara-progress.json', JSON.stringify(data, null, 2));
+};
 $('#printBtn').onclick = () => window.print();
 $('#resetBtn').onclick = () => {
   if (!confirm(t('confirmReset'))) return;
@@ -3455,7 +3486,7 @@ function wireStudentView(c) {
 
 function pinHtml() {
   return `<div class="card pinbox enter" style="margin-top:16px">
-    <div style="display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:var(--coral-soft);color:var(--coral-ink);margin:0 auto 10px">${ic('lock')}</div>
+    ${heroIcon('lock', 'var(--coral-soft)', 'var(--coral-ink)')}
     <h3>${t('k_pinTitle')}</h3><p class="muted small">${t('k_pinHint')}</p>
     <input type="password" id="pinIn" inputmode="numeric" maxlength="6" placeholder="••••" aria-label="PIN">
     <button class="btn" id="pinGo" style="margin-top:10px">${ic('unlock')} ${t('k_unlock')}</button></div>`;
@@ -3521,21 +3552,26 @@ function teacherViewHtml(c) {
       <button class="btn sm outline" id="demoClass">${ic('sparkles')} ${t('demoClass')}</button></div></div>`;
 }
 
+// keep the picker chips and counter in sync without re-rendering (typed fields survive)
+function syncAsgPicker() {
+  $$('[data-pick]').forEach(b => b.classList.toggle('on', newAsgIds.includes(b.dataset.pick)));
+  $('#asgCount').textContent = `${newAsgIds.length} ${t('signs')}`;
+}
+
 function wireTeacherView(c) {
   $$('[data-addcat]').forEach(b => b.onclick = () => {
     const ids = SIGNS.filter(s => s.cat === b.dataset.addcat).map(s => s.id);
     newAsgIds = [...new Set([...newAsgIds, ...ids])];
-    renderClass();
+    syncAsgPicker();
   });
   $$('[data-pick]').forEach(b => b.onclick = () => {
     const id = b.dataset.pick;
     newAsgIds = newAsgIds.includes(id) ? newAsgIds.filter(x => x !== id) : [...newAsgIds, id];
-    b.classList.toggle('on');
-    $('#asgCount').textContent = `${newAsgIds.length} ${t('signs')}`;
+    syncAsgPicker();
   });
   $('#asgClear').onclick = () => {
     newAsgIds = [];
-    renderClass();
+    syncAsgPicker();
   };
   $('#asgSave').onclick = () => saveAssignment(c);
   $$('[data-delasg]').forEach(b => b.onclick = () => {
@@ -3604,7 +3640,14 @@ function loadDemoClass(c) {
 // student → teacher hand-off file
 function exportStudentFile() {
   const c = classState();
-  const snapshot = { xp: P.xp, learned: learnedCount(), acc: quizAcc(), streak: streak(), ts: now(), assignments: Object.fromEntries(c.assignments.map(a => [a.id, assignmentPct(a)])) };
+  const snapshot = {
+    xp: P.xp,
+    learned: learnedCount(),
+    acc: quizAcc(),
+    streak: streak(),
+    ts: now(),
+    assignments: Object.fromEntries(c.assignments.map(a => [a.id, assignmentPct(a)])),
+  };
   download(`ishara-${SET.studentCode || 'student'}.json`, JSON.stringify({ app: 'ishara-student', code: SET.studentCode, name: SET.studentName, snapshot }, null, 2));
 }
 
@@ -3807,6 +3850,8 @@ function seedDemo() {
   CAM.chk = [[90, 40, 60, 60, 50], [30, 50, 20, 20, 20], [80, 150, 120, 110, 100]];
   CAM.bad = [[30, 4, 9, 12, 6], [12, 20, 8, 7, 9], [8, 10, 14, 30, 22]];
   saveCam();
+  P.badges = earnedBadges();
+  save();
   store.set('tour', 'done');
 }
 
@@ -3959,7 +4004,11 @@ const PAGES = [
   ['class', 'graduation'], ['settings', 'settings'], ['about', 'info'],
 ];
 const MOBILE_PRIMARY = ['learn', 'practice', 'quiz', 'dictionary'];
-const RENDER = { learn: renderLearn, practice: renderPractice, quiz: renderQuiz, dictionary: renderDict, spell: renderSpell, sentences: renderSentences, talk: renderTalk, progress: renderProgress, class: renderClass, settings: renderSettings, about: renderAbout };
+const RENDER = {
+  learn: renderLearn, practice: renderPractice, quiz: renderQuiz, dictionary: renderDict,
+  spell: renderSpell, sentences: renderSentences, talk: renderTalk, progress: renderProgress,
+  class: renderClass, settings: renderSettings, about: renderAbout,
+};
 
 function go(page) {
   if (!PAGES.some(p => p[0] === page)) page = 'learn';
@@ -4010,6 +4059,7 @@ window.addEventListener('hashchange', () => go(location.hash.slice(1)));
 // TODO(student): register a service worker (sw.js) that caches the app shell and
 // the hand-pose model weights so the app works fully offline as a PWA.
 applySettings();
+syncBadgesSilently();
 applyLang();
 bootNotifications();
 </script>
