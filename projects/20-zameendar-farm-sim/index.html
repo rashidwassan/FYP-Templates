@@ -1239,7 +1239,7 @@ const MECH = [
   { icon: 'building', en: 'Finance', ur: 'مالیات',
     body: { en: 'A bank loan costs 15 % a year, needs a credit score of 50 and is capped at Rs 15 lac; the score falls while you sit above 70 % of the limit and rises with repayments and mandi sales. The arhti advance is instant but grows 2 % a month, forces sales through him at 5 % commission and 5 % below mandi, and silently covers any cash shortfall by adding to itself. Insurance costs 2 % of standing crop value for six months.', ur: 'بینک قرض 15٪ سالانہ، کریڈٹ سکور 50 درکار اور حد 15 لاکھ؛ حد کے 70٪ سے اوپر رہنے پر سکور گرتا ہے اور ادائیگیوں اور منڈی فروخت سے بڑھتا ہے۔ آڑھتی کا پیشگی قرض فوری مگر ہر ماہ 2٪ بڑھتا ہے، فروخت اسی کے ذریعے 5٪ کمیشن اور منڈی سے 5٪ کم پر، اور نقد کی کمی خاموشی سے قرض میں جوڑ دیتا ہے۔ انشورنس چھ ماہ کے لیے کھڑی فصل کی قیمت کا 2٪۔' } },
   { icon: 'trophy', en: 'Scoring', ur: 'سکور',
-    body: { en: 'After 60 turns: financial score = 50 + 50 × log₂(net worth ÷ par), where par is your starting cash plus Rs 90,000 per acre per year (about Rs 80 lac on Normal); doubling par scores 100, halving it scores 0. Sustainability = 0.4 × average soil + 0.3 × water efficiency (harvest value per acre-inch vs Rs 12,000) + 0.3 × diversity (distinct crops and rotation discipline). Final score = 60 % financial + 40 % sustainability; A+ from 90, A from 80, B from 65, C from 50, D from 35.', ur: '60 باریوں کے بعد: مالی سکور = 50 + 50 × log₂(کل مالیت ÷ معیار)، جہاں معیار آپ کی ابتدائی رقم جمع 90,000 روپے فی ایکڑ فی سال ہے (معمول پر تقریباً 80 لاکھ)؛ معیار سے دگنا 100 اور آدھا 0۔ پائیداری = 0.4 × اوسط زمین + 0.3 × پانی کی کارکردگی (فی ایکڑ انچ فصل کی قیمت بمقابلہ 12,000 روپے) + 0.3 × رنگا رنگی (مختلف فصلیں اور ادل بدل)۔ آخری سکور = 60٪ مالی + 40٪ پائیداری؛ A+ 90 سے، A 80 سے، B 65 سے، C 50 سے، D 35 سے۔' } }
+    body: { en: 'After 60 turns: financial score = 50 + 50 × log₂(net worth ÷ par), where par is your starting cash plus Rs 90,000 per acre per year counted from month six (about Rs 73 lac on Normal after five years); doubling par scores 100, halving it scores 0. Sustainability = 0.4 × average soil + 0.3 × water efficiency (harvest value per acre-inch vs Rs 12,000) + 0.3 × diversity (distinct crops and rotation discipline). Final score = 60 % financial + 40 % sustainability; A+ from 90, A from 80, B from 65, C from 50, D from 35.', ur: '60 باریوں کے بعد: مالی سکور = 50 + 50 × log₂(کل مالیت ÷ معیار)، جہاں معیار آپ کی ابتدائی رقم جمع 90,000 روپے فی ایکڑ فی سال ہے جو چھٹے مہینے سے گنا جاتا ہے (پانچ سال بعد معمول پر تقریباً 73 لاکھ)؛ معیار سے دگنا 100 اور آدھا 0۔ پائیداری = 0.4 × اوسط زمین + 0.3 × پانی کی کارکردگی (فی ایکڑ انچ فصل کی قیمت بمقابلہ 12,000 روپے) + 0.3 × رنگا رنگی (مختلف فصلیں اور ادل بدل)۔ آخری سکور = 60٪ مالی + 40٪ پائیداری؛ A+ 90 سے، A 80 سے، B 65 سے، C 50 سے، D 35 سے۔' } }
 ];
 const GLOSSARY = [
   { term: 'Warabandi', ur: 'وارہ بندی', def: { en: 'The rotational canal-water schedule that gives each farm a fixed weekly turn; in the game, your monthly share in acre-inches.', ur: 'نہری پانی کی باری کا نظام جو ہر فارم کو ہفتہ وار مقررہ وقت دیتا ہے؛ کھیل میں آپ کی ماہانہ باری ایکڑ انچ میں۔' } },
@@ -1996,8 +1996,9 @@ function sustainability() {
 function grade() {
   const nw = netWorth();
   const s = sustainability();
-  // the benchmark grows with elapsed time so the interim "grade so far" is meaningful; at 60 turns it equals five years of par income
-  const yearsElapsed = Math.max(g.turn, 1) / 12;
+  // the benchmark grows with elapsed time (lagged one season, since the first harvests land around month 6),
+  // so the interim "grade so far" is meaningful; at 60 turns it equals 4.5 years of par income
+  const yearsElapsed = Math.max(g.turn - 6, 0) / 12;
   const par = g.startCash + PAR_PER_ACRE_YEAR * 16 * yearsElapsed;
   const fin = clamp(50 + 50 * Math.log2(Math.max(nw, 1) / par), 0, 100);
   const score = Math.round(.6 * fin + .4 * s.index);

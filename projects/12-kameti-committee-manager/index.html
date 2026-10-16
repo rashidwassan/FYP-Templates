@@ -651,6 +651,7 @@ html[data-theme=dark] .doc h3,html[data-theme=dark] .receipt h3{color:var(--mint
 <symbol id="i-credit-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
 <symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5Z"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
 <symbol id="i-whatsapp" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M9 8.5c.2 2.6 2.4 5.4 5.3 6.4.6.2 1.2 0 1.6-.4l.6-.7-1.9-1.2-1 .8a6 6 0 0 1-2.5-2.5l.8-1L10.7 8 10 8c-.6 0-1 .3-1 .5Z"/></symbol>
 </svg>
 
@@ -2781,15 +2782,15 @@ function ledgerReport(c) {
   const head = c.order.map((_, k) => `<th>${monthLabel(monthOf(c, k))}</th>`).join('');
   const body = c.members.map(m => `<tr><td>${esc(m.name)}</td>${c.order.map((_, k) => {
     const p = cell(c, k, m.id);
-    if (!p) return `<td class="num muted">${dueDate(c, k) < today ? '✕' : '·'}</td>`;
-    const mark = p.s === 'waived' ? 'W' : p.s === 'partial' ? 'P' : p.s === 'late' ? 'L' : '✓';
+    if (!p) return `<td class="num muted">${dueDate(c, k) < today ? ic('x') : '·'}</td>`;
+    const mark = p.s === 'waived' ? 'W' : p.s === 'partial' ? 'P' : p.s === 'late' ? 'L' : ic('check');
     return `<td class="num">${mark} ${p.s !== 'waived' ? nf.format(p.amt) : ''}</td>`;
   }).join('')}</tr>`).join('');
   const stats = c.order.map((_, k) => monthStats(c, k));
   return `<div class="doc">${docHead(c, tEn('rp_ledger'), TXT.ur.rp_ledger, `${n} ${tEn('months')} · ${rsFull(c.contribution)} × ${totalSlots(c)}`)}
     <div class="tblwrap"><table class="tbl" style="font-size:.8rem"><thead><tr><th>${tEn('mem_name')}</th>${head}</tr></thead><tbody>${body}</tbody>
       <tfoot><tr><th>${tEn('pay_collected')}</th>${stats.map(s => `<th class="num">${nf.format(s.collected)}</th>`).join('')}</tr><tr><th>${tEn('pay_fees')}</th>${stats.map(s => `<th class="num">${nf.format(s.fees)}</th>`).join('')}</tr><tr><th>${tEn('pay_recipient')}</th>${stats.map(s => `<th>${s.recipient ? esc(s.recipient.name.split(' ')[0]) : '—'}</th>`).join('')}</tr></tfoot></table></div>
-    <p class="small muted">✓ ${tEn('st_paid')} · L ${tEn('st_late')} · P ${tEn('st_partial')} · W ${tEn('st_waived')} · ✕ ${tEn('st_overdue')} · ${tEn('ov_late')}: ${esc(lateRuleName(c.lateFee, TXT.en))} · ${tEn('ov_grace')}: ${c.graceDays || 0} ${tEn('sch_days')}</p></div>`;
+    <p class="small muted">${ic('check')} ${tEn('st_paid')} · L ${tEn('st_late')} · P ${tEn('st_partial')} · W ${tEn('st_waived')} · ${ic('x')} ${tEn('st_overdue')} · ${tEn('ov_late')}: ${esc(lateRuleName(c.lateFee, TXT.en))} · ${tEn('ov_grace')}: ${c.graceDays || 0} ${tEn('sch_days')}</p></div>`;
 }
 function payoutRegister(c) {
   const done = Object.keys(c.payouts).map(Number).sort((a, b) => a - b);
@@ -3007,14 +3008,14 @@ async function eraseAll() {
 
 /* --- About --- */
 const TODOS = [
-  ['Multi-device sync + member logins', '★★★', 'Push every store.set() to a backend (Supabase / Firebase / own API) and pull on start; each member logs in and sees their own statement.', 'syncToBackend()'],
-  ['OTP-confirmed payment acknowledgements', '★★', 'When the organizer records a payment, the member confirms it with a one-time code so the register is two-sided.', 'requestAck()'],
-  ['Raast / JazzCash / Easypaisa integration', '★★★', 'Payment links per member per cycle; gateway callbacks auto-fill the matrix (auto-reconciliation).', 'reconcile()'],
-  ['E-signatures on the agreement', '★★', 'Hash the agreement, sign on canvas or via OTP, store signature + hash per member.', 'signAgreement()'],
-  ['Evidence uploads on disputes', '★★', 'Attach receipt photos (resized, stored as data URLs or uploaded) to a dispute and show them in its history.', 'attachEvidence()'],
-  ['Portable trust score', '★★★', 'Signed outcome history that travels with a member across organizers and devices.', 'trustScore()'],
-  ['SMS reminders', '★', 'A server-side scheduler sends SMS on the collection day via an SMS gateway.', 'sendSms()'],
-  ['Live inflation and bank rates in the planner', '★', 'Fetch SBP / PBS figures with a last-synced stamp and offline fallback to the sliders.', 'fetchInflation()']
+  ['Multi-device sync + member logins', 3, 'Push every store.set() to a backend (Supabase / Firebase / own API) and pull on start; each member logs in and sees their own statement.', 'syncToBackend()'],
+  ['OTP-confirmed payment acknowledgements', 2, 'When the organizer records a payment, the member confirms it with a one-time code so the register is two-sided.', 'requestAck()'],
+  ['Raast / JazzCash / Easypaisa integration', 3, 'Payment links per member per cycle; gateway callbacks auto-fill the matrix (auto-reconciliation).', 'reconcile()'],
+  ['E-signatures on the agreement', 2, 'Hash the agreement, sign on canvas or via OTP, store signature + hash per member.', 'signAgreement()'],
+  ['Evidence uploads on disputes', 2, 'Attach receipt photos (resized, stored as data URLs or uploaded) to a dispute and show them in its history.', 'attachEvidence()'],
+  ['Portable trust score', 3, 'Signed outcome history that travels with a member across organizers and devices.', 'trustScore()'],
+  ['SMS reminders', 1, 'A server-side scheduler sends SMS on the collection day via an SMS gateway.', 'sendSms()'],
+  ['Live inflation and bank rates in the planner', 1, 'Fetch SBP / PBS figures with a last-synced stamp and offline fallback to the sliders.', 'fetchInflation()']
 ];
 const MODULES = [
   ['layers', 'Dashboard', 'renderDashboard · monthEvents'], ['pie-chart', 'Overview', 'renderOverview · monthStats'], ['users', 'Members & order', 'renderMembers · syncOrder · lotteryModal'],
@@ -3032,7 +3033,7 @@ function renderAbout() {
     <div class="card" style="margin-bottom:14px"><h2>${ic('git-branch')}${t('ab_modules')}</h2><div class="modmap">${MODULES.map(([i, n, f]) => `<div><b>${ic(i)}${esc(n)}</b><span class="mono small muted">${esc(f)}</span></div>`).join('')}</div></div>
     <div class="card"><h2>${ic('save')}${t('ab_data')}</h2><p class="lead txt">${t('ab_data_t')}</p>
       <div class="toolbar" style="margin:0"><button class="btn" id="expJson">${ic('download')}${t('ab_export')}</button><a class="btn ghost" href="#settings">${ic('settings')}${t('nav_settings')}</a><button class="btn ghost" id="abTour">${ic('play')}${t('tour_start')}</button></div></div></div>
-    <div><h3 style="margin:0 0 10px;display:flex;align-items:center;gap:8px">${ic('git-branch')}${t('ab_todo')}</h3><div class="list stagger">${TODOS.map(([h, s, b, fn]) => `<div class="todo"><h4>${esc(h)} <span class="stars">${s}</span><span class="tag">${esc(fn)}</span></h4><div class="muted small">${esc(b)}</div></div>`).join('')}</div></div></div>`;
+    <div><h3 style="margin:0 0 10px;display:flex;align-items:center;gap:8px">${ic('git-branch')}${t('ab_todo')}</h3><div class="list stagger">${TODOS.map(([h, s, b, fn]) => `<div class="todo"><h4>${esc(h)} <span class="stars" aria-label="${s}/3">${ic('star').repeat(s)}</span><span class="tag">${esc(fn)}</span></h4><div class="muted small">${esc(b)}</div></div>`).join('')}</div></div></div>`;
   $('#expJson').onclick = exportAll;
   $('#abTour').onclick = startTour;
 }
