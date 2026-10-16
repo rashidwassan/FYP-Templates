@@ -2683,7 +2683,7 @@ function renderPlanner() {
       <label class="f" for="plK">${t('pl_turn')}</label><input id="plK" type="range" min="1" max="${PLAN.months}" value="${clamp(PLAN.turn, 1, PLAN.months)}"><div class="rangeval"><span>1</span><b id="plKv">#${PLAN.turn}</b><span>${PLAN.months}</span></div>
       ${field2('plB', t('pl_bank'), 'number', PLAN.bank, 'min="0" max="40" step="0.5"')}
       ${field2('plI', t('pl_infl'), 'number', PLAN.infl, 'min="0" max="60" step="0.5"')}
-      <div class="toolbar" style="margin:14px 0 0">${c ? `<button class="btn ghost sm" id="plFrom">${ic('layers')}${t('pl_from')}</button>` : ''}<button class="btn ghost sm" id="plLive" disabled title="TODO(student)">${ic('refresh')}${t('pl_live')}</button></div></div>
+      <div class="toolbar" style="margin:14px 0 0">${c ? `<button class="btn ghost sm" id="plFrom">${ic('layers')}${t('pl_from')}</button>` : ''}<button class="btn ghost sm" id="plLive" disabled title="${t('not_built')}">${ic('refresh')}${t('pl_live')}</button></div></div>
     <div style="display:grid;gap:14px;align-content:start"><div id="plRes"></div>
       <div class="card"><h2>${ic('trending-up')}${t('pl_chart')}</h2><p class="lead txt">${t('pl_chart_s')}</p><div class="chart" id="plCum"></div></div>
       <div class="card"><h2>${ic('bar-chart')}${t('pl_turn_chart')}</h2><p class="lead txt">${t('pl_turn_s')}</p><div class="chart" id="plTurns"></div><div id="plTbl" style="margin-top:12px"></div></div></div></div>`;
@@ -3219,36 +3219,57 @@ function submitMember(c, m) {
 }
 
 /* --- Lottery draw with animated shuffle --- */
+const LOT_H = 50;
+function lotteryEntries(c) {
+  return c.order.map((id, k) => {
+    const m = id ? memberById(c, id) : null;
+    const sl = m && (m.slots || 1) > 1 ? c.order.slice(0, k + 1).filter(x => x === id).length : 0;
+    return { id, k, locked: cycleState(c, k) === 'done', name: m ? m.name : t('ord_unassigned'), sl };
+  });
+}
 function lotteryModal(c) {
   if (c.members.length < 2) return toast(t('lot_need'), 'bad');
-  const entries = c.order.map((id, k) => ({
-    id, k, locked: cycleState(c, k) === 'done', name: id ? memberById(c, id).name : t('ord_unassigned'),
-    sl: id && (memberById(c, id).slots || 1) > 1 ? c.order.slice(0, k + 1).filter(x => x === id).length : 0
-  }));
-  const H = 50;
+  const entries = lotteryEntries(c);
+  const items = entries.map((e, idx) => `<div class="litem ${e.locked ? 'final' : ''}" data-idx="${idx}" style="top:${e.k * LOT_H}px"><span class="pos">${e.k + 1}</span>${e.locked ? ic('lock') : ic('user')}<span>${esc(e.name)}${e.sl ? ` <small class="muted">· ${tf('mem_slot_n', { a: e.sl })}</small>` : ''}</span></div>`).join('');
+  openModal(`${modalHead(t('lot_title'), 'dice')}<div class="body"><p class="lead txt">${t('lot_s')}</p><div class="lotto" id="lotto" style="--h:${entries.length * LOT_H}px">${items}</div></div>
+    <div class="foot"><button class="btn ghost" id="lCancel">${t('cancel')}</button><button class="btn gold" id="lDraw">${ic('shuffle')}${t('lot_draw')}</button><button class="btn" id="lApply" disabled>${ic('check')}${t('lot_apply')}</button></div>`);
+  const state = { entries, slotOf: entries.map(e => e.k), els: $$('.litem', $('#lotto')), timer: null, finalOrder: null };
+  $('#lDraw').onclick = () => lotteryDraw(state);
+  $('#lCancel').onclick = () => {
+    clearTimeout(state.timer);
+    closeModal();
+  };
+  $('#lApply').onclick = () => applyLottery(c, state);
+}
+const shuffleArr = arr => {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+/* 14 ticks of re-shuffling that slow down (quadratic delay), then the free slots settle one by one. */
+function lotteryDraw(state) {
+  const { entries, slotOf, els } = state;
   const freeEntries = entries.filter(e => !e.locked);
   const freeSlots = freeEntries.map(e => e.k);
-  const slotOf = entries.map(e => e.k);
-  let timer = null;
-  let finalOrder = null;
-  const items = entries.map((e, idx) => `<div class="litem ${e.locked ? 'final' : ''}" data-idx="${idx}" style="top:${e.k * H}px"><span class="pos">${e.k + 1}</span>${e.locked ? ic('lock') : ic('user')}<span>${esc(e.name)}${e.sl ? ` <small class="muted">· ${tf('mem_slot_n', { a: e.sl })}</small>` : ''}</span></div>`).join('');
-  openModal(`${modalHead(t('lot_title'), 'dice')}<div class="body"><p class="lead txt">${t('lot_s')}</p><div class="lotto" id="lotto" style="--h:${entries.length * H}px">${items}</div></div>
-    <div class="foot"><button class="btn ghost" id="lCancel">${t('cancel')}</button><button class="btn gold" id="lDraw">${ic('shuffle')}${t('lot_draw')}</button><button class="btn" id="lApply" disabled>${ic('check')}${t('lot_apply')}</button></div>`);
-  const els = $$('.litem', $('#lotto'));
+  clearTimeout(state.timer);
+  $('#lApply').disabled = true;
+  $('#lDraw').disabled = true;
+  state.finalOrder = null;
+  els.forEach(el => {
+    if (!entries[+el.dataset.idx].locked) {
+      el.classList.remove('final');
+      el.classList.add('spin');
+    }
+  });
   const place = () => els.forEach((el, idx) => {
-    el.style.top = slotOf[idx] * H + 'px';
+    el.style.top = slotOf[idx] * LOT_H + 'px';
     $('.pos', el).textContent = slotOf[idx] + 1;
   });
-  const shuffle = arr => {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  };
   const finish = () => {
-    finalOrder = slotOf.slice();
+    state.finalOrder = slotOf.slice();
     els.forEach((el, idx) => {
       el.classList.remove('spin');
       setTimeout(() => el.classList.add('final'), slotOf[idx] * 60);
@@ -3257,45 +3278,27 @@ function lotteryModal(c) {
     $('#lDraw').disabled = false;
     $('#lDraw').innerHTML = ic('shuffle') + t('lot_again');
   };
-  const draw = () => {
-    clearTimeout(timer);
-    $('#lApply').disabled = true;
-    $('#lDraw').disabled = true;
-    finalOrder = null;
-    els.forEach(el => {
-      if (!entries[+el.dataset.idx].locked) {
-        el.classList.remove('final');
-        el.classList.add('spin');
-      }
-    });
-    let tick = 0;
-    const total = 14;
-    const step = () => {
-      const perm = shuffle(freeSlots);
-      freeEntries.forEach((e, j) => (slotOf[entries.indexOf(e)] = perm[j]));
-      place();
-      tick++;
-      if (tick < total) timer = setTimeout(step, 90 + tick * tick * 2.2);
-      else finish();
-    };
-    step();
+  let tick = 0;
+  const step = () => {
+    const perm = shuffleArr(freeSlots);
+    freeEntries.forEach((e, j) => (slotOf[entries.indexOf(e)] = perm[j]));
+    place();
+    tick++;
+    if (tick < 14) state.timer = setTimeout(step, 90 + tick * tick * 2.2);
+    else finish();
   };
-  $('#lDraw').onclick = draw;
-  $('#lCancel').onclick = () => {
-    clearTimeout(timer);
-    closeModal();
-  };
-  $('#lApply').onclick = () => {
-    if (!finalOrder) return;
-    const o = new Array(c.order.length).fill(null);
-    entries.forEach((e, idx) => (o[finalOrder[idx]] = e.id));
-    c.order = o;
-    logEvent('lg_lottery', {}, c.id);
-    save();
-    closeModal();
-    toast(t('lot_applied'), 'ok');
-    refresh();
-  };
+  step();
+}
+function applyLottery(c, state) {
+  if (!state.finalOrder) return;
+  const o = new Array(c.order.length).fill(null);
+  state.entries.forEach((e, idx) => (o[state.finalOrder[idx]] = e.id));
+  c.order = o;
+  logEvent('lg_lottery', {}, c.id);
+  save();
+  closeModal();
+  toast(t('lot_applied'), 'ok');
+  refresh();
 }
 
 /* --- Need requests --- */
