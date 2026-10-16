@@ -307,6 +307,8 @@ kbd{font-family:var(--mono);font-size:.76rem;background:var(--field);border:1px 
   .list-tools{grid-template-columns:minmax(0,1fr) 120px}
   #toasts{left:12px;right:12px;bottom:12px;max-width:none}
   .cryptoflow{grid-template-columns:1fr} .cryptoflow .ic{transform:rotate(90deg);justify-self:center}
+  .nrow{flex-wrap:wrap} .nrow .ntxt{flex:1 1 180px} .nrow .nact{flex-basis:100%;justify-content:flex-start}
+  .labgrid{grid-template-columns:1fr}
 }
 @media print{.rail,.mobilebar,#toasts,.list-pane,.scrim,.modal{display:none!important} body{background:#fff;color:#000} #app.on{display:block} .detail-pane,.content-pane{overflow:visible;padding:0}}
 </style>
@@ -1192,7 +1194,7 @@ function cardExpiryState(entry) {
   return { end, expired: end < now(), soon: end - now() < 60 * DAY };
 }
 
-/** Rule-based notices. Existing notices keep their read state; resolved ones disappear. */
+/** Rule-based notices (missing-2FA stays on the Health page to keep the inbox focused). Existing notices keep their read state; resolved ones disappear. */
 function refreshNotices() {
   if (!session.data) return;
   const active = new Set();
@@ -1212,14 +1214,12 @@ function refreshNotices() {
         const overdue = due < now();
         want.push(['rotate:' + e.id, overdue ? 'bad' : 'warn', `Rotate password: ${e.title}`, `Scheduled every ${e.rotateDays} days — ${inDays(due)}.`, e.id, 'all/' + e.id]);
       }
-    } else if (e.password && now() - e.pwAt > 365 * DAY) {
-      want.push(['old:' + e.id, 'warn', `Old password: ${e.title}`, `Last changed ${ago(e.pwAt)}. Consider rotating it.`, e.id, 'all/' + e.id]);
     }
-    if (e.password && (e.type === 'login' || e.type === 'wifi') && analyze(e.password).score <= 1) {
+    const weak = e.password && (e.type === 'login' || e.type === 'wifi') && analyze(e.password).score <= 1;
+    if (weak) {
       want.push(['weak:' + e.id, 'bad', `Weak password: ${e.title}`, `${analyze(e.password).verdict} — cracked ${analyze(e.password).crack}. Generate a new one from the editor.`, e.id, 'all/' + e.id]);
-    }
-    if (e.type === 'login' && !e.totp && KNOWN_2FA.some(k => (e.url + ' ' + e.title).toLowerCase().includes(k))) {
-      want.push(['no2fa:' + e.id, 'acc', `2FA available: ${e.title}`, 'This service supports one-time codes. Add the TOTP secret to the item.', e.id, 'all/' + e.id]);
+    } else if (!e.rotateDays && e.password && now() - e.pwAt > 365 * DAY) {
+      want.push(['old:' + e.id, 'warn', `Old password: ${e.title}`, `Last changed ${ago(e.pwAt)}. Consider rotating it.`, e.id, 'all/' + e.id]);
     }
     const exp = cardExpiryState(e);
     if (exp && exp.expired) want.push(['expired-card:' + e.id, 'warn', `Card expired: ${e.title}`, `Expiry ${e.extra.expiry} has passed. Update the item when the new card arrives.`, e.id, 'all/' + e.id]);
