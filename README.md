@@ -6,30 +6,30 @@ Start with [`IDEAS.md`](IDEAS.md) for the full backlog of 90 ideas, or open [`in
 
 ## Projects
 
-| # | Idea | Project | Folder | One line |
-|---|---|---|---|---|
-| 01 | #1 | Kisan Mandi Rate Board | `projects/01-kisan-mandi-rate-board` | Daily crop rates across 18 mandis, Sell Advisor ranking mandis by net revenue, alerts, community reports |
-| 02 | #4 | Crop Doctor | `projects/02-crop-doctor` | Offline leaf analyzer, trainable TensorFlow.js classifier, symptom wizard, bilingual treatment cards |
-| 03 | #11 | Dengue Watch | `projects/03-dengue-watch` | Town-level outbreak dashboard, WHO 2009 triage, fever diary, breeding-site map, prevention streaks |
-| 04 | #12 | Khoon | `projects/04-khoon-blood-donor-network` | Compatibility-aware donor search, emergency requests, donor card with eligibility, blood banks |
-| 05 | #13 | Thalassemia Care Companion | `projects/05-thalassemia-care-companion` | Transfusion and ferritin tracking, next-transfusion predictor, chelation adherence, screening |
-| 06 | #15 | Dawai | `projects/06-dawai-generic-finder` | Brand → generic finder, price-per-unit compare, medicine cabinet savings, interactions, reminders |
-| 07 | #16 | LHW Field Visit Assistant | `projects/07-lhw-field-visit-assistant` | Offline maternal/child register, ANC schedule with auto flags, EPI card, growth, referral slips, reports |
-| 08 | #25 | Ishara — PSL Learner | `projects/08-psl-sign-language-learner` | Pakistan Sign Language lessons with animated sign schematics, SRS quiz, dictionary, webcam handshape practice |
-| 09 | #26 | Board Exam Revision Planner | `projects/09-board-exam-revision-planner` | Weightage-aware study planner, Pomodoro, spaced revision, past-paper tracking, readiness score |
-| 10 | #27 | Virtual Science Lab | `projects/10-virtual-science-lab` | Canvas physics and chemistry simulations with worksheets for schools without labs |
-| 11 | #39 | Sailab — Flood Preparedness | `projects/11-sailab-flood-preparedness` | River gauges, district risk map, evacuation planner, relief camps, missing-person board |
-| 12 | #43 | Kameti Manager | `projects/12-kameti-committee-manager` | Rotating savings committee ledger: members, lottery order, payments matrix, agreement |
-| 13 | #51 | Privacy-First Password Manager | `projects/13-password-manager` | WebCrypto vault, strength analysis, generator, encrypted export |
-| 14 | #52 | Algorithm Visualizer | `projects/14-algorithm-visualizer` | Sorting, pathfinding and graph algorithms animated with step controls and code highlighting |
-| 15 | #56 | ATS-Friendly Resume Builder | `projects/15-resume-builder` | Templates, job-description keyword match, PDF export |
-| 16 | #59 | Mind Map & Flowchart Editor | `projects/16-mindmap-flowchart-editor` | Canvas nodes and connectors, auto-layout, undo/redo, export |
-| 17 | #60 | Client-Side Image Toolkit | `projects/17-image-toolkit` | Compress, resize, convert, crop, strip EXIF without uploading |
-| 18 | #66 | Ludo | `projects/18-ludo` | Classic Ludo with AI opponents and local multiplayer |
-| 19 | #74 | Rickshaw Rush | `projects/19-rickshaw-rush` | Endless runner through Karachi traffic with passengers and upgrades |
-| 20 | #77 | Zameendar | `projects/20-zameendar-farm-sim` | Farm strategy simulation: seasons, water, crops and market prices |
+| # | Idea | Project | Folder | Lines | What it does |
+|---|---|---|---|---:|---|
+| 01 | #1 | Kisan Mandi Rate Board | `projects/01-kisan-mandi-rate-board` | 3,841 | Daily rates across 18 mandis, Sell Advisor, cost and profit calculator, mandi price map, seasonal analytics, store portfolio, buyer directory and SMS rate sheets |
+| 02 | #4 | Crop Doctor | `projects/02-crop-doctor` | 5,273 | Offline leaf analyzer with a trainable TensorFlow.js model, field log, spray planner and dosage calculator, weather risk indices, outbreak map and a 34-entry pest and disease library |
+| 03 | #11 | Dengue Watch | `projects/03-dengue-watch` | 4,552 | Outbreak dashboard, case line list with epidemic curve, larval survey indices, hospital board, campaign planner, WHO triage, fever diary and a school module |
+| 04 | #12 | Khoon | `projects/04-khoon-blood-donor-network` | 4,330 | Compatibility-aware donor search, request lifecycle, pre-donation screening, donation camps, thalassemia rota, component matrices and demand analytics |
+| 05 | #13 | Thalassemia Care Companion | `projects/05-thalassemia-care-companion` | 4,981 | Transfusion, ferritin and MRI iron tracking, labs, growth, chelation adherence, medicine refills, costs and support programmes, printable medical summary |
+| 06 | #15 | Dawai | `projects/06-dawai-generic-finder` | 4,878 | 69 molecules and 220 brands with cheapest equivalents, drug information, prescription digitiser, family alerts, antibiotic stewardship and a cabinet expiry tracker |
+| 07 | #16 | LHW Field Visit Assistant | `projects/07-lhw-field-visit-assistant` | 5,031 | Offline maternal and child register, ANC and EPI schedules, family planning, MUAC nutrition, TB and malaria screening, supplies, supervisor dashboard and DHIS2 export |
+| 08 | #25 | Ishara — PSL Learner | `projects/08-psl-sign-language-learner` | 4,067 | 123 PSL signs with animated schematics, Urdu fingerspelling, sentence builder, conversations, SRS quiz, webcam practice and classroom mode |
+| 09 | #26 | Board Exam Revision Planner | `projects/09-board-exam-revision-planner` | 4,409 | Per-board chapter weightage, interleaved weekly planner, SM-2 revision, flashcards, mock exams, datesheet countdown and guardian reports |
+| 10 | #27 | Virtual Science Lab | `projects/10-virtual-science-lab` | 7,856 | Fourteen canvas experiments across physics, chemistry and biology with measurement tools, readings and regression, worksheets, quiz bank and teacher mode |
+| 11 | #39 | Sailab — Flood Preparedness | `projects/11-sailab-flood-preparedness` | 4,019 | District flood risk from river gauges and rain, evacuation routes, relief camps with supplies and volunteers, missing-person matching and flood history |
+| 12 | #43 | Kameti Manager | `projects/12-kameti-committee-manager` | 3,971 | Rotating savings committees with payments matrix, lottery and need-based payouts, late fees, disputes, receipts, savings planner and printable agreements |
+| 13 | #51 | Privacy-First Password Manager | `projects/13-password-manager` | 3,571 | Zero-knowledge WebCrypto vault with five item types, TOTP codes, generator, explainable strength analysis, health audit and a hands-on crypto lab |
+| 14 | #52 | Algorithm Visualizer | `projects/14-algorithm-visualizer` | 5,923 | Sorting, pathfinding, graph and data-structure labs on one step engine, plus a benchmark lab, glossary, quiz and printable lab reports |
+| 15 | #56 | ATS-Friendly Resume Builder | `projects/15-resume-builder` | 5,699 | ATS-friendly CV templates with keyword scoring, application tracker, skills-gap analysis, interview prep, LinkedIn generator and an Urdu CV mode |
+| 16 | #59 | Nuqta — Mind Map & Flowchart Editor | `projects/16-mindmap-flowchart-editor` | 4,868 | Mind maps and flowcharts with auto-layout, synced outline, presentation mode, comments, version history and Mermaid import and export |
+| 17 | #60 | Client-Side Image Toolkit | `projects/17-image-toolkit` | 4,517 | Resize, crop, compress, convert, stamp and strip metadata in the browser, with passport presets, portal requirement checks and batch ZIP export |
+| 18 | #66 | Ludo | `projects/18-ludo` | 4,498 | Classic Ludo with four AI levels including an expectimax Expert, round-robin tournaments, replay viewer, achievements, player statistics, a guided tutorial and custom boards |
+| 19 | #74 | Rickshaw Rush | `projects/19-rickshaw-rush` | 4,214 | Pseudo-3D Karachi endless runner with passengers, fuel and traffic, a truck-art garage, seeded daily challenge with ghost replay and trip analytics |
+| 20 | #77 | Zameendar | `projects/20-zameendar-farm-sim` | 3,927 | Sixty-month farm strategy game with canal water, soil health, pests, markets, bank and arhti credit, challenges and a season planner |
 
-Projects 01–08 are built; 09 onward are in progress. Each folder has an `index.html` (the whole app) and a `README.md` (getting started, problem, features, architecture, domain logic, student extensions).
+All 20 projects are built: 94,425 lines of app code in total, between 3,571 and 7,856 lines each. Each folder has an `index.html` (the whole app) and a `README.md` (getting started, problem, features, architecture, domain logic, student extensions).
 
 ## Conventions
 
