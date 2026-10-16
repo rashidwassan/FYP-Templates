@@ -237,9 +237,9 @@ kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;backgroun
 .info details[open] summary .chev{transform:rotate(180deg)}
 .info .ibody{padding:0 0 12px 30px;font-size:.92rem}
 .hbars{display:grid;gap:8px;position:relative}
-.hbar{display:grid;grid-template-columns:minmax(90px,120px) minmax(0,1fr) 72px;gap:10px;align-items:center;font-size:.84rem}
-.hbar .lab{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hbar .lab small{display:block;color:var(--muted);font-weight:500;font-size:.74rem}
+.hbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;align-items:center;font-size:.84rem}
+.hbar .lab{grid-column:1/-1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar .lab small{color:var(--muted);font-weight:500;font-size:.74rem;margin-left:6px}
 .hbar .trk{position:relative;height:16px;background:var(--tint-2);border-radius:999px;overflow:visible}
 .hbar .trk i{display:block;height:100%;border-radius:999px;background:var(--mint);width:0;transition:width .6s var(--ease)}
 .hbar .trk i.over{background:var(--coral)}
@@ -292,7 +292,7 @@ kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;backgroun
 .warn h4{font-size:.95rem;margin:0 0 3px;text-transform:none;letter-spacing:0;color:var(--ink)}
 
 /* ---------- Family profiles ---------- */
-.fams{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.fams{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;align-items:start}
 .fam{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
 .fam .fh{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .fam .av{width:38px;height:38px;border-radius:50%;background:var(--mint-soft);color:var(--mint-ink);display:grid;place-items:center;font-weight:800}
@@ -301,7 +301,7 @@ kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;backgroun
 .fam .fa{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
 
 /* ---------- Stock & expiry ---------- */
-.stock{display:grid;grid-template-columns:minmax(0,1.3fr) 130px 110px 150px auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fff;margin-bottom:8px}
+.stock{display:grid;grid-template-columns:minmax(0,1.3fr) 160px 110px 150px auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fff;margin-bottom:8px}
 .stock.expired{border-color:#f2c4c4;background:#fff8f8}
 .stock.soon{border-color:#f0dca6;background:#fffcf3}
 .stock input{min-height:36px;padding:6px 8px;font-size:.88rem}
@@ -317,6 +317,7 @@ kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;backgroun
 .rxitem .sw{width:12px;height:12px;border-radius:3px}
 .rxitem .rm{border:0;background:none;color:var(--muted);cursor:pointer;width:32px;height:32px;border-radius:8px}
 .rxitem .rm:hover{background:var(--red-soft);color:var(--red)}
+.calwrap{max-width:560px}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:8px}
 .cal .dh{font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;text-align:center;padding:4px 0}
 .cal .d{min-height:46px;border:1px solid var(--tint-2);border-radius:8px;padding:4px 5px;font-size:.78rem;background:#fff;position:relative}
@@ -486,8 +487,13 @@ body.drawer-open .drawer{transform:none;visibility:visible;transition:transform 
   .warn{grid-template-columns:minmax(0,1fr)}
   .warn .sev{width:auto;justify-self:start}
   .mhead .acts{margin-left:0;width:100%}
-  .kpis,.kpis.four{grid-template-columns:minmax(0,1fr)}
-  .hbar{grid-template-columns:minmax(70px,90px) minmax(0,1fr) 64px;font-size:.78rem}
+  .kpis{grid-template-columns:minmax(0,1fr)}
+  .kpis.four{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .kpis.four .kpi{padding:12px}
+  .kpis.four .kpi .k{padding-right:26px;font-size:.66rem}
+  .kpis.four .kpi .kic{right:10px;top:10px;width:20px;height:20px}
+  .kpis.four .kpi .v{font-size:1.3rem}
+  .tabs a{padding:10px 8px;font-size:.84rem;gap:4px}
   .cal .d{min-height:40px;padding:3px 4px;font-size:.72rem}
   .classes{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -860,7 +866,7 @@ const L = {
     f_none: 'No profiles yet. Add the people who share your cabinet so Dawai can warn about allergies and conditions when you add a medicine.',
     f_saved: 'Profile saved', f_removed: 'Profile removed', f_alerts: 'Alerts for current medicines', f_no_alerts: 'No profile alerts for this person.',
     f_items: 'medicines in cabinet', f_check: 'Check a medicine', f_check_lead: 'Pick any molecule to see how it fits this profile.', f_fits: 'No profile concerns found for this molecule.',
-    f_delete_q: 'Remove this profile?', f_name_req: 'Enter a name.',
+    f_delete_q: 'Remove this profile?', f_name_req: 'Enter a name.', f_no_tags: 'No allergies or conditions recorded',
     age_infant: 'Infant (under 2)', age_child: 'Child (2–11)', age_teen: 'Teen (12–17)', age_adult: 'Adult', age_senior: 'Senior (65+)',
     al_penicillin: 'Penicillins', al_cephalosporin: 'Cephalosporins', al_sulfa: 'Sulfa drugs', al_nsaid: 'NSAIDs', al_aspirin: 'Aspirin', al_macrolide: 'Macrolides',
     al_fluoroquinolone: 'Fluoroquinolones', al_metronidazole: 'Metronidazole', al_paracetamol: 'Paracetamol',
@@ -1018,7 +1024,7 @@ const L = {
     f_none: 'ابھی کوئی پروفائل نہیں۔ الماری میں شریک افراد شامل کریں تاکہ دوا شامل کرتے وقت الرجی اور بیماری کی وارننگ ملے۔',
     f_saved: 'پروفائل محفوظ', f_removed: 'پروفائل ہٹا دی گئی', f_alerts: 'موجودہ دواؤں کے الرٹ', f_no_alerts: 'اس فرد کے لیے کوئی پروفائل الرٹ نہیں۔',
     f_items: 'دوائیں الماری میں', f_check: 'دوا جانچیں', f_check_lead: 'کوئی سالٹ منتخب کریں اور دیکھیں کہ یہ اس پروفائل کے لیے کیسی ہے۔', f_fits: 'اس سالٹ کے لیے پروفائل میں کوئی تشویش نہیں ملی۔',
-    f_delete_q: 'یہ پروفائل ہٹا دیں؟', f_name_req: 'نام درج کریں۔',
+    f_delete_q: 'یہ پروفائل ہٹا دیں؟', f_name_req: 'نام درج کریں۔', f_no_tags: 'کوئی الرجی یا بیماری درج نہیں',
     age_infant: 'شیرخوار (2 سال سے کم)', age_child: 'بچہ (2 سے 11)', age_teen: 'نوعمر (12 سے 17)', age_adult: 'بالغ', age_senior: 'معمر (65+)',
     al_penicillin: 'پینسلین', al_cephalosporin: 'سیفالوسپورن', al_sulfa: 'سلفا دوائیں', al_nsaid: 'درد کش (NSAID)', al_aspirin: 'اسپرین', al_macrolide: 'میکرولائیڈ',
     al_fluoroquinolone: 'فلوروکوئنولون', al_metronidazole: 'میٹرونیڈازول', al_paracetamol: 'پیراسیٹامول',
@@ -1774,6 +1780,8 @@ const brandsOf = mol => BRANDS.filter(b => b.mol === mol);
 const sameSF = (a, b) => a.mol === b.mol && a.strength === b.strength && a.form === b.form;
 const cheapestEq = b => brandsOf(b.mol).filter(x => sameSF(x, b)).sort((x, y) => x.unit - y.unit)[0];
 const unitLabel = b => t('u_' + b.form);
+/** "2 tab" but "1 × 5 ml" when the unit label itself starts with a number. */
+const doseText = (n, b) => (/^\d/.test(unitLabel(b)) ? `${n} × ${unitLabel(b)}` : `${n} ${unitLabel(b)}`);
 const mgPerUnit = b => parseFloat(b.strength) || 0;
 const FORMS = ['tablet', 'capsule', 'syrup', 'suspension', 'sachet', 'inhaler', 'drops'];
 const POPULAR = ['paracetamol', 'amoxicillin', 'metformin', 'atorvastatin', 'omeprazole', 'amlodipine', 'azithromycin', 'cetirizine'];
@@ -3037,7 +3045,7 @@ function addItem(data) {
     who: data.who || 'me',
     name: (data.name || '').trim(),
     times: [...(data.times || [])],
-    added: dkey(TODAY),
+    added: data.added || dkey(TODAY),
   };
   if (data.until) it.until = data.until;
   if (data.expiry) it.expiry = data.expiry;
@@ -3119,6 +3127,9 @@ function personAlerts(key, items) {
 }
 
 const sevCls = s => (s === 'high' ? 'red' : s === 'moderate' ? 'amber' : 'blue');
+/** Interaction warnings (rule title, parties, bilingual advice). */
+const interactionRows = warns => warns.map(w => `<div class="warn ${w.sev}"><span class="pill sev ${sevCls(w.sev)}">${ic('alert')} ${t('sev_' + w.sev)}</span>
+  <div><h4>${esc(w.t)} <span class="muted small" style="font-weight:500">· ${w.parties.map(esc).join(' + ')}</span></h4>${bi({ en: w.en, ur: w.ur }, 'small')}</div></div>`).join('');
 const alertRows = list => list.map(a => `<div class="warn ${a.sev}"><span class="pill sev ${sevCls(a.sev)}">${ic('alert')} ${t('sev_' + a.sev)}</span><div>${a.brand ? `<h4>${esc(a.brand)}</h4>` : ''}${bi({ en: a.en, ur: a.ur }, 'small')}</div></div>`).join('');
 
 // ---------- add-to-cabinet modal ----------
@@ -3128,21 +3139,7 @@ function openAdd(brandId, preset = {}) {
   const sel = [...(preset.times || [])];
   const state = { dose: preset.dose || 1, who: preset.who || 'me', name: preset.name || '', expiry: '', qty: '' };
   const draw = () => {
-    openModal(`<div><div class="eyebrow">${esc(m.en)}</div><h2>${t('a_title')}</h2></div>`, `
-      <div><b style="font-size:1.05rem">${esc(b.name)}</b> ${esc(b.strength)} ${t('f_' + b.form)} · ${esc(b.mfr)} · ${rs2(b.unit)} / ${unitLabel(b)}</div>
-      <div class="cols">
-        <div><label class="f">${t('a_dose')} (${unitLabel(b)})</label><input id="aDose" type="number" min="1" max="24" step="1" value="${state.dose}"></div>
-        <div><label class="f">${t('a_who')}</label><select id="aWho">${WHO.map(w => `<option value="${w}" ${state.who === w ? 'selected' : ''}>${t('who_' + w)}</option>`).join('')}</select></div>
-      </div>
-      <div id="aNameWrap" class="${state.who === 'other' ? '' : 'hidden'}"><label class="f">${t('a_name')}</label><input id="aName" type="text" maxlength="30" value="${esc(state.name)}"></div>
-      <div id="aAlerts"></div>
-      <label class="f">${t('a_times')}</label>${timeChips(sel)}
-      <div class="cols">
-        <div><label class="f">${t('a_expiry')}</label><input id="aExp" type="month" value="${esc(state.expiry)}"></div>
-        <div><label class="f">${t('a_qty')}</label><input id="aQty" type="number" min="0" step="1" value="${esc(state.qty)}"></div>
-      </div>
-      ${m.nti ? `<div class="callout red small" style="margin-top:12px">${t('m_nti')}</div>` : ''}
-      <div class="row" style="margin-top:16px"><button class="btn" id="aSave">${ic('check')} ${t('save')}</button><button class="btn ghost" id="aCancel">${t('cancel')}</button></div>`);
+    openModal(`<div><div class="eyebrow">${esc(m.en)}</div><h2>${t('a_title')}</h2></div>`, addFormHtml(b, m, state, sel));
     wireAdd();
   };
   const remember = () => {
@@ -3183,6 +3180,24 @@ function openAdd(brandId, preset = {}) {
     showAlerts();
   };
   draw();
+}
+
+function addFormHtml(b, m, state, sel) {
+  return `
+      <div><b style="font-size:1.05rem">${esc(b.name)}</b> ${esc(b.strength)} ${t('f_' + b.form)} · ${esc(b.mfr)} · ${rs2(b.unit)} / ${unitLabel(b)}</div>
+      <div class="cols">
+        <div><label class="f">${t('a_dose')} (${unitLabel(b)})</label><input id="aDose" type="number" min="1" max="24" step="1" value="${state.dose}"></div>
+        <div><label class="f">${t('a_who')}</label><select id="aWho">${WHO.map(w => `<option value="${w}" ${state.who === w ? 'selected' : ''}>${t('who_' + w)}</option>`).join('')}</select></div>
+      </div>
+      <div id="aNameWrap" class="${state.who === 'other' ? '' : 'hidden'}"><label class="f">${t('a_name')}</label><input id="aName" type="text" maxlength="30" value="${esc(state.name)}"></div>
+      <div id="aAlerts"></div>
+      <label class="f">${t('a_times')}</label>${timeChips(sel)}
+      <div class="cols">
+        <div><label class="f">${t('a_expiry')}</label><input id="aExp" type="month" value="${esc(state.expiry)}"></div>
+        <div><label class="f">${t('a_qty')}</label><input id="aQty" type="number" min="0" step="1" value="${esc(state.qty)}"></div>
+      </div>
+      ${m.nti ? `<div class="callout red small" style="margin-top:12px">${t('m_nti')}</div>` : ''}
+      <div class="row" style="margin-top:16px"><button class="btn" id="aSave">${ic('check')} ${t('save')}</button><button class="btn ghost" id="aCancel">${t('cancel')}</button></div>`;
 }
 
 // ---------- demo household ----------
@@ -3288,7 +3303,7 @@ function itemRow(it) {
     ? `<div class="sub">${t('c_cheapest')}</div><b>${esc(ch.name)}</b> · ${rs2(ch.unit)} → <b>${rs(sv)}</b> <span class="sub">${t('c_savemo')}</span>${MOL[b.mol].nti ? ` <span class="pill red">${ic('alert')} NTI</span>` : ''}`
     : `<span class="pill mint">${ic('star')} ${t('c_same')}</span>`;
   return `<div class="item">
-    <div><div class="nm">${esc(b.name)} <span class="muted small">${esc(b.strength)} ${t('f_' + b.form)}</span></div><div class="sub">${esc(MOL[b.mol].en)} · ${esc(b.mfr)} · ${it.dose} ${unitLabel(b)} ${t('c_dose')}</div>${pills.length ? `<div class="row" style="gap:4px;margin-top:4px">${pills.join('')}</div>` : ''}</div>
+    <div><div class="nm">${esc(b.name)} <span class="muted small">${esc(b.strength)} ${t('f_' + b.form)}</span></div><div class="sub">${esc(MOL[b.mol].en)} · ${esc(b.mfr)} · ${doseText(it.dose, b)} ${t('c_dose')}</div>${pills.length ? `<div class="row" style="gap:4px;margin-top:4px">${pills.join('')}</div>` : ''}</div>
     <div><div class="cost">${rs(itemCost(it))} <span class="muted small" style="font-weight:600">${t('c_month')}</span></div><div class="sub">${rs2(b.unit)} / ${unitLabel(b)}</div></div>
     <div class="alt">${alt}</div>
     <div class="acts" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${sv > 0.5 ? `<button class="btn coral sm" data-sw="${it.id}">${ic('trending-down')} ${t('c_switch')}</button>` : ''}<a class="btn ghost sm" href="#m/${b.mol}" aria-label="${t('open')} ${esc(MOL[b.mol].en)}">${ic('external')}</a><button class="btn ghost sm" data-rm="${it.id}" aria-label="${t('c_remove')} ${esc(b.name)}">${ic('trash')}</button></div></div>`;
@@ -3307,7 +3322,7 @@ function personCard(p, c, extrasAll) {
     <div class="stagger">${items.map(itemRow).join('')}</div>
     <div class="h4" style="margin-top:12px">${t('c_extras')}</div><div class="chips">${EXTRAS.map(e => `<button class="chip coral ${ex.includes(e.id) ? 'on' : ''}" data-p="${esc(p)}" data-x="${e.id}">${esc(nm(e))}</button>`).join('')}</div>
     <div class="h4" style="margin-top:14px">${t('c_inter')}</div>
-    <div class="stagger">${warns.length ? warns.map(w => `<div class="warn ${w.sev}"><span class="pill sev ${sevCls(w.sev)}">${ic('alert')} ${t('sev_' + w.sev)}</span><div><h4>${esc(w.t)} <span class="muted small" style="font-weight:500">· ${w.parties.map(esc).join(' + ')}</span></h4>${bi({ en: w.en, ur: w.ur }, 'small')}</div></div>`).join('') : `<div class="callout small">${ic('check-circle')} ${fill(t('c_inter_none'), { n: INTERACTIONS.length })}</div>`}</div>
+    <div class="stagger">${warns.length ? interactionRows(warns) : `<div class="callout small">${ic('check-circle')} ${fill(t('c_inter_none'), { n: INTERACTIONS.length })}</div>`}</div>
     <div class="h4" style="margin-top:14px">${t('c_profile')}</div>
     <div class="stagger">${pAlerts.length ? alertRows(pAlerts) : `<div class="callout small">${ic('check-circle')} ${profile ? t('f_no_alerts') : t('c_profile_none')}</div>`}</div>
   </div>`;
@@ -3371,7 +3386,7 @@ function famCard(p) {
   return `<div class="fam">
     <div class="fh"><div class="av">${esc((p.name || '?').slice(0, 1).toUpperCase())}</div><div><h3>${esc(p.name)}</h3><div class="small muted">${items.length} ${t('f_items')}${alerts.length ? ` · <span style="color:var(--red);font-weight:700">${alerts.length} ${t('c_profile').toLowerCase()}</span>` : ''}</div></div></div>
     <div class="row" style="gap:4px">${flags.join('')}</div>
-    <div class="tags">${tags.length ? tags.join('') : `<span class="small muted">${t('none')}</span>`}</div>
+    <div class="tags">${tags.length ? tags.join('') : `<span class="small muted">${t('f_no_tags')}</span>`}</div>
     ${p.notes ? `<div class="small muted" style="margin-top:8px">${esc(p.notes)}</div>` : ''}
     ${alerts.length ? `<div class="h4" style="margin-top:12px">${t('f_alerts')}</div>${alertRows(alerts)}` : ''}
     <div class="fa"><button class="btn ghost sm" data-fe="${p.id}">${ic('edit')} ${t('edit')}</button><button class="btn ghost sm" data-fd="${p.id}">${ic('trash')} ${t('delete')}</button></div>
@@ -3498,7 +3513,7 @@ function stockRow(it) {
   const refill = d == null ? '' : d <= 7 ? `<span class="pill ${d <= 3 ? 'red' : 'amber'}">${ic('refresh')} ${t('st_refill')} · ${d} ${t('days')}</span>` : `<span class="pill">${t('st_days')} ${d} ${t('days')}</span>`;
   const liquid = LIQUID.includes(b.form);
   return `<div class="stock ${cls}">
-    <div><div class="nm" style="font-weight:800">${esc(b.name)} <span class="muted small">${esc(b.strength)} ${t('f_' + b.form)}</span></div><div class="small muted">${esc(whoLabel(it))} · ${it.dose} ${unitLabel(b)} ${t('c_dose')}</div><div class="row" style="gap:4px;margin-top:4px">${status}${refill}${liquidOld(it) ? `<span class="pill red">${ic('droplet')} ${t('st_liquid_old')}</span>` : ''}</div></div>
+    <div><div class="nm" style="font-weight:800">${esc(b.name)} <span class="muted small">${esc(b.strength)} ${t('f_' + b.form)}</span></div><div class="small muted">${esc(whoLabel(it))} · ${doseText(it.dose, b)} ${t('c_dose')}</div><div class="row" style="gap:4px;margin-top:4px">${status}${refill}${liquidOld(it) ? `<span class="pill red">${ic('droplet')} ${t('st_liquid_old')}</span>` : ''}</div></div>
     <div><span class="lbl">${t('st_expiry')}</span><input type="month" data-exp="${it.id}" value="${esc(it.expiry || '')}" aria-label="${t('st_expiry')} ${esc(b.name)}"></div>
     <div><span class="lbl">${t('st_qty')}</span><input type="number" min="0" step="1" data-qty="${it.id}" value="${it.qty ?? ''}" aria-label="${t('st_qty')} ${esc(b.name)}"></div>
     <div>${liquid ? `<span class="lbl">${t('st_opened')}</span><input type="date" data-op="${it.id}" value="${esc(it.opened || '')}" max="${dkey(TODAY)}" aria-label="${t('st_opened')} ${esc(b.name)}">` : ''}</div>
@@ -3619,7 +3634,7 @@ function rxItemRow(item, i) {
   const status = left < 0 ? `<span class="pill">${t('rx_done')}</span>` : `<span class="pill blue">${left + 1} ${t('rx_days_left')}</span>`;
   return `<div class="rxitem"><span class="sw" style="background:${RX_COLORS[i % RX_COLORS.length]}"></span>
     <div><b>${esc(c.b.name)}</b> <span class="small muted">${esc(c.b.strength)} ${t('f_' + c.b.form)} · ${esc(MOL[c.b.mol].en)}</span>${MOL[c.b.mol].abx ? ` <span class="aware ${MOL[c.b.mol].aware}">${t('aware_' + MOL[c.b.mol].aware)}</span>` : ''}</div>
-    <div class="c3">${item.perDose} ${unitLabel(c.b)} × ${t('freq_' + item.freq).toLowerCase()} × ${item.days} ${t('days')}</div>
+    <div class="c3">${doseText(item.perDose, c.b)} · ${t('freq_' + item.freq)} · ${item.days} ${t('days')}</div>
     <div class="c4">${fmtDate(c.start, { day: 'numeric', month: 'short' })} → ${fmtDate(c.end, { day: 'numeric', month: 'short' })} ${status}</div>
     <div class="small" style="text-align:right;white-space:nowrap"><b>${rs(c.cost)}</b><br><span class="muted">${c.packs} × ${esc(c.b.packLabel)}</span></div></div>`;
 }
@@ -3659,8 +3674,8 @@ function rxCalendar(rx) {
     cells.push(`<div class="d ${key === todayKey ? 'today' : ''} ${key < todayKey ? 'past' : ''}">${d}<div class="dots">${dots}</div></div>`);
   }
   const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(x => `<div class="dh">${x}</div>`).join('');
-  return `<div class="calhead"><button class="btn ghost sm" data-cal="${rx.id}" data-dir="-1" aria-label="${t('back')}">${ic('chevron-left')}</button><b>${month.toLocaleDateString('en-PK', { month: 'long', year: 'numeric' })}</b><button class="btn ghost sm" data-cal="${rx.id}" data-dir="1" aria-label="${t('tour_next')}">${ic('chevron-right')}</button></div>
-    <div class="cal">${dows}${cells.join('')}</div>`;
+  return `<div class="calwrap"><div class="calhead"><button class="btn ghost sm" data-cal="${rx.id}" data-dir="-1" aria-label="${t('back')}">${ic('chevron-left')}</button><b>${month.toLocaleDateString('en-PK', { month: 'long', year: 'numeric' })}</b><button class="btn ghost sm" data-cal="${rx.id}" data-dir="1" aria-label="${t('tour_next')}">${ic('chevron-right')}</button></div>
+    <div class="cal">${dows}${cells.join('')}</div></div>`;
 }
 
 function wireRxTab() {
@@ -3695,7 +3710,7 @@ function rxDraftRow(item, i) {
   const c = rxCalc(item);
   return `<div class="rxitem"><span class="sw" style="background:${RX_COLORS[i % RX_COLORS.length]}"></span>
     <div><b>${esc(b.name)}</b> <span class="small muted">${esc(b.strength)} ${t('f_' + b.form)}</span><div class="small muted">${rs(c.cost)} · ${c.packs} ${t('pack')}</div></div>
-    <div class="c3 row" style="gap:6px"><input type="number" min="1" max="10" step="1" value="${item.perDose}" data-pd="${i}" aria-label="${t('rx_dose')}" style="width:64px;min-height:36px;padding:6px 8px"><select data-fq="${i}" aria-label="${t('rx_freq')}" style="width:auto;min-height:36px;padding:6px 8px">${[1, 2, 3, 4].map(f => `<option value="${f}" ${item.freq === f ? 'selected' : ''}>${t('freq_' + f)}</option>`).join('')}</select></div>
+    <div class="c3 row" style="gap:6px"><input type="number" min="1" max="10" step="1" value="${item.perDose}" data-pd="${i}" aria-label="${t('rx_dose')}" style="width:64px;min-height:36px;padding:6px 8px"><span class="small muted">${unitLabel(b)}</span><select data-fq="${i}" aria-label="${t('rx_freq')}" style="width:auto;min-height:36px;padding:6px 8px">${[1, 2, 3, 4].map(f => `<option value="${f}" ${item.freq === f ? 'selected' : ''}>${t('freq_' + f)}</option>`).join('')}</select></div>
     <div class="c4 row" style="gap:6px"><input type="number" min="1" max="90" step="1" value="${item.days}" data-dy="${i}" aria-label="${t('rx_days')}" style="width:64px;min-height:36px;padding:6px 8px"><span class="small muted">${t('days')}</span><input type="date" value="${item.start}" data-st="${i}" aria-label="${t('rx_start')}" style="width:auto;min-height:36px;padding:6px 8px"></div>
     <button type="button" class="rm" data-rmi="${i}" aria-label="${t('delete')}">${ic('x')}</button></div>`;
 }
@@ -3826,7 +3841,7 @@ function printRx(rx) {
   const tot = rxTotals(rx);
   const rows = rx.items.map(item => {
     const c = rxCalc(item);
-    return `<tr><td><b>${esc(c.b.name)}</b><br><span class="small muted">${esc(c.b.strength)} ${t('f_' + c.b.form)} · ${esc(MOL[c.b.mol].en)}</span></td><td>${item.perDose} ${unitLabel(c.b)} · ${t('freq_' + item.freq)}</td><td>${item.days} ${t('days')}<br><span class="small muted">${fmtDate(c.start, { day: 'numeric', month: 'short' })} – ${fmtDate(c.end, { day: 'numeric', month: 'short' })}</span></td><td class="small">${esc(MOL[c.b.mol].counsel.en)}</td><td style="white-space:nowrap">${rs(c.cost)}</td></tr>`;
+    return `<tr><td><b>${esc(c.b.name)}</b><br><span class="small muted">${esc(c.b.strength)} ${t('f_' + c.b.form)} · ${esc(MOL[c.b.mol].en)}</span></td><td>${doseText(item.perDose, c.b)} · ${t('freq_' + item.freq)}</td><td>${item.days} ${t('days')}<br><span class="small muted">${fmtDate(c.start, { day: 'numeric', month: 'short' })} – ${fmtDate(c.end, { day: 'numeric', month: 'short' })}</span></td><td class="small">${esc(MOL[c.b.mol].counsel.en)}</td><td style="white-space:nowrap">${rs(c.cost)}</td></tr>`;
   }).join('');
   openModal(`<h2>${t('rx_sheet')}</h2>`, `<div class="pcard">
     <div class="ph"><div><div class="eyebrow">Dawai · ${t('rx_sheet')}</div><h2>${esc(rxWhoLabel(rx))}</h2><div class="muted small">${t('rx_doctor')}: ${esc(rx.doctor || '—')} · ${t('rx_dx')}: ${esc(rx.dx || '—')}</div></div><div class="small muted" style="text-align:right">${fmtDate(parseDay(rx.date) || TODAY)}</div></div>
@@ -3844,17 +3859,15 @@ function loadDemoRx() {
   };
   rx.items.forEach(item => {
     const c = rxCalc(item);
-    const it = addItem({ brand: item.brand, dose: item.perDose * item.freq, who: 'child', times: FREQ_TIMES[item.freq], until: dkey(c.end), rx: rx.id, opened: start, expiry: '2027-04' });
+    const it = addItem({ brand: item.brand, dose: item.perDose * item.freq, who: 'child', times: FREQ_TIMES[item.freq], until: dkey(c.end), rx: rx.id, opened: start, expiry: '2027-04', added: start });
     rx.itemIds.push(it.id);
-    if (MOL[c.b.mol].abx) {
-      addCourse({ itemId: it.id, brand: item.brand, who: 'child', start, days: 7, perDay: 3 });
-      const taken = takenMap();
-      for (let i = 1; i <= 2; i++) {
-        const day = dkey(daysAgo(i));
-        taken[day] = [...(taken[day] || []), ...FREQ_TIMES[3].map(tm => doseKey(it, tm))];
-      }
-      store.set('taken', taken);
+    if (MOL[c.b.mol].abx) addCourse({ itemId: it.id, brand: item.brand, who: 'child', start, days: 7, perDay: 3 });
+    const taken = takenMap();
+    for (let i = 1; i <= 2; i++) {
+      const day = dkey(daysAgo(i));
+      taken[day] = [...(taken[day] || []), ...FREQ_TIMES[item.freq].map(tm => doseKey(it, tm))];
     }
+    store.set('taken', taken);
   });
   saveRx([rx]);
 }
@@ -4067,13 +4080,18 @@ function loadDemoCourses() {
 const takenMap = () => store.get('taken', {});
 const doseKey = (it, tm) => it.id + '@' + tm;
 
-function scheduledToday() {
-  return activeItems().flatMap(it => (it.times || []).map(tm => ({ it, tm }))).sort((a, b) => a.tm.localeCompare(b.tm));
+/** Doses scheduled on one day: items added on or before it whose course had not ended. */
+function scheduledOn(day) {
+  return cabinet()
+    .filter(it => (!it.added || it.added <= day) && (!it.until || it.until >= day))
+    .flatMap(it => (it.times || []).map(tm => ({ it, tm })))
+    .sort((a, b) => a.tm.localeCompare(b.tm));
 }
+const scheduledToday = () => scheduledOn(dkey(TODAY));
 
-/** Share of today's schedule ticked on a given day (only keys of currently scheduled doses count). */
+/** Share of that day's schedule that was ticked off. */
 function adherence(dayKeyStr) {
-  const sched = scheduledToday();
+  const sched = scheduledOn(dayKeyStr);
   if (!sched.length) return null;
   const keys = new Set(sched.map(({ it, tm }) => doseKey(it, tm)));
   const taken = (takenMap()[dayKeyStr] || []).filter(k => keys.has(k)).length;
@@ -4479,7 +4497,7 @@ function renderSettings() {
         ${setRow(t('set_demo'), t('set_demo_s'), `<button class="btn sm" id="setDemo">${ic('users')} ${t('set_demo_load')}</button>${store.get('demo', false) ? `<button class="btn ghost sm" id="setDemoClear">${ic('trash')} ${t('set_demo_clear')}</button>` : ''}`)}
         ${setRow(t('set_export'), t('set_export_s'), `<button class="btn sm" id="setExport">${ic('download')} ${t('set_export_b')}</button>`)}
         ${setRow(t('set_import'), t('set_import_s'), `<input type="file" id="setImport" accept="application/json,.json" aria-label="${t('set_import')}">`)}
-        ${setRow(t('set_reset'), `${t('set_reset_s')} · ${t('set_storage')}: ${nf.format(Math.round(storageBytes() / 1024))} KB`, `<button class="btn danger sm" id="setReset">${ic('trash')} ${t('set_reset')}</button>`)}
+        ${setRow(t('set_reset'), `${t('set_reset_s')} · ${t('set_storage')}: ${(storageBytes() / 1024).toFixed(1)} KB`, `<button class="btn danger sm" id="setReset">${ic('trash')} ${t('set_reset')}</button>`)}
       </div>
       <div class="card"><h4 style="margin-top:0">${ic('type')} ${t('set_keys')}</h4><table class="keys" style="width:100%;font-size:.9rem">${kb.map(([k, d]) => `<tr><td style="width:90px"><kbd>${k}</kbd></td><td>${d}</td></tr>`).join('')}</table><p class="small muted" style="margin:8px 0 0">${t('sh_go_keys')}</p></div>
     </div>
@@ -4629,12 +4647,19 @@ function scanAlerts() {
   renderInboxBadge();
 }
 
+const INBOX_ICON = { info: 'info', warn: 'alert', alert: 'alert-circle' };
+
+function inboxRow(n) {
+  const when = `${fmtDate(n.ts, { day: 'numeric', month: 'short' })} · ${new Date(n.ts).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' })}`;
+  return `<div class="n ${n.read ? 'read' : ''}" data-n="${n.id}"><span class="dot"></span>
+    <div><b>${ic(INBOX_ICON[n.type] || 'info')} ${esc(n.title)}</b><div class="small">${esc(n.body)}</div><div class="when">${when}</div></div></div>`;
+}
+
 function openInbox() {
   const list = inbox();
-  const icon = { info: 'info', warn: 'alert', alert: 'alert-circle' };
   $('#drawerTitle').textContent = t('in_title');
   $('#drawerBody').innerHTML = `<div class="row" style="margin-bottom:8px"><button class="btn ghost sm" id="inRead">${ic('check')} ${t('in_read_all')}</button><button class="btn ghost sm" id="inClear">${ic('trash')} ${t('in_clear')}</button></div>
-    <div class="inbox">${list.length ? list.map(n => `<div class="n ${n.read ? 'read' : ''}" data-n="${n.id}"><span class="dot"></span><div><b>${ic(icon[n.type] || 'info')} ${esc(n.title)}</b><div class="small">${esc(n.body)}</div><div class="when">${fmtDate(n.ts, { day: 'numeric', month: 'short' })} · ${new Date(n.ts).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' })}</div></div></div>`).join('') : `<div class="empty">${ic('bell', 'big')}<p>${t('in_none')}</p></div>`}</div>`;
+    <div class="inbox">${list.length ? list.map(inboxRow).join('') : `<div class="empty">${ic('bell', 'big')}<p>${t('in_none')}</p></div>`}</div>`;
   $$('.inbox .n').forEach(el => (el.onclick = () => {
     const l = inbox();
     const n = l.find(x => x.id === el.dataset.n);
