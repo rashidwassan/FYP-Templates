@@ -1,4 +1,4 @@
-# 04 · Crop Doctor
+# 02 · Crop Doctor (idea #4)
 
 **First-line leaf disease screening for Pakistani crops, on any phone, offline.** A bilingual (English / اردو) single-file app with a dependency-free colour analyzer, an optional in-browser trainable classifier, a symptom wizard and spoken treatment cards.
 

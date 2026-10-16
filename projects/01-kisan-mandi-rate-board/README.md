@@ -1,4 +1,4 @@
-# 01 · Kisan Mandi Rate Board
+# 01 · Kisan Mandi Rate Board (idea #1)
 
 **Know the rate before the arhti does.** A bilingual (English / اردو) dashboard of daily crop rates across 18 Pakistani mandis, with a Sell Advisor that ranks mandis by the money that actually reaches the farmer.
 
