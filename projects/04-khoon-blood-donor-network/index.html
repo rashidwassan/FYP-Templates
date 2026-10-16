@@ -324,6 +324,7 @@ section[data-page].on { display: block; }
 
 /* ---------- donor grid ---------- */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+.grid > .empty { grid-column: 1 / -1; }
 .donor {
   background: var(--surface);
   border: 1px solid var(--line);

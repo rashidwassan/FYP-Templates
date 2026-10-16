@@ -662,7 +662,7 @@ function staggerChildren(root) {
 function countUp(el, to, { dur = 700, fmt = v => Math.round(v).toLocaleString('en-PK') } = {}) {
   const start = performance.now();
   const step = now => {
-    const p = Math.min(1, (now - start) / dur);
+    const p = clamp((now - start) / dur, 0, 1);
     const eased = 1 - Math.pow(1 - p, 3);
     el.textContent = fmt(to * eased);
     if (p < 1) requestAnimationFrame(step);
@@ -757,7 +757,7 @@ const TXT = {
     s_note: 'Note (source / destination)', s_saved: 'Stock movement logged', s_short: 'Shortages across camps', s_short_none: 'No camp is below 2 days of supply.',
     s_log: 'Stock movements', s_log_none: 'No movements logged yet.', s_vols: 'Volunteers', s_add_vol: 'Add volunteer', s_vol_name: 'Name', s_vol_skill: 'Skill',
     s_vol_phone: 'Phone', s_vol_camp: 'Assigned camp', s_unassigned: 'Unassigned', s_vol_saved: 'Volunteer added', s_vol_assigned: 'Volunteer assigned', s_print: 'Print shortage report',
-    s_k_water: 'Camps < 2 days water', s_k_food: 'Camps < 2 days food', s_k_tents: 'Camps < 60% tents', s_k_vols: 'Volunteers on duty', s_per_day: 'per person / day', s_per_people: 'people per unit',
+    s_k_water: 'Water < 2 d', s_k_food: 'Food < 2 d', s_k_tents: 'Tents < 60%', s_k_vols: 'On duty', s_per_day: 'per person / day', s_per_people: 'people per unit',
     sk_medical: 'Medical', sk_boat: 'Boat / rescue', sk_logistics: 'Logistics', sk_cooking: 'Cooking', sk_counsel: 'Counselling', sk_data: 'Registration / data',
     // missing
     m_title: 'Reunification board',
@@ -880,7 +880,7 @@ const TXT = {
     s_note: 'نوٹ (ذریعہ / منزل)', s_saved: 'سامان کی نقل و حرکت درج ہو گئی', s_short: 'کیمپوں میں کمی', s_short_none: 'کوئی کیمپ 2 دن سے کم ذخیرے پر نہیں۔',
     s_log: 'سامان کا ریکارڈ', s_log_none: 'ابھی کوئی اندراج نہیں۔', s_vols: 'رضاکار', s_add_vol: 'رضاکار شامل کریں', s_vol_name: 'نام', s_vol_skill: 'مہارت',
     s_vol_phone: 'فون', s_vol_camp: 'مقرر کردہ کیمپ', s_unassigned: 'غیر مقرر', s_vol_saved: 'رضاکار شامل ہو گیا', s_vol_assigned: 'رضاکار مقرر ہو گیا', s_print: 'کمی کی رپورٹ پرنٹ کریں',
-    s_k_water: 'کیمپ < 2 دن پانی', s_k_food: 'کیمپ < 2 دن خوراک', s_k_tents: 'کیمپ < 60% خیمے', s_k_vols: 'ڈیوٹی پر رضاکار', s_per_day: 'فی کس / روزانہ', s_per_people: 'افراد فی یونٹ',
+    s_k_water: 'پانی < 2 دن', s_k_food: 'خوراک < 2 دن', s_k_tents: 'خیمے < 60%', s_k_vols: 'ڈیوٹی پر', s_per_day: 'فی کس / روزانہ', s_per_people: 'افراد فی یونٹ',
     sk_medical: 'طبی', sk_boat: 'کشتی / ریسکیو', sk_logistics: 'لاجسٹکس', sk_cooking: 'کھانا پکانا', sk_counsel: 'مشاورت', sk_data: 'اندراج / ڈیٹا',
     m_title: 'گمشدہ افراد بورڈ',
     m_lead: 'گمشدہ یا ملے ہوئے فرد کی اطلاع دیں۔ ممکنہ میچ نام، عمر اور جگہ کی مماثلت سے تجویز ہوتے ہیں۔ صرف اسی آلے میں محفوظ۔',
@@ -1690,7 +1690,7 @@ const MapCtl = {
     }
     const start = performance.now();
     const step = now => {
-      const p = Math.min(1, (now - start) / 380);
+      const p = clamp((now - start) / 380, 0, 1);
       const eased = 1 - Math.pow(1 - p, 3);
       for (const k of 'xywh') this.vb[k] = from[k] + (to[k] - from[k]) * eased;
       this.applyVb();
@@ -3504,8 +3504,8 @@ function segControl(key, options) {
   return `<div class="seg">${buttons.join('')}</div>`;
 }
 
-function switchControl(key) {
-  return `<button class="switch ${settings[key] ? 'on' : ''}" data-switch="${key}" role="switch" aria-checked="${settings[key]}" aria-label="${t('st_' + key)}"></button>`;
+function switchControl(key, on) {
+  return `<button class="switch ${on ? 'on' : ''}" data-switch="${key}" role="switch" aria-checked="${on}" aria-label="${t('st_' + key)}"></button>`;
 }
 
 function renderSettings() {
@@ -3518,8 +3518,8 @@ function renderSettings() {
       ${settingRow(t('st_lang'), t('st_lang_d'), `<div class="seg"><button class="${lang === 'en' ? 'on' : ''}" data-lang="en">English</button><button class="${lang === 'ur' ? 'on' : ''}" data-lang="ur">اردو</button></div>`)}
       ${settingRow(t('st_units'), t('st_units_d'), segControl('units', [['cusecs', t('g_cusecs')], ['cumecs', t('g_cumecs')]]))}
       ${settingRow(t('st_text'), t('st_text_d'), segControl('text', [['normal', t('st_normal')], ['large', t('st_large')]]))}
-      ${settingRow(t('st_motion'), t('st_motion_d'), switchControl('motion'))}
-      ${settingRow(t('st_notify'), t('st_notify_d'), switchControl('notify'))}
+      ${settingRow(t('st_motion'), t('st_motion_d'), switchControl('motion', settings.motion === 'reduced'))}
+      ${settingRow(t('st_notify'), t('st_notify_d'), switchControl('notify', settings.notify))}
       ${settingRow(t('st_sheet'), t('st_sheet_d'), segControl('sheet', [['peek', t('st_peek')], ['half', t('st_half')], ['full', t('st_full')]]))}
       ${settingRow(t('st_district'), t('al_lead').split('.')[0] + '.', `<select id="setDistrict" aria-label="${t('st_district')}">${districtOptions}</select>`)}
     </div>
