@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dawai — Generic Medicine Finder</title>
+<meta name="description" content="Search a brand, molecule or problem; see every interchangeable brand in Pakistan sorted by price per unit, build a medicine cabinet with monthly cost, interaction warnings and dose reminders. Single-file FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens: pharmacy mint on white, coral for savings ---------- */
+:root{
+  --bg:#ffffff;--tint:#f3faf8;--tint-2:#e7f4f0;--ink:#0e2b27;--muted:#5f7a75;--line:#d9e8e4;
+  --mint:#0f9d8a;--mint-deep:#0a7566;--mint-soft:#dff3ee;--mint-ink:#075c50;
+  --coral:#e4603d;--coral-soft:#fdeae3;--coral-deep:#b9452a;
+  --amber:#b87a00;--amber-soft:#fcf1d6;--red:#c53d3d;--red-soft:#fbe5e5;--blue:#2c6fcf;--blue-soft:#e4edfb;
+  --radius:14px;--shadow:0 14px 40px -26px rgba(14,43,39,.4);
+  --font:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--font-ur:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.01em}
+a{color:var(--mint-deep)}
+.ur{font-family:var(--font-ur);direction:rtl;text-align:right;line-height:2;unicode-bidi:plaintext}
+/* Urdu mode: Public Sans still draws Latin/digits; Nastaliq is reached by per-glyph fallback for Arabic script only */
+html[lang=ur] body{font-family:var(--font),var(--font-ur);line-height:1.9}
+.muted{color:var(--muted)} .small{font-size:.84rem} .hidden{display:none!important} .spacer{flex:1}
+.eyebrow{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--mint-deep)}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+.ic.big{width:40px;height:40px;stroke-width:1.6;display:block;margin:0 auto 8px;color:var(--mint)}
+
+/* ---------- Motion kit (all under prefers-reduced-motion) ---------- */
+:root{--ease:cubic-bezier(.2,.8,.2,1);--dur:.35s}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
+.enter{animation:fadeUp var(--dur) var(--ease) backwards}
+.stagger>*{animation:fadeUp .45s var(--ease) backwards;animation-delay:calc(var(--i,0)*45ms)}
+.stagger-fade>*{animation:fadeIn .4s var(--ease) backwards;animation-delay:calc(var(--i,0)*35ms)}
+.chart .dot{animation:fadeIn .4s var(--ease) backwards;animation-delay:calc(var(--i,0)*70ms + .25s)}
+.kpi,.stat,.todo,.item,.dose,.warn{transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s,background .2s}
+.kpi:hover,.stat:hover,.todo:hover{transform:translateY(-2px)} .item:hover,.dose:hover{border-color:var(--mint)}
+
+/* ---------- Top bar: minimal text nav with underline indicator ---------- */
+.top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1180px;margin:0 auto;padding:8px 18px;display:flex;align-items:center;gap:14px;min-height:58px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);flex:none}
+.brand .logo{width:36px;height:36px;border-radius:10px;background:var(--mint);display:grid;place-items:center;color:#fff}
+.brand b{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;display:block;line-height:1}
+.brand small{font-size:.7rem;color:var(--muted);font-weight:600}
+.nav{display:flex;gap:2px}
+.nav a{color:var(--muted);text-decoration:none;padding:10px 11px;font-weight:600;font-size:.9rem;border-bottom:2px solid transparent;white-space:nowrap}
+.nav a:hover{color:var(--ink)} .nav a.on{color:var(--mint-deep);border-color:var(--mint)}
+.lang{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer;flex:none}
+.lang:hover{border-color:var(--mint)}
+
+/* ---------- Search box (shared by hero + header) ---------- */
+.sbox{position:relative;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:0 8px 0 16px}
+.sbox svg{flex:none;color:var(--muted)}
+.sbox input{flex:1;min-width:0;border:0;outline:0;background:none;padding:12px 0}
+.sbox:focus-within{border-color:var(--mint);box-shadow:0 0 0 4px var(--mint-soft)}
+.sbox.mini{width:300px;max-width:34vw} .sbox.mini input{padding:8px 0;font-size:.9rem}
+body[data-page=search] .sbox.mini{display:none}
+.sbox.hero-s{padding:4px 6px 4px 20px;box-shadow:0 20px 50px -30px rgba(14,43,39,.45);border-radius:999px}
+.sbox.hero-s input{padding:16px 0;font-size:1.1rem}
+.sbox .scan{border:0;background:var(--tint-2);color:var(--mint-ink);border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer;display:inline-flex;gap:6px;align-items:center;flex:none}
+.sbox .scan:hover{background:var(--mint-soft)}
+.suggest{position:absolute;left:0;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 30px 60px -30px rgba(14,43,39,.5);z-index:40;overflow:hidden;text-align:left;direction:ltr}
+.suggest:empty{display:none}
+.suggest .it{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--tint-2)}
+.suggest .it:last-child{border-bottom:0}
+.suggest .it.on,.suggest .it:hover{background:var(--tint)}
+.suggest .k{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border-radius:6px;padding:3px 6px;flex:none;width:76px;text-align:center}
+.k.brand{background:var(--coral-soft);color:var(--coral-deep)} .k.molecule{background:var(--mint-soft);color:var(--mint-ink)} .k.condition{background:var(--blue-soft);color:var(--blue)}
+.suggest .it b{display:block} .suggest .it span{font-size:.8rem;color:var(--muted)}
+
+/* ---------- Layout ---------- */
+main{max-width:1180px;margin:0 auto;padding:22px 18px 70px}
+section[data-page]{display:none} section[data-page].on{display:block}
+.hero{text-align:center;padding:48px 0 10px;max-width:760px;margin:0 auto}
+.hero h2{font-size:clamp(1.9rem,4.6vw,3rem);font-weight:800;letter-spacing:-.03em;margin:10px 0 10px}
+.hero h2 em{font-style:normal;color:var(--mint)}
+.hero p.lead{color:var(--muted);margin:0 0 26px;font-size:1.02rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:.86rem;font-weight:600;cursor:pointer;color:var(--ink);min-height:36px;transition:background .15s,border-color .15s,color .15s,transform .15s var(--ease)}
+.chip:hover{border-color:var(--mint);color:var(--mint-deep)} .chip:active{transform:scale(.96)}
+.chip.on{background:var(--mint);border-color:var(--mint);color:#fff}
+.chip.coral.on{background:var(--coral);border-color:var(--coral)}
+.chip.rec{background:var(--tint)} .chip.rec i{font-style:normal;color:var(--muted);margin-left:6px}
+.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px;justify-content:center}
+.hrow .lbl{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:760px;margin:38px auto 0}
+.stat{background:var(--tint);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;gap:12px;align-items:center;text-align:left}
+.stat .sic{width:26px;height:26px;color:var(--mint);stroke-width:1.8} .stat.coral .sic{color:var(--coral)}
+.stat .v{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;color:var(--mint-ink)} .stat .k{font-size:.8rem;color:var(--muted);font-weight:600}
+.stat.coral .v{color:var(--coral-deep)}
+.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:26px auto 0;max-width:1000px}
+.how .card h3{font-size:1rem;margin:10px 0 4px} .how .card p{margin:0;color:var(--muted);font-size:.9rem}
+.how .n{width:30px;height:30px;border-radius:50%;background:var(--mint-soft);color:var(--mint-ink);display:grid;place-items:center;font-weight:800;font-size:.85rem}
+.ribbon{margin:26px auto 0;max-width:1000px;background:var(--amber-soft);border:1px solid #f0dca6;border-radius:12px;padding:10px 14px;font-size:.86rem;display:flex;gap:10px;align-items:flex-start}
+.ribbon b{color:var(--amber)}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);transition:transform .2s var(--ease),box-shadow .2s var(--ease),border-color .2s}
+.how .card:hover{transform:translateY(-2px);border-color:var(--mint)}
+.card h2{font-size:1.2rem;margin-bottom:4px} .card p.lead{margin:0 0 12px;color:var(--muted)}
+.card h4,.h4{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 6px;font-weight:800}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.results{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.rail{display:grid;gap:16px;position:sticky;top:76px}
+.mhead{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;padding:18px 0 14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.mhead h2{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;letter-spacing:-.03em}
+.mhead .urname{font-size:1.15rem;color:var(--mint-deep)}
+.mhead .ur{text-align:left}
+.mhead .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-left:auto}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:7px;padding:2px 8px;font-size:.72rem;font-weight:800;background:var(--tint-2);color:var(--muted);white-space:nowrap}
+.pill.mint{background:var(--mint-soft);color:var(--mint-ink)} .pill.coral{background:var(--coral-soft);color:var(--coral-deep)} .pill.amber{background:var(--amber-soft);color:var(--amber)} .pill.red{background:var(--red-soft);color:var(--red)} .pill.blue{background:var(--blue-soft);color:var(--blue)}
+.callout{border-radius:12px;padding:12px 14px;font-size:.9rem;background:var(--tint);border:1px solid var(--line)}
+.callout.mint{background:var(--mint-soft);border-color:#bfe6dc} .callout.coral{background:var(--coral-soft);border-color:#f6c9b9} .callout.amber{background:var(--amber-soft);border-color:#f0dca6} .callout.red{background:var(--red-soft);border-color:#f2c4c4}
+.filters{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+.filters .grp{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .filters .lbl{font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.btn{border:0;border-radius:10px;padding:10px 15px;font-weight:700;cursor:pointer;background:var(--mint);color:#fff;display:inline-flex;align-items:center;gap:8px;min-height:40px;text-decoration:none;transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s}
+.btn:hover{background:var(--mint-deep);transform:translateY(-1px)} .btn:active{transform:translateY(0) scale(.98)}
+.btn.coral{background:var(--coral)} .btn.coral:hover{background:var(--coral-deep)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)} .btn.ghost:hover{background:var(--tint);border-color:var(--mint)}
+.btn.danger{background:var(--red-soft);color:var(--red)} .btn.danger:hover{background:#f6d2d2}
+.btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px;min-height:32px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+select,input[type=number],input[type=text],input[type=time],input[type=search],textarea{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 11px;outline:0}
+select:focus,input:focus,textarea:focus{border-color:var(--mint);box-shadow:0 0 0 3px var(--mint-soft)}
+label.f{display:block;font-size:.76rem;font-weight:800;color:var(--muted);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 14px}
+
+/* ---------- Brand table (cards on mobile) ---------- */
+.btable{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.btable th{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;padding:10px 12px;background:var(--tint);border-bottom:1px solid var(--line);font-weight:800}
+.btable td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:.92rem}
+.btable tr:last-child td{border-bottom:0}
+.btable tr.best td{background:#f4fbf9}
+.btable tr.best td:first-child{box-shadow:inset 4px 0 0 var(--mint)}
+.btable tr.ref td{background:var(--tint)}
+.btable .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.btable .name{font-weight:800;font-size:1rem} .btable .sub{font-size:.78rem;color:var(--muted)}
+.btable label.ck{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.btable input[type=checkbox]{width:18px;height:18px;accent-color:var(--mint);cursor:pointer;margin:0}
+.unit{font-size:1.05rem;font-weight:800} .unit small{font-size:.72rem;color:var(--muted);font-weight:600}
+.save{display:inline-flex;align-items:center;border-radius:999px;padding:3px 9px;font-size:.78rem;font-weight:800;white-space:nowrap}
+.save.down{background:var(--coral-soft);color:var(--coral-deep)} .save.up{background:var(--tint-2);color:var(--muted)} .save.zero{background:var(--mint-soft);color:var(--mint-ink)}
+.seen{font-size:.78rem;color:var(--muted)} .seen b{color:var(--ink)}
+.rowacts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+
+/* ---------- Cabinet ---------- */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);position:relative}
+.kpi .kic{position:absolute;right:14px;top:12px;width:24px;height:24px;color:var(--mint);stroke-width:1.8;opacity:.9}
+.kpi .ring{position:absolute;right:12px;top:10px;width:52px;height:52px}
+.kpi .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800;padding-right:56px}
+.kpi .v{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-top:2px} .kpi.coral .v{color:var(--coral-deep)}
+.meter{height:10px;background:var(--tint-2);border-radius:999px;overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;background:var(--coral);border-radius:999px;transition:width .4s}
+.person{margin-bottom:16px}
+.person .ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 8px}
+.person .ph h3{font-size:1.05rem}
+.item{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-bottom:8px}
+.item .nm{font-weight:800} .item .sub{font-size:.8rem;color:var(--muted)}
+.item .cost{font-weight:800;font-variant-numeric:tabular-nums}
+.item .alt{font-size:.84rem} .item .alt b{color:var(--coral-deep)}
+.warn{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-bottom:8px}
+.warn .sev{width:74px;text-align:center;align-self:start}
+.warn.high{border-color:#f2c4c4;background:#fff8f8} .warn.moderate{border-color:#f0dca6;background:#fffcf3} .warn.low{border-color:#cddcf5;background:#f7faff}
+.warn h4{font-size:.95rem;margin:0 0 3px;text-transform:none;letter-spacing:0;color:var(--ink)}
+
+/* ---------- Reminders ---------- */
+.today{display:grid;gap:8px}
+.dose{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:#fff}
+.dose .tm{font-weight:800;font-variant-numeric:tabular-nums;width:56px;color:var(--mint-ink)}
+.dose.done{background:var(--mint-soft);border-color:#bfe6dc} .dose.done .nm{text-decoration:line-through;color:var(--muted)}
+.dose input[type=checkbox]{width:22px;height:22px;accent-color:var(--mint);margin-left:auto;cursor:pointer;flex:none}
+.chart{background:var(--tint);border:1px solid var(--line);border-radius:12px;padding:10px}
+.chart svg{width:100%;height:120px;display:block;overflow:visible}
+.streak{font-size:2.2rem;font-weight:800;letter-spacing:-.03em;color:var(--mint-ink);line-height:1}
+.times{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.times .chip{padding:5px 10px;font-size:.8rem;min-height:32px}
+.times .chip.on::after{content:"";display:inline-block;width:.6em;height:.6em;margin-left:7px;vertical-align:-.02em;background:currentColor;opacity:.85;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E") center/contain no-repeat}
+
+/* ---------- Safety ---------- */
+.check{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--tint-2)}
+.check:last-child{border-bottom:0}
+.check input{width:20px;height:20px;accent-color:var(--mint);margin-top:3px;cursor:pointer;flex:none}
+.check .ur{font-size:.95rem;color:var(--muted)}
+.verdict{margin-top:12px}
+.out{background:var(--tint);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;white-space:pre-wrap;min-height:120px}
+.tips li{margin:4px 0} .tips .ur{display:block;font-size:.95rem;color:var(--muted)}
+
+/* ---------- About / todo ---------- */
+.todo{border:1px dashed var(--mint-deep);border-radius:12px;padding:12px 14px;background:var(--tint)}
+.todo h4{margin:0 0 4px;font-size:.95rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap;text-transform:none;letter-spacing:0;color:var(--ink)}
+.tag{font-size:.66rem;background:var(--mint-deep);color:#fff;border-radius:6px;padding:2px 6px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.todo code{font-size:.8rem;background:#fff;border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.list{display:grid;gap:10px}
+
+/* ---------- Drawer / modal / toasts ---------- */
+.scrim{position:fixed;inset:0;background:rgba(14,43,39,.4);backdrop-filter:blur(2px);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);background:#fff;z-index:50;transform:translateX(102%);transition:transform .25s cubic-bezier(.2,.8,.2,1);box-shadow:-20px 0 60px -30px rgba(0,0,0,.5);display:flex;flex-direction:column}
+body.drawer-open .scrim{opacity:1;pointer-events:auto} body.drawer-open .drawer{transform:none}
+.drawer header{display:flex;align-items:center;gap:10px;padding:16px 20px 12px;border-bottom:1px solid var(--line)}
+.drawer header h2{font-size:1.2rem} .drawer .body{padding:16px 20px 30px;overflow:auto}
+.close{margin-left:auto;background:var(--tint);border:1px solid var(--line);border-radius:9px;width:36px;height:36px;cursor:pointer;flex:none}
+.cmp{width:100%;border-collapse:collapse;font-size:.86rem}
+.cmp th,.cmp td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.cmp th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);width:92px}
+.cmp td.best{background:#f4fbf9;font-weight:700}
+.modal-scrim{position:fixed;inset:0;background:rgba(14,43,39,.5);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;transition:opacity .25s var(--ease),visibility .25s}
+.modal-scrim.on{opacity:1;visibility:visible}
+.modal{background:#fff;border-radius:18px;max-width:640px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 40px 80px -30px rgba(0,0,0,.6);transform:translateY(12px) scale(.97);transition:transform .3s var(--ease)}
+.modal-scrim.on .modal{transform:none}
+.modal header{padding:18px 22px 12px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;position:sticky;top:0;background:#fff;z-index:1}
+.modal header h2{font-size:1.25rem} .modal .body{padding:16px 22px 24px}
+.pcard{border:2px solid var(--mint);border-radius:14px;padding:18px 20px}
+.pcard .ph{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:10px}
+.pcard h2{font-size:1.5rem} .pcard h4{font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 4px}
+.pcard table{width:100%;border-collapse:collapse;font-size:.88rem} .pcard td,.pcard th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left}
+.pcard .foot{font-size:.76rem;color:var(--muted);margin-top:14px;border-top:1px dashed var(--line);padding-top:8px}
+#toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:grid;gap:8px;z-index:70}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;animation:pop .3s var(--ease);box-shadow:0 10px 30px -10px rgba(0,0,0,.5);display:flex;align-items:center;gap:8px}
+.toast.ok{background:var(--mint-deep)} .toast.bad{background:var(--red)} .toast.out{animation:toastOut .3s var(--ease) forwards}
+@keyframes pop{from{transform:translateY(10px);opacity:0}}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:var(--radius);background:var(--tint)}
+
+@media (max-width:980px){
+  .results{grid-template-columns:minmax(0,1fr)} .rail{position:static}
+  .two{grid-template-columns:minmax(0,1fr)}
+  .top .in{flex-wrap:wrap;row-gap:6px} .nav{order:5;flex-basis:100%;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
+  .nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.66rem;padding:6px 2px 7px;letter-spacing:-.01em} .nav a .ic{width:1.35rem;height:1.35rem}
+  .sbox.mini{order:4;flex-basis:100%;max-width:none;width:auto}
+  .brand small{display:none}
+  .how,.stats{grid-template-columns:minmax(0,1fr)} .stats{gap:10px}
+  .stat .v{font-size:1.25rem}
+  .kpis{grid-template-columns:minmax(0,1fr)}
+  .item{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .item .acts{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+  .hero{padding-top:26px}
+  .sbox.hero-s .scan span{display:none}
+}
+@media (max-width:760px){
+  .btable,.btable tbody{display:block} .btable thead{display:none}
+  .btable tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .btable tr:last-child{border-bottom:0}
+  .btable td{display:block;padding:0;border:0;font-size:.9rem}
+  .btable td.num{text-align:left}
+  .btable td.full{grid-column:1/-1}
+  .btable td[data-l]::before{content:attr(data-l);display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800;margin-bottom:1px}
+  .btable tr.best td:first-child{box-shadow:none} .btable tr.best{box-shadow:inset 4px 0 0 var(--mint)}
+  .rowacts{justify-content:flex-start}
+  .warn{grid-template-columns:minmax(0,1fr)} .warn .sev{width:auto;justify-self:start}
+  .mhead .acts{margin-left:0;width:100%}
+}
+@media print{
+  body>*:not(#modalScrim){display:none!important}
+  #modalScrim{position:static;display:block;background:none;padding:0;opacity:1;visibility:visible}
+  .modal{max-width:none;max-height:none;box-shadow:none;border-radius:0;transform:none}
+  .modal header,.noprint,#toasts{display:none!important}
+  .modal .body{padding:0}
+}
+</style>
+</head>
+<body data-page="search">
+<!-- Inline SVG icon sprite (Lucide-style, 24x24, stroke-based). Render with ic('name'). -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+<symbol id="i-alert-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></symbol>
+<symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.2-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.2-2.4 1-3.5.5 1.5 1.5 3 2.5 3z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><path d="M7 7h.01"/></symbol>
+<symbol id="i-trending-down" viewBox="0 0 24 24"><path d="m22 17-8.5-8.5-5 5L2 7M16 17h6v-6"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></symbol>
+<symbol id="i-graduation" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.1 10.4a6 6 0 1 1-7.7 7.7"/><path d="M7 6h1v4"/></symbol>
+<symbol id="i-compare" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/><path d="M6.5 9v6M17.5 9v6"/></symbol>
+</svg>
+
+<header class="top"><div class="in">
+  <a class="brand" href="#search" aria-label="Dawai home"><span class="logo" aria-hidden="true"><svg class="ic" style="width:20px;height:20px;stroke-width:2.2"><use href="#i-pill"/></svg></span><span><b>Dawai</b><small data-i18n="tagline">Generic finder · price compare</small></span></a>
+  <nav class="nav" id="nav" aria-label="Main"></nav>
+  <div class="spacer"></div>
+  <div class="sbox mini" role="search"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><input id="q2" type="search" autocomplete="off" data-i18n-ph="search_ph" placeholder="Search brand, molecule or problem…"><div class="suggest" id="q2List" role="listbox"></div></div>
+  <button class="lang" id="langBtn" title="Switch language">اردو</button>
+</div></header>
+
+<main>
+<!-- SEARCH-FIRST LANDING -->
+<section data-page="search" class="on">
+  <div class="hero">
+    <div class="eyebrow" data-i18n="hero_eyebrow">Generic medicine finder · Pakistan</div>
+    <h2 id="heroTitle"></h2>
+    <p class="lead" data-i18n="hero_sub">Type a brand (Panadol), a molecule (metformin) or a problem (bukhar, blood pressure). See every interchangeable brand sorted by price per tablet.</p>
+    <div class="sbox hero-s" role="search"><svg class="ic" aria-hidden="true" style="width:22px;height:22px"><use href="#i-search"/></svg><input id="q" type="search" autocomplete="off" data-i18n-ph="search_ph" placeholder="Search brand, molecule or problem…" aria-label="Search"><button class="scan" id="scanBtn" title="Scan barcode" aria-label="Scan barcode"><svg class="ic" aria-hidden="true" style="width:18px;height:18px"><use href="#i-scan"/></svg><span data-i18n="scan">Scan</span></button><div class="suggest" id="qList" role="listbox"></div></div>
+    <div class="hrow" id="recent"></div>
+    <div class="hrow"><span class="lbl" data-i18n="popular">Popular molecules</span><div class="chips stagger" id="popular"></div></div>
+  </div>
+  <div class="stats stagger" id="stats"></div>
+  <div class="how stagger" id="how"></div>
+  <div class="ribbon"><svg class="ic" aria-hidden="true" style="color:var(--amber);width:1.3em;height:1.3em;margin-top:2px"><use href="#i-alert"/></svg><div><b data-i18n="ribbon_h">ILLUSTRATIVE DATASET.</b> <span data-i18n="ribbon">Prices are seed values for demonstration only. Verify every figure against the DRAP MRP list and the pack in your hand before acting on it.</span></div></div>
+</section>
+
+<section data-page="molecule" id="molPage"></section>
+<section data-page="cabinet" id="cabPage"></section>
+<section data-page="reminders" id="remPage"></section>
+<section data-page="safety" id="safePage"></section>
+<section data-page="about" id="aboutPage"></section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"><header><h2 id="drawerTitle"></h2><button class="close" id="drawerClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></header><div class="body" id="drawerBody"></div></aside>
+<div class="modal-scrim" id="modalScrim"><div class="modal" role="dialog" aria-modal="true"><header><div id="mHead"></div><button class="close" id="mClose" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></header><div class="body" id="mBody"></div></div></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Dawai — Generic Medicine Finder & Price Compare — single-file app
+   utils · i18n · seed data (ILLUSTRATIVE) · search index · molecule page ·
+   compare drawer · cabinet + interaction engine · reminders · safety ·
+   price log · about · router
+   Student extension points are marked with  TODO(student)
+   ===================================================================== */
+
+// ---------- utils ----------
+const NS = 'dawai:';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const ic = (n, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const toast = (m, type = '') => { const el = document.createElement('div'); el.className = 'toast ' + type; el.innerHTML = ic(type === 'ok' ? 'check-circle' : type === 'bad' ? 'alert-circle' : 'info') + '<span></span>'; el.lastChild.textContent = m; $('#toasts').append(el); setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 3000); };
+// motion helpers (all respect prefers-reduced-motion)
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stagger = root => $$('.stagger,.stagger-fade', root).forEach(g => [...g.children].forEach((el, i) => el.style.setProperty('--i', i)));
+const animateIn = root => { root.classList.remove('enter'); void root.offsetWidth; root.classList.add('enter'); stagger(root); };
+const countUp = (el, to, fmt = v => nf.format(Math.round(v)), dur = 700) => { if (!el) return; if (RM) { el.textContent = fmt(to); return; } const t0 = performance.now(); const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+const drawPath = p => { if (!p || RM) return; const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = 'stroke-dashoffset .9s var(--ease)'; p.style.strokeDashoffset = 0; };
+const animateFills = root => requestAnimationFrame(() => { $$('[data-w]', root).forEach(el => el.style.width = el.dataset.w + '%'); $$('[data-dash]', root).forEach(el => el.style.strokeDashoffset = el.dataset.dash); });
+const nf = new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 }), nf2 = new Intl.NumberFormat('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const rs = n => 'Rs ' + nf.format(Math.round(n));
+const rs2 = n => 'Rs ' + (n >= 100 ? nf.format(Math.round(n)) : nf2.format(n));
+const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
+const dkey = d => { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+const daysAgo = n => { const d = new Date(TODAY); d.setDate(d.getDate() - n); return d; };
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const notImpl = () => toast(t('not_impl'), 'bad');
+
+// ---------- i18n ----------
+const L = {
+  en: {
+    tagline: 'Generic finder · price compare', nav_search: 'Search', nav_cabinet: 'My medicines', nav_reminders: 'Reminders', nav_safety: 'Safety', nav_about: 'About',
+    hero_eyebrow: 'Generic medicine finder · Pakistan', hero_a: 'Same molecule.', hero_b: 'A fraction of the price.', hero_sub: 'Type a brand (Panadol), a molecule (metformin) or a problem (bukhar, blood pressure). See every interchangeable brand sorted by price per tablet.',
+    search_ph: 'Search brand, molecule or problem…', scan: 'Scan', recent: 'Recent', clear: 'Clear', popular: 'Popular molecules', stat_mol: 'molecules in the seed set', stat_brands: 'brands with pack MRP', stat_gap: 'biggest price gap for the same strength',
+    how1: 'Find the molecule behind the brand', how1t: 'Every brand is a wrapper around one molecule (salt). Dawai maps brands, molecules and everyday problems to the same page.', how2: 'Compare price per unit', how2t: 'Pack prices hide the real cost. We divide MRP by pack size and show savings only between the same strength and form.', how3: 'Switch safely', how3t: 'Counselling points, interaction checks across your cabinet and a counterfeit checklist — in Urdu and English.',
+    ribbon_h: 'ILLUSTRATIVE DATASET.', ribbon: 'Prices are seed values for demonstration only. Verify every figure against the DRAP MRP list and the pack in your hand before acting on it.',
+    m_used: 'Used for', m_counsel: 'Key counselling point', m_strength: 'Strength', m_form: 'Form', all: 'All', m_ref: 'Savings compared with', col_brand: 'Brand', col_sf: 'Strength · form', col_pack: 'Pack · MRP', col_unit: 'Per unit', col_save: 'Savings', col_seen: 'Seen at pharmacies', orig: 'Originator', cheapest: 'Cheapest', compare: 'Compare', add: 'Add', m_card: 'Medicine card', print: 'Print', m_cmp: 'Compare', m_cmp_hint: 'Tick 2–3 brands to compare side by side.', m_note_same: 'Savings are shown only between brands of the same strength and form; "—" means not directly comparable.', m_nti: 'Narrow therapeutic index: do not switch brands without your doctor and a follow-up blood test.', m_abx: 'Antibiotic: complete the full course; never share leftovers or buy without a prescription.', m_facts: 'Quick facts', m_class: 'Class', m_brands: 'brands', m_quality: 'Quality / bioequivalence rating', m_quality_na: 'not available — student extension',
+    m_log: 'Price seen at a pharmacy', m_log_lead: 'Record what you actually paid so others can see street price vs MRP.', log_price: 'Pack price paid (Rs)', log_pharmacy: 'Pharmacy', log_city: 'City', log_save: 'Save observation', log_recent: 'Recent observations', log_none: 'No observations yet for this molecule.', log_saved: 'Observation saved on this device', log_invalid: 'Enter the brand and a valid price.', nearby: 'Nearby pharmacies', seen_avg: 'avg', seen_vs: 'vs MRP', no_rows: 'No brands match these filters.',
+    c_title: 'My medicines', c_lead: 'Your household cabinet: monthly cost per item, what switching to the cheapest equivalent would save, and interaction warnings per person.', c_empty: 'Your cabinet is empty. Search a medicine and press "Add", or load a demo cabinet.', c_demo: 'Load demo cabinet', c_total: 'Monthly cost', c_save: 'Potential monthly savings', c_save_s: 'if every item switched to its cheapest equivalent', c_items: 'Items', c_people: 'people', c_dose: '/ day', c_month: '/ month', c_cheapest: 'Cheapest equivalent', c_switch: 'Switch', c_remove: 'Remove', c_extras: 'Also taking / planned', c_inter: 'Interaction check', c_inter_none: 'No interactions found among these items. This check covers 16 common pairs only — it is not a complete screen.', c_ocr: 'Import prescription photo', c_same: 'already the cheapest', c_savemo: 'saved / month', c_nti_sw: 'This is a narrow-therapeutic-index medicine. Only switch with your doctor and a follow-up test. Switch anyway in the app?', c_switched: 'Switched', c_clear: 'Clear cabinet',
+    sev_high: 'High', sev_moderate: 'Moderate', sev_low: 'Low', who_me: 'Me', who_ammi: 'Ammi', who_abbu: 'Abbu', who_child: 'Child', who_other: 'Other',
+    r_title: 'Reminders', r_lead: 'Set dose times per medicine, tick doses off during the day and watch your adherence streak.', r_today: "Today's doses", r_none: 'No reminder times set. Add times to each medicine below.', r_none_cab: 'Add medicines to your cabinet first.', r_streak: 'day streak', r_week: 'Adherence, last 7 days', r_notif: 'Enable browser notifications', r_notif_on: 'Notifications on while this tab is open', r_notif_no: 'This browser does not support notifications — the checklist still works.', r_denied: 'Notifications are blocked in browser settings.', r_times: 'Dose times per medicine', r_taken: 'taken', r_add_time: 'Add', r_test: 'Test', r_notif_body: 'Time for your dose',
+    s_title: 'Safety', s_fake: 'Spot a counterfeit', s_fake_lead: 'Check the pack before you pay. Tick what you can confirm.', s_score: 'checks passed', s_v_good: 'Looks genuine. Keep the receipt and the carton.', s_v_mid: 'Be cautious — ask the pharmacist to show the DRAP registration and the batch on the carton.', s_v_bad: 'Do not buy. Report it below.', s_report: 'Report a suspicious medicine', s_med: 'Medicine (brand, strength)', s_batch: 'Batch / lot no.', s_pharm: 'Pharmacy name', s_city: 'City', s_concern: 'What looks suspicious?', s_gen: 'Generate report text', s_copy: 'Copy', s_wa: 'WhatsApp', s_mail: 'Email', s_copied: 'Copied to clipboard', s_store: 'Storage tips', s_abx: 'Finish your antibiotics',
+    ab_title: 'About Dawai', ab_problem: 'The problem', ab_how: 'How savings are computed', ab_inter: 'How the interaction check works', ab_disc: 'Disclaimers', ab_data: 'Data notes', ab_todo: 'Left for students to build',
+    a_title: 'Add to my medicines', a_dose: 'Doses per day', a_who: 'For whom', a_name: 'Name', a_times: 'Reminder times (optional)', save: 'Save', cancel: 'Cancel', added: 'Added to my medicines', removed: 'Removed', not_impl: 'Not implemented yet — student extension', close: 'Close',
+    u_tablet: 'tab', u_capsule: 'cap', u_syrup: '5 ml', u_suspension: '5 ml', u_sachet: 'sachet', f_tablet: 'Tablet', f_capsule: 'Capsule', f_syrup: 'Syrup', f_suspension: 'Suspension', f_sachet: 'Sachet', per: 'per', pack: 'pack', mrp: 'MRP', mfr: 'Manufacturer', monthly1: 'Monthly cost at 1 / day', vs_priciest: 'vs priciest here', yes: 'Yes', no: 'No', ref_badge: 'reference', open: 'Open'
+  },
+  ur: {
+    tagline: 'جنرک دوا · قیمت کا موازنہ', nav_search: 'تلاش', nav_cabinet: 'میری دوائیں', nav_reminders: 'یاد دہانی', nav_safety: 'حفاظت', nav_about: 'تعارف',
+    hero_eyebrow: 'جنرک دوا تلاش کریں · پاکستان', hero_a: 'وہی دوا۔', hero_b: 'کہیں کم قیمت۔', hero_sub: 'برانڈ (پیناڈول)، سالٹ (میٹفارمن) یا مسئلہ (بخار، بلڈ پریشر) لکھیں۔ ایک جیسی تمام برانڈز فی گولی قیمت کے حساب سے دیکھیں۔',
+    search_ph: 'برانڈ، سالٹ یا مسئلہ تلاش کریں…', scan: 'اسکین', recent: 'حالیہ', clear: 'صاف', popular: 'مشہور سالٹ', stat_mol: 'سالٹ (مالیکیول)', stat_brands: 'برانڈ مع قیمت', stat_gap: 'ایک جیسی طاقت میں سب سے بڑا فرق',
+    how1: 'برانڈ کے پیچھے سالٹ جانیں', how1t: 'ہر برانڈ ایک ہی سالٹ کا لفافہ ہے۔ دوائی برانڈ، سالٹ اور روزمرہ مسائل کو ایک ہی صفحے پر لاتی ہے۔', how2: 'فی یونٹ قیمت کا موازنہ', how2t: 'پیک کی قیمت اصل خرچ چھپا لیتی ہے۔ ہم قیمت کو پیک کی تعداد سے تقسیم کرتے ہیں اور بچت صرف ایک جیسی طاقت اور شکل میں دکھاتے ہیں۔', how3: 'محفوظ طریقے سے بدلیں', how3t: 'ہدایات، آپ کی الماری میں دواؤں کا تعامل اور جعلی دوا کی چیک لسٹ — اردو اور انگریزی میں۔',
+    ribbon_h: 'نمونہ ڈیٹا۔', ribbon: 'قیمتیں صرف مظاہرے کے لیے ہیں۔ عمل کرنے سے پہلے ہر قیمت ڈریپ کی MRP لسٹ اور اپنے ہاتھ میں موجود ڈبے سے تصدیق کریں۔',
+    m_used: 'استعمال', m_counsel: 'اہم ہدایت', m_strength: 'طاقت', m_form: 'شکل', all: 'سب', m_ref: 'بچت کا موازنہ', col_brand: 'برانڈ', col_sf: 'طاقت · شکل', col_pack: 'پیک · قیمت', col_unit: 'فی یونٹ', col_save: 'بچت', col_seen: 'فارمیسی پر دیکھی گئی', orig: 'اصل برانڈ', cheapest: 'سب سے سستی', compare: 'موازنہ', add: 'شامل کریں', m_card: 'دوا کارڈ', print: 'پرنٹ', m_cmp: 'موازنہ', m_cmp_hint: 'موازنے کے لیے 2 سے 3 برانڈ منتخب کریں۔', m_note_same: 'بچت صرف ایک جیسی طاقت اور شکل والے برانڈز کے درمیان دکھائی جاتی ہے؛ "—" یعنی براہ راست موازنہ ممکن نہیں۔', m_nti: 'حساس دوا: ڈاکٹر اور دوبارہ ٹیسٹ کے بغیر برانڈ نہ بدلیں۔', m_abx: 'اینٹی بایوٹک: پورا کورس مکمل کریں؛ بچی دوا کسی کو نہ دیں اور نسخے کے بغیر نہ خریدیں۔', m_facts: 'مختصر معلومات', m_class: 'قسم', m_brands: 'برانڈ', m_quality: 'معیار / بائیو ایکویویلنس درجہ', m_quality_na: 'دستیاب نہیں — طلبہ کے لیے',
+    m_log: 'فارمیسی پر دیکھی گئی قیمت', m_log_lead: 'جو قیمت آپ نے ادا کی وہ درج کریں تاکہ MRP کے مقابلے میں بازار کی قیمت نظر آئے۔', log_price: 'پیک کی ادا کی گئی قیمت (روپے)', log_pharmacy: 'فارمیسی', log_city: 'شہر', log_save: 'محفوظ کریں', log_recent: 'حالیہ اندراجات', log_none: 'اس سالٹ کا ابھی کوئی اندراج نہیں۔', log_saved: 'قیمت اسی آلے پر محفوظ ہو گئی', log_invalid: 'برانڈ اور درست قیمت درج کریں۔', nearby: 'قریبی فارمیسی', seen_avg: 'اوسط', seen_vs: 'MRP کے مقابلے', no_rows: 'ان فلٹرز پر کوئی برانڈ نہیں۔',
+    c_title: 'میری دوائیں', c_lead: 'گھر کی الماری: ہر دوا کا ماہانہ خرچ، سب سے سستی متبادل پر بچت، اور ہر فرد کے لیے تعامل کی وارننگ۔', c_empty: 'الماری خالی ہے۔ دوا تلاش کر کے "شامل کریں" دبائیں، یا نمونہ الماری لوڈ کریں۔', c_demo: 'نمونہ الماری لوڈ کریں', c_total: 'ماہانہ خرچ', c_save: 'ممکنہ ماہانہ بچت', c_save_s: 'اگر ہر دوا سب سے سستی متبادل پر بدل دی جائے', c_items: 'دوائیں', c_people: 'افراد', c_dose: '/ دن', c_month: '/ مہینہ', c_cheapest: 'سب سے سستی متبادل', c_switch: 'بدلیں', c_remove: 'ہٹائیں', c_extras: 'یہ بھی لے رہے ہیں / متوقع', c_inter: 'تعامل (انٹریکشن) چیک', c_inter_none: 'ان دواؤں میں کوئی معلوم تعامل نہیں ملا۔ یہ چیک صرف 16 عام جوڑوں پر ہے — مکمل جانچ نہیں۔', c_ocr: 'نسخے کی تصویر درآمد کریں', c_same: 'پہلے ہی سب سے سستی', c_savemo: 'بچت / مہینہ', c_nti_sw: 'یہ حساس (نیرو تھیراپیوٹک انڈیکس) دوا ہے۔ صرف ڈاکٹر اور دوبارہ ٹیسٹ کے ساتھ بدلیں۔ ایپ میں پھر بھی بدلیں؟', c_switched: 'بدل دی گئی', c_clear: 'الماری صاف کریں',
+    sev_high: 'شدید', sev_moderate: 'درمیانہ', sev_low: 'معمولی', who_me: 'میں', who_ammi: 'امی', who_abbu: 'ابو', who_child: 'بچہ', who_other: 'دیگر',
+    r_title: 'یاد دہانی', r_lead: 'ہر دوا کے اوقات مقرر کریں، دن میں خوراک پر نشان لگائیں اور اپنا تسلسل دیکھیں۔', r_today: 'آج کی خوراکیں', r_none: 'کوئی وقت مقرر نہیں۔ نیچے ہر دوا کے اوقات شامل کریں۔', r_none_cab: 'پہلے الماری میں دوائیں شامل کریں۔', r_streak: 'دن مسلسل', r_week: 'پابندی، پچھلے 7 دن', r_notif: 'براؤزر نوٹیفکیشن چالو کریں', r_notif_on: 'نوٹیفکیشن چالو (جب تک یہ ٹیب کھلا ہے)', r_notif_no: 'اس براؤزر میں نوٹیفکیشن نہیں — چیک لسٹ پھر بھی کام کرتی ہے۔', r_denied: 'براؤزر کی سیٹنگ میں نوٹیفکیشن بند ہیں۔', r_times: 'ہر دوا کے اوقات', r_taken: 'لی گئی', r_add_time: 'شامل', r_test: 'آزمائیں', r_notif_body: 'دوا کا وقت ہو گیا',
+    s_title: 'حفاظت', s_fake: 'جعلی دوا کی پہچان', s_fake_lead: 'پیسے دینے سے پہلے ڈبہ جانچیں۔ جو تصدیق ہو جائے اس پر نشان لگائیں۔', s_score: 'نکات پورے', s_v_good: 'اصلی لگتی ہے۔ رسید اور ڈبہ محفوظ رکھیں۔', s_v_mid: 'احتیاط کریں — فارماسسٹ سے ڈریپ رجسٹریشن اور بیچ نمبر دکھانے کو کہیں۔', s_v_bad: 'نہ خریدیں۔ نیچے اطلاع دیں۔', s_report: 'مشکوک دوا کی اطلاع دیں', s_med: 'دوا (برانڈ، طاقت)', s_batch: 'بیچ / لاٹ نمبر', s_pharm: 'فارمیسی کا نام', s_city: 'شہر', s_concern: 'کیا مشکوک لگا؟', s_gen: 'اطلاع کا متن بنائیں', s_copy: 'کاپی', s_wa: 'واٹس ایپ', s_mail: 'ای میل', s_copied: 'کاپی ہو گیا', s_store: 'دوا رکھنے کے اصول', s_abx: 'اینٹی بایوٹک کا کورس مکمل کریں',
+    ab_title: 'دوائی کے بارے میں', ab_problem: 'مسئلہ', ab_how: 'بچت کا حساب کیسے ہوتا ہے', ab_inter: 'تعامل چیک کیسے کام کرتا ہے', ab_disc: 'انتباہ', ab_data: 'ڈیٹا نوٹ', ab_todo: 'طلبہ کے لیے باقی کام',
+    a_title: 'میری دواؤں میں شامل کریں', a_dose: 'روزانہ خوراکیں', a_who: 'کس کے لیے', a_name: 'نام', a_times: 'یاد دہانی کے اوقات (اختیاری)', save: 'محفوظ', cancel: 'منسوخ', added: 'میری دواؤں میں شامل ہو گئی', removed: 'ہٹا دی گئی', not_impl: 'ابھی نہیں بنا — طلبہ کے لیے', close: 'بند',
+    u_tablet: 'گولی', u_capsule: 'کیپسول', u_syrup: '5 ملی لیٹر', u_suspension: '5 ملی لیٹر', u_sachet: 'ساشے', f_tablet: 'گولی', f_capsule: 'کیپسول', f_syrup: 'سیرپ', f_suspension: 'سسپنشن', f_sachet: 'ساشے', per: 'فی', pack: 'پیک', mrp: 'قیمت', mfr: 'ساخت کنندہ', monthly1: 'ماہانہ خرچ (1 روزانہ)', vs_priciest: 'سب سے مہنگی کے مقابلے', yes: 'ہاں', no: 'نہیں', ref_badge: 'حوالہ', open: 'کھولیں'
+  }
+  // TODO(student): add L.sd (Sindhi) and L.ps (Pashto) dictionaries with the same keys, plus `ur`-style fields on MOLECULES, INTERACTIONS and SAFETY text. Turn the toggle into a 4-way language menu.
+};
+let lang = store.get('lang', 'en');
+const t = k => L[lang][k] ?? L.en[k] ?? k;
+const nm = o => lang === 'ur' ? o.ur : o.en;
+/** Bilingual block: both languages always visible, current language first. */
+const bi = (o, cls = '') => lang === 'ur' ? `<div class="ur ${cls}">${esc(o.ur)}</div><div class="muted small">${esc(o.en)}</div>` : `<div class="${cls}">${esc(o.en)}</div><div class="ur small muted">${esc(o.ur)}</div>`;
+
+// ---------- seed data (ILLUSTRATIVE — verify against the DRAP MRP list) ----------
+// groups: pharmacological groups used by the interaction engine. abx = antibiotic, nti = narrow therapeutic index.
+const M = (id, en, ur, cls, uEn, uUr, cEn, cUr, tags, x = {}) => ({ id, en, ur, cls, uses: { en: uEn, ur: uUr }, counsel: { en: cEn, ur: cUr }, tags, ...x });
+const MOLECULES = [
+  M('paracetamol', 'Paracetamol', 'پیراسیٹامول', 'Analgesic · antipyretic', 'Fever, headache, mild to moderate pain', 'بخار، سر درد، ہلکا سے درمیانہ درد', 'Do not exceed 4 g (8 × 500 mg) in 24 hours across all products — many cold and flu remedies also contain paracetamol.', 'چوبیس گھنٹوں میں تمام دواؤں کو ملا کر 4 گرام (8 گولیاں 500 ملی گرام) سے زیادہ نہ لیں — نزلہ زکام کی بہت سی دواؤں میں بھی پیراسیٹامول ہوتا ہے۔', ['fever', 'bukhar', 'بخار', 'headache', 'sar dard', 'pain', 'dard', 'درد', 'flu', 'body ache'], { maxDaily: 4000 }),
+  M('ibuprofen', 'Ibuprofen', 'آئبوپروفین', 'NSAID (anti-inflammatory)', 'Pain, inflammation, period pain, fever', 'درد، سوزش، ماہواری کا درد، بخار', 'Take with food. Avoid if you have a stomach ulcer, kidney disease or are in the last 3 months of pregnancy.', 'کھانے کے ساتھ لیں۔ معدے کا السر، گردے کی بیماری یا حمل کے آخری تین مہینوں میں نہ لیں۔', ['pain', 'dard', 'period pain', 'toothache', 'dant dard', 'joint pain', 'jor dard', 'fever'], { groups: ['NSAID'] }),
+  M('diclofenac', 'Diclofenac', 'ڈائیکلوفینیک', 'NSAID (anti-inflammatory)', 'Joint and back pain, arthritis, swelling after injury', 'جوڑوں اور کمر کا درد، گٹھیا، چوٹ کی سوجن', 'Take after meals; use the lowest dose for the shortest time. People with heart disease should not take it without a doctor\'s advice.', 'کھانے کے بعد لیں؛ کم سے کم خوراک کم سے کم وقت کے لیے۔ دل کے مریض ڈاکٹر کے مشورے کے بغیر نہ لیں۔', ['back pain', 'kamar dard', 'joint pain', 'arthritis', 'swelling', 'sojan'], { groups: ['NSAID'] }),
+  M('amoxicillin', 'Amoxicillin', 'اموکسی سلین', 'Penicillin antibiotic', 'Throat, ear, chest and urinary infections', 'گلے، کان، سینے اور پیشاب کی نالی کے انفیکشن', 'Complete the full course even if you feel better. Stop and seek help immediately for rash, swelling or breathing difficulty (allergy).', 'بہتر محسوس ہونے پر بھی پورا کورس مکمل کریں۔ خارش، سوجن یا سانس کی تکلیف ہو تو فوراً دوا روک کر ڈاکٹر سے رجوع کریں۔', ['infection', 'throat infection', 'gala kharab', 'ear infection', 'chest infection', 'kaan'], { abx: true }),
+  M('amoxiclav', 'Amoxicillin + Clavulanate', 'اموکسی سلین + کلاویولینیٹ', 'Penicillin + β-lactamase inhibitor', 'Sinus, chest, dental and skin infections that resist plain amoxicillin', 'سائنس، سینے، دانتوں اور جلد کے وہ انفیکشن جن پر سادہ اموکسی سلین اثر نہ کرے', 'Take at the start of a meal to reduce stomach upset and diarrhoea. Complete the course.', 'معدے کی خرابی اور دست سے بچنے کے لیے کھانے کے شروع میں لیں۔ کورس مکمل کریں۔', ['dental infection', 'sinus', 'chest infection', 'skin infection', 'tooth abscess'], { abx: true }),
+  M('azithromycin', 'Azithromycin', 'ایزیتھرومائسین', 'Macrolide antibiotic', 'Typhoid, chest and throat infections', 'ٹائیفائیڈ، سینے اور گلے کے انفیکشن', 'Usually once daily for 3–5 days (longer for typhoid). Keep 2 hours away from antacids. Complete the course.', 'عموماً روز ایک بار 3 سے 5 دن (ٹائیفائیڈ میں زیادہ)۔ تیزابیت کی دوا سے 2 گھنٹے کا فاصلہ رکھیں۔ کورس مکمل کریں۔', ['typhoid', 'chest infection', 'cough', 'khansi', 'throat infection'], { abx: true, groups: ['MACROLIDE'] }),
+  M('ciprofloxacin', 'Ciprofloxacin', 'سپروفلوکساسین', 'Fluoroquinolone antibiotic', 'Urinary tract infection, typhoid, some gut infections', 'پیشاب کی نالی کا انفیکشن، ٹائیفائیڈ، پیٹ کے کچھ انفیکشن', 'Drink plenty of water. Take 2 hours before or 6 hours after milk, antacids, iron or calcium. Stop and report tendon pain. Not for children unless prescribed.', 'پانی زیادہ پیئں۔ دودھ، تیزابیت کی دوا، آئرن یا کیلشیم سے 2 گھنٹے پہلے یا 6 گھنٹے بعد لیں۔ پٹھوں یا کنڈرا میں درد ہو تو دوا روک کر ڈاکٹر کو بتائیں۔', ['UTI', 'urine infection', 'peshab', 'typhoid', 'burning urine'], { abx: true }),
+  M('metronidazole', 'Metronidazole', 'میٹرونیڈازول', 'Antiprotozoal · antibiotic', 'Amoebic dysentery, giardia, dental and gut infections', 'پیچش (امیبا)، جیارڈیا، دانتوں اور پیٹ کے انفیکشن', 'No alcohol during the course and for 48 hours after — it causes severe flushing and vomiting. A metallic taste is normal.', 'کورس کے دوران اور اس کے 48 گھنٹے بعد تک الکحل ہرگز نہ لیں — شدید متلی اور قے ہو سکتی ہے۔ منہ کا ذائقہ دھاتی ہونا معمول ہے۔', ['dysentery', 'pechish', 'loose motions', 'dast', 'stomach infection', 'amoeba'], { abx: true }),
+  M('cefixime', 'Cefixime', 'سیفکسیم', '3rd-generation cephalosporin', 'Typhoid, urinary and respiratory infections', 'ٹائیفائیڈ، پیشاب اور سانس کی نالی کے انفیکشن', 'Complete the full course (typhoid often needs 14 days). Loose stools are common; see a doctor if severe.', 'پورا کورس مکمل کریں (ٹائیفائیڈ میں اکثر 14 دن)۔ پتلے پاخانے عام ہیں؛ شدید ہوں تو ڈاکٹر سے ملیں۔', ['typhoid', 'fever', 'UTI', 'motijhara'], { abx: true }),
+  M('metformin', 'Metformin', 'میٹفارمن', 'Biguanide (type 2 diabetes)', 'Type 2 diabetes — first-line blood sugar control', 'ٹائپ 2 ذیابیطس (شوگر) — خون میں شکر کا بنیادی کنٹرول', 'Take with or after meals. Stop 48 hours before a CT/angiography contrast scan and tell the doctor you take it. On its own it does not cause low sugar.', 'کھانے کے ساتھ یا بعد لیں۔ سی ٹی اسکین یا انجیوگرافی (ڈائی والے) سے 48 گھنٹے پہلے روک دیں اور ڈاکٹر کو بتائیں۔ اکیلے یہ شوگر کم نہیں کرتی۔', ['diabetes', 'sugar', 'شوگر', 'blood sugar', 'ziabetes']),
+  M('glimepiride', 'Glimepiride', 'گلیمیپرائیڈ', 'Sulfonylurea (type 2 diabetes)', 'Type 2 diabetes when metformin alone is not enough', 'ٹائپ 2 ذیابیطس جب میٹفارمن اکیلے کافی نہ ہو', 'Take just before breakfast; never skip the meal after a dose — it can cause dangerously low sugar (sweating, shaking, confusion). Keep sugar or juice handy.', 'ناشتے سے فوراً پہلے لیں؛ دوا کے بعد کھانا کبھی نہ چھوڑیں — شوگر خطرناک حد تک کم ہو سکتی ہے (پسینہ، کپکپی، الجھن)۔ چینی یا جوس ساتھ رکھیں۔', ['diabetes', 'sugar', 'شوگر'], { groups: ['SU'] }),
+  M('sitagliptin', 'Sitagliptin', 'سیٹاگلپٹن', 'DPP-4 inhibitor (type 2 diabetes)', 'Type 2 diabetes, usually added to metformin', 'ٹائپ 2 ذیابیطس، عموماً میٹفارمن کے ساتھ', 'Once daily with or without food. Report severe, persistent stomach pain (rare pancreatitis). Generic versions are now available — ask your pharmacist.', 'روز ایک بار، کھانے کے ساتھ یا بغیر۔ پیٹ میں شدید مسلسل درد ہو تو ڈاکٹر کو بتائیں۔ اب جنرک دستیاب ہیں — فارماسسٹ سے پوچھیں۔', ['diabetes', 'sugar', 'شوگر']),
+  M('atorvastatin', 'Atorvastatin', 'اٹورواسٹیٹن', 'Statin (cholesterol)', 'High cholesterol; prevention of heart attack and stroke', 'کولیسٹرول کی زیادتی؛ دل کے حملے اور فالج سے بچاؤ', 'Take at the same time each day. Report unexplained muscle pain or dark urine. Avoid large amounts of grapefruit juice.', 'روزانہ ایک ہی وقت پر لیں۔ بلا وجہ پٹھوں میں درد یا پیشاب گہرا ہو تو ڈاکٹر کو بتائیں۔', ['cholesterol', 'heart', 'dil', 'lipids'], { groups: ['STATIN'] }),
+  M('rosuvastatin', 'Rosuvastatin', 'روسوواسٹیٹن', 'Statin (cholesterol)', 'High cholesterol; cardiovascular risk reduction', 'کولیسٹرول کی زیادتی؛ دل کی بیماری کے خطرے میں کمی', 'Once daily at a fixed time. Report muscle pain or weakness. It is stronger per milligram than atorvastatin — never swap mg for mg.', 'روز ایک بار مقررہ وقت پر۔ پٹھوں میں درد یا کمزوری ہو تو بتائیں۔ یہ اٹورواسٹیٹن سے زیادہ طاقتور ہے — ملی گرام برابر سمجھ کر نہ بدلیں۔', ['cholesterol', 'heart'], { groups: ['STATIN'] }),
+  M('amlodipine', 'Amlodipine', 'ایملوڈیپین', 'Calcium-channel blocker (blood pressure)', 'High blood pressure, angina', 'ہائی بلڈ پریشر، انجائنا (سینے کا درد)', 'Once daily. Ankle swelling is a common side effect — tell your doctor rather than stopping. Never stop suddenly.', 'روز ایک بار۔ ٹخنوں کی سوجن عام ہے — دوا چھوڑنے کے بجائے ڈاکٹر کو بتائیں۔ اچانک بند نہ کریں۔', ['blood pressure', 'BP', 'بلڈ پریشر', 'hypertension', 'high bp']),
+  M('losartan', 'Losartan', 'لوسارٹن', 'ARB (blood pressure)', 'High blood pressure; kidney protection in diabetes', 'ہائی بلڈ پریشر؛ ذیابیطس میں گردوں کی حفاظت', 'Avoid potassium supplements and salt substitutes unless advised. Not safe in pregnancy. Have kidney tests as advised.', 'پوٹاشیم کی گولیاں اور نمک کے متبادل مشورے کے بغیر نہ لیں۔ حمل میں محفوظ نہیں۔ گردوں کے ٹیسٹ ہدایت کے مطابق کرائیں۔', ['blood pressure', 'BP', 'بلڈ پریشر', 'kidney', 'gurda']),
+  M('bisoprolol', 'Bisoprolol', 'بائسوپرولول', 'Beta blocker', 'High blood pressure, heart failure, fast heart rate', 'ہائی بلڈ پریشر، دل کی کمزوری، تیز دھڑکن', 'Never stop suddenly — taper under medical advice. Tell your doctor if you have asthma or a very slow pulse.', 'اچانک کبھی بند نہ کریں — ڈاکٹر کے مشورے سے آہستہ کم کریں۔ دمہ یا بہت سست نبض ہو تو ڈاکٹر کو بتائیں۔', ['blood pressure', 'heart', 'palpitations', 'dharkan']),
+  M('omeprazole', 'Omeprazole', 'اومیپرازول', 'Proton-pump inhibitor', 'Acidity, heartburn, stomach ulcer, reflux', 'تیزابیت، سینے کی جلن، معدے کا السر، ریفلکس', 'Take 30–60 minutes before breakfast. Long-term use needs a review — it is not meant to be taken for years without a reason.', 'ناشتے سے 30 سے 60 منٹ پہلے لیں۔ لمبے عرصے کے استعمال پر ڈاکٹر سے نظرثانی ضروری ہے۔', ['acidity', 'heartburn', 'tezabiyat', 'تیزابیت', 'pait', 'stomach', 'gas', 'ulcer'], { groups: ['PPI'] }),
+  M('esomeprazole', 'Esomeprazole', 'ایسومیپرازول', 'Proton-pump inhibitor', 'Reflux, acidity, ulcer healing', 'ریفلکس، تیزابیت، السر کا علاج', 'Take before a meal. Esomeprazole and omeprazole are near-identical — never take both. Review long-term use.', 'کھانے سے پہلے لیں۔ ایسومیپرازول اور اومیپرازول تقریباً ایک ہی دوا ہیں — دونوں کبھی ایک ساتھ نہ لیں۔', ['acidity', 'reflux', 'heartburn', 'تیزابیت'], { groups: ['PPI'] }),
+  M('domperidone', 'Domperidone', 'ڈومپیریڈون', 'Antiemetic · prokinetic', 'Nausea, vomiting, bloating and slow stomach emptying', 'متلی، قے، پیٹ کا پھولنا', 'Take 15–30 minutes before meals. Lowest dose for the shortest time (max 1 week) — higher doses affect heart rhythm.', 'کھانے سے 15 سے 30 منٹ پہلے لیں۔ کم سے کم خوراک کم سے کم وقت (زیادہ سے زیادہ ایک ہفتہ) — زیادہ خوراک دل کی دھڑکن پر اثر کرتی ہے۔', ['vomiting', 'ulti', 'قے', 'nausea', 'matli', 'bloating']),
+  M('cetirizine', 'Cetirizine', 'سیٹریزین', 'Antihistamine (allergy)', 'Allergic rhinitis, hives, itching, sneezing', 'الرجی، چھینکیں، خارش، پتی اچھلنا', 'Once daily; may cause drowsiness — take care driving. Avoid alcohol.', 'روز ایک بار؛ نیند آ سکتی ہے — گاڑی چلانے میں احتیاط کریں۔ الکحل سے پرہیز کریں۔', ['allergy', 'الرجی', 'sneezing', 'chheenk', 'itching', 'kharish', 'nazla', 'runny nose']),
+  M('montelukast', 'Montelukast', 'مونٹیلوکاسٹ', 'Leukotriene receptor antagonist', 'Asthma prevention, allergic rhinitis', 'دمہ سے بچاؤ، الرجی والا نزلہ', 'Take every evening even when well — it prevents attacks but does not treat one. Report mood changes or nightmares.', 'ہر شام لیں چاہے طبیعت ٹھیک ہو — یہ حملے سے بچاتی ہے، حملہ روکتی نہیں۔ مزاج میں تبدیلی یا ڈراؤنے خواب ہوں تو بتائیں۔', ['asthma', 'dama', 'دمہ', 'wheezing', 'allergy']),
+  M('levothyroxine', 'Levothyroxine', 'لیووتھائیروکسین', 'Thyroid hormone', 'Hypothyroidism (underactive thyroid)', 'تھائیرائیڈ کی کمی', 'Empty stomach, 30–60 minutes before breakfast, with water only. Keep 4 hours away from iron, calcium and antacids. Do not switch brands without your doctor and a repeat TSH test.', 'خالی پیٹ، ناشتے سے 30 سے 60 منٹ پہلے، صرف پانی کے ساتھ۔ آئرن، کیلشیم اور تیزابیت کی دوا سے 4 گھنٹے کا فاصلہ رکھیں۔ ڈاکٹر کے مشورے اور دوبارہ TSH ٹیسٹ کے بغیر برانڈ نہ بدلیں۔', ['thyroid', 'تھائیرائیڈ', 'hypothyroid', 'goitre'], { nti: true }),
+  M('clopidogrel', 'Clopidogrel', 'کلوپیڈوگرل', 'Antiplatelet', 'After heart attack, stent or stroke, to prevent clots', 'دل کے حملے، اسٹنٹ یا فالج کے بعد خون کے لوتھڑے روکنے کے لیے', 'Never stop without your cardiologist — especially after a stent. Tell dentists and surgeons you take it. Prefer pantoprazole over omeprazole if you need an acid tablet.', 'دل کے ڈاکٹر کے بغیر کبھی نہ روکیں — خاص طور پر اسٹنٹ کے بعد۔ دانتوں کے ڈاکٹر اور سرجن کو بتائیں۔ تیزابیت کے لیے اومیپرازول کے بجائے پینٹوپرازول بہتر ہے۔', ['heart', 'stent', 'blood thinner', 'stroke', 'falij', 'دل'], { groups: ['ANTIPLATELET'] }),
+  M('aspirin', 'Aspirin (low dose)', 'اسپرین (کم خوراک)', 'Antiplatelet (low dose)', 'Prevention of heart attack and stroke in people at high risk', 'زیادہ خطرے والے افراد میں دل کے حملے اور فالج سے بچاؤ', 'Take after food. Not for children under 16. Report black stools or vomiting blood. Do not combine with ibuprofen or diclofenac without advice.', 'کھانے کے بعد لیں۔ 16 سال سے کم بچوں کو نہ دیں۔ کالا پاخانہ یا خون کی قے ہو تو فوراً بتائیں۔ آئبوپروفین یا ڈائیکلوفینیک کے ساتھ مشورے کے بغیر نہ لیں۔', ['heart', 'blood thinner', 'dil', 'stroke'], { groups: ['ANTIPLATELET'] }),
+  M('ors', 'ORS (oral rehydration salts)', 'او آر ایس (نمکول)', 'Oral rehydration salts', 'Dehydration from diarrhoea and vomiting; heat exhaustion', 'دست اور قے سے پانی کی کمی؛ گرمی سے نڈھال', 'Dissolve one sachet in exactly the stated volume of clean (boiled, cooled) water; use within 24 hours. Give small sips often; continue breastfeeding. Children with diarrhoea also need zinc for 10–14 days.', 'ایک ساشے بتائی گئی مقدار کے صاف (ابال کر ٹھنڈے کیے) پانی میں گھولیں؛ 24 گھنٹے میں استعمال کریں۔ تھوڑا تھوڑا بار بار پلائیں؛ ماں کا دودھ جاری رکھیں۔ دست والے بچوں کو 10 سے 14 دن زنک بھی دیں۔', ['diarrhoea', 'dast', 'دست', 'dehydration', 'vomiting', 'loose motions', 'heat stroke']),
+];
+const MOL = Object.fromEntries(MOLECULES.map(m => [m.id, m]));
+// [molecule, brand, manufacturer, strength, form, units per pack, pack label, pack MRP in PKR (ILLUSTRATIVE 2026 values), originator?]
+const BRANDS = [
+  ['paracetamol', 'Panadol', 'GSK', '500 mg', 'tablet', 200, '200 tabs', 820, 1], ['paracetamol', 'Calpol', 'GSK', '500 mg', 'tablet', 200, '200 tabs', 640], ['paracetamol', 'Febrol', 'Sami', '500 mg', 'tablet', 200, '200 tabs', 470], ['paracetamol', 'Calpol', 'GSK', '120 mg/5 ml', 'syrup', 12, '60 ml', 155], ['paracetamol', 'Febrol', 'Sami', '120 mg/5 ml', 'syrup', 12, '60 ml', 115],
+  ['ibuprofen', 'Brufen', 'Abbott', '400 mg', 'tablet', 30, '30 tabs', 345, 1], ['ibuprofen', 'Ibufen', 'Werrick', '400 mg', 'tablet', 30, '30 tabs', 180], ['ibuprofen', 'Brufen', 'Abbott', '100 mg/5 ml', 'suspension', 18, '90 ml', 230],
+  ['diclofenac', 'Voltral', 'Novartis', '50 mg', 'tablet', 20, '20 tabs', 260, 1], ['diclofenac', 'Caflam', 'Novartis', '50 mg', 'tablet', 20, '20 tabs', 300], ['diclofenac', 'Dicloran', 'Sami', '50 mg', 'tablet', 20, '20 tabs', 150], ['diclofenac', 'Artifen', 'Abbott', '50 mg', 'tablet', 20, '20 tabs', 190],
+  ['amoxicillin', 'Amoxil', 'GSK', '500 mg', 'capsule', 12, '12 caps', 330, 1], ['amoxicillin', 'Ospamox', 'Novartis (Sandoz)', '500 mg', 'capsule', 12, '12 caps', 250], ['amoxicillin', 'Zamox', 'Zafa', '500 mg', 'capsule', 12, '12 caps', 165], ['amoxicillin', 'Amoxil', 'GSK', '250 mg/5 ml', 'suspension', 12, '60 ml', 240],
+  ['amoxiclav', 'Augmentin', 'GSK', '625 mg', 'tablet', 6, '6 tabs', 590, 1], ['amoxiclav', 'Calamox', 'Bosch', '625 mg', 'tablet', 6, '6 tabs', 420], ['amoxiclav', 'Amoclav', 'Getz', '625 mg', 'tablet', 6, '6 tabs', 390], ['amoxiclav', 'Augmentin DS', 'GSK', '457 mg/5 ml', 'suspension', 14, '70 ml', 480],
+  ['azithromycin', 'Zithromax', 'Pfizer', '500 mg', 'tablet', 3, '3 tabs', 580, 1], ['azithromycin', 'Azitma', 'Getz', '500 mg', 'tablet', 3, '3 tabs', 320], ['azithromycin', 'Azomax', 'Hilton', '500 mg', 'tablet', 3, '3 tabs', 290], ['azithromycin', 'Zithromax', 'Pfizer', '200 mg/5 ml', 'suspension', 3, '15 ml', 440],
+  ['ciprofloxacin', 'Ciproxin', 'Bayer', '500 mg', 'tablet', 10, '10 tabs', 640, 1], ['ciprofloxacin', 'Novidat', 'Sami', '500 mg', 'tablet', 10, '10 tabs', 320], ['ciprofloxacin', 'Ciprozen', 'Zafa', '500 mg', 'tablet', 10, '10 tabs', 220],
+  ['metronidazole', 'Flagyl', 'Sanofi', '400 mg', 'tablet', 20, '20 tabs', 230, 1], ['metronidazole', 'Metrozine', 'Zafa', '400 mg', 'tablet', 20, '20 tabs', 120], ['metronidazole', 'Flagyl', 'Sanofi', '200 mg/5 ml', 'suspension', 12, '60 ml', 150],
+  ['cefixime', 'Cefspan', 'Barrett Hodgson', '400 mg', 'capsule', 5, '5 caps', 940, 1], ['cefixime', 'Cefiget', 'Getz', '400 mg', 'capsule', 5, '5 caps', 660], ['cefixime', 'Cefim', 'Highnoon', '400 mg', 'capsule', 5, '5 caps', 560],
+  ['metformin', 'Glucophage', 'Martin Dow', '500 mg', 'tablet', 100, '100 tabs', 490, 1], ['metformin', 'Neodipar', 'Sanofi', '500 mg', 'tablet', 100, '100 tabs', 420], ['metformin', 'Getformin', 'Getz', '500 mg', 'tablet', 30, '30 tabs', 105], ['metformin', 'Glucophage', 'Martin Dow', '850 mg', 'tablet', 60, '60 tabs', 470],
+  ['glimepiride', 'Amaryl', 'Sanofi', '2 mg', 'tablet', 30, '30 tabs', 540, 1], ['glimepiride', 'Getryl', 'Getz', '2 mg', 'tablet', 30, '30 tabs', 310], ['glimepiride', 'Glimride', 'Hilton', '2 mg', 'tablet', 30, '30 tabs', 240],
+  ['sitagliptin', 'Januvia', 'MSD (OBS)', '50 mg', 'tablet', 14, '14 tabs', 1560, 1], ['sitagliptin', 'Inosita', 'Getz', '50 mg', 'tablet', 14, '14 tabs', 720], ['sitagliptin', 'Sitaglu', 'PharmEvo', '50 mg', 'tablet', 14, '14 tabs', 520],
+  ['atorvastatin', 'Lipitor', 'Pfizer', '20 mg', 'tablet', 10, '10 tabs', 660, 1], ['atorvastatin', 'Lipiget', 'Getz', '20 mg', 'tablet', 10, '10 tabs', 340], ['atorvastatin', 'Lipirex', 'Hilton', '20 mg', 'tablet', 10, '10 tabs', 320], ['atorvastatin', 'Atorva', 'Highnoon', '20 mg', 'tablet', 10, '10 tabs', 260],
+  ['rosuvastatin', 'Crestor', 'AstraZeneca', '10 mg', 'tablet', 10, '10 tabs', 980, 1], ['rosuvastatin', 'Rovista', 'Getz', '10 mg', 'tablet', 10, '10 tabs', 430], ['rosuvastatin', 'X-Plended', 'Hilton', '10 mg', 'tablet', 10, '10 tabs', 400],
+  ['amlodipine', 'Norvasc', 'Pfizer', '5 mg', 'tablet', 10, '10 tabs', 290, 1], ['amlodipine', 'Sofvasc', 'Getz', '5 mg', 'tablet', 10, '10 tabs', 150], ['amlodipine', 'Amlosun', 'CCL', '5 mg', 'tablet', 10, '10 tabs', 95],
+  ['losartan', 'Cozaar', 'MSD (OBS)', '50 mg', 'tablet', 14, '14 tabs', 540, 1], ['losartan', 'Eziday', 'Getz', '50 mg', 'tablet', 14, '14 tabs', 310], ['losartan', 'Losar', 'Ferozsons', '50 mg', 'tablet', 14, '14 tabs', 250],
+  ['bisoprolol', 'Concor', 'Martin Dow (Merck)', '5 mg', 'tablet', 20, '20 tabs', 470, 1], ['bisoprolol', 'Bisocar', 'Getz', '5 mg', 'tablet', 20, '20 tabs', 260], ['bisoprolol', 'Bisopro', 'Werrick', '5 mg', 'tablet', 20, '20 tabs', 210],
+  ['omeprazole', 'Losec', 'AstraZeneca', '20 mg', 'capsule', 14, '14 caps', 580, 1], ['omeprazole', 'Risek', 'Getz', '20 mg', 'capsule', 14, '14 caps', 340], ['omeprazole', 'Ruling', 'Sami', '20 mg', 'capsule', 14, '14 caps', 230], ['omeprazole', 'Omezol', 'Macter', '20 mg', 'capsule', 14, '14 caps', 190],
+  ['esomeprazole', 'Nexium', 'AstraZeneca', '40 mg', 'tablet', 14, '14 tabs', 1350, 1], ['esomeprazole', 'Nexum', 'Getz', '40 mg', 'tablet', 14, '14 tabs', 680], ['esomeprazole', 'Esso', 'Hilton', '40 mg', 'tablet', 14, '14 tabs', 600],
+  ['domperidone', 'Motilium', 'Janssen', '10 mg', 'tablet', 30, '30 tabs', 360, 1], ['domperidone', 'Domel', 'Hilton', '10 mg', 'tablet', 30, '30 tabs', 210], ['domperidone', 'Domel', 'Hilton', '5 mg/5 ml', 'suspension', 12, '60 ml', 160],
+  ['cetirizine', 'Zyrtec', 'GSK', '10 mg', 'tablet', 10, '10 tabs', 230, 1], ['cetirizine', 'Rigix', 'Getz', '10 mg', 'tablet', 10, '10 tabs', 125], ['cetirizine', 'T-Day', 'Hilton', '10 mg', 'tablet', 10, '10 tabs', 95], ['cetirizine', 'Rigix', 'Getz', '5 mg/5 ml', 'syrup', 12, '60 ml', 98],
+  ['montelukast', 'Singulair', 'MSD (OBS)', '10 mg', 'tablet', 14, '14 tabs', 930, 1], ['montelukast', 'Myteka', 'Hilton', '10 mg', 'tablet', 14, '14 tabs', 470], ['montelukast', 'Montiget', 'Getz', '10 mg', 'tablet', 14, '14 tabs', 430],
+  ['levothyroxine', 'Eltroxin', 'GSK (Aspen)', '50 mcg', 'tablet', 100, '100 tabs', 720, 1], ['levothyroxine', 'Thyronorm', 'Abbott', '50 mcg', 'tablet', 100, '100 tabs', 620], ['levothyroxine', 'Thyrox', 'Macter', '50 mcg', 'tablet', 100, '100 tabs', 520],
+  ['clopidogrel', 'Plavix', 'Sanofi', '75 mg', 'tablet', 14, '14 tabs', 980, 1], ['clopidogrel', 'Lowplat', 'Getz', '75 mg', 'tablet', 14, '14 tabs', 470], ['clopidogrel', 'Noclot', 'Hilton', '75 mg', 'tablet', 14, '14 tabs', 440],
+  ['aspirin', 'Loprin', 'Highnoon', '75 mg', 'tablet', 30, '30 tabs', 125], ['aspirin', 'Ascard', 'Atco', '75 mg', 'tablet', 30, '30 tabs', 115], ['aspirin', 'Disprin CV', 'Reckitt', '100 mg', 'tablet', 30, '30 tabs', 150],
+  ['ors', 'Peditral', 'Searle', '1 L sachet', 'sachet', 10, '10 sachets', 330], ['ors', 'Nimkol', 'Nabiqasim', '1 L sachet', 'sachet', 10, '10 sachets', 300], ['ors', 'ORS Indus', 'Indus', '1 L sachet', 'sachet', 10, '10 sachets', 250],
+].map(([mol, name, mfr, strength, form, units, packLabel, mrp, orig]) => ({ id: slug(name + '-' + strength + '-' + form), mol, name, mfr, strength, form, units, packLabel, mrp, orig: !!orig, unit: mrp / units }));
+const BR = Object.fromEntries(BRANDS.map(b => [b.id, b]));
+const brandsOf = mol => BRANDS.filter(b => b.mol === mol);
+const sameSF = (a, b) => a.mol === b.mol && a.strength === b.strength && a.form === b.form;
+const cheapestEq = b => brandsOf(b.mol).filter(x => sameSF(x, b)).sort((x, y) => x.unit - y.unit)[0];
+const unitLabel = b => t('u_' + b.form);
+const mgPerUnit = b => parseFloat(b.strength) || 0;
+const POPULAR = ['paracetamol', 'amoxicillin', 'metformin', 'atorvastatin', 'omeprazole', 'amlodipine', 'azithromycin', 'cetirizine'];
+// Seeded "seen at pharmacy" observations so the street-price feature has something to show. User entries are stored under dawai:pricelog.
+const SEED_LOG = [['panadol-500-mg-tablet', 850, 'Servaid Pharmacy', 'Lahore', 3], ['panadol-500-mg-tablet', 800, 'D. Watson', 'Islamabad', 9], ['glucophage-500-mg-tablet', 500, 'Fazal Din', 'Lahore', 5], ['risek-20-mg-capsule', 350, 'Clinix', 'Karachi', 2], ['lipitor-20-mg-tablet', 700, 'Shaheen Chemist', 'Rawalpindi', 12], ['augmentin-625-mg-tablet', 620, 'Medicare Pharmacy', 'Peshawar', 6], ['azitma-500-mg-tablet', 330, 'Time Medicos', 'Karachi', 1], ['norvasc-5-mg-tablet', 310, 'Shifa Pharmacy', 'Multan', 8], ['febrol-500-mg-tablet', 450, 'Al-Khidmat Pharmacy', 'Faisalabad', 4]]
+  .map(([brand, price, pharmacy, city, ago]) => ({ id: 's' + brand + ago, brand, price, pharmacy, city, date: dkey(daysAgo(ago)), seed: true }));
+const allLog = () => [...SEED_LOG, ...store.get('pricelog', [])];
+function seenStats(brandId) { const rows = allLog().filter(r => r.brand === brandId); if (!rows.length) return null; const avg = rows.reduce((s, r) => s + r.price, 0) / rows.length; return { avg, n: rows.length, delta: (avg - BR[brandId].mrp) / BR[brandId].mrp * 100 }; }
+
+// ---------- interaction knowledge (per person) ----------
+const GROUPS = { NSAID: ['ibuprofen', 'diclofenac'], PPI: ['omeprazole', 'esomeprazole'], STATIN: ['atorvastatin', 'rosuvastatin'], MACROLIDE: ['azithromycin'], SU: ['glimepiride'], ANTIPLATELET: ['clopidogrel', 'aspirin'] };
+const EXTRAS = [['iron', 'Iron tablets', 'آئرن کی گولیاں'], ['calcium', 'Calcium / vitamin D', 'کیلشیم / وٹامن ڈی'], ['antacid', 'Antacid (Mucaine, Gaviscon…)', 'تیزابیت کی دوا (اینٹاسڈ)'], ['potassium', 'Potassium supplement / salt substitute', 'پوٹاشیم سپلیمنٹ / نمک کا متبادل'], ['alcohol', 'Alcohol', 'الکحل'], ['contrast', 'CT / angiography contrast scan planned', 'سی ٹی اسکین یا انجیوگرافی (ڈائی) متوقع']].map(([id, en, ur]) => ({ id, en, ur }));
+const EXTRA = Object.fromEntries(EXTRAS.map(e => [e.id, e]));
+// a × b: fires when one item/extra matches any token in a and another matches any token in b. dup: two distinct molecules of one group.
+const INTERACTIONS = [
+  { a: ['NSAID'], b: ['aspirin'], sev: 'high', t: 'NSAID + low-dose aspirin', en: 'Stomach-bleeding risk rises sharply and ibuprofen can cancel aspirin\'s heart protection. Use paracetamol for pain, or ask your doctor.', ur: 'معدے سے خون بہنے کا خطرہ بہت بڑھ جاتا ہے اور آئبوپروفین اسپرین کی دل کی حفاظت ختم کر سکتی ہے۔ درد کے لیے پیراسیٹامول لیں یا ڈاکٹر سے پوچھیں۔' },
+  { a: ['ciprofloxacin'], b: ['antacid', 'iron', 'calcium'], sev: 'moderate', t: 'Ciprofloxacin + antacid / iron / calcium', en: 'These bind ciprofloxacin in the gut so far less is absorbed and the infection may not clear. Take cipro 2 hours before or 6 hours after them.', ur: 'یہ آنت میں سپروفلوکساسین کو جکڑ لیتے ہیں اور دوا بہت کم جذب ہوتی ہے۔ سپرو ان سے 2 گھنٹے پہلے یا 6 گھنٹے بعد لیں۔' },
+  { a: ['levothyroxine'], b: ['calcium', 'iron', 'antacid'], sev: 'moderate', t: 'Levothyroxine + calcium / iron / antacid', en: 'They cut levothyroxine absorption and your TSH drifts. Keep a 4-hour gap; take levothyroxine on an empty stomach.', ur: 'یہ لیووتھائیروکسین کا جذب کم کر دیتے ہیں اور TSH بگڑ جاتا ہے۔ 4 گھنٹے کا فاصلہ رکھیں؛ تھائیرائیڈ کی دوا خالی پیٹ لیں۔' },
+  { a: ['metronidazole'], b: ['alcohol'], sev: 'high', t: 'Metronidazole + alcohol', en: 'Disulfiram-like reaction: flushing, pounding heart, vomiting. No alcohol during the course and for 48 hours after.', ur: 'شدید ردعمل: چہرہ سرخ، دل کی تیز دھڑکن، قے۔ کورس کے دوران اور 48 گھنٹے بعد تک الکحل بالکل نہیں۔' },
+  { a: ['clopidogrel'], b: ['PPI'], sev: 'moderate', t: 'Clopidogrel + omeprazole / esomeprazole', en: 'These PPIs reduce activation of clopidogrel and weaken its clot protection. Ask the doctor about pantoprazole instead.', ur: 'اومیپرازول اور ایسومیپرازول کلوپیڈوگرل کے اثر کو کمزور کر دیتے ہیں۔ ڈاکٹر سے پینٹوپرازول کے بارے میں پوچھیں۔' },
+  { a: ['STATIN'], b: ['MACROLIDE'], sev: 'moderate', t: 'Statin + macrolide antibiotic', en: 'Macrolides raise statin levels and the risk of muscle damage. Report muscle pain or dark urine; some doctors pause the statin during a short course.', ur: 'میکرولائیڈ اینٹی بایوٹک خون میں اسٹیٹن کی مقدار اور پٹھوں کے نقصان کا خطرہ بڑھاتی ہے۔ پٹھوں میں درد یا گہرا پیشاب ہو تو بتائیں۔' },
+  { a: ['metformin'], b: ['contrast'], sev: 'high', t: 'Metformin + contrast scan', en: 'Hold metformin on the day of the scan and for 48 hours after, until kidney function is confirmed normal. Tell the radiology staff.', ur: 'اسکین کے دن اور 48 گھنٹے بعد تک میٹفارمن روک دیں جب تک گردوں کا ٹیسٹ ٹھیک نہ آ جائے۔ ریڈیولوجی عملے کو بتائیں۔' },
+  { a: ['metformin'], b: ['alcohol'], sev: 'moderate', t: 'Metformin + alcohol', en: 'Heavy drinking with metformin raises the risk of lactic acidosis and low sugar. Avoid binge drinking.', ur: 'میٹفارمن کے ساتھ زیادہ الکحل لیکٹک ایسڈوسس اور شوگر کم ہونے کا خطرہ بڑھاتی ہے۔' },
+  { a: ['losartan'], b: ['potassium'], sev: 'moderate', t: 'Losartan + potassium', en: 'Losartan already raises potassium; supplements or salt substitutes can push it dangerously high (irregular heartbeat). Only with blood-test monitoring.', ur: 'لوسارٹن پہلے ہی پوٹاشیم بڑھاتی ہے؛ سپلیمنٹ یا نمک کے متبادل اسے خطرناک حد تک بڑھا سکتے ہیں (دھڑکن بے ترتیب)۔ صرف خون کے ٹیسٹ کی نگرانی میں۔' },
+  { a: ['NSAID'], b: ['losartan'], sev: 'moderate', t: 'NSAID + losartan', en: 'NSAIDs blunt the blood-pressure effect of losartan and together they stress the kidneys, especially when dehydrated. Short courses only, with fluids.', ur: 'درد کش (NSAID) لوسارٹن کا بلڈ پریشر اثر کم کرتی ہیں اور مل کر گردوں پر بوجھ ڈالتی ہیں، خاص طور پر پانی کی کمی میں۔ مختصر عرصے کے لیے، پانی کے ساتھ۔' },
+  { a: ['ciprofloxacin'], b: ['SU'], sev: 'moderate', t: 'Ciprofloxacin + glimepiride', en: 'Fluoroquinolones can cause unpredictable low (or high) blood sugar with sulfonylureas. Check sugar more often during the course.', ur: 'سپروفلوکساسین گلیمیپرائیڈ کے ساتھ شوگر غیر متوقع طور پر کم (یا زیادہ) کر سکتی ہے۔ کورس کے دوران شوگر زیادہ بار چیک کریں۔' },
+  { a: ['aspirin'], b: ['clopidogrel'], sev: 'low', t: 'Aspirin + clopidogrel', en: 'Dual antiplatelet therapy is often intentional after a stent, but bleeding risk is higher. Make sure a cardiologist prescribed both.', ur: 'اسٹنٹ کے بعد دونوں اکثر جان بوجھ کر دی جاتی ہیں، مگر خون بہنے کا خطرہ زیادہ ہے۔ یقینی بنائیں کہ دل کے ڈاکٹر نے دونوں لکھی ہیں۔' },
+  { a: ['cetirizine'], b: ['alcohol'], sev: 'low', t: 'Cetirizine + alcohol', en: 'Extra drowsiness. Avoid driving.', ur: 'نیند زیادہ آتی ہے۔ گاڑی نہ چلائیں۔' },
+  { a: ['azithromycin'], b: ['antacid'], sev: 'low', t: 'Azithromycin + antacid', en: 'Aluminium/magnesium antacids slow azithromycin absorption; separate by 2 hours.', ur: 'اینٹاسڈ ایزیتھرومائسین کا جذب سست کرتے ہیں؛ 2 گھنٹے کا فاصلہ رکھیں۔' },
+  { dup: 'NSAID', sev: 'high', t: 'Two NSAIDs together', en: 'Two NSAIDs give no extra pain relief but double the stomach, kidney and heart risk. Keep one.', ur: 'دو درد کش دواؤں سے درد میں زیادہ فائدہ نہیں مگر معدے، گردوں اور دل کا خطرہ دوگنا ہو جاتا ہے۔ ایک ہی رکھیں۔' },
+  { dup: 'PPI', sev: 'moderate', t: 'Omeprazole + esomeprazole', en: 'Esomeprazole is one isomer of omeprazole — the same medicine family. Taking both is duplicate therapy.', ur: 'اومیپرازول اور ایسومیپرازول تقریباً ایک ہی دوا ہیں۔ دونوں لینا دوہری خوراک ہے۔' },
+];
+const SEV_RANK = { high: 0, moderate: 1, low: 2 };
+/** Interaction check for one person's items + extras. Returns sorted warnings. */
+function checkInteractions(items, extras) {
+  const toks = new Map(), add = (k, who) => { if (!toks.has(k)) toks.set(k, new Set()); toks.get(k).add(who); };
+  items.forEach(it => { const m = MOL[BR[it.brand].mol]; [m.id, ...(m.groups || [])].forEach(k => add(k, m.en)); });
+  extras.forEach(x => add(x, EXTRA[x].en));
+  const out = [];
+  for (const r of INTERACTIONS) {
+    if (r.dup) { const mols = new Set(items.map(it => BR[it.brand].mol).filter(id => GROUPS[r.dup].includes(id))); if (mols.size >= 2) out.push({ ...r, parties: [...mols].map(id => MOL[id].en) }); continue; }
+    const A = r.a.filter(k => toks.has(k)), B = r.b.filter(k => toks.has(k));
+    if (A.length && B.length) out.push({ ...r, parties: [...new Set([...A, ...B].flatMap(k => [...toks.get(k)]))] });
+  }
+  const mg = items.filter(it => BR[it.brand].mol === 'paracetamol').reduce((s, it) => s + mgPerUnit(BR[it.brand]) * it.dose, 0);
+  if (mg > MOL.paracetamol.maxDaily) out.push({ sev: 'high', t: 'Paracetamol over 4 g / day', parties: ['Paracetamol'], en: `Total paracetamol across this person's items is ${nf.format(mg)} mg/day — above the 4,000 mg adult limit. Risk of liver damage: remove duplicates or lower the dose.`, ur: `اس فرد کی دواؤں میں پیراسیٹامول کی کل مقدار ${nf.format(mg)} ملی گرام روزانہ ہے — بالغوں کی حد 4000 ملی گرام سے زیادہ۔ جگر کو نقصان کا خطرہ: دوہری دوا ہٹائیں یا خوراک کم کریں۔` });
+  return out.sort((x, y) => SEV_RANK[x.sev] - SEV_RANK[y.sev]);
+}
+
+// ---------- search index ----------
+const INDEX = (() => {
+  const ix = [];
+  MOLECULES.forEach(m => { ix.push({ type: 'molecule', label: m.en, sub: m.cls, mol: m.id, keys: [m.en, m.ur, m.id] }); m.tags.forEach(tag => ix.push({ type: 'condition', label: tag, sub: m.en, mol: m.id, keys: [tag] })); });
+  const seen = new Set();
+  BRANDS.forEach(b => { if (seen.has(b.name)) return; seen.add(b.name); ix.push({ type: 'brand', label: b.name, sub: b.mfr + ' · ' + MOL[b.mol].en, mol: b.mol, brand: b.id, keys: [b.name] }); });
+  return ix;
+})();
+function suggest(q) {
+  q = q.trim().toLowerCase(); if (!q) return [];
+  const pri = { brand: 0, molecule: 1, condition: 2 };
+  return INDEX.map(it => { let s = 0; for (const k of it.keys) { const kk = k.toLowerCase(); if (kk === q) s = Math.max(s, 3); else if (kk.startsWith(q)) s = Math.max(s, 2); else if (kk.includes(q)) s = Math.max(s, 1); } return { it, s }; })
+    .filter(x => x.s).sort((a, b) => b.s - a.s || pri[a.it.type] - pri[b.it.type] || a.it.label.localeCompare(b.it.label)).slice(0, 8).map(x => x.it);
+}
+function pushRecent(label, mol, brand) { const r = store.get('recent', []).filter(x => x.label !== label); r.unshift({ label, mol, brand }); store.set('recent', r.slice(0, 8)); }
+function attachSearch(input, list) {
+  let items = [], cur = -1;
+  const draw = () => { list.innerHTML = items.map((it, i) => `<div class="it ${i === cur ? 'on' : ''}" data-i="${i}" role="option"><span class="k ${it.type}">${it.type}</span><div><b>${esc(it.label)}</b><span>${esc(it.sub)}</span></div></div>`).join(''); $$('.it', list).forEach(el => el.onmousedown = e => { e.preventDefault(); pick(items[+el.dataset.i]); }); };
+  const pick = it => { if (!it) return; pushRecent(it.label, it.mol, it.brand); input.value = ''; items = []; draw(); input.blur(); openMolecule(it.mol, it.brand); };
+  input.addEventListener('input', () => { items = suggest(input.value); cur = items.length ? 0 : -1; draw(); });
+  input.addEventListener('focus', () => { if (input.value) { items = suggest(input.value); draw(); } });
+  input.addEventListener('blur', () => setTimeout(() => { items = []; draw(); }, 120));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { cur = Math.min(items.length - 1, cur + 1); draw(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { cur = Math.max(0, cur - 1); draw(); e.preventDefault(); }
+    else if (e.key === 'Enter') { if (items.length) pick(items[Math.max(0, cur)]); else toast(t('no_rows')); }
+    else if (e.key === 'Escape') { items = []; draw(); input.blur(); }
+  });
+}
+// TODO(student): barcode / QR scan. Use the BarcodeDetector API (navigator.mediaDevices + new BarcodeDetector({formats:['ean_13','qr_code']})),
+// map the GTIN to a brand id (you will need a GTIN column in BRANDS) and call openMolecule(). Fall back to a JS decoder (e.g. ZXing) where the API is missing.
+function scanBarcode() { notImpl(); }
+
+// ---------- landing ----------
+let pendingRef = null;
+function openMolecule(mol, brandId) {
+  pendingRef = brandId || null;
+  if (location.hash === '#m/' + mol) { ms.mol = null; route(); } else location.hash = 'm/' + mol;
+}
+function renderLanding() {
+  $('#heroTitle').innerHTML = `${esc(t('hero_a'))} <em>${esc(t('hero_b'))}</em>`;
+  const rec = store.get('recent', []);
+  $('#recent').innerHTML = rec.length ? `<span class="lbl">${t('recent')}</span><div class="chips">${rec.map((r, i) => `<button class="chip rec" data-i="${i}">${esc(r.label)}</button>`).join('')}</div><button class="btn ghost sm" id="recClear">${t('clear')}</button>` : '';
+  $$('#recent .chip').forEach(b => b.onclick = () => { const r = rec[+b.dataset.i]; pushRecent(r.label, r.mol, r.brand); openMolecule(r.mol, r.brand); });
+  const rc = $('#recClear'); if (rc) rc.onclick = () => { store.set('recent', []); renderLanding(); };
+  $('#popular').innerHTML = POPULAR.map(id => `<button class="chip" data-m="${id}">${esc(nm(MOL[id]))}</button>`).join('');
+  $$('#popular .chip').forEach(b => b.onclick = () => { pushRecent(MOL[b.dataset.m].en, b.dataset.m); openMolecule(b.dataset.m); });
+  let gap = { r: 1, m: null };
+  MOLECULES.forEach(m => { const groups = {}; brandsOf(m.id).forEach(b => { (groups[b.strength + b.form] ||= []).push(b.unit); }); Object.values(groups).forEach(u => { const r = Math.max(...u) / Math.min(...u); if (r > gap.r) gap = { r, m }; }); });
+  $('#stats').innerHTML = `<div class="stat">${ic('layers', 'sic')}<div><div class="v" data-cu="${MOLECULES.length}">0</div><div class="k">${t('stat_mol')}</div></div></div><div class="stat">${ic('tag', 'sic')}<div><div class="v" data-cu="${BRANDS.length}">0</div><div class="k">${t('stat_brands')}</div></div></div><div class="stat coral">${ic('trending-down', 'sic')}<div><div class="v" data-cu="${gap.r}" data-x>0</div><div class="k">${t('stat_gap')} · ${esc(nm(gap.m))}</div></div></div>`;
+  $$('#stats .v').forEach(el => countUp(el, +el.dataset.cu, el.hasAttribute('data-x') ? v => v.toFixed(1) + '×' : undefined));
+  $('#how').innerHTML = [1, 2, 3].map(i => `<div class="card"><div class="n">${i}</div><h3>${t('how' + i)}</h3><p>${t('how' + i + 't')}</p></div>`).join('');
+  stagger($('section[data-page=search]'));
+}
+$('#scanBtn').onclick = scanBarcode;
+
+// ---------- molecule page ----------
+const ms = { mol: null, strength: 'all', form: 'all', ref: null, cmp: [] };
+function defaultRef(rows) { return (rows.find(b => b.orig && (b.form === 'tablet' || b.form === 'capsule')) || rows.find(b => b.orig) || [...rows].sort((a, b) => b.unit - a.unit)[0])?.id; }
+function savePct(ref, b) { return (ref.unit - b.unit) / ref.unit * 100; }
+function renderMolecule(id) {
+  const m = MOL[id], all = brandsOf(id);
+  if (ms.mol !== id) { Object.assign(ms, { mol: id, strength: 'all', form: 'all', cmp: [], ref: pendingRef && BR[pendingRef]?.mol === id ? pendingRef : defaultRef(all) }); pendingRef = null; }
+  const strengths = [...new Set(all.map(b => b.strength))], forms = [...new Set(all.map(b => b.form))];
+  const rows = all.filter(b => (ms.strength === 'all' || b.strength === ms.strength) && (ms.form === 'all' || b.form === ms.form)).sort((a, b) => a.unit - b.unit);
+  if (rows.length && !rows.some(b => b.id === ms.ref)) ms.ref = defaultRef(rows);
+  const ref = BR[ms.ref];
+  const minBy = {}; rows.forEach(b => { const k = b.strength + '|' + b.form; minBy[k] = minBy[k] ? Math.min(minBy[k], b.unit) : b.unit; });
+  const cnt = {}; rows.forEach(b => { const k = b.strength + '|' + b.form; cnt[k] = (cnt[k] || 0) + 1; });
+  const chip = (v, key, label) => `<button class="chip ${ms[key] === v ? 'on' : ''}" data-k="${key}" data-v="${esc(v)}">${label}</button>`;
+  const logs = allLog().filter(r => BR[r.brand]?.mol === id).sort((a, b) => b.date.localeCompare(a.date));
+  $('#molPage').innerHTML = `
+  <div class="mhead">
+    <div style="min-width:0;flex:1">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><span class="pill mint">${esc(m.cls)}</span>${m.abx ? `<span class="pill amber">Antibiotic</span>` : ''}${m.nti ? `<span class="pill red">Narrow therapeutic index</span>` : ''}<span class="pill">${all.length} ${t('m_brands')}</span></div>
+      <h2>${esc(m.en)}</h2><div class="ur urname">${esc(m.ur)}</div>
+      <div style="margin-top:8px"><span class="eyebrow">${t('m_used')}</span>${bi(m.uses)}</div>
+    </div>
+    <div class="acts"><button class="btn ghost" id="cardBtn">${ic('file')} ${t('m_card')}</button><button class="btn" id="cmpBtn" ${ms.cmp.length < 2 ? 'disabled' : ''}>${ic('compare')} ${t('m_cmp')} (${ms.cmp.length})</button></div>
+  </div>
+  <div class="results">
+    <div>
+      <div class="callout mint" style="margin-bottom:14px"><span class="eyebrow">${t('m_counsel')}</span>${bi(m.counsel)}${m.nti ? `<div class="small" style="margin-top:6px;color:var(--red);font-weight:700">${ic('alert')} ${t('m_nti')}</div>` : ''}${m.abx ? `<div class="small" style="margin-top:6px;color:var(--amber);font-weight:700">${ic('alert')} ${t('m_abx')}</div>` : ''}</div>
+      <div class="filters">
+        <div class="grp"><span class="lbl">${t('m_strength')}</span>${chip('all', 'strength', t('all'))}${strengths.map(s => chip(s, 'strength', esc(s))).join('')}</div>
+        <div class="grp"><span class="lbl">${t('m_form')}</span>${chip('all', 'form', t('all'))}${forms.map(f => chip(f, 'form', t('f_' + f))).join('')}</div>
+        <div class="grp" style="margin-left:auto"><span class="lbl">${t('m_ref')}</span><select id="refSel" style="width:auto;padding:6px 10px">${rows.map(b => `<option value="${b.id}" ${b.id === ms.ref ? 'selected' : ''}>${esc(b.name)} ${esc(b.strength)} ${t('f_' + b.form)}</option>`).join('')}</select></div>
+      </div>
+      ${rows.length ? `<table class="btable"><thead><tr><th>${t('col_brand')}</th><th>${t('col_sf')}</th><th class="num">${t('col_pack')}</th><th class="num">${t('col_unit')}</th><th class="num">${t('col_save')}</th><th>${t('col_seen')}</th><th></th></tr></thead><tbody class="stagger-fade">
+      ${rows.map(b => { const k = b.strength + '|' + b.form, best = b.unit === minBy[k] && cnt[k] > 1, comparable = ref && sameSF(ref, b), p = comparable ? savePct(ref, b) : null, seen = seenStats(b.id);
+        return `<tr class="${best ? 'best' : ''} ${b.id === ms.ref ? 'ref' : ''}">
+          <td class="full"><label class="ck"><input type="checkbox" data-cmp="${b.id}" ${ms.cmp.includes(b.id) ? 'checked' : ''} aria-label="${t('compare')} ${esc(b.name)}"><span><span class="name">${esc(b.name)}</span> ${b.orig ? `<span class="pill coral">${t('orig')}</span>` : ''}${best ? `<span class="pill mint">${ic('star')} ${t('cheapest')}</span>` : ''}<br><span class="sub">${esc(b.mfr)}</span></span></label></td>
+          <td data-l="${t('col_sf')}">${esc(b.strength)}<br><span class="sub">${t('f_' + b.form)}</span></td>
+          <td class="num" data-l="${t('col_pack')}">${esc(b.packLabel)}<br><span class="sub">${rs(b.mrp)}</span></td>
+          <td class="num" data-l="${t('col_unit')}"><span class="unit">${rs2(b.unit)} <small>/ ${unitLabel(b)}</small></span></td>
+          <td class="num" data-l="${t('col_save')}">${p == null ? '<span class="muted">—</span>' : b.id === ms.ref ? `<span class="save zero">${ic('flag')} ${t('ref_badge')}</span>` : p > 0.5 ? `<span class="save down">−${p.toFixed(0)}%</span>` : p < -0.5 ? `<span class="save up">+${(-p).toFixed(0)}%</span>` : `<span class="save up">≈</span>`}</td>
+          <td class="full seen" data-l="${t('col_seen')}">${seen ? `<b>${rs(seen.avg)}</b> <bdi>${t('seen_avg')}</bdi> · <bdi>${seen.n}×</bdi> · <span style="color:${seen.delta > 0 ? 'var(--coral-deep)' : 'var(--mint-ink)'}"><bdi>${seen.delta > 0 ? '+' : ''}${seen.delta.toFixed(0)}%</bdi> <bdi>${t('seen_vs')}</bdi></span>` : '<span class="muted">—</span>'}</td>
+          <td class="full"><div class="rowacts"><button class="btn sm ${best ? '' : 'ghost'}" data-add="${b.id}">${ic('plus')} ${t('add')}</button></div></td></tr>`; }).join('')}
+      </tbody></table>` : `<div class="empty">${t('no_rows')}</div>`}
+      <p class="small muted" style="margin:10px 2px 0">${t('m_note_same')} ${t('m_cmp_hint')}</p>
+    </div>
+    <aside class="rail">
+      <div class="card"><h4 style="margin-top:0">${t('m_facts')}</h4>
+        <div class="small"><b>${t('m_class')}:</b> ${esc(m.cls)}</div><div class="small"><b>${t('m_strength')}:</b> ${strengths.map(esc).join(', ')}</div><div class="small"><b>${t('m_form')}:</b> ${forms.map(f => t('f_' + f)).join(', ')}</div>
+        <div class="small muted" style="margin-top:8px"><b>${t('m_quality')}:</b> ${t('m_quality_na')}</div>
+      </div>
+      <div class="card"><h4 style="margin-top:0">${t('m_log')}</h4><p class="small muted" style="margin:0 0 6px">${t('m_log_lead')}</p>
+        <label class="f">${t('col_brand')}</label><select id="lgB">${all.map(b => `<option value="${b.id}">${esc(b.name)} ${esc(b.strength)} · ${esc(b.packLabel)}</option>`).join('')}</select>
+        <label class="f">${t('log_price')}</label><input id="lgP" type="number" min="1" inputmode="numeric">
+        <div class="cols"><div><label class="f">${t('log_pharmacy')}</label><input id="lgF" type="text" maxlength="60"></div><div><label class="f">${t('log_city')}</label><input id="lgC" type="text" maxlength="40"></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn coral" id="lgSave">${ic('coins')} ${t('log_save')}</button><button class="btn ghost" id="nearBtn">${ic('map-pin')} ${t('nearby')}</button></div>
+        <h4>${t('log_recent')}</h4>
+        ${logs.length ? logs.slice(0, 5).map(r => `<div class="small" style="padding:6px 0;border-bottom:1px solid var(--tint-2)"><b>${esc(BR[r.brand].name)}</b> ${esc(BR[r.brand].strength)} · <b>${rs(r.price)}</b> <span class="muted">${esc(r.pharmacy)}, ${esc(r.city)} · ${r.date}${r.seed ? ' · seed' : ''}</span></div>`).join('') : `<div class="small muted">${t('log_none')}</div>`}
+      </div>
+    </aside>
+  </div>`;
+  $$('.filters .chip').forEach(c => c.onclick = () => { ms[c.dataset.k] = c.dataset.v; renderMolecule(id); });
+  $('#refSel').onchange = e => { ms.ref = e.target.value; renderMolecule(id); };
+  $$('[data-cmp]').forEach(c => c.onchange = () => { if (c.checked) { if (ms.cmp.length >= 3) { c.checked = false; toast(t('m_cmp_hint')); return; } ms.cmp.push(c.dataset.cmp); } else ms.cmp = ms.cmp.filter(x => x !== c.dataset.cmp); $('#cmpBtn').disabled = ms.cmp.length < 2; $('#cmpBtn').innerHTML = `${ic('compare')} ${t('m_cmp')} (${ms.cmp.length})`; });
+  stagger($('#molPage'));
+  $$('[data-add]').forEach(b => b.onclick = () => openAdd(b.dataset.add));
+  $('#cmpBtn').onclick = openCompare; $('#cardBtn').onclick = () => openCard(ms.ref);
+  $('#nearBtn').onclick = findNearbyPharmacies;
+  $('#lgSave').onclick = () => {
+    const price = +$('#lgP').value, brand = $('#lgB').value; if (!brand || !price) return toast(t('log_invalid'), 'bad');
+    const log = store.get('pricelog', []); log.unshift({ id: uid(), brand, price, pharmacy: $('#lgF').value.trim() || '—', city: $('#lgC').value.trim() || '—', date: dkey(TODAY) }); store.set('pricelog', log);
+    syncPriceLog(log[0]); toast(t('log_saved'), 'ok'); renderMolecule(id);
+  };
+}
+// TODO(student): pharmacy locator. Add a Leaflet/OpenStreetMap map with pharmacies near the user (Geolocation API), filtered to those whose price logs mention this molecule.
+function findNearbyPharmacies() { notImpl(); }
+// TODO(student): crowd-sourced prices. POST each observation to your backend (Node/Django/Firebase), add OTP or account login,
+// a moderation queue, MAD-based outlier rejection, and pull the community average back into seenStats().
+function syncPriceLog(/* entry */) { /* local only for now */ }
+// TODO(student): bioequivalence / quality data. Load DRAP or WHO prequalification status per brand and render a rating in the Quick facts card and as a table column.
+function qualityRating(/* brand */) { return null; }
+
+// ----- compare drawer -----
+function openCompare() {
+  const list = ms.cmp.map(id => BR[id]); if (list.length < 2) return;
+  const maxU = Math.max(...list.map(b => b.unit)), minU = Math.min(...list.map(b => b.unit));
+  const row = (label, f, bestFn) => `<tr><th>${label}</th>${list.map(b => `<td class="${bestFn && bestFn(b) ? 'best' : ''}">${f(b)}</td>`).join('')}</tr>`;
+  $('#drawerTitle').textContent = `${t('m_cmp')} · ${nm(MOL[ms.mol])}`;
+  $('#drawerBody').innerHTML = `<table class="cmp"><thead><tr><th></th>${list.map(b => `<th style="width:auto;color:var(--ink);font-size:.95rem;text-transform:none;letter-spacing:0">${esc(b.name)}${b.orig ? ` <span class="pill coral">${t('orig')}</span>` : ''}</th>`).join('')}</tr></thead><tbody>
+    ${row(t('mfr'), b => esc(b.mfr))}${row(t('m_strength'), b => esc(b.strength))}${row(t('m_form'), b => t('f_' + b.form))}${row(t('pack'), b => esc(b.packLabel))}${row(t('mrp'), b => rs(b.mrp))}
+    ${row(t('col_unit'), b => `<b>${rs2(b.unit)}</b> / ${unitLabel(b)}`, b => b.unit === minU)}
+    ${row(t('monthly1'), b => rs(b.unit * 30), b => b.unit === minU)}
+    ${row(t('vs_priciest'), b => b.unit === maxU ? '—' : `<span class="save down">−${((maxU - b.unit) / maxU * 100).toFixed(0)}%</span>`)}
+    ${row(t('col_seen'), b => { const s = seenStats(b.id); return s ? `${rs(s.avg)} (${s.n})` : '—'; })}
+    ${row(t('orig'), b => b.orig ? t('yes') : t('no'))}
+    <tr><th></th>${list.map(b => `<td><button class="btn sm" data-add="${b.id}">${ic('plus')} ${t('add')}</button></td>`).join('')}</tr></tbody></table>
+    <p class="small muted" style="margin-top:10px">${t('m_note_same')}</p>`;
+  $$('[data-add]', $('#drawerBody')).forEach(b => b.onclick = () => { closeDrawer(); openAdd(b.dataset.add); });
+  document.body.classList.add('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'false');
+}
+function closeDrawer() { document.body.classList.remove('drawer-open'); $('#drawer').setAttribute('aria-hidden', 'true'); }
+$('#drawerClose').onclick = closeDrawer; $('#scrim').onclick = closeDrawer;
+
+// ----- modal helpers -----
+function openModal(head, body) { $('#mHead').innerHTML = head; $('#mBody').innerHTML = body; $('#modalScrim').classList.add('on'); }
+function closeModal() { $('#modalScrim').classList.remove('on'); }
+$('#mClose').onclick = closeModal; $('#modalScrim').onclick = e => { if (e.target === e.currentTarget) closeModal(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeDrawer(); } });
+
+// ----- printable medicine card -----
+function openCard(brandId) {
+  const b = BR[brandId], m = MOL[b.mol], alts = brandsOf(m.id).filter(x => sameSF(x, b) && x.id !== b.id && x.unit < b.unit).sort((x, y) => x.unit - y.unit).slice(0, 3);
+  openModal(`<h2>${t('m_card')}</h2>`, `<div class="pcard">
+    <div class="ph"><div><div class="eyebrow">Dawai · ${t('m_card')}</div><h2>${esc(m.en)}</h2><div class="ur" style="color:var(--mint-deep)">${esc(m.ur)}</div><div class="muted small">${esc(m.cls)}</div></div><div class="small muted" style="text-align:right">${TODAY.toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}</div></div>
+    <h4>${t('m_used')}</h4>${bi(m.uses)}
+    <h4>${t('col_brand')}</h4><div><b>${esc(b.name)}</b> ${esc(b.strength)} ${t('f_' + b.form)} · ${esc(b.mfr)} · ${rs(b.mrp)} / ${esc(b.packLabel)} · <b>${rs2(b.unit)}</b> ${t('per')} ${unitLabel(b)}</div>
+    ${alts.length ? `<h4>${t('c_cheapest')} (${esc(b.strength)} ${t('f_' + b.form)})</h4><table><tr><th>${t('col_brand')}</th><th>${t('mfr')}</th><th>${t('col_unit')}</th><th>${t('col_save')}</th></tr>${alts.map(a => `<tr><td><b>${esc(a.name)}</b></td><td>${esc(a.mfr)}</td><td>${rs2(a.unit)}</td><td style="color:var(--coral-deep);font-weight:700">−${savePct(b, a).toFixed(0)}%</td></tr>`).join('')}</table>` : `<p class="small muted">${t('c_same')}</p>`}
+    <h4>${t('m_counsel')}</h4>${bi(m.counsel)}
+    ${m.nti ? `<div class="callout red small" style="margin-top:8px">${t('m_nti')}</div>` : ''}${m.abx ? `<div class="callout amber small" style="margin-top:8px">${t('m_abx')}</div>` : ''}
+    <div class="foot">${t('ribbon_h')} ${t('ribbon')} · Not medical advice — confirm with a pharmacist or doctor.</div>
+  </div>
+  <div class="noprint" style="display:flex;gap:8px;margin-top:14px"><button class="btn" onclick="window.print()">${ic('printer')} ${t('print')}</button><button class="btn ghost" onclick="closeModal()">${ic('x')} ${t('close')}</button></div>`);
+}
+
+// ---------- cabinet ----------
+const WHO = ['me', 'ammi', 'abbu', 'child', 'other'];
+const cabinet = () => store.get('cabinet', []);
+const saveCabinet = c => store.set('cabinet', c);
+const whoLabel = it => it.who === 'other' && it.name ? it.name : t('who_' + it.who);
+const TIMES = ['06:00', '08:00', '12:00', '14:00', '18:00', '20:00', '22:00'];
+const timeChips = sel => `<div class="times" id="timeChips">${TIMES.map(x => `<button type="button" class="chip ${sel.includes(x) ? 'on' : ''}" data-t="${x}">${x}</button>`).join('')}<input type="time" id="tCustom" style="width:auto;padding:5px 8px"><button type="button" class="btn ghost sm" id="tAdd">${t('r_add_time')}</button></div>`;
+function wireTimeChips(sel, onChange) {
+  $$('#timeChips .chip').forEach(c => c.onclick = () => { const x = c.dataset.t; sel.includes(x) ? sel.splice(sel.indexOf(x), 1) : sel.push(x); sel.sort(); onChange(); });
+  $('#tAdd').onclick = () => { const v = $('#tCustom').value; if (v && !sel.includes(v)) { sel.push(v); sel.sort(); onChange(); } };
+}
+function openAdd(brandId) {
+  const b = BR[brandId], m = MOL[b.mol], sel = [];
+  const draw = () => {
+    openModal(`<div><div class="eyebrow">${esc(m.en)}</div><h2>${t('a_title')}</h2></div>`, `<div><b style="font-size:1.05rem">${esc(b.name)}</b> ${esc(b.strength)} ${t('f_' + b.form)} · ${esc(b.mfr)} · ${rs2(b.unit)} / ${unitLabel(b)}</div>
+      <div class="cols"><div><label class="f">${t('a_dose')} (${unitLabel(b)})</label><input id="aDose" type="number" min="1" max="12" step="1" value="${$('#aDose')?.value || 1}"></div><div><label class="f">${t('a_who')}</label><select id="aWho">${WHO.map(w => `<option value="${w}" ${($('#aWho')?.value || 'me') === w ? 'selected' : ''}>${t('who_' + w)}</option>`).join('')}</select></div></div>
+      <div id="aNameWrap" class="${($('#aWho')?.value || 'me') === 'other' ? '' : 'hidden'}"><label class="f">${t('a_name')}</label><input id="aName" type="text" maxlength="30" value="${esc($('#aName')?.value || '')}"></div>
+      <label class="f">${t('a_times')}</label>${timeChips(sel)}
+      ${m.nti ? `<div class="callout red small" style="margin-top:12px">${t('m_nti')}</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:16px"><button class="btn" id="aSave">${t('save')}</button><button class="btn ghost" id="aCancel">${t('cancel')}</button></div>`);
+    wireTimeChips(sel, draw);
+    $('#aWho').onchange = e => $('#aNameWrap').classList.toggle('hidden', e.target.value !== 'other');
+    $('#aCancel').onclick = closeModal;
+    $('#aSave').onclick = () => { const c = cabinet(); c.push({ id: uid(), brand: b.id, dose: Math.max(1, Math.min(12, +$('#aDose').value || 1)), who: $('#aWho').value, name: $('#aName').value.trim(), times: [...sel], added: dkey(TODAY) }); saveCabinet(c); closeModal(); toast(t('added'), 'ok'); };
+  };
+  draw();
+}
+const DEMO = [['glucophage-500-mg-tablet', 2, 'ammi', ['08:00', '20:00']], ['lipitor-20-mg-tablet', 1, 'ammi', ['22:00']], ['loprin-75-mg-tablet', 1, 'abbu', ['09:00']], ['brufen-400-mg-tablet', 2, 'abbu', ['09:00', '21:00']], ['eziday-50-mg-tablet', 1, 'abbu', ['09:00']], ['calpol-120-mg-5-ml-syrup', 3, 'child', ['08:00', '14:00', '20:00']]];
+/** Demo cabinet + six days of plausible tick-off history so the adherence chart and streak have something to show. */
+function loadDemo() {
+  const items = DEMO.map(([brand, dose, who, times]) => ({ id: uid(), brand, dose, who, times, added: dkey(daysAgo(7)) }));
+  saveCabinet(items); store.set('extras', { abbu: ['antacid'] });
+  const all = {}, keys = items.flatMap(it => it.times.map(tm => doseKey(it, tm)));
+  for (let i = 1; i <= 6; i++) all[dkey(daysAgo(i))] = (i === 3 || i === 5) ? keys.filter((_, j) => j % 3 !== 0) : keys;
+  store.set('taken', all); renderCabinet();
+}
+function renderCabinet() {
+  const c = cabinet(), extrasAll = store.get('extras', {});
+  const el = $('#cabPage');
+  const head = `<div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px"><div style="flex:1;min-width:240px"><h2 style="font-size:1.5rem">${t('c_title')}</h2><p class="muted" style="margin:4px 0 0">${t('c_lead')}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" id="ocrBtn">${ic('camera')} ${t('c_ocr')}</button>${c.length ? `<button class="btn danger" id="cabClear">${ic('trash')} ${t('c_clear')}</button>` : ''}</div></div>`;
+  if (!c.length) { el.innerHTML = head + `<div class="empty">${ic('pill', 'big')}<p>${t('c_empty')}</p><button class="btn" id="demoBtn">${ic('users')} ${t('c_demo')}</button></div>`; $('#demoBtn').onclick = loadDemo; $('#ocrBtn').onclick = ocrPrescription; return; }
+  const cost = it => BR[it.brand].unit * it.dose * 30, saving = it => (BR[it.brand].unit - cheapestEq(BR[it.brand]).unit) * it.dose * 30;
+  const total = c.reduce((s, it) => s + cost(it), 0), save = c.reduce((s, it) => s + saving(it), 0), pct = total ? save / total * 100 : 0, C = 2 * Math.PI * 20;
+  const people = [...new Set(c.map(it => it.who === 'other' ? 'other:' + it.name : it.who))];
+  const personKey = it => it.who === 'other' ? 'other:' + it.name : it.who;
+  const sevCls = s => s === 'high' ? 'red' : s === 'moderate' ? 'amber' : 'blue';
+  el.innerHTML = head + `<div class="kpis stagger">
+      <div class="kpi">${ic('wallet', 'kic')}<div class="k">${t('c_total')}</div><div class="v"><span data-cu="${total}">Rs 0</span><span class="muted" style="font-size:.9rem;font-weight:600"> ${t('c_month')}</span></div></div>
+      <div class="kpi coral"><svg class="ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="none" stroke="var(--coral-soft)" stroke-width="5"/><circle cx="24" cy="24" r="20" fill="none" stroke="var(--coral)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}" data-dash="${(C * (1 - Math.min(1, pct / 100))).toFixed(1)}" transform="rotate(-90 24 24)" style="transition:stroke-dashoffset .8s var(--ease)"/><text x="24" y="28" text-anchor="middle" font-size="11" font-weight="800" fill="var(--coral-deep)">${pct.toFixed(0)}%</text></svg><div class="k">${t('c_save')}</div><div class="v"><span data-cu="${save}">Rs 0</span><span class="muted" style="font-size:.9rem;font-weight:600"> ${t('c_month')}</span></div><div class="meter"><i data-w="${Math.min(100, pct).toFixed(1)}" style="width:0"></i></div><div class="small muted" style="margin-top:4px">${t('c_save_s')}</div></div>
+      <div class="kpi">${ic('users', 'kic')}<div class="k">${t('c_items')}</div><div class="v"><span data-cu="${c.length}" data-int>0</span><span class="muted" style="font-size:.9rem;font-weight:600"> · ${people.length} ${t('c_people')}</span></div></div>
+    </div>
+    ${people.map(p => { const items = c.filter(it => personKey(it) === p), ex = extrasAll[p] || [], warns = checkInteractions(items, ex);
+      return `<div class="person card"><div class="ph">${ic('users')}<h3>${esc(whoLabel(items[0]))}</h3><span class="pill">${items.length} ${t('c_items')}</span><span class="pill mint">${rs(items.reduce((s, it) => s + cost(it), 0))} ${t('c_month')}</span>${warns.length ? `<span class="pill ${sevCls(warns[0].sev)}">${ic('alert')} ${warns.length}</span>` : ''}</div>
+        <div class="stagger">${items.map(it => { const b = BR[it.brand], ch = cheapestEq(b), sv = saving(it); return `<div class="item">
+          <div><div class="nm">${esc(b.name)} <span class="muted small">${esc(b.strength)} ${t('f_' + b.form)}</span></div><div class="sub">${esc(MOL[b.mol].en)} · ${esc(b.mfr)} · ${it.dose} ${unitLabel(b)} ${t('c_dose')}</div></div>
+          <div><div class="cost">${rs(cost(it))} <span class="muted small" style="font-weight:600">${t('c_month')}</span></div><div class="sub">${rs2(b.unit)} / ${unitLabel(b)}</div></div>
+          <div class="alt">${sv > 0.5 ? `<div class="sub">${t('c_cheapest')}</div><b>${esc(ch.name)}</b> · ${rs2(ch.unit)} → <b>${rs(sv)}</b> <span class="sub">${t('c_savemo')}</span>${MOL[b.mol].nti ? ` <span class="pill red">${ic('alert')} NTI</span>` : ''}` : `<span class="pill mint">${ic('star')} ${t('c_same')}</span>`}</div>
+          <div class="acts" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${sv > 0.5 ? `<button class="btn coral sm" data-sw="${it.id}">${ic('trending-down')} ${t('c_switch')}</button>` : ''}<a class="btn ghost sm" href="#m/${b.mol}" aria-label="${t('open')} ${esc(MOL[b.mol].en)}">${ic('external')}</a><button class="btn ghost sm" data-rm="${it.id}" aria-label="${t('c_remove')} ${esc(b.name)}">${ic('trash')}</button></div></div>`; }).join('')}</div>
+        <div class="h4" style="margin-top:12px">${t('c_extras')}</div><div class="chips">${EXTRAS.map(e => `<button class="chip coral ${ex.includes(e.id) ? 'on' : ''}" data-p="${esc(p)}" data-x="${e.id}">${esc(nm(e))}</button>`).join('')}</div>
+        <div class="h4" style="margin-top:14px">${t('c_inter')}</div>
+        <div class="stagger">${warns.length ? warns.map(w => `<div class="warn ${w.sev}"><span class="pill sev ${sevCls(w.sev)}">${ic('alert')} ${t('sev_' + w.sev)}</span><div><h4>${esc(w.t)} <span class="muted small" style="font-weight:500">· ${w.parties.map(esc).join(' + ')}</span></h4>${bi({ en: w.en, ur: w.ur }, 'small')}</div></div>`).join('') : `<div class="callout small">${ic('check-circle')} ${t('c_inter_none')}</div>`}</div>
+      </div>`; }).join('')}`;
+  $$('[data-cu]', el).forEach(s => countUp(s, +s.dataset.cu, s.hasAttribute('data-int') ? undefined : rs));
+  animateFills(el); stagger(el);
+  $$('[data-rm]').forEach(b => b.onclick = () => { saveCabinet(cabinet().filter(it => it.id !== b.dataset.rm)); toast(t('removed')); renderCabinet(); });
+  $$('[data-sw]').forEach(b => b.onclick = () => { const c2 = cabinet(), it = c2.find(x => x.id === b.dataset.sw), br = BR[it.brand]; if (MOL[br.mol].nti && !confirm(t('c_nti_sw'))) return; it.brand = cheapestEq(br).id; saveCabinet(c2); toast(t('c_switched') + ' → ' + BR[it.brand].name, 'ok'); renderCabinet(); });
+  $$('[data-x]').forEach(b => b.onclick = () => { const ex = store.get('extras', {}), p = b.dataset.p, list = ex[p] || []; ex[p] = list.includes(b.dataset.x) ? list.filter(x => x !== b.dataset.x) : [...list, b.dataset.x]; store.set('extras', ex); renderCabinet(); });
+  $('#ocrBtn').onclick = ocrPrescription;
+  const cc = $('#cabClear'); if (cc) cc.onclick = () => { if (confirm(t('c_clear') + '?')) { saveCabinet([]); renderCabinet(); } };
+}
+// TODO(student): prescription OCR. Let the user photograph a prescription, run Tesseract.js (or a cloud OCR API) with an Urdu+English model,
+// fuzzy-match the recognised tokens against BRANDS/MOLECULES (Levenshtein), and pre-fill openAdd() for each match for the user to confirm.
+function ocrPrescription() { notImpl(); }
+
+// ---------- reminders ----------
+const takenMap = () => store.get('taken', {});
+const doseKey = (it, tm) => it.id + '@' + tm;
+function scheduledToday() { return cabinet().flatMap(it => (it.times || []).map(tm => ({ it, tm }))).sort((a, b) => a.tm.localeCompare(b.tm)); }
+function adherence(dayKeyStr) { const sched = scheduledToday().length; if (!sched) return null; const taken = (takenMap()[dayKeyStr] || []).length; return Math.min(1, taken / sched); }
+function streak() { let n = 0; const todayFull = adherence(dkey(TODAY)) === 1; for (let i = todayFull ? 0 : 1; i < 365; i++) { if (adherence(dkey(daysAgo(i))) === 1) n++; else break; } return n; }
+let notifTimers = [];
+function scheduleNotifs() {
+  notifTimers.forEach(clearTimeout); notifTimers = [];
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = new Date(), taken = takenMap()[dkey(TODAY)] || [];
+  scheduledToday().forEach(({ it, tm }) => { if (taken.includes(doseKey(it, tm))) return; const [h, mi] = tm.split(':').map(Number); const at = new Date(TODAY); at.setHours(h, mi, 0, 0); const ms = at - now; if (ms > 0 && ms < 864e5) notifTimers.push(setTimeout(() => { try { new Notification('Dawai · ' + tm, { body: `${t('r_notif_body')}: ${BR[it.brand].name} ${BR[it.brand].strength} (${whoLabel(it)})` }); } catch {} }, ms)); });
+  // TODO(student): notifications only fire while this tab is open. Add a service worker + Push API (or Capacitor local notifications) so reminders work when the app is closed; make it an installable PWA.
+}
+/** 7-day adherence line (single series: no legend; today direct-labelled; every point has a hover title). */
+function weekChart() {
+  const days = Array.from({ length: 7 }, (_, i) => daysAgo(6 - i)), W = 420, H = 130, P = { l: 30, r: 16, t: 18, b: 24 }, ih = H - P.t - P.b;
+  const pts = days.map((d, i) => { const a = adherence(dkey(d)) ?? 0; return { d, a, x: P.l + i * (W - P.l - P.r) / 6, y: H - P.b - a * ih, isT: dkey(d) === dkey(TODAY) }; });
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('r_week')}">
+    ${[0, .5, 1].map(g => { const y = (H - P.b - g * ih).toFixed(1); return `<line x1="${P.l}" x2="${W - P.r}" y1="${y}" y2="${y}" stroke="#d9e8e4" stroke-dasharray="${g ? '3 3' : '0'}"/><text x="${P.l - 6}" y="${+y + 4}" text-anchor="end" font-size="10" fill="#5f7a75">${g * 100}</text>`; }).join('')}
+    <path d="${line} L${pts[6].x.toFixed(1)} ${H - P.b} L${pts[0].x.toFixed(1)} ${H - P.b}Z" fill="#0f9d8a" opacity=".08"/>
+    <path class="line" d="${line}" fill="none" stroke="#0f9d8a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((p, i) => `<g class="dot" style="--i:${i}"><title>${p.d.toLocaleDateString('en-PK', { weekday: 'long', day: 'numeric', month: 'short' })}: ${Math.round(p.a * 100)}%</title><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="10" fill="transparent"/><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.isT ? 5 : 4}" fill="${p.isT ? '#0f9d8a' : '#fff'}" stroke="#0f9d8a" stroke-width="2"/>${p.isT && p.a > 0 ? `<text x="${p.x.toFixed(1)}" y="${(p.y - 11).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#0e2b27">${Math.round(p.a * 100)}%</text>` : ''}<text x="${p.x.toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="${p.isT ? '#0e2b27' : '#5f7a75'}" font-weight="${p.isT ? 700 : 500}">${p.d.toLocaleDateString('en-PK', { weekday: 'short' })}</text></g>`).join('')}
+  </svg>`;
+}
+function renderReminders() {
+  const c = cabinet(), sched = scheduledToday(), taken = takenMap()[dkey(TODAY)] || [], el = $('#remPage');
+  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+  const notifLine = perm === 'unsupported' ? `<div class="small muted">${ic('bell')} ${t('r_notif_no')}</div>` : perm === 'granted' ? `<div class="small" style="color:var(--mint-ink);font-weight:700">${ic('bell')} ${t('r_notif_on')} <button class="btn ghost sm" id="nTest">${t('r_test')}</button></div>` : perm === 'denied' ? `<div class="small muted">${ic('bell')} ${t('r_denied')}</div>` : `<button class="btn ghost sm" id="nAsk">${ic('bell')} ${t('r_notif')}</button>`;
+  el.innerHTML = `<div style="margin-bottom:14px"><h2 style="font-size:1.5rem">${t('r_title')}</h2><p class="muted" style="margin:4px 0 0">${t('r_lead')}</p></div>
+  <div class="two">
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>${ic('clock')} ${t('r_today')} <span class="muted small" style="font-weight:600">${TODAY.toLocaleDateString('en-PK', { weekday: 'long', day: 'numeric', month: 'long' })}</span></h2><span class="pill mint">${taken.length} / ${sched.length} ${t('r_taken')}</span></div>
+      <div class="today stagger" style="margin-top:12px">${!c.length ? `<div class="empty">${ic('pill', 'big')}<a class="btn" href="#search">${ic('search')} ${t('r_none_cab')}</a></div>` : !sched.length ? `<div class="callout">${ic('bell')} ${t('r_none')}</div>` : sched.map(({ it, tm }) => { const k = doseKey(it, tm), b = BR[it.brand], done = taken.includes(k); return `<label class="dose ${done ? 'done' : ''}"><span class="tm">${tm}</span><span style="min-width:0"><span class="nm" style="font-weight:700">${esc(b.name)} ${esc(b.strength)}</span><br><span class="small muted">${esc(whoLabel(it))} · ${esc(MOL[b.mol].en)}</span></span><input type="checkbox" data-k="${k}" ${done ? 'checked' : ''} aria-label="${esc(b.name)} ${tm}"></label>`; }).join('')}</div>
+      <div style="margin-top:14px">${notifLine}</div>
+    </div>
+    <div class="list">
+      <div class="card"><div style="display:flex;gap:18px;align-items:center"><div style="text-align:center"><div class="streak" data-cu="${streak()}">0</div><div class="small muted" style="font-weight:700">${ic('flame')} ${t('r_streak')}</div></div><div style="flex:1;min-width:0"><div class="h4" style="margin:0 0 6px">${t('r_week')}</div><div class="chart">${weekChart()}</div></div></div></div>
+      <div class="card"><h4 style="margin-top:0">${t('r_times')}</h4>${c.length ? c.map(it => `<div style="padding:10px 0;border-bottom:1px solid var(--tint-2)"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${esc(BR[it.brand].name)}</b> <span class="small muted">${esc(BR[it.brand].strength)} · ${esc(whoLabel(it))} · ${it.dose} ${t('c_dose')}</span></div><div class="times" style="margin-top:6px">${(it.times || []).map(tm => `<button class="chip on" data-rt="${it.id}" data-tm="${tm}" aria-label="${t('c_remove')} ${tm}">${tm}</button>`).join('')}<input type="time" data-ti="${it.id}" style="width:auto;padding:5px 8px" aria-label="${t('r_add_time')}"><button class="btn ghost sm" data-ta="${it.id}">${ic('plus')} ${t('r_add_time')}</button></div></div>`).join('') : `<div class="small muted">${t('r_none_cab')}</div>`}</div>
+    </div>
+  </div>`;
+  countUp($('.streak', el), streak()); drawPath($('path.line', el)); stagger(el);
+  $$('[data-k]').forEach(cb => cb.onchange = () => { const all = takenMap(), d = dkey(TODAY), list = new Set(all[d] || []); cb.checked ? list.add(cb.dataset.k) : list.delete(cb.dataset.k); all[d] = [...list]; store.set('taken', all); renderReminders(); scheduleNotifs(); });
+  $$('[data-rt]').forEach(b => b.onclick = () => { const c2 = cabinet(), it = c2.find(x => x.id === b.dataset.rt); it.times = it.times.filter(x => x !== b.dataset.tm); saveCabinet(c2); renderReminders(); scheduleNotifs(); });
+  $$('[data-ta]').forEach(b => b.onclick = () => { const v = $(`[data-ti="${b.dataset.ta}"]`).value; if (!v) return; const c2 = cabinet(), it = c2.find(x => x.id === b.dataset.ta); if (!it.times.includes(v)) { it.times.push(v); it.times.sort(); } saveCabinet(c2); renderReminders(); scheduleNotifs(); });
+  const ask = $('#nAsk'); if (ask) ask.onclick = () => Notification.requestPermission().then(() => { renderReminders(); scheduleNotifs(); }).catch(() => renderReminders());
+  const tst = $('#nTest'); if (tst) tst.onclick = () => { try { new Notification('Dawai', { body: t('r_notif_body') }); } catch { toast(t('r_notif_no'), 'bad'); } };
+}
+
+// ---------- safety ----------
+const CHECKS = [
+  ['DRAP registration number printed on the pack (e.g. "Reg. No. 0XXXXX") and legible', 'ڈبے پر ڈریپ رجسٹریشن نمبر (Reg. No.) واضح چھپا ہوا ہے'],
+  ['Manufacturer name and full address on the carton', 'ساخت کنندہ کا نام اور پورا پتہ ڈبے پر موجود ہے'],
+  ['Batch/lot number, manufacturing and expiry dates are printed (not stickers) and match on carton and strip', 'بیچ نمبر، تیاری اور میعاد کی تاریخ چھپی ہوئی ہے (سٹکر نہیں) اور ڈبے اور پتّے پر ایک جیسی ہے'],
+  ['Printed MRP matches what you are being charged', 'ڈبے پر چھپی قیمت (MRP) اور وصول کی گئی رقم ایک جیسی ہے'],
+  ['Hologram, seal or blister foil intact; print sharp with no spelling mistakes', 'ہولوگرام یا سیل سالم ہے؛ چھپائی صاف اور املا درست ہے'],
+  ['Tablets uniform in colour and shape; no crumbling, odd smell or discolouration', 'گولیاں رنگ اور شکل میں یکساں ہیں؛ ٹوٹ پھوٹ، عجیب بو یا رنگت نہیں'],
+  ['Pharmacy displays a valid drug sale licence and a qualified person is present', 'فارمیسی پر درست لائسنس آویزاں ہے اور قابل شخص موجود ہے'],
+  ['Price is not suspiciously far below every other pharmacy\'s price', 'قیمت دوسری تمام فارمیسیوں سے مشکوک حد تک کم نہیں'],
+].map(([en, ur]) => ({ en, ur }));
+const TIPS = [
+  ['Keep medicines below 25–30 °C, away from sunlight — not in the car, bathroom or above the stove.', 'دوائیں 25 سے 30 ڈگری سے نیچے، سورج کی روشنی سے دور رکھیں — گاڑی، باتھ روم یا چولہے کے اوپر نہیں۔'],
+  ['Keep the original pack and leaflet; the batch number matters if there is a recall.', 'اصل ڈبہ اور پرچہ سنبھال رکھیں؛ واپس بلانے (ریکال) کی صورت میں بیچ نمبر ضروری ہوتا ہے۔'],
+  ['Syrups and suspensions: note the opening date and discard after the time on the label (often 4 weeks). Shake before use.', 'سیرپ اور سسپنشن: کھولنے کی تاریخ لکھیں اور لیبل پر دیے وقت (اکثر 4 ہفتے) کے بعد پھینک دیں۔ استعمال سے پہلے ہلائیں۔'],
+  ['Fridge items (insulin, some reconstituted antibiotics) go in the main fridge compartment, never the freezer or the door.', 'فریج والی دوائیں (انسولین، کچھ تیار شدہ اینٹی بایوٹک) فریج کے اندرونی خانے میں رکھیں، فریزر یا دروازے میں نہیں۔'],
+  ['Mixed ORS must be used within 24 hours.', 'گھولا ہوا او آر ایس 24 گھنٹوں میں استعمال کریں۔'],
+  ['Lock medicines away from children; never call medicine "sweets".', 'دوائیں بچوں کی پہنچ سے دور تالے میں رکھیں؛ دوا کو کبھی "ٹافی" نہ کہیں۔'],
+  ['Never use after the expiry date; return expired medicines to a pharmacy rather than the bin or drain.', 'میعاد ختم ہونے کے بعد کبھی استعمال نہ کریں؛ پرانی دوائیں کوڑے یا نالی میں نہیں، فارمیسی کو واپس دیں۔'],
+].map(([en, ur]) => ({ en, ur }));
+const ABX_MSG = { en: 'Finish the full course even if you feel better after two days. Stopping early leaves the strongest bacteria alive and breeds resistance that affects your whole family. Never buy antibiotics without a prescription, never take them for a cold or viral fever, and never share leftovers.', ur: 'دو دن میں بہتر محسوس ہونے پر بھی پورا کورس مکمل کریں۔ ادھورا کورس سب سے مضبوط جراثیم کو زندہ چھوڑ دیتا ہے اور ایسی مزاحمت پیدا کرتا ہے جو پورے خاندان پر اثر کرتی ہے۔ نسخے کے بغیر اینٹی بایوٹک نہ خریدیں، نزلے یا وائرل بخار میں نہ لیں، اور بچی ہوئی دوا کسی کو نہ دیں۔' };
+function renderSafety() {
+  const ck = store.get('checks', []);
+  $('#safePage').innerHTML = `<div style="margin-bottom:14px"><h2 style="font-size:1.5rem">${t('s_title')}</h2></div>
+  <div class="two">
+    <div class="list">
+      <div class="card"><h2>${ic('shield-check')} ${t('s_fake')}</h2><p class="lead">${t('s_fake_lead')}</p>
+        <div class="stagger">${CHECKS.map((c, i) => `<label class="check"><input type="checkbox" data-ck="${i}" ${ck.includes(i) ? 'checked' : ''}><div><div>${esc(c.en)}</div><div class="ur">${esc(c.ur)}</div></div></label>`).join('')}</div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+      <div class="card"><h2>${ic('pill')} ${t('s_abx')}</h2>${bi(ABX_MSG)}</div>
+    </div>
+    <div class="list">
+      <div class="card"><h2>${ic('alert')} ${t('s_report')}</h2>
+        <div class="cols"><div><label class="f">${t('s_med')}</label><input id="rpMed" type="text" maxlength="80"></div><div><label class="f">${t('s_batch')}</label><input id="rpBatch" type="text" maxlength="40"></div></div>
+        <div class="cols"><div><label class="f">${t('s_pharm')}</label><input id="rpPh" type="text" maxlength="80"></div><div><label class="f">${t('s_city')}</label><input id="rpCity" type="text" maxlength="40"></div></div>
+        <label class="f">${t('s_concern')}</label><textarea id="rpWhy" rows="3" maxlength="400"></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="btn" id="rpGen">${ic('file')} ${t('s_gen')}</button><button class="btn ghost" id="rpCopy">${ic('copy')} ${t('s_copy')}</button><a class="btn ghost" id="rpWa" target="_blank" rel="noopener">${ic('message')} ${t('s_wa')}</a><a class="btn ghost" id="rpMail">${ic('mail')} ${t('s_mail')}</a></div>
+        <div class="out" id="rpOut"></div>
+      </div>
+      <div class="card"><h2>${ic('box')} ${t('s_store')}</h2><ul class="tips stagger" style="padding-left:18px;margin:8px 0 0">${TIPS.map(x => `<li>${esc(x.en)}<span class="ur">${esc(x.ur)}</span></li>`).join('')}</ul></div>
+    </div>
+  </div>`;
+  stagger($('#safePage'));
+  const verdict = () => { const n = store.get('checks', []).length, cls = n >= 7 ? 'mint' : n >= 5 ? 'amber' : 'red'; $('#verdict').innerHTML = `<div class="callout ${cls}">${ic(n >= 7 ? 'check-circle' : 'alert')} <b>${n} / ${CHECKS.length} ${t('s_score')}</b> — ${t(n >= 7 ? 's_v_good' : n >= 5 ? 's_v_mid' : 's_v_bad')}</div>`; };
+  $$('[data-ck]').forEach(cb => cb.onchange = () => { const s = new Set(store.get('checks', [])); cb.checked ? s.add(+cb.dataset.ck) : s.delete(+cb.dataset.ck); store.set('checks', [...s]); verdict(); });
+  verdict();
+  const gen = () => { const v = id => $(id).value.trim() || '—'; const text = `Suspicious medicine report (via Dawai)\nMedicine: ${v('#rpMed')}\nBatch / lot: ${v('#rpBatch')}\nBought at: ${v('#rpPh')}, ${v('#rpCity')}\nDate: ${dkey(TODAY)}\nConcern: ${v('#rpWhy')}\n\nPlease verify this product. Reports can be filed with DRAP (drap.gov.pk complaint form) or the provincial drug inspector.`; $('#rpOut').textContent = text; $('#rpWa').href = 'https://wa.me/?text=' + encodeURIComponent(text); $('#rpMail').href = 'mailto:?subject=' + encodeURIComponent('Suspicious medicine report') + '&body=' + encodeURIComponent(text); return text; };
+  $('#rpGen').onclick = gen;
+  $('#rpCopy').onclick = async () => { const text = gen(); try { await navigator.clipboard.writeText(text); toast(t('s_copied'), 'ok'); } catch { const ta = document.createElement('textarea'); ta.value = text; document.body.append(ta); ta.select(); try { document.execCommand('copy'); toast(t('s_copied'), 'ok'); } catch { toast('Copy failed', 'bad'); } ta.remove(); } };
+  $('#rpWa').onclick = () => { if (!$('#rpOut').textContent) gen(); }; $('#rpMail').onclick = () => { if (!$('#rpOut').textContent) gen(); };
+}
+
+// ---------- about ----------
+const TODOS = [
+  ['Import the full DRAP MRP list', 'importDrapMrp(csvText)', 'data', 'Parse the official MRP CSV/XLSX export into the BRANDS shape (molecule, brand, manufacturer, strength, form, pack, MRP, registration no.), de-duplicate strengths and replace the illustrative seed. Add a "data as of" stamp.'],
+  ['Barcode / QR scan', 'scanBarcode()', 'device', 'Use the BarcodeDetector API with the camera to read the EAN-13/QR on a pack, map GTIN → brand and jump to its molecule page. Fall back to a JS decoder where the API is missing.'],
+  ['Pharmacy locator map', 'findNearbyPharmacies()', 'maps', 'Leaflet + OpenStreetMap with the Geolocation API; show pharmacies that have recent price logs for the molecule you are viewing.'],
+  ['Crowd-sourced prices backend', 'syncPriceLog()', 'backend', 'Sync observations to a server, add login/OTP, moderation and MAD outlier rejection; pull the community average back into seenStats().'],
+  ['Prescription OCR', 'ocrPrescription()', 'ML', 'Photograph a prescription, run Tesseract.js (Urdu + English), fuzzy-match tokens against brands and molecules, and pre-fill the cabinet for confirmation.'],
+  ['Bioequivalence / quality rating', 'qualityRating()', 'data', 'Attach DRAP/WHO-prequalification or bioequivalence status per brand and show it next to the price, so "cheapest" is weighed against "proven equivalent".'],
+  ['Sindhi & Pashto translations', 'L.sd / L.ps', 'i18n', 'Add dictionaries and per-record text fields, and turn the language toggle into a four-way menu with proper RTL layout.'],
+  ['Background dose notifications', 'scheduleNotifs()', 'platform', 'Service worker + Push API (or an installable PWA with local notifications) so reminders fire when the tab is closed.'],
+];
+function renderAbout() {
+  $('#aboutPage').innerHTML = `<div class="two"><div class="list">
+    <div class="card"><h2>${ic('info')} ${t('ab_title')}</h2>
+      <h4>${t('ab_problem')}</h4><p class="muted" style="margin:0">Branded medicines in Pakistan often cost 2–10× an interchangeable generic. Patients rarely know the molecule behind a brand, which brands are interchangeable, or how to spot a counterfeit, so they keep paying for a name. Dawai is a search-first finder that puts the molecule, every brand's price per unit and the counselling point on one page.</p>
+      <h4>${t('ab_how')}</h4><p class="muted" style="margin:0"><b>Price per unit</b> = pack MRP ÷ units in the pack (one tablet, one capsule, one 5 ml dose or one sachet). <b>Savings %</b> = (reference unit price − brand unit price) ÷ reference unit price, where the reference is the brand you searched for, or the originator, or the priciest brand. Savings are only computed between brands of the <b>same molecule, strength and form</b>. In the cabinet, <b>monthly cost</b> = unit price × doses per day × 30, and <b>potential saving</b> = monthly cost − monthly cost of the cheapest equivalent.</p>
+      <h4>${t('ab_inter')}</h4><p class="muted" style="margin:0">Each item contributes its molecule id and pharmacological groups (NSAID, PPI, statin, macrolide, sulfonylurea, antiplatelet); "also taking" chips add tokens such as iron, antacid or alcohol. A rule fires when one token on side A and one on side B are both present for the same person. Duplicate-therapy rules fire on two distinct molecules from one group, and paracetamol is summed as mg per unit × doses per day against the 4 g limit. Sixteen rules ship; it is a teaching screen, not a clinical database.</p>
+      <h4>${t('ab_disc')}</h4><p class="muted" style="margin:0">Dawai is not medical advice. Never switch brands of narrow-therapeutic-index medicines (levothyroxine, anti-epileptics, warfarin, lithium, immunosuppressants) without your doctor and a follow-up test. Always finish antibiotic courses. A lower price never justifies buying from an unlicensed seller.</p>
+      <h4>${t('ab_data')}</h4><p class="muted" style="margin:0">${MOLECULES.length} molecules and ${BRANDS.length} brands are hard-coded as <b>illustrative 2026 seed values</b> for demonstration; manufacturers are real companies but every MRP must be verified against the DRAP list. "Seen at pharmacies" mixes nine seeded observations with entries you record on this device.</p>
+      <p class="small muted" style="margin:12px 0 0">Stack: one HTML file, vanilla JS, hand-drawn SVG, localStorage under <code>dawai:</code>. No build step.</p>
+    </div></div>
+    <div><h3 style="margin:0 0 10px">${ic('graduation')} ${t('ab_todo')}</h3><div class="list stagger">${TODOS.map(([h, fn, tag, b]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span> <code>${esc(fn)}</code></h4><div class="muted small">${esc(b)}</div></div>`).join('')}</div><p class="small muted" style="margin-top:10px">Search the source for <code>TODO(student)</code> to find each stub.</p></div></div>`;
+  stagger($('#aboutPage'));
+}
+// TODO(student): DRAP MRP import. Parse the official CSV (handle quoted commas, BOM, mixed units), validate each row against the BRANDS schema
+// and merge into BRANDS/MOLECULES; persist under store 'drap' and show a "data as of" badge in the ribbon.
+function importDrapMrp(/* csvText */) { throw new Error('importDrapMrp() is not implemented — student extension'); }
+
+// ---------- nav / router / i18n ----------
+const PAGES = ['search', 'cabinet', 'reminders', 'safety', 'about'];
+const RENDER = { search: renderLanding, molecule: null, cabinet: renderCabinet, reminders: renderReminders, safety: renderSafety, about: renderAbout };
+const NAV_ICON = { search: 'search', cabinet: 'pill', reminders: 'bell', safety: 'shield-check', about: 'info' };
+function renderNav(cur) { $('#nav').innerHTML = PAGES.map(p => `<a href="#${p}" class="${cur === p ? 'on' : ''}">${ic(NAV_ICON[p])} ${t('nav_' + p)}</a>`).join(''); }
+function route() {
+  const h = (location.hash.slice(1) || 'search'), [page, arg] = h.split('/');
+  let show = page;
+  if (page === 'm' && MOL[arg]) { show = 'molecule'; renderMolecule(arg); }
+  else if (PAGES.includes(page)) RENDER[page]();
+  else { location.hash = 'search'; return; }
+  document.body.dataset.page = show;
+  $$('section[data-page]').forEach(s => s.classList.toggle('on', s.dataset.page === show));
+  renderNav(show === 'molecule' ? 'search' : show);
+  animateIn($(`section[data-page="${show}"]`));
+  closeDrawer(); window.scrollTo({ top: 0 });
+}
+function applyLang() {
+  document.documentElement.lang = lang; store.set('lang', lang);
+  $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
+  $$('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English';
+  ms.mol = null; route();
+}
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+attachSearch($('#q'), $('#qList')); attachSearch($('#q2'), $('#q2List'));
+window.addEventListener('hashchange', route);
+applyLang();
+scheduleNotifs();
+</script>
+</body>
+</html>
