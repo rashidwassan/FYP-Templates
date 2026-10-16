@@ -43,18 +43,21 @@ html.no-anim *,html.no-anim *::before,html.no-anim *::after{animation-duration:.
 .stagger>*{animation:fadeUp .4s var(--ease) both;animation-delay:calc(var(--i,0)*35ms)}
 
 /* ---------- app frame ---------- */
-.app{display:grid;grid-template-rows:52px minmax(0,1fr) 28px;height:100%}
+.app{display:grid;grid-template-rows:52px minmax(0,1fr) 28px;grid-template-columns:minmax(0,1fr);height:100%}
 .app.presenting{grid-template-rows:minmax(0,1fr)}
 .app.presenting .bar,.app.presenting .status,.app.presenting .palette,.app.presenting .inspector,.app.presenting .side,
 .app.presenting .float.zoom,.app.presenting .minimap,.app.presenting .hint,.app.presenting .findbar{display:none}
 .app.presenting .work{grid-template-columns:minmax(0,1fr)}
 
 /* ---------- toolbar ---------- */
-.bar{background:var(--bar);color:#e2e8f0;display:flex;align-items:center;gap:6px;padding:0 10px;border-bottom:1px solid #000}
+.bar{background:var(--bar);color:#e2e8f0;display:flex;align-items:center;gap:6px;padding:0 10px;border-bottom:1px solid #000;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.bar::-webkit-scrollbar{display:none}
+.bar>*{flex:none}
+.bar .spacer{flex:1 0 8px}
 .brand{display:flex;align-items:center;gap:8px;margin-right:6px}
 .brand .logo{width:30px;height:30px;border-radius:9px;background:var(--accent);display:grid;place-items:center;color:#0f172a}
 .brand b{font-size:.98rem}
-.docname{background:transparent;border:1px solid transparent;border-radius:8px;color:#fff;padding:5px 8px;width:170px;font-weight:600}
+.docname{background:transparent;border:1px solid transparent;border-radius:8px;color:#fff;padding:5px 8px;width:150px;font-weight:600}
 .docname:hover,.docname:focus{border-color:var(--bar-3);outline:0;background:var(--bar-2)}
 .tb{border:0;background:transparent;color:#cbd5e1;border-radius:8px;width:36px;height:36px;display:grid;place-items:center;cursor:pointer;position:relative;transition:background .15s,color .15s,transform .1s}
 .tb:hover{background:var(--bar-2);color:#fff}
@@ -67,12 +70,12 @@ html.no-anim *,html.no-anim *::before,html.no-anim *::after{animation-duration:.
 .tb .badge:empty{display:none}
 .sep{width:1px;height:24px;background:var(--bar-3);margin:0 4px}
 .seg{display:inline-flex;background:var(--bar-2);border-radius:9px;padding:2px}
-.seg button{border:0;background:transparent;color:#cbd5e1;padding:5px 10px;border-radius:7px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.seg button{border:0;background:transparent;color:#cbd5e1;padding:5px 10px;white-space:nowrap;border-radius:7px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
 .seg button.on{background:var(--accent);color:#0f172a}
 .spacer{flex:1}
 .search{display:flex;align-items:center;gap:6px;background:var(--bar-2);border-radius:9px;padding:0 4px 0 8px}
 .search .ic{width:14px;height:14px;color:#94a3b8}
-.search input{background:none;border:0;color:#fff;outline:0;width:120px;padding:7px 2px}
+.search input{background:none;border:0;color:#fff;outline:0;width:110px;padding:7px 2px}
 .search .tb{width:28px;height:28px}
 .btn{border:0;border-radius:9px;padding:7px 12px;font-weight:600;cursor:pointer;background:var(--accent);color:#0f172a;display:inline-flex;gap:7px;align-items:center;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
 .btn:hover{transform:translateY(-1px)}
@@ -281,11 +284,9 @@ kbd{background:var(--bg);border:1px solid var(--line);border-bottom-width:2px;bo
 
 /* ---------- responsive ---------- */
 .mob-insp{display:none}
+@media (max-width:1440px){.brand b{display:none}}
 @media (max-width:900px){
-  .bar{overflow-x:auto;scrollbar-width:none;gap:4px}
-  .bar::-webkit-scrollbar{display:none}
-  .bar>*{flex:none}
-  .bar .spacer{flex:1 0 8px}
+  .bar{gap:4px}
   .hide-m{display:none!important}
   .docname{width:110px}
   .work{grid-template-columns:48px minmax(0,1fr)}
@@ -413,7 +414,6 @@ kbd{background:var(--bg);border:1px solid var(--line);border-bottom-width:2px;bo
   <button class="tb" id="undoBtn" data-tip="Undo (Ctrl+Z)" aria-label="Undo"><svg class="ic"><use href="#i-undo"/></svg></button>
   <button class="tb" id="redoBtn" data-tip="Redo (Ctrl+Y)" aria-label="Redo"><svg class="ic"><use href="#i-redo"/></svg></button>
   <button class="tb" id="layoutBtn" data-tip="Auto layout (L)" aria-label="Auto layout"><svg class="ic"><use href="#i-sparkles"/></svg></button>
-  <button class="tb hide-m" id="alignBtn" data-tip="Align selected in a row" aria-label="Align selected"><svg class="ic"><use href="#i-align"/></svg></button>
   <span class="spacer"></span>
   <div class="search hide-m">
     <svg class="ic"><use href="#i-search"/></svg>
@@ -2400,7 +2400,6 @@ $('#layoutBtn').onclick = autoLayout;
 $('#zoomIn').onclick = () => zoomAt(1.2);
 $('#zoomOut').onclick = () => zoomAt(1 / 1.2);
 $('#fitBtn').onclick = fit;
-$('#alignBtn').onclick = alignSelected;
 $('#docName').onchange = e => {
   doc.name = e.target.value.trim() || 'Untitled';
   save();
@@ -2594,7 +2593,7 @@ function nodePanel(el, ns) {
     </div>
     <div class="field"><label>Icon</label><div class="icons" id="iconGrid">${iconGrid(n.icon)}</div></div>
     ${multi ? '' : imageField(n) + `<div class="field"><label for="nUrl">Link (URL)</label><input type="url" id="nUrl" value="${esc(n.url)}" placeholder="https://"></div><div class="field"><label for="nNotes">Notes</label><textarea id="nNotes" placeholder="Longer notes shown only here">${esc(n.notes)}</textarea></div>`}
-    <div class="row"><button class="btn light sm" id="nDup">${ic('copy')} Duplicate</button><button class="btn light sm" id="nDel">${ic('trash')} Delete</button></div>
+    <div class="row">${multi ? `<button class="btn light sm" id="nAlign">${ic('align')} Align in a row</button>` : ''}<button class="btn light sm" id="nDup">${ic('copy')} Duplicate</button><button class="btn light sm" id="nDel">${ic('trash')} Delete</button></div>
     ${multi ? '' : commentThread(n)}`;
   bindNodePanel(el, ns);
 }
@@ -2632,6 +2631,8 @@ function bindNodePanel(el, ns) {
   if (img) img.onclick = () => pickImageFor(n);
   const imgDel = $('#nImgDel');
   if (imgDel) imgDel.onclick = () => apply(x => (x.image = ''));
+  const al = $('#nAlign');
+  if (al) al.onclick = alignSelected;
   $('#nDup').onclick = duplicate;
   $('#nDel').onclick = deleteSel;
   bindCommentThread(n);
@@ -3447,7 +3448,7 @@ const TEMPLATES = [
         ['Modules', ['Frontend', 'Backend', 'Data / ML'], 'cpu'],
         ['Timeline', ['Semester 1', 'Semester 2', 'Demo day'], 'calendar'],
       ], { rootIcon: 'graduation' });
-      stickyD(d, -260, -40, 'Supervisor meeting on Thursday: bring the scope cut list.');
+      stickyD(d, -230, 400, 'Supervisor meeting on Thursday: bring the scope cut list.');
       commentD(d, t.branches[0], 'Add two survey quotes as evidence.');
     },
   },
@@ -3511,7 +3512,7 @@ const TEMPLATES = [
         ['Thursday', ['Supervisor meeting', 'FYP: prototype'], 'calendar'],
         ['Friday', ['Revision', 'Family time'], 'calendar'],
       ], { rootIcon: 'clock', rootColor: '#a5f3fc' });
-      stickyD(d, -260, 0, 'Deadline: OS assignment due Wednesday 11:59 pm', STICKY_COLORS[1]);
+      stickyD(d, -240, 330, 'Deadline: OS assignment due Wednesday 11:59 pm', STICKY_COLORS[1]);
     },
   },
   {
