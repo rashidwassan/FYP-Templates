@@ -1195,6 +1195,10 @@ html.ur .psgroup { text-transform: none; letter-spacing: 0; font-size: .82rem; }
 'use strict';
 
 // ---------- utils ----------
+// TODO(student): cloud sync and accounts — keep this `store` interface but back it with an authenticated API
+//   (Supabase, Firebase or Node + Postgres). Give every record an `updated` timestamp, push changes in the background,
+//   pull on boot, and resolve conflicts per record (newest wins, or a merge dialog for essays). Keep localStorage as
+//   the offline cache so the app still opens without a connection.
 const NS = 'st:';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -2488,6 +2492,9 @@ function profile() {
 
 // ---------- scholarships: catalogue + user edits + custom entries ----------
 function allScholarships() {
+  // TODO(student): live scholarship feed — fetch a curated, versioned JSON feed (maintained by an admin or scraped
+  //   server-side from official pages, never from the browser), cache it with its version, merge it here before the
+  //   user's edits, and badge records whose window, rules or link changed since the last visit.
   const edits = store.get('schEdits', {});
   const custom = store.get('customSch', []).map(c => ({ ...c, custom: true }));
   return [...CATALOGUE, ...custom].map(s => (edits[s.id] ? { ...s, ...edits[s.id] } : s));
@@ -2757,6 +2764,8 @@ function seedActivity() {
 
 // ---------- eligibility matcher ----------
 // Approximate conversion used only when a scholarship states one scale (labelled approximate in the UI).
+// TODO(student): official grade conversion — replace this linear rule with per-university or HEC conversion tables
+//   chosen in the quiz (a lookup of CGPA bands to percentages) and show which table was used in the match reasons.
 const cgpaToPct = c => Math.round(20 * c + 10);
 const pctToCgpa = p => Math.round(((p - 10) / 20) * 100) / 100;
 
@@ -2988,6 +2997,9 @@ function reminders() {
 const REMIND_ICON = { deadline: 'clock', overdue: 'alert', docs: 'paperclip', interview: 'mic', expiring: 'timer', expired: 'alert-circle', intake: 'globe', referee: 'quote' };
 
 // Push new reminders into the inbox once (deduplicated by key).
+// TODO(student): push, email and SMS reminders — register a service worker and use the Notification API (or a server
+//   cron that emails / texts the student) so reminders arrive when the page is closed; add quiet hours and per-kind
+//   opt-outs in Settings, and reuse the same reminder keys so nothing is sent twice.
 function syncReminders() {
   let added = 0;
   reminders().forEach(r => {
@@ -3056,6 +3068,7 @@ defineStrings({
   d_link: ['Official website (paste the exact page)', 'سرکاری ویب سائٹ (درست صفحے کا لنک)'],
   d_myNote: ['My note', 'میرا نوٹ'],
   d_custom: ['Added by you', 'آپ نے شامل کی'],
+  d_badUrl: ['Links must start with https:// or http://', 'لنک https:// یا http:// سے شروع ہونا چاہیے'],
   e_cgpa: ['Minimum CGPA about {v}', 'کم از کم سی جی پی اے تقریباً {v}'],
   e_pct: ['Minimum marks about {v}%', 'کم از کم نمبر تقریباً {v}%'],
   e_inc: ['Household income up to {v} per month', 'گھریلو آمدنی {v} ماہانہ تک'],
@@ -3313,7 +3326,7 @@ function scholarshipDetailHtml(s) {
     <div class="row">${s.lv.map(l => `<span class="chip navy">${esc(tr(LEVELS[l]))}</span>`).join('')}<span class="chip">${esc(countryName(s.c))}</span><span class="chip gold">${esc(tr(BASIS[s.b]))}</span></div>
     <p class="muted">${esc(tr(s.p))}</p>
     <div class="notice">${ic('alert')}<span>${t('verify')}</span></div>
-    ${m ? `<section><h4 class="sub">${ic('target')} ${t('d_yourMatch')} · <span class="tnum">${m.score}%</span></h4>${reasonList(m)}</section>` : `<a class="btn ghost sm" href="#quiz">${ic('target')} ${t('takeQuiz')}</a>`}
+    ${m ? `<section><h4 class="sub">${ic('target')} ${t('d_yourMatch')} · ${bdi(m.score + '%')}</h4>${reasonList(m)}</section>` : `<a class="btn ghost sm" href="#quiz">${ic('target')} ${t('takeQuiz')}</a>`}
     <section><h4 class="sub">${ic('list-checks')} ${t('d_eligibility')}</h4><ul class="plain">${eligibilityList(s).map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>
     <section><h4 class="sub">${ic('wallet')} ${t('d_coverage')}</h4><div class="chips">${coverChips(s)}</div>
       <p class="small mt">${t('d_value')}: <b class="tnum">${fmtCompactPKR(s.v || 0)}</b> · ${t('d_duration')}: <b class="tnum">${s.d}</b> ${s.d === 1 ? t('year') : t('years')}</p></section>
@@ -3358,7 +3371,7 @@ function openEditLink(id) {
   $('#elSave').onclick = () => {
     const url = $('#elUrl').value.trim();
     if (url && !/^https?:\/\//i.test(url)) {
-      toast('https://', 'bad');
+      toast(t('d_badUrl'), 'bad');
       return;
     }
     editScholarship(id, { url, myNote: $('#elNote').value.trim() });
@@ -4367,6 +4380,9 @@ function bindVault(view, rerender) {
 }
 
 function openVaultDoc(id, after) {
+  // TODO(student): read expiry dates with OCR — add a "Scan" button that lazy-loads Tesseract.js (pinned version,
+  //   offline fallback), reads a photo of a passport, CNIC or IELTS report on the device only, extracts dates with
+  //   regular expressions (DD MMM YYYY, DD/MM/YYYY) and pre-fills #vdIssued / #vdExpiry for the user to confirm.
   const d = id ? list('vault').find(x => x.id === id) : { type: 'transcript', title: '', issued: iso(TODAY), expiry: '', location: '', attested: false, status: 'ready', note: '' };
   const typeOpts = Object.keys(DOC_TYPES).map(k => `<option value="${k}" ${d.type === k ? 'selected' : ''}>${esc(tr(DOC_TYPES[k].n))}</option>`).join('');
   openModal(`<h3>${ic('folder')} ${id ? t('dc_editDoc') : t('dc_addDoc')}</h3>
@@ -4440,6 +4456,8 @@ defineStrings({
   es_wordsLc: ['words', 'الفاظ'],
   es_charsLc: ['characters', 'حروف'],
   es_bankShort: ['Bank', 'بینک'],
+  es_defaultTitle: ['Statement of purpose', 'اسٹیٹمنٹ آف پرپز'],
+  es_draftN: ['Draft {n}', 'مسودہ {n}'],
   es_limit: ['Limit', 'حد'],
   es_app: ['Application', 'درخواست'],
   es_outline: ['Start with an outline', 'خاکے سے آغاز کریں'],
@@ -4531,6 +4549,9 @@ const CLICHES = ['since childhood', 'since my childhood', 'from a young age', 'p
 const STOP = new Set('the a an and or but of to in on for with at by from as is are was were be been being this that these those it its i my me we our you your they their he she his her them not no so if then than also into about which who whom what when where how all any can will would should could have has had do does did more most such only own same other just very'.split(' '));
 
 function readability(text) {
+  // TODO(student): AI feedback on essays — add a "Get feedback" action that strips names, CNIC and contact details,
+  //   sends the essay through your own server proxy to a language model, and returns structure suggestions that the
+  //   writer can accept or reject next to these readability numbers. Never call a model API key from the browser.
   const words = String(text).match(/[A-Za-z][A-Za-z'’-]*/g) || [];
   const sentences = splitSentences(text);
   const lower = String(text).toLowerCase();
@@ -4572,7 +4593,9 @@ function structureState(e) {
   });
 }
 
-// Word-level diff (LCS); long texts are compared paragraph by paragraph to bound the table size.
+// Word-level diff (LCS); very long pairs fall back to a whole-text replacement to bound the table size.
+// TODO(student): essay reuse detector — build 5-word shingles for every essay and bank paragraph, compute Jaccard
+//   similarity between essays sent to competing scholarships and flag near-identical paragraphs before submission.
 function diffWords(a, b) {
   const A = String(a).split(/(\s+)/).filter(x => x !== '');
   const B = String(b).split(/(\s+)/).filter(x => x !== '');
@@ -4685,7 +4708,7 @@ const OUTLINE = '[Hook — one specific moment that made the problem real]\n\n[A
 function openNewEssay(appId) {
   const appOpts = apps().map(a => `<option value="${a.id}" ${a.id === appId ? 'selected' : ''}>${esc(appName(a))}</option>`).join('');
   openModal(`<h3>${ic('feather')} ${t('es_new')}</h3>
-    <label class="field">${t('title')}<input type="text" id="neTitle" placeholder="Statement of purpose"></label>
+    <label class="field">${t('title')}<input type="text" id="neTitle" placeholder="${t('es_defaultTitle')}"></label>
     <label class="field mt">${t('es_app')}<select id="neApp"><option value="">${t('es_noApp')}</option>${appOpts}</select></label>
     <label class="field mt">${t('es_prompt')}<textarea id="nePrompt" rows="3"></textarea></label>
     <div class="grid2 mt"><label class="field">${t('es_limitType')}<select id="neType"><option value="words">${t('es_words')}</option><option value="chars">${t('es_chars')}</option></select></label>
@@ -4694,7 +4717,7 @@ function openNewEssay(appId) {
     <div class="row mt"><span class="spacer"></span><button class="btn" id="neSave">${ic('save')} ${t('save')}</button></div>`);
   $('#neSave').onclick = () => {
     const app = $('#neApp').value;
-    const title = $('#neTitle').value.trim() || (app ? appName(appById(app)) + ' — SOP' : 'Statement of purpose');
+    const title = $('#neTitle').value.trim() || (app ? `${appName(appById(app))} — ${t('es_defaultTitle')}` : t('es_defaultTitle'));
     const e = { id: 'e-' + uid(), title, app, prompt: $('#nePrompt').value.trim(), limitType: $('#neType').value, limit: Math.max(50, +$('#neLimit').value || 500), text: $('#neOutline').checked ? OUTLINE : '', checks: {}, versions: [], updated: Date.now() };
     saveList('essays', [...list('essays'), e]);
     closeModal(true);
@@ -4764,7 +4787,7 @@ function renderEssayEditor(view, id) {
     return;
   }
   const a = e.app ? appById(e.app) : null;
-  view.innerHTML = `<header class="pagehead"><div><div class="kicker">${ic('feather')} ${a ? `<a href="#app/${a.id}">${esc(appName(a))}</a>` : t('es_kicker')}</div><h1>${esc(e.title)}</h1></div>
+  view.innerHTML = `<header class="pagehead noprint"><div><div class="kicker">${ic('feather')} ${a ? `<a href="#app/${a.id}">${esc(appName(a))}</a>` : t('es_kicker')}</div><h1>${esc(e.title)}</h1></div>
       <div class="actions"><a class="btn ghost" href="#essays">${ic('arrow-left')} ${t('nav_essays')}</a><button class="btn ghost" id="edSettings">${ic('sliders')} ${t('es_settings')}</button>
       <button class="btn ghost" onclick="window.print()">${ic('printer')} ${t('print')}</button><button class="btn danger" id="edDel">${ic('trash')} ${t('del')}</button></div></header>
     <div class="editor">
@@ -4868,13 +4891,13 @@ function insertAtCursor(text) {
 
 function saveVersionPrompt(id) {
   const e = essayById(id);
-  openModal(`<h3>${ic('history')} ${t('es_saveVersion')}</h3><label class="field">${t('es_versionLabel')}<input type="text" id="vLabel" value="Draft ${e.versions.length + 1}"></label>
+  openModal(`<h3>${ic('history')} ${t('es_saveVersion')}</h3><label class="field">${t('es_versionLabel')}<input type="text" id="vLabel" value="${t('es_draftN', { n: e.versions.length + 1 })}"></label>
     <div class="row mt"><span class="spacer"></span><button class="btn" id="vSave">${ic('save')} ${t('save')}</button></div>`);
   $('#vSave').onclick = () => {
     const text = $('#edText') ? $('#edText').value : e.text;
     mutateIn('essays', id, x => {
       x.text = text;
-      x.versions.push({ ts: Date.now(), label: $('#vLabel').value.trim() || 'Draft', text });
+      x.versions.push({ ts: Date.now(), label: $('#vLabel').value.trim() || t('es_draftN', { n: x.versions.length + 1 }), text });
     });
     logActivity('act_version', { e: e.title });
     toast(t('saved'), 'ok');
@@ -6288,7 +6311,7 @@ function openShortcuts() {
   const row = (keys, k) => `<div class="setrow"><span>${t(k)}</span><span class="row">${keys.map(x => `<span class="kbd">${x}</span>`).join('')}</span></div>`;
   openModal(`<h3>${ic('keyboard')} ${t('shortcuts')}</h3>
     ${row(['1', '…', '9', '0'], 'ks_sections')}${row(['Ctrl', 'K'], 'ks_search')}${row(['/'], 'ks_search')}${row(['N'], 'ks_new')}
-    ${row(['L'], 'ks_lang')}${row(['T'], 'ks_theme')}${row(['I'], 'ks_inbox')}${row(['Alt', '← →'], 'ks_move')}${row(['?'], 'ks_help')}${row(['Esc'], 'ks_close')}`);
+    ${row(['L'], 'ks_lang')}${row(['T'], 'ks_theme')}${row(['I'], 'ks_inbox')}${row(['Alt', 'Left', 'Right'], 'ks_move')}${row(['?'], 'ks_help')}${row(['Esc'], 'ks_close')}`);
 }
 
 function onGlobalKey(e) {
@@ -6349,7 +6372,7 @@ const STUDENT_TODOS = [
 ];
 
 function renderAbout(view) {
-  view.innerHTML = `<header class="pagehead"><div><div class="kicker">${ic('info')} ${t('ab_kicker')}</div><h1>${t('ab_title')}</h1><p class="dek">${t('ab_counts', { s: allScholarships().length, g: GUIDES.length, m: 17 })}</p></div>
+  view.innerHTML = `<header class="pagehead"><div><div class="kicker">${ic('info')} ${t('ab_kicker')}</div><h1>${t('ab_title')}</h1><p class="dek">${t('ab_counts', { s: allScholarships().length, g: GUIDES.length, m: 20 })}</p></div>
       <div class="actions"><button class="btn ghost" id="abTour">${ic('sparkles')} ${t('se_tour')}</button><button class="btn ghost" id="abKeys">${ic('keyboard')} ${t('shortcuts')}</button></div></header>
     <div class="about"><section class="gtext"><p class="dropcap">${t('ab_p1')}</p><p>${t('ab_p2')}</p><p class="small muted">${t('ab_stack')}</p>
       <div class="notice">${ic('alert')}<span>${t('foot1')}</span></div></section>
@@ -6402,6 +6425,7 @@ function renderColophon() {
 }
 
 function refreshChrome() {
+  syncReminders();
   const n = unreadCount();
   const dot = $('#bellDot');
   dot.textContent = n > 9 ? '9+' : n;
