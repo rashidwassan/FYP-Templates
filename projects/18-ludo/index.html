@@ -2184,11 +2184,17 @@ function renderAll() {
 
 // ---------- accessibility: spoken move announcements (assertive live region) ----------
 const Speak = {
+  last: { msg: '', at: 0 },
+
+  /** Sentences arriving within 400 ms are joined, so a move and the tutorial step that follows are both read. */
   say(msg) {
     // TODO(student): spoken announcements — also pass msg to speechSynthesis.speak() with an ur-PK voice when the language is Urdu, behind a "speak aloud" toggle in Settings › Accessibility.
+    const now = Date.now();
+    const text = now - this.last.at < 400 ? this.last.msg + ' ' + msg : msg;
+    this.last = { msg: text, at: now };
     const el = $('#liveMoves');
     el.textContent = '';
-    setTimeout(() => { el.textContent = msg; }, 30);
+    setTimeout(() => { el.textContent = text; }, 30);
   },
   where(p, pos) {
     if (pos === -1) return t('an_base');
@@ -2659,10 +2665,10 @@ $('#modal').addEventListener('click', e => {
 });
 
 /** Small confirm dialog; resolves the action only on the danger/gold button. */
-function confirmModal(icon, title, body, okLabel, onOk, danger = false) {
-  openModal(`<h2>${ic(icon)}${esc(title)}</h2><p class="muted">${esc(body)}</p><div class="btns"><button class="btn ghost" id="cancelBtn">${esc(t('cancel'))}</button><button class="btn ${danger ? 'danger' : 'gold'}" id="okBtn">${ic(danger ? 'trash' : 'check')}${esc(okLabel)}</button></div>`);
+function confirmModal(icon, title, body, okLabel, onOk, danger = false, okId = 'okBtn') {
+  openModal(`<h2>${ic(icon)}${esc(title)}</h2><p class="muted">${esc(body)}</p><div class="btns"><button class="btn ghost" id="cancelBtn">${esc(t('cancel'))}</button><button class="btn ${danger ? 'danger' : 'gold'}" id="${okId}">${ic(danger ? 'trash' : 'check')}${esc(okLabel)}</button></div>`);
   $('#cancelBtn').onclick = closeModal;
-  $('#okBtn').onclick = () => {
+  $('#' + okId).onclick = () => {
     closeModal();
     onOk();
   };
@@ -2959,7 +2965,7 @@ function bindSettings() {
   };
   $('#exportBtn').onclick = exportAll;
   $('#importFile').onchange = e => importFile(e.target.files[0]);
-  $('#resetBtn').onclick = () => confirmModal('trash', t('reset'), t('reset_q'), t('reset'), resetAll, true);
+  $('#resetBtn').onclick = () => confirmModal('trash', t('reset'), t('reset_q'), t('reset'), resetAll, true, 'okReset');
   $('#aboutLink').onclick = closeDrawer;
 }
 
@@ -4188,7 +4194,7 @@ $('#newBtn').onclick = () => {
     leaveGame();
     return;
   }
-  confirmModal('refresh', t('new_game_q'), t('new_game_h'), t('confirm'), leaveGame);
+  confirmModal('refresh', t('new_game_q'), t('new_game_h'), t('confirm'), leaveGame, false, 'okNew');
 };
 $('#soundBtn').onclick = () => {
   prefs.sound = !prefs.sound;
