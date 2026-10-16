@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FYP Templates</title>
+<meta name="description" content="Hub for the FYP Templates repository: twenty single-file project templates for Pakistani university students, with a guided tour, filters and a student guide.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f8f4;--surface:#fff;--surface-2:#eef2ea;--ink:#111a14;--muted:#5e6b62;--line:#dde5d9;--green:#0f6b3f;--green-deep:#084a2b;--green-soft:#dcefe3;--lime:#9fd356;--coral:#e8633f;--coral-soft:#fde4dc;--gold:#e0a21b;--gold-soft:#fdf1cf;--sky:#2b7fb8;--sky-soft:#dcecf7;--violet:#6e56cf;--violet-soft:#e9e4fb;--radius:20px;--shadow:0 20px 50px -30px rgba(17,26,20,.35);--font:"DM Sans",system-ui,sans-serif;--display:"Outfit","DM Sans",sans-serif;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.55}
+h1,h2,h3,h4{margin:0;font-family:var(--display);line-height:1.1;letter-spacing:-.02em}
+a{color:var(--green)}
+.ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s var(--ease),transform .6s var(--ease)} .reveal.in{opacity:1;transform:none}
+.stagger>*{animation:fadeUp .5s var(--ease) both;animation-delay:calc(var(--i,0)*45ms)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+/* header */
+.hdr{position:sticky;top:0;z-index:40;background:rgba(247,248,244,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.hdr .wrap{display:flex;align-items:center;gap:16px;padding:12px 20px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand .logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--green),var(--green-deep));display:grid;place-items:center;color:#fff}
+.brand b{font-family:var(--display);font-size:1.1rem}
+.nav{display:flex;gap:4px;margin-left:10px}
+.nav a{text-decoration:none;color:var(--muted);font-weight:600;padding:8px 12px;border-radius:10px;transition:background .2s,color .2s}
+.nav a:hover{background:var(--surface-2);color:var(--ink)}
+.spacer{flex:1}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:600;cursor:pointer;background:var(--green);color:#fff;display:inline-flex;align-items:center;gap:8px;text-decoration:none;transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .2s;box-shadow:0 10px 24px -14px var(--green)}
+.btn:hover{transform:translateY(-1px)} .btn:active{transform:scale(.98)}
+.btn.coral{background:var(--coral);box-shadow:0 10px 24px -14px var(--coral)} .btn.ghost{background:var(--surface-2);color:var(--ink);box-shadow:none} .btn.outline{background:transparent;border:2px solid var(--line);color:var(--ink);box-shadow:none} .btn.sm{padding:7px 12px;font-size:.88rem;border-radius:10px}
+/* hero */
+.hero{padding:70px 0 40px;position:relative;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:30px;align-items:center}
+.hero h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:800}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero p{font-size:1.1rem;color:var(--muted);max-width:560px;margin:16px 0 22px}
+.stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:28px}
+.stat b{font-family:var(--display);font-size:2rem;display:block;line-height:1} .stat span{font-size:.85rem;color:var(--muted)}
+.hero-art{position:relative;height:340px}
+.tile{position:absolute;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:center;font-weight:600;font-size:.9rem;animation:float 6s ease-in-out infinite}
+.tile .icw{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+/* sections */
+section{padding:54px 0}
+.sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.sechead h2{font-size:2rem;font-weight:700} .sechead p{margin:6px 0 0;color:var(--muted);max-width:620px}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.search{display:flex;align-items:center;gap:8px;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:4px 12px;min-width:240px;flex:1;max-width:360px}
+.search input{border:0;outline:0;background:none;font:inherit;padding:8px 2px;width:100%}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:.86rem;font-weight:600;cursor:pointer;transition:all .15s}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);transition:transform .25s var(--ease),border-color .25s;position:relative;overflow:hidden}
+.card::after{content:"";position:absolute;inset:auto 0 0 0;height:4px;background:var(--c,var(--green));opacity:.85}
+.card:hover{transform:translateY(-4px);border-color:var(--c,var(--green))}
+.card .top{display:flex;align-items:center;gap:12px}
+.card .icw{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--cs,var(--green-soft));color:var(--c,var(--green));flex:none}
+.card .icw .ic{width:22px;height:22px}
+.card .num{font-family:var(--display);font-weight:700;color:var(--muted);font-size:.85rem}
+.card h3{font-size:1.15rem} .card p{margin:0;color:var(--muted);font-size:.92rem;flex:1}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:.72rem;font-weight:700;background:var(--surface-2);color:var(--muted);border-radius:6px;padding:2px 7px}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:700;border-radius:999px;padding:3px 9px}
+.status.built{background:var(--green-soft);color:var(--green-deep)} .status.wip{background:var(--gold-soft);color:#7a5600} .status.planned{background:var(--surface-2);color:var(--muted)}
+.status i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.status.wip i{animation:pulse 1.4s infinite} @keyframes pulse{50%{opacity:.3}}
+.card .acts{display:flex;gap:8px;margin-top:4px}
+.card.planned .acts .btn{pointer-events:none;opacity:.45}
+/* how */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.step .n{font-family:var(--display);font-size:2.4rem;font-weight:800;color:var(--green-soft);line-height:1}
+.step h3{font-size:1.05rem;margin:6px 0} .step p{margin:0;color:var(--muted);font-size:.92rem}
+.conv{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:18px}
+.conv div{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;background:var(--surface-2);border-radius:14px;padding:12px 14px}
+.conv .ic{color:var(--green);margin-top:3px}
+code{background:var(--surface-2);padding:1px 6px;border-radius:6px;font-size:.9em}
+/* guide */
+.acc{display:grid;gap:10px}
+.acc details{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.acc summary{list-style:none;cursor:pointer;padding:16px 18px;font-weight:700;font-family:var(--display);font-size:1.1rem;display:flex;align-items:center;gap:12px}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary .icw{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+.acc summary .chev{margin-left:auto;transition:transform .25s} .acc details[open] summary .chev{transform:rotate(180deg)}
+.acc ul{margin:0;padding:0 18px 16px 48px;color:var(--ink)} .acc li{margin:8px 0;font-size:.95rem} .acc li a{font-size:.82rem;margin-left:4px}
+/* ideas */
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.idea{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
+.idea b{font-family:var(--display);font-size:2rem;display:block;color:var(--green)} .idea span{font-size:.86rem;color:var(--muted)}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line);margin-top:30px}
+/* tour */
+.tour-scrim{position:fixed;inset:0;z-index:80;pointer-events:none;opacity:0;transition:opacity .3s}
+.tour-scrim.on{pointer-events:auto;opacity:1}
+.spot{position:absolute;border-radius:18px;box-shadow:0 0 0 9999px rgba(17,26,20,.62);transition:all .45s var(--ease);pointer-events:none}
+.tcard{position:absolute;background:var(--surface);border-radius:18px;padding:18px 20px;width:min(360px,calc(100vw - 32px));box-shadow:0 30px 60px -20px rgba(0,0,0,.5);transition:all .45s var(--ease)}
+.tcard h4{font-size:1.05rem;margin-bottom:6px;font-family:var(--display)} .tcard p{margin:0 0 12px;color:var(--muted);font-size:.92rem}
+.tcard .row{display:flex;gap:8px;align-items:center} .tcard .dots{display:flex;gap:4px;margin-right:auto} .tcard .dots i{width:7px;height:7px;border-radius:50%;background:var(--line)} .tcard .dots i.on{background:var(--green)}
+#toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:90}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;animation:fadeUp .25s var(--ease)}
+@media (max-width:900px){.hdr .wrap{gap:8px}.hdr .btn{white-space:nowrap;padding:7px 10px}.brand b{white-space:nowrap;font-size:1rem}#tourBtn span{display:none}.hero .wrap{grid-template-columns:1fr}.hero-art{display:none}.nav{display:none}.hero{padding:40px 0 20px}section{padding:40px 0}}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
+<symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-wheat" viewBox="0 0 24 24"><path d="M12 22V10"/><path d="M12 14c-3 0-5-2-5-5 3 0 5 2 5 5zM12 14c3 0 5-2 5-5-3 0-5 2-5 5zM12 9c-3 0-4.5-2-4.5-5 2.5 0 4.5 1.5 4.5 5zM12 9c3 0 4.5-2 4.5-5-2.5 0-4.5 1.5-4.5 5z"/></symbol>
+<symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.5 5-6.5"/></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+<symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5a5.5 5.5 0 0 0-10 3.5c0 2.3 1.5 4 3 5.5l7 7Z"/></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
+<symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></symbol>
+<symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/></symbol>
+<symbol id="i-graduation" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.3L4.6 18.4A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.7-2.6L14 9.3V3"/><path d="M7 15h10"/></symbol>
+<symbol id="i-waves" viewBox="0 0 24 24"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.1 10.4a6 6 0 1 1-7.7 7.7"/><path d="M7 6h1v4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></symbol>
+<symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+<symbol id="i-pen-tool" viewBox="0 0 24 24"><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.6 7.6"/><circle cx="11" cy="11" r="2"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
+<symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/></symbol>
+<symbol id="i-rickshaw" viewBox="0 0 24 24"><path d="M4 16V9a4 4 0 0 1 4-4h6l3 6h3a2 2 0 0 1 2 2v3h-2"/><circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M9.5 17h5M4 10h11"/></symbol>
+<symbol id="i-tractor" viewBox="0 0 24 24"><path d="M3 4h9l1 7h5l1 3h2v3h-2"/><circle cx="7" cy="17" r="4"/><circle cx="18" cy="18" r="2.5"/><path d="M11 17h4.5M7 4v7M3 11h9"/></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1M16 11h.01"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16M10 14.7V17c0 .5-.5 1-1 1.3-1 .6-1 2.7-1 2.7h8s0-2.1-1-2.7c-.5-.3-1-.8-1-1.3v-2.3"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+<symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+<symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.9 5.6L19.5 10.5l-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/></symbol>
+<symbol id="i-languages" viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9Z"/></symbol>
+</svg>
+
+<header class="hdr"><div class="wrap">
+  <a class="brand" href="#top"><span class="logo"><svg class="ic" style="width:22px;height:22px"><use href="#i-layers"/></svg></span><b>FYP Templates</b></a>
+  <nav class="nav"><a href="#projects">Projects</a><a href="#how">How it works</a><a href="#guide">Student guide</a><a href="#ideas">Ideas</a></nav>
+  <span class="spacer"></span>
+  <button class="btn ghost sm" id="tourBtn"><svg class="ic"><use href="#i-play"/></svg> <span>Take the tour</span></button>
+  <a class="btn sm" href="https://github.com/rashidwassan/FYP-Templates" target="_blank" rel="noopener"><svg class="ic"><use href="#i-git-branch"/></svg> GitHub</a>
+</div></header>
+
+<section class="hero" id="top"><div class="wrap">
+  <div>
+    <div class="eyebrow">Final Year Project templates · Pakistan</div>
+    <h1 style="margin-top:10px">Twenty <em>single-file</em> apps that solve real problems, and leave room for yours.</h1>
+    <p>Each template is one HTML file: vanilla JavaScript, inline CSS, hand-drawn charts, offline-first storage, English and Urdu. Open it, understand it, then build the features deliberately left for you.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="#projects"><svg class="ic"><use href="#i-layers"/></svg> Browse projects</a><button class="btn coral" id="tourBtn2"><svg class="ic"><use href="#i-play"/></svg> Guided tour</button><a class="btn outline" href="IDEAS.md"><svg class="ic"><use href="#i-lightbulb"/></svg> 90 ideas</a></div>
+    <div class="stats"><div class="stat"><b id="sBuilt">0</b><span>templates ready</span></div><div class="stat"><b id="sTotal">0</b><span>templates planned</span></div><div class="stat"><b>90</b><span>ideas in the backlog</span></div><div class="stat"><b>2</b><span>languages</span></div></div>
+  </div>
+  <div class="hero-art" id="heroArt"></div>
+</div></section>
+
+<section id="projects"><div class="wrap">
+  <div class="sechead"><div><div class="eyebrow">Projects</div><h2>Pick a template</h2><p>Numbered in build order. Every card opens the app directly and links to its README with getting-started steps and the extensions left for students.</p></div></div>
+  <div class="toolbar" id="filters"><div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search projects, tags, ideas…"></div><div class="chips" id="chips"></div></div>
+  <div class="grid stagger" id="grid"></div>
+</div></section>
+
+<section id="how" style="background:var(--surface);border-block:1px solid var(--line)"><div class="wrap">
+  <div class="sechead"><div><div class="eyebrow">How it works</div><h2>From template to your FYP in four steps</h2></div></div>
+  <div class="steps reveal">
+    <div class="step"><div class="n">01</div><h3>Pick a problem you care about</h3><p>Browse the cards or the ideas backlog. The best FYPs come from a problem you have seen yourself.</p></div>
+    <div class="step"><div class="n">02</div><h3>Open <code>index.html</code></h3><p>No install, no build. Everything runs in the browser and saves to localStorage. Serve over HTTP for camera, GPS or notifications.</p></div>
+    <div class="step"><div class="n">03</div><h3>Read the README and the code</h3><p>Each README explains the problem, the architecture of the file, and the domain logic. The code is commented at the seams.</p></div>
+    <div class="step"><div class="n">04</div><h3>Build what is left for you</h3><p>Search for <code>TODO(student)</code>. Backends, authentication, ML models, maps and notifications are intentionally unbuilt.</p></div>
+  </div>
+  <div class="conv reveal">
+    <div><svg class="ic"><use href="#i-file"/></svg><span><b>Single file.</b> Vanilla JS, inline CSS, SVG charts. Lazily loaded libraries only where unavoidable.</span></div>
+    <div><svg class="ic"><use href="#i-lock"/></svg><span><b>Local-first.</b> Namespaced localStorage with realistic seed data, export and import.</span></div>
+    <div><svg class="ic"><use href="#i-languages"/></svg><span><b>Bilingual.</b> English with an Urdu toggle wherever the audience is the public.</span></div>
+    <div><svg class="ic"><use href="#i-sparkles"/></svg><span><b>Distinct design.</b> Different palette, type and layout per project, proper icons, fluid motion.</span></div>
+    <div><svg class="ic"><use href="#i-code"/></svg><span><b>Extension points.</b> <code>TODO(student)</code> markers, an About panel and a README table in every project.</span></div>
+    <div><svg class="ic"><use href="#i-git-branch"/></svg><span><b>One PR per project.</b> Each template lands from its own branch into <code>main</code>.</span></div>
+  </div>
+</div></section>
+
+<section id="guide"><div class="wrap">
+  <div class="sechead"><div><div class="eyebrow">Student guide</div><h2>Money, competitions, careers and tools</h2><p>Why a strong FYP matters in Pakistan right now, and where the support is. Figures and dates are from the linked sources.</p></div></div>
+  <div class="acc reveal" id="acc"></div>
+</div></section>
+
+<section id="ideas" style="background:var(--surface);border-block:1px solid var(--line)"><div class="wrap">
+  <div class="sechead"><div><div class="eyebrow">Backlog</div><h2>Ninety ideas, four parts</h2><p>Fifty Pakistan-focused problem solvers, fifteen global tools, twenty games and five additions. Shortlist from the backlog and the template is built the same way.</p></div><a class="btn" href="IDEAS.md"><svg class="ic"><use href="#i-lightbulb"/></svg> Open IDEAS.md</a></div>
+  <div class="ideas reveal"><div class="idea"><b>50</b><span>Pakistan-focused</span></div><div class="idea"><b>15</b><span>Global tools</span></div><div class="idea"><b>20</b><span>Games</span></div><div class="idea"><b>5</b><span>Additions</span></div><div class="idea"><b>10</b><span>Alternates</span></div></div>
+</div></section>
+
+<footer><div class="wrap">FYP Templates · MIT-style use for students and teachers · Built one project at a time. Seed data in the apps is illustrative; verify before real-world use.</div></footer>
+
+<div class="tour-scrim" id="tour"><div class="spot" id="spot"></div><div class="tcard" id="tcard"></div></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ic = n => `<svg class="ic" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+// ---------- project registry (keep in sync with README.md) ----------
+const DOMAINS = { agri: ['Agriculture', 'var(--green)', 'var(--green-soft)'], health: ['Health', 'var(--coral)', 'var(--coral-soft)'], edu: ['Education', 'var(--sky)', 'var(--sky-soft)'], civic: ['Civic & finance', 'var(--gold)', 'var(--gold-soft)'], global: ['Global tools', 'var(--violet)', 'var(--violet-soft)'], game: ['Games', '#c2185b', '#fde2ee'] };
+const PROJECTS = [
+  { n: 1, idea: 1, slug: '01-kisan-mandi-rate-board', title: 'Kisan Mandi Rate Board', tag: 'Daily crop rates across 18 mandis, a Sell Advisor that ranks mandis by net revenue, alerts and community reports.', dom: 'agri', icon: 'wheat', tags: ['Urdu', 'offline', 'charts'], status: 'built' },
+  { n: 2, idea: 4, slug: '02-crop-doctor', title: 'Crop Doctor', tag: 'Offline leaf analyzer, trainable TensorFlow.js classifier, symptom wizard and bilingual treatment cards.', dom: 'agri', icon: 'leaf', tags: ['Urdu', 'camera', 'TF.js'], status: 'built' },
+  { n: 3, idea: 11, slug: '03-dengue-watch', title: 'Dengue Watch', tag: 'Town-level outbreak dashboard, WHO 2009 triage, fever diary, breeding-site map and prevention streaks.', dom: 'health', icon: 'activity', tags: ['Urdu', 'map', 'charts'], status: 'built' },
+  { n: 4, idea: 12, slug: '04-khoon-blood-donor-network', title: 'Khoon', tag: 'Compatibility-aware donor search, emergency request board, donor card with eligibility, blood banks.', dom: 'health', icon: 'droplet', tags: ['Urdu', 'offline'], status: 'built' },
+  { n: 5, idea: 13, slug: '05-thalassemia-care-companion', title: 'Thalassemia Care Companion', tag: 'Transfusion and ferritin tracking, next-transfusion predictor, chelation adherence and screening.', dom: 'health', icon: 'heart', tags: ['Urdu', 'charts'], status: 'wip' },
+  { n: 6, idea: 15, slug: '06-dawai-generic-finder', title: 'Dawai', tag: 'Brand → generic medicine finder, price-per-unit compare, cabinet savings, interactions and reminders.', dom: 'health', icon: 'pill', tags: ['Urdu', 'search'], status: 'wip' },
+  { n: 7, idea: 16, slug: '07-lhw-field-visit-assistant', title: 'LHW Field Visit Assistant', tag: 'Offline maternal and child register, ANC schedule with auto flags, EPI card, growth, referral slips, reports.', dom: 'health', icon: 'stethoscope', tags: ['Urdu', 'offline', 'mobile-first'], status: 'wip' },
+  { n: 8, idea: 25, slug: '08-psl-sign-language-learner', title: 'Ishara — PSL Learner', tag: 'Pakistan Sign Language lessons with animated sign schematics, SRS quiz, dictionary and webcam handshape practice.', dom: 'edu', icon: 'hand', tags: ['Urdu', 'camera', 'TF.js', 'gamified'], status: 'built' },
+  { n: 9, idea: 26, slug: '09-board-exam-revision-planner', title: 'Board Exam Revision Planner', tag: 'Weightage-aware study planner, Pomodoro, spaced revision, past-paper tracking and readiness score.', dom: 'edu', icon: 'graduation', tags: ['planner', 'charts'], status: 'wip' },
+  { n: 10, idea: 27, slug: '10-virtual-science-lab', title: 'Virtual Science Lab', tag: 'Canvas physics and chemistry simulations with worksheets for schools without labs.', dom: 'edu', icon: 'flask', tags: ['Urdu', 'canvas', 'simulation'], status: 'wip' },
+  { n: 11, idea: 39, slug: '11-sailab-flood-preparedness', title: 'Sailab — Flood Preparedness', tag: 'River gauges, district risk map, evacuation planner, relief camps and a missing-person board.', dom: 'civic', icon: 'waves', tags: ['Urdu', 'map'], status: 'planned' },
+  { n: 12, idea: 43, slug: '12-kameti-committee-manager', title: 'Kameti Manager', tag: 'Rotating savings committee ledger: members, lottery order, payments matrix and a bilingual agreement.', dom: 'civic', icon: 'coins', tags: ['Urdu', 'ledger'], status: 'wip' },
+  { n: 13, idea: 51, slug: '13-password-manager', title: 'Privacy-First Password Manager', tag: 'WebCrypto vault, strength analysis, generator and encrypted export. Nothing leaves the browser.', dom: 'global', icon: 'lock', tags: ['WebCrypto', 'security'], status: 'planned' },
+  { n: 14, idea: 52, slug: '14-algorithm-visualizer', title: 'Algorithm Visualizer', tag: 'Sorting, pathfinding and graph algorithms animated with step controls and code highlighting.', dom: 'global', icon: 'cpu', tags: ['canvas', 'education'], status: 'planned' },
+  { n: 15, idea: 56, slug: '15-resume-builder', title: 'ATS-Friendly Resume Builder', tag: 'Templates, job-description keyword match score and PDF export.', dom: 'global', icon: 'briefcase', tags: ['print', 'careers'], status: 'planned' },
+  { n: 16, idea: 59, slug: '16-mindmap-flowchart-editor', title: 'Mind Map & Flowchart Editor', tag: 'Canvas nodes and connectors, auto-layout, undo/redo and export.', dom: 'global', icon: 'pen-tool', tags: ['canvas', 'editor'], status: 'planned' },
+  { n: 17, idea: 60, slug: '17-image-toolkit', title: 'Client-Side Image Toolkit', tag: 'Compress, resize, convert, crop and strip EXIF without uploading anything.', dom: 'global', icon: 'image', tags: ['privacy', 'canvas'], status: 'planned' },
+  { n: 18, idea: 66, slug: '18-ludo', title: 'Ludo', tag: 'Pakistan\'s favourite board game with AI opponents and local multiplayer.', dom: 'game', icon: 'dice', tags: ['game', 'AI'], status: 'planned' },
+  { n: 19, idea: 74, slug: '19-rickshaw-rush', title: 'Rickshaw Rush', tag: 'Endless runner through Karachi traffic with passengers and upgrades.', dom: 'game', icon: 'rickshaw', tags: ['game', 'canvas'], status: 'planned' },
+  { n: 20, idea: 77, slug: '20-zameendar-farm-sim', title: 'Zameendar', tag: 'Farm strategy simulation: seasons, water, crops and market prices.', dom: 'game', icon: 'tractor', tags: ['game', 'simulation'], status: 'planned' },
+];
+let filter = 'all';
+function renderChips() {
+  const opts = [['all', 'All'], ...Object.entries(DOMAINS).map(([k, v]) => [k, v[0]]), ['built', 'Ready'], ['wip', 'In progress']];
+  $('#chips').innerHTML = opts.map(([k, l]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('');
+  $$('#chips .chip').forEach(b => b.onclick = () => { filter = b.dataset.f; renderChips(); renderGrid(); });
+}
+function renderGrid() {
+  const q = $('#q').value.trim().toLowerCase();
+  const list = PROJECTS.filter(p => (filter === 'all' || p.dom === filter || p.status === filter) && (!q || p.title.toLowerCase().includes(q) || p.tag.toLowerCase().includes(q) || p.tags.some(t => t.includes(q)) || ('#' + p.idea).includes(q) || String(p.n).padStart(2, '0').includes(q)));
+  $('#grid').innerHTML = list.map((p, i) => { const [dn, c, cs] = DOMAINS[p.dom]; const base = `projects/${p.slug}/`; return `<article class="card ${p.status}" data-n="${p.n}" style="--c:${c};--cs:${cs};--i:${Math.min(i, 12)}"><div class="top"><div class="icw">${ic(p.icon)}</div><div><div class="num">${String(p.n).padStart(2, '0')} · idea #${p.idea} · ${dn}</div><h3>${esc(p.title)}</h3></div></div><p>${esc(p.tag)}</p><div class="tags">${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="status ${p.status}"><i></i>${p.status === 'built' ? 'Ready' : p.status === 'wip' ? 'In progress' : 'Planned'}</span><div class="acts"><a class="btn sm" href="${base}index.html">${ic('play')} Open</a><a class="btn ghost sm" href="${base}README.md">${ic('file')} README</a></div></div></article>`; }).join('') || `<p style="color:var(--muted)">No projects match.</p>`;
+}
+$('#q').addEventListener('input', renderGrid);
+// stats with count-up
+const countUp = (el, to) => { const t0 = performance.now(); const step = t => { const p = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * e); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); };
+countUp($('#sBuilt'), PROJECTS.filter(p => p.status === 'built').length); countUp($('#sTotal'), PROJECTS.length);
+// hero art: floating tiles
+$('#heroArt').innerHTML = [[0, 10, 'wheat', 'Mandi rates', 'var(--green)', 'var(--green-soft)'], [220, 0, 'droplet', 'Blood donors', 'var(--coral)', 'var(--coral-soft)'], [40, 120, 'hand', 'Sign language', 'var(--sky)', 'var(--sky-soft)'], [250, 110, 'flask', 'Virtual lab', 'var(--violet)', 'var(--violet-soft)'], [0, 230, 'coins', 'Kameti ledger', 'var(--gold)', 'var(--gold-soft)'], [210, 225, 'dice', 'Ludo', '#c2185b', '#fde2ee']].map(([x, y, i, l, c, s], k) => `<div class="tile" style="left:${x}px;top:${y}px;animation-delay:${k * .7}s"><div class="icw" style="background:${s};color:${c}">${ic(i)}</div>${l}</div>`).join('');
+// detect built projects when served over HTTP (file:// blocks fetch; falls back to the registry)
+(async () => { if (location.protocol === 'file:') return; let changed = false; await Promise.all(PROJECTS.filter(p => p.status !== 'built').map(async p => { try { const r = await fetch(`projects/${p.slug}/index.html`, { method: 'HEAD' }); if (r.ok) { p.status = 'built'; changed = true; } } catch { } })); if (changed) { renderGrid(); countUp($('#sBuilt'), PROJECTS.filter(p => p.status === 'built').length); } })();
+// student guide
+const GUIDE = [
+  ['Money and support', 'piggy', 'var(--green)', 'var(--green-soft)', [
+    ['Ignite\'s NGIRI program funds prototypes with up to Rs 84,700 for equipment and Rs 12,100 for other costs; the national champion team wins Rs 400,000. Check whether your department is registered.', 'https://ignite.org.pk/?p=2503', 'ignite'],
+    ['HEC\'s Innovator Seed Fund gave 28 university startups up to Rs 10 million each (2022-23). Students and recent alumni can apply with their incubation centre\'s endorsement and an SECP-registered company.', 'https://www.hec.gov.pk/english/news/news/Pages/28-University-Startups-Win-HEC-Innovator-Seed-Fund.aspx', 'hec'],
+    ['Campus pitch funds: Rawalpindi Women University\'s 2025 pitch fest awarded Rs 9 million; Punjab is setting up funding pools at each university.', 'https://www.dawn.com/news/1960379', 'dawn'],
+    ['NIC Islamabad gives selected startups a year of free workspace and runs campus sessions on turning an FYP into a startup.', 'https://www.startup.pk/nic-islamabad/', 'startup.pk']]],
+  ['Competitions and recognition', 'trophy', 'var(--gold)', 'var(--gold-soft)', [
+    ['P@SHA ICT Awards: the 2026 cycle closed on 10 August and winners go to APICTA Jakarta in December 2026. Aim for the 2027 cycle.', 'https://propakistani.pk/2026/08/03/psha-opens-applications-for-22nd-ict-awards-winners-to-represent-pakistan-at-apicta-2026/', 'propakistani'],
+    ['Microsoft Imagine Cup 2027: teams of up to four, up to $5,000 Azure credits, listed deadline 8 January 2027, world championship May 2027.', 'https://imaginecup.microsoft.com/en-us/category/34', 'imaginecup'],
+    ['Ignite\'s national FYP championship has drawn winners from universities across Pakistan, not only the big cities.', 'https://propakistani.pk/2017/05/20/student-entrepreneurs-honored-national-competition-final-year-projects/', 'propakistani']]],
+  ['Jobs and careers', 'briefcase', 'var(--sky)', 'var(--sky-soft)', [
+    ['At IBA Karachi\'s June 2026 FYP exhibition several students received job offers and interview calls.', 'https://smcs.iba.edu.pk/iba-smcs-hosted-the-computer-science-final-year-project-fyp-exhibition-2026.php', 'iba'],
+    ['32.8 % of graduates aged 20–24 are unemployed; the rate falls with age, so a strong FYP moves you up the queue.', 'https://galluppakistandigitalanalytics.com/2026/07/24/in-pakistan-a-university-degree-can-mean-a-longer-wait-for-a-job-not-a-faster-one/', 'gallup'],
+    ['Employers say new graduates lack job skills; your FYP is evidence you are the exception.', 'https://www.thenews.pk/tns/detail/1397528-the-point-of-education', 'thenews'],
+    ['AI is cutting routine programming demand while opening AI engineering, cybersecurity and cloud roles. A basic data-entry app no longer stands out.', 'https://bloompakistan.com/?p=163533', 'bloompakistan'],
+    ['IT exports hit a record $4.6 billion in FY26 (target $10 billion by FY29); freelancer earnings passed $1 billion with 2.37 million registered freelancers.', 'https://profit.pakistantoday.com.pk/2026/07/18/pakistans-it-exports-hit-record-dollar46-billion-in-fy26-surpass-government-target', 'profit'],
+    ['The National AI Policy\'s High-Tech Internship Program targets 20,000 placements a year plus 3,000 postgraduate scholarships.', 'https://meatechwatch.com/2025/10/03/pakistan-launches-national-ai-policy-2025-with-goal-to-train-one-million-by-2030/', 'meatechwatch']]],
+  ['Tools', 'wrench', 'var(--violet)', 'var(--violet-soft)', [
+    ['GPU access is the biggest limit for AI research in Pakistan; prefer small models on free Colab or Kaggle, or APIs.', 'https://www.geo.tv/latest/611676-pakistani-students-revolutionary-geogemma-project-wins-top-google-award', 'geo'],
+    ['Under the August 2026 Pakistan–Google agreement students get a year of free Google AI Plus and Gemini; a payment method is required and it converts to paid unless cancelled.', 'https://propakistani.pk/2026/08/21/how-pakistani-students-can-get-free-gemini-subscription-for-1-year/', 'propakistani']]],
+];
+$('#acc').innerHTML = GUIDE.map(([h, i, c, s, items], k) => `<details ${k === 0 ? 'open' : ''}><summary><span class="icw" style="background:${s};color:${c}">${ic(i)}</span>${h}<span class="chev">${ic('chevron-down')}</span></summary><ul>${items.map(([txt, url, src]) => `<li>${esc(txt)} <a href="${url}" target="_blank" rel="noopener">${esc(src)} ${ic('external')}</a></li>`).join('')}</ul></details>`).join('');
+// reveal on scroll
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .1 });
+$$('.reveal').forEach(el => io.observe(el));
+// ---------- tour ----------
+const STEPS = [
+  { sel: '#top .stats', title: 'Welcome to FYP Templates', body: 'Twenty single-file apps for Pakistani students. This hub navigates the repository; each project also stands alone.' },
+  { sel: '#filters', title: 'Filter and search', body: 'Filter by domain or status, or search by name, tag or idea number. Cards link straight to the app and its README.' },
+  { sel: '#grid .card', title: 'A project card', body: 'The number is the build order, the idea number points back to IDEAS.md. "Open" runs the app; "README" has getting-started steps and the student extension table.' },
+  { sel: '#how .steps', title: 'How to use a template', body: 'Open index.html, read the README, then build the features marked TODO(student): backends, auth, ML, maps, notifications.' },
+  { sel: '#guide .sechead', title: 'Student guide', body: 'Funding programs, competitions, career data and tool access, with sources, so you can pitch the project beyond the viva.' },
+  { sel: '#ideas .ideas', title: 'The backlog', body: 'Ninety ideas in four parts. Shortlist one and it can be built in the same style. That is the end of the tour.' },
+];
+let step = 0; const tour = $('#tour'), spot = $('#spot'), tcard = $('#tcard');
+function place() {
+  const s = STEPS[step]; const el = $(s.sel); if (!el) return next();
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  setTimeout(() => { const r = el.getBoundingClientRect(), pad = 10; spot.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;height:${r.height + pad * 2}px`;
+    tcard.innerHTML = `<h4>${esc(s.title)}</h4><p>${esc(s.body)}</p><div class="row"><div class="dots">${STEPS.map((_, i) => `<i class="${i === step ? 'on' : ''}"></i>`).join('')}</div><button class="btn ghost sm" id="tPrev" ${step === 0 ? 'disabled' : ''}>${ic('arrow-left')}</button><button class="btn sm" id="tNext">${step === STEPS.length - 1 ? ic('check') + ' Done' : 'Next ' + ic('arrow-right')}</button><button class="btn ghost sm" id="tClose" aria-label="Close tour">${ic('x')}</button></div>`;
+    const cw = tcard.offsetWidth, ch = tcard.offsetHeight; let top = r.bottom + 18, left = Math.min(Math.max(16, r.left), window.innerWidth - cw - 16); if (top + ch > window.innerHeight - 10) top = Math.max(10, r.top - ch - 18); tcard.style.cssText = `left:${left}px;top:${top}px`;
+    $('#tNext').onclick = next; $('#tPrev').onclick = () => { step--; place(); }; $('#tClose').onclick = endTour; }, 350);
+}
+function next() { if (step >= STEPS.length - 1) return endTour(); step++; place(); }
+function startTour() { step = 0; tour.classList.add('on'); place(); }
+function endTour() { tour.classList.remove('on'); const t = document.createElement('div'); t.className = 'toast'; t.textContent = 'Tour finished. Pick a project to begin.'; $('#toasts').append(t); setTimeout(() => t.remove(), 2600); }
+$('#tourBtn').onclick = startTour; $('#tourBtn2').onclick = startTour;
+document.addEventListener('keydown', e => { if (!tour.classList.contains('on')) return; if (e.key === 'Escape') endTour(); if (e.key === 'ArrowRight') next(); if (e.key === 'ArrowLeft' && step > 0) { step--; place(); } });
+window.addEventListener('resize', () => { if (tour.classList.contains('on')) place(); });
+renderChips(); renderGrid();
+</script>
+</body>
+</html>

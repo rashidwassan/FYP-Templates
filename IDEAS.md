@@ -321,3 +321,27 @@ Seed food database, macros, weekly plan, grocery list, BMI/TDEE.
 **83. Tetris** ★★ — Hold piece, ghost piece, levels, scoring.
 **84. Tower Defense** ★★★ — Waves, towers, upgrades, map editor.
 **85. 8-Ball Pool** ★★★ — Cue physics, collisions, two-player.
+
+---
+
+## Part D — Additions (86–90)
+
+**86. PromptCraft — AI Prompt Engineering Game & Playground** ★★ (global, deployable website)
+Problem: Everyone uses AI assistants, almost nobody is taught to prompt them well.
+Build: Level-based game (clarify, constrain, give examples, chain-of-thought, roles, output formats) with funny scenarios and instant scoring against hidden rubrics; sandbox playground with side-by-side prompt A/B, token/cost estimator, prompt templates library, shareable prompt cards, leaderboard. Bring-your-own-API-key model adapter so it runs on a static host.
+
+**87. CodeBuddy — Code Mentor & Playground for Kids and Beginners** ★★★ (global)
+Problem: Beginners get stuck on setup and error messages before they learn anything.
+Build: In-browser JavaScript/Python (Pyodide) playground with guided lessons, animated step-through of variables and loops, "explain this error" in plain Urdu/English, block-to-code toggle, mini projects (turtle art, quiz app), badges; optional AI mentor hook via API key.
+
+**88. CampusHub — Student Portal with Lost & Found** ★★ (Pakistan)
+Problem: Campus life runs on scattered WhatsApp groups: lost items, notices, timetables, society events, ride sharing.
+Build: Lost & found board with photo, location pin and claim verification questions; notices and events calendar; timetable and class-room finder; society directory; anonymous feedback box; moderator queue. Role-based views (student / society admin / staff).
+
+**89. ScholarTrack — Scholarship Tracker & Application Manager** ★★ (Pakistan; expands idea #24)
+Problem: Deadlines, documents and eligibility rules for HEC, PEEF, Ehsaas, provincial, university and foreign scholarships are scattered and missed.
+Build: Searchable database with eligibility quiz, per-application pipeline (eligible → documents → submitted → interview → result), document checklist with reminders, essay/SOP drafts, calendar export, success statistics, guide articles in Urdu.
+
+**90. FraudShield — Scam & Fraud Detection for Digital Payments** ★★★ (Pakistan)
+Problem: 92 % of retail payments are digital (SBP, March 2026); reported cybercrime rose 35 % in 2025; one estimate puts annual digital-fraud losses near $9.3 billion.
+Build (pick one or combine): scam SMS/WhatsApp detector for Urdu, Roman Urdu and English (rule features + small TF.js text classifier, explainable red flags, report button); fake job-ad checker (red-flag scoring, registered-company lookup checklist); anomaly detection on synthetic transaction data (isolation-forest style scoring, dashboard of flagged transactions, analyst review queue).
