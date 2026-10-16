@@ -107,7 +107,7 @@ code, kbd, .mono { font-family: var(--mono); }
 code { background: var(--paper-2); border-radius: 6px; padding: 1px 6px; font-size: .88em; }
 .muted { color: var(--muted); }
 .small { font-size: .85rem; }
-.hidden { display: none !important; }
+.hidden, [hidden] { display: none !important; }
 .spacer { flex: 1; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .between { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
@@ -115,15 +115,17 @@ code { background: var(--paper-2); border-radius: 6px; padding: 1px 6px; font-si
 .tnum { font-variant-numeric: tabular-nums; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 :focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; border-radius: 8px; }
-.skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: var(--paper); padding: 8px 12px; border-radius: 10px; z-index: 100; }
-.skip:focus { left: 8px; }
+.skip { position: absolute; inset-inline-start: 8px; top: -80px; background: var(--ink); color: var(--paper); padding: 8px 12px; border-radius: 10px; z-index: 100; }
+.skip:focus { top: 8px; }
 .ic { width: 1.1em; height: 1.1em; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -.2em; flex: none; }
 .ic.lg { width: 1.5em; height: 1.5em; }
 .ic.xl { width: 2.2em; height: 2.2em; }
 
 /* Urdu: Nastaliq for prose, Lexend kept for numbers, code and chips */
 html.ur body { font-family: var(--font-ur); line-height: 2.05; }
-html.ur .mono, html.ur code, html.ur .editor, html.ur .console, html.ur .tnum, html.ur .num-bubble, html.ur .kbd, html.ur .vtable td:nth-child(2) { font-family: var(--mono); line-height: 1.55; }
+html.ur .mono, html.ur code, html.ur .editor, html.ur .console, html.ur .kbd, html.ur .vtable td:nth-child(2) { font-family: var(--mono); line-height: 1.55; }
+html.ur .num-bubble, html.ur .kpi .v { font-family: var(--font); line-height: 1.2; }
+html.ur .console .c-sys { font-family: var(--font-ur), var(--font); line-height: 2; display: block; direction: rtl; text-align: right; }
 html.ur .btn, html.ur .chip, html.ur .seg button, html.ur .tabs button { line-height: 1.7; }
 html.ur h1, html.ur h2, html.ur h3, html.ur h4 { line-height: 1.9; }
 .ltr { direction: ltr; text-align: left; }
@@ -603,6 +605,7 @@ html.ur .vis-block h4 { text-transform: none; letter-spacing: 0; }
 /* ---------- blocks ---------- */
 .blocks-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr) minmax(0, 380px); gap: 14px; align-items: start; }
 .palette { display: grid; gap: 7px; position: sticky; top: calc(var(--top-h) + 14px); }
+.palette h3 { grid-column: 1 / -1; margin-bottom: 4px; }
 .pblock, .blk-head {
   display: flex;
   align-items: center;
@@ -820,6 +823,8 @@ html.rm *, html.rm *::before, html.rm *::after { animation-duration: .01ms !impo
   .edbar { gap: 6px; padding: 8px; }
   .top-actions { gap: 4px; }
   .top-actions .iconbtn { width: 38px; height: 38px; }
+  .top-actions .langbtn { width: auto; }
+  #settingsBtn { display: none; }
   .langbtn { min-width: 52px; padding: 0 8px; }
   .brand .logo { width: 36px; height: 36px; }
   .brand b { font-size: 1rem; }
@@ -976,7 +981,7 @@ html.rm *, html.rm *::before, html.rm *::after { animation-duration: .01ms !impo
         <details class="inputs" id="inputsBox">
           <summary id="inputsSummary"></summary>
           <div class="body">
-            <textarea class="field" id="inputsTa" spellcheck="false" aria-describedby="inputsHelp"></textarea>
+            <textarea class="field" id="inputsTa" dir="auto" spellcheck="false" aria-describedby="inputsHelp"></textarea>
             <p class="muted small" id="inputsHelp" style="margin:6px 0 0"></p>
           </div>
         </details>
@@ -1304,7 +1309,7 @@ const I18N = {
     skip: 'Skip to content', tagline: 'Code mentor for kids', search: 'Search', inbox: 'Inbox', learner: 'Learner', settings: 'Settings',
     nav_learn: 'Learn', nav_play: 'Playground', nav_projects: 'Projects', nav_blocks: 'Blocks', nav_progress: 'Progress', nav_teacher: 'Teacher', nav_errors: 'Errors', nav_settings: 'Settings', nav_about: 'About',
     find: 'Find', findNext: 'Next match', findPrev: 'Previous match', close: 'Close', fontBigger: 'Bigger code', fontSmaller: 'Smaller code', moreTools: 'More tools',
-    justNow: 'just now', minAgo: '{n} min ago', hAgo: '{n} h ago', yesterday: 'yesterday', daysAgo: '{n} days ago',
+    justNow: 'just now', today: 'today', colLessons: 'Lessons', colProjects: 'Projects', minAgo: '{n} min ago', hAgo: '{n} h ago', yesterday: 'yesterday', daysAgo: '{n} days ago',
     copied: 'Copied', copyFailed: 'Could not copy — select and copy by hand', ok: 'OK', cancel: 'Cancel', save: 'Save', delete: 'Delete', rename: 'Rename', create: 'Create', add: 'Add', clear: 'Clear', print: 'Print', copy: 'Copy', next: 'Next', back: 'Back', done: 'Done', use: 'Use', active: 'Active', all: 'All', both: 'Both languages',
     // IDE
     editorLabel: '{lang} code editor', lessonN: 'Lesson {n} of {total}', goals: 'Goals', showHint: 'Show a hint', showSolution: 'Show solution', nextLesson: 'Next lesson', toProjects: 'Mini projects', turtle: 'Turtle', miniProject: 'Mini project', miniProjects: 'Mini projects', level: 'Level', steps: 'Steps', peekSolution: 'Peek at a solution', allProjects: 'All projects',
@@ -1367,7 +1372,7 @@ const I18N = {
     settingsTitle: 'Settings', settingsIntro: 'Language, look, editor, running, Live AI, learners and data. Everything is saved on this device.', preferences: 'Preferences', languageD: 'All menus, lessons and error help', theme: 'Theme', themeD: 'Paper (light) or chalkboard (dark)', themeLight: 'Paper', themeDark: 'Chalkboard',
     textSize: 'Text size', textSizeD: 'Bigger text for younger readers', normal: 'Normal', large: 'Large', motion: 'Motion', motionD: 'Animations', motionSystem: 'Follow device', motionReduce: 'Reduce', motionFull: 'Full',
     editorSettings: 'Editor', fontSizeLbl: 'Code size', fontSizeD: 'Also Alt + and Alt - in the editor', autoClose: 'Close brackets and quotes', autoCloseD: 'Typing ( adds ) for you',
-    timeLimit: 'Time limit', timeLimitD: 'Stops programs that run too long (infinite loops)', seconds: '{n} seconds', seed: 'Repeatable random', seedD: 'A number makes random choices repeat (blank = truly random)',
+    runningTitle: 'Running code', timeLimit: 'Time limit', timeLimitD: 'Stops programs that run too long (infinite loops)', seconds: '{n} seconds', seed: 'Repeatable random', seedD: 'A number makes random choices repeat (blank = truly random)',
     liveAi: 'Live AI mentor (optional)', liveAiIntro: 'Buddy works fully offline. If you have your own Claude API key you can let Buddy answer with a live AI model.',
     aiWarning: 'A key typed into a web page can be seen by anyone using this device. Use a restricted key with a spend limit. Real apps should call the AI from their own server.',
     aiEnable: 'Use Live AI in the Buddy tab', aiEnableD: 'Off = offline rule-based Buddy', apiKey: 'API key', showKey: 'Show or hide key', rememberKey: 'Remember on this device (otherwise the key is forgotten when you close the tab)', model: 'Model',
@@ -1400,7 +1405,7 @@ const I18N = {
     skip: 'مواد پر جائیں', tagline: 'بچوں کا کوڈنگ استاد', search: 'تلاش', inbox: 'ان باکس', learner: 'سیکھنے والا', settings: 'ترتیبات',
     nav_learn: 'سیکھیں', nav_play: 'کھیل کا میدان', nav_projects: 'پروجیکٹس', nav_blocks: 'بلاکس', nav_progress: 'پیش رفت', nav_teacher: 'استاد', nav_errors: 'غلطیاں', nav_settings: 'ترتیبات', nav_about: 'تعارف',
     find: 'تلاش کریں', findNext: 'اگلا', findPrev: 'پچھلا', close: 'بند کریں', fontBigger: 'کوڈ بڑا', fontSmaller: 'کوڈ چھوٹا', moreTools: 'مزید ٹولز',
-    justNow: 'ابھی', minAgo: '{n} منٹ پہلے', hAgo: '{n} گھنٹے پہلے', yesterday: 'کل', daysAgo: '{n} دن پہلے',
+    justNow: 'ابھی', today: 'آج', colLessons: 'اسباق', colProjects: 'پروجیکٹس', minAgo: '{n} منٹ پہلے', hAgo: '{n} گھنٹے پہلے', yesterday: 'کل', daysAgo: '{n} دن پہلے',
     copied: 'کاپی ہو گیا', copyFailed: 'کاپی نہیں ہو سکا — خود منتخب کر کے کاپی کریں', ok: 'ٹھیک ہے', cancel: 'منسوخ', save: 'محفوظ کریں', delete: 'حذف کریں', rename: 'نام بدلیں', create: 'بنائیں', add: 'شامل کریں', clear: 'صاف کریں', print: 'پرنٹ', copy: 'کاپی', next: 'اگلا', back: 'پیچھے', done: 'مکمل', use: 'استعمال کریں', active: 'فعال', all: 'سب', both: 'دونوں زبانیں',
     editorLabel: '{lang} کوڈ ایڈیٹر', lessonN: 'سبق {n} از {total}', goals: 'مقاصد', showHint: 'اشارہ دکھائیں', showSolution: 'حل دکھائیں', nextLesson: 'اگلا سبق', toProjects: 'منی پروجیکٹس', turtle: 'کچھوا', miniProject: 'منی پروجیکٹ', miniProjects: 'منی پروجیکٹس', level: 'درجہ', steps: 'قدم', peekSolution: 'حل پر ایک نظر', allProjects: 'تمام پروجیکٹس',
     playground: 'کھیل کا میدان', playIntro: 'آپ کے اپنے پروگرام۔ سب کچھ اسی ڈیوائس پر خود بخود محفوظ ہوتا ہے۔', newProgram: 'نیا پروگرام', myPrograms: 'میرے پروگرام', programName: 'پروگرام کا نام', myProgram: 'میرا پروگرام', language: 'زبان', deleteProgram: 'پروگرام حذف کریں؟', deleteProgramBody: '"{name}" اس ڈیوائس سے ہٹا دیا جائے گا۔',
@@ -1455,7 +1460,7 @@ const I18N = {
     settingsTitle: 'ترتیبات', settingsIntro: 'زبان، انداز، ایڈیٹر، چلانا، لائیو AI، سیکھنے والے اور ڈیٹا۔ سب کچھ اسی ڈیوائس پر محفوظ ہے۔', preferences: 'پسند', languageD: 'تمام مینو، اسباق اور غلطیوں کی مدد', theme: 'انداز', themeD: 'کاغذ (روشن) یا بلیک بورڈ (گہرا)', themeLight: 'کاغذ', themeDark: 'بلیک بورڈ',
     textSize: 'لکھائی کا سائز', textSizeD: 'چھوٹے بچوں کے لیے بڑی لکھائی', normal: 'عام', large: 'بڑا', motion: 'حرکت', motionD: 'اینیمیشن', motionSystem: 'ڈیوائس کے مطابق', motionReduce: 'کم', motionFull: 'پوری',
     editorSettings: 'ایڈیٹر', fontSizeLbl: 'کوڈ کا سائز', fontSizeD: 'ایڈیٹر میں Alt + اور Alt - بھی', autoClose: 'بریکٹس اور کوٹس خود بند ہوں', autoCloseD: '( لکھنے پر ) خود لگ جائے',
-    timeLimit: 'وقت کی حد', timeLimitD: 'بہت دیر چلنے والے پروگرام (لامتناہی لوپ) روک دیتا ہے', seconds: '{n} سیکنڈ', seed: 'دہرایا جانے والا رینڈم', seedD: 'نمبر دینے سے بے ترتیب انتخاب ہر بار ایک جیسا ہوگا (خالی = واقعی بے ترتیب)',
+    runningTitle: 'کوڈ چلانا', timeLimit: 'وقت کی حد', timeLimitD: 'بہت دیر چلنے والے پروگرام (لامتناہی لوپ) روک دیتا ہے', seconds: '{n} سیکنڈ', seed: 'دہرایا جانے والا رینڈم', seedD: 'نمبر دینے سے بے ترتیب انتخاب ہر بار ایک جیسا ہوگا (خالی = واقعی بے ترتیب)',
     liveAi: 'لائیو AI استاد (اختیاری)', liveAiIntro: 'بڈی مکمل طور پر آف لائن کام کرتا ہے۔ اگر آپ کے پاس اپنی Claude API کلید ہے تو بڈی لائیو AI ماڈل سے جواب دے سکتا ہے۔',
     aiWarning: 'ویب صفحے میں لکھی گئی کلید اس ڈیوائس کا ہر استعمال کرنے والا دیکھ سکتا ہے۔ خرچ کی حد والی محدود کلید استعمال کریں۔ اصل ایپس کو AI اپنے سرور سے بلانا چاہیے۔',
     aiEnable: 'بڈی ٹیب میں لائیو AI استعمال کریں', aiEnableD: 'بند = آف لائن اصولوں والا بڈی', apiKey: 'API کلید', showKey: 'کلید دکھائیں یا چھپائیں', rememberKey: 'اس ڈیوائس پر یاد رکھیں (ورنہ ٹیب بند ہوتے ہی کلید بھلا دی جائے گی)', model: 'ماڈل',
@@ -5568,7 +5573,7 @@ class TurtleCanvas {
       const [a, b] = this.toPx(op.x1, op.y1);
       const [x, y] = this.toPx(op.x2, op.y2);
       c.strokeStyle = op.color;
-      c.lineWidth = op.width * this.scale * 0.9;
+      c.lineWidth = Math.max(2, op.width) * this.scale * 1.1;
       c.lineCap = 'round';
       c.beginPath();
       c.moveTo(a, b);
@@ -5679,6 +5684,7 @@ self.onmessage = e => {
     fn = new Function(e.data.code);
   } catch (err) {
     __post({ type: 'error', name: err.name, message: err.message, stack: '', syntax: true });
+    __post({ type: 'done', asks: 0 });
     return;
   }
   try {
@@ -5974,6 +5980,8 @@ async function runProgram(code, lang, opts = {}) {
 
 // ---------- goal checks ----------
 const outputText = res => res.out.map(c => c.s).join('');
+// Goals judge what the program printed, so typed answers count only as line breaks.
+const printedText = res => res.out.map(c => (c.k === 'in' ? '\n' : c.s)).join('');
 
 function stripComments(code, lang) {
   return scanCode(code, lang).filter(t => t.t !== 'comment').map(t => t.v).join('');
@@ -5981,7 +5989,7 @@ function stripComments(code, lang) {
 
 function checkGoal(goal, res, code, lang) {
   const c = goal.check;
-  const text = outputText(res);
+  const text = printedText(res);
   const plain = stripComments(code, lang);
   switch (c.k) {
     case 'ok':
@@ -6514,7 +6522,7 @@ function addLog(kind, text) {
 
 function visibleInbox() {
   const pid = (activeProfile() || {}).id;
-  return inbox().filter(m => !m.pid || m.pid === pid);
+  return inbox().filter(m => !m.pid || m.pid === pid).sort((a, b) => b.ts - a.ts);
 }
 
 const unreadCount = () => visibleInbox().filter(m => !m.read).length;
@@ -6588,6 +6596,12 @@ function seedDemo() {
   });
   store.set('play:' + ayesha.id, demoPrograms(now));
   seedInbox(ayesha, now);
+  store.set('log', [
+    { kind: 'done', text: { en: 'Lesson complete: Joining words', ur: 'سبق مکمل: الفاظ جوڑنا' }, ts: now - DAY },
+    { kind: 'solution', text: { en: 'Viewed the solution for Score keeper', ur: 'اسکور کیپر کا حل دیکھا' }, ts: now - 2 * DAY },
+    { kind: 'done', text: { en: 'Lesson complete: Score keeper', ur: 'سبق مکمل: اسکور کیپر' }, ts: now - 2 * DAY - 36e5 },
+    { kind: 'export', text: { en: 'Exported a backup', ur: 'بیک اپ ایکسپورٹ کیا' }, ts: now - 6 * DAY },
+  ]);
   store.set('seeded', SEED_VERSION);
 }
 
@@ -8728,6 +8742,13 @@ function lastActive(p) {
   return days.length ? new Date(days[days.length - 1] + 'T12:00:00').getTime() : p.created;
 }
 
+function dayAgo(ts) {
+  const days = Math.round((new Date(todayIso() + 'T12:00:00') - new Date(isoDay(ts) + 'T12:00:00')) / DAY);
+  if (days <= 0) return t('today');
+  if (days === 1) return t('yesterday');
+  return t('daysAgo', { n: days });
+}
+
 function needsHelp(p) {
   const idle = (Date.now() - lastActive(p)) / DAY;
   const stuck = p.stats.errors > 6 && p.stats.fixes < p.stats.errors / 3;
@@ -8798,13 +8819,13 @@ function classDashboardHTML(cls) {
 
 function rosterTableHTML(members) {
   if (!members.length) return `<div class="empty">${ic('users')}<p>${t('noMembers')}</p></div>`;
-  const head = `<tr><th>${t('learner')}</th><th>${t('lessonsWord')}</th>${UNITS.map((u, i) => `<th title="${esc(T(u.sub))}">U${i + 1}</th>`).join('')}<th>${t('projectsWord')}</th><th>${t('streak')}</th><th>${t('lastActive')}</th><th></th></tr>`;
+  const head = `<tr><th>${t('learner')}</th><th>${t('colLessons')}</th>${UNITS.map((u, i) => `<th title="${esc(T(u.sub))}">U${i + 1}</th>`).join('')}<th>${t('colProjects')}</th><th>${t('streak')}</th><th>${t('lastActive')}</th><th></th></tr>`;
   const rows = members.sort((a, b) => lessonsDone(b) - lessonsDone(a)).map(p => {
     const n = lessonsDone(p);
     return `<tr><td><span class="row" style="flex-wrap:nowrap"><span class="avatar" style="width:30px;height:30px;font-size:.72rem;background:${p.color};cursor:default">${esc(initials(p.name))}</span>${esc(p.name)}</span></td>
       <td class="tnum"><span class="mini-bar"><i data-w="${pct(n, LESSONS.length)}"></i></span>${n}/${LESSONS.length}</td>
       ${UNITS.map(u => `<td class="tnum">${unitProgress(p, u.id)}/4</td>`).join('')}
-      <td class="tnum">${projectsDone(p)}/5</td><td class="tnum">${streak(p)}</td><td class="small">${ago(lastActive(p))}</td>
+      <td class="tnum">${projectsDone(p)}/5</td><td class="tnum">${streak(p)}</td><td class="small">${dayAgo(lastActive(p))}</td>
       <td><button type="button" class="btn ghost xs" data-cert="${p.id}">${ic('award')} ${t('certificate')}</button> <button type="button" class="btn ghost xs" data-open="${p.id}">${ic('user')} ${t('openAs')}</button></td></tr>`;
   }).join('');
   return `<table class="data"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
@@ -8827,7 +8848,7 @@ function lessonHeatSVG(members) {
 function needsHelpHTML(members) {
   const list = members.map(p => ({ p, why: needsHelp(p) })).filter(x => x.why);
   if (!list.length) return `<div class="empty">${ic('smile')}<p>${t('allGood')}</p></div>`;
-  return `<div class="list">${list.map(({ p, why }) => `<div class="between"><span><b>${esc(p.name)}</b> <span class="chip ${why === 'idle' ? 'sun' : 'coral'}">${t('help_' + why)}</span></span><span class="small muted">${why === 'idle' ? ago(lastActive(p)) : t('errFix', { e: p.stats.errors, f: p.stats.fixes })}</span></div>`).join('')}</div>`;
+  return `<div class="list">${list.map(({ p, why }) => `<div class="between"><span><b>${esc(p.name)}</b> <span class="chip ${why === 'idle' ? 'sun' : 'coral'}">${t('help_' + why)}</span></span><span class="small muted">${why === 'idle' ? dayAgo(lastActive(p)) : t('errFix', { e: p.stats.errors, f: p.stats.fixes })}</span></div>`).join('')}</div>`;
 }
 
 function bindTeacher(cls) {
@@ -8926,22 +8947,41 @@ function renderErrorList() {
   const q = EP.q.trim().toLowerCase();
   const list = ERROR_CATALOG.filter(e => e.ex && (EP.lang === 'all' || e.lang === EP.lang || e.lang === 'any'))
     .filter(e => !q || [e.title.en, e.title.ur, e.what.en, e.what.ur, e.re.source].join(' ').toLowerCase().includes(q));
-  $('#epList').innerHTML = list.length ? list.map(e => {
-    const l = e.lang === 'any' ? S.lang : e.lang;
-    const clean = s => s.replace(/\{\d\}|\{s\}/g, '').replace(/""/g, '').replace(/\s+/g, ' ');
-    return `<article class="card lift err-entry"><div class="row"><span class="chip ${e.lang === 'py' ? 'sun' : e.lang === 'js' ? 'sky' : 'mint'}">${e.lang === 'py' ? 'Python' : e.lang === 'js' ? 'JavaScript' : t('both')}</span></div>
-      <h3 style="margin:0">${esc(clean(T(e.title)))}</h3><p class="small" style="margin:0">${esc(clean(T(e.what)))}</p>
-      <div class="note mint small">${ic('lightbulb')}<span>${esc(clean(T(e.how)))}</span></div>
-      <div class="cols-2"><div><b class="small">${t('broken')}</b><div class="code-view" style="min-height:0;padding:8px">${highlightHTML(e.ex[0], l)}</div></div><div><b class="small">${t('fixed')}</b><div class="code-view" style="min-height:0;padding:8px">${highlightHTML(e.ex[1], l)}</div></div></div>
-      <button type="button" class="btn ghost sm" data-try="${e.id}">${ic('play')} ${t('tryIt')}</button></article>`;
-  }).join('') : `<div class="card empty">${ic('search')}<p>${t('noResults')}</p></div>`;
+  $('#epList').innerHTML = list.length ? list.map(errorEntryHTML).join('') : `<div class="card empty">${ic('search')}<p>${t('noResults')}</p></div>`;
   $$('[data-try]').forEach(b => (b.onclick = () => {
     const e = ERROR_CATALOG.find(x => x.id === b.dataset.try);
-    const prog = { id: 'g' + uid(), name: t('bugHunt', { name: T(e.title).replace(/\{\d\}|\{s\}|"/g, '').trim().slice(0, 26) }), lang: e.lang === 'any' ? S.lang : e.lang, updated: Date.now(), code: e.ex[0] + '\n' };
+    const l = e.lang === 'any' ? 'py' : e.lang;
+    const prog = { id: 'g' + uid(), name: t('bugHunt', { name: T(sampleExplanation(e, l).title).slice(0, 30) }), lang: l, updated: Date.now(), code: e.ex[0] + '\n' };
     savePlayPrograms([prog, ...playPrograms()]);
     go('#play/' + prog.id);
   }));
   animateIn($('#pgErrors'));
+}
+
+// Run the broken example so the card shows real, filled-in wording.
+const sampleCache = new Map();
+
+function sampleExplanation(e, l) {
+  const key = e.id + ':' + l;
+  if (sampleCache.has(key)) return sampleCache.get(key);
+  const r = e.ex ? runMini(e.ex[0], l, { timeLimit: 150 }) : { error: null };
+  const fill = o => ({ en: o.en.replace(/\{\d\}|\{s\}/g, '...'), ur: o.ur.replace(/\{\d\}|\{s\}/g, '...') });
+  const x = r.error && findCatalogEntry(r.error, l).id === e.id ? explainError(r.error, l, e.ex[0]) : { title: fill(e.title), what: fill(e.what), how: fill(e.how) };
+  sampleCache.set(key, x);
+  return x;
+}
+
+function errorEntryHTML(e) {
+  const l = e.lang === 'any' ? 'py' : e.lang;
+  const x = sampleExplanation(e, l);
+  const cur = lang === 'ur' ? 'ur' : 'en';
+  const chip = e.lang === 'py' ? ['sun', 'Python'] : e.lang === 'js' ? ['sky', 'JavaScript'] : ['mint', t('both')];
+  return `<article class="card lift err-entry"><div class="row"><span class="chip ${chip[0]}">${chip[1]}</span></div>
+    <h3 style="margin:0">${esc(x.title[cur])}</h3><p class="small" style="margin:0">${esc(x.what[cur])}</p>
+    <div class="note mint small">${ic('lightbulb')}<span>${esc(x.how[cur])}</span></div>
+    <b class="small">${t('broken')}</b><div class="code-view" style="min-height:0;padding:8px 12px">${highlightHTML(e.ex[0], l)}</div>
+    <b class="small">${t('fixed')}</b><div class="code-view" style="min-height:0;padding:8px 12px">${highlightHTML(e.ex[1], l)}</div>
+    <button type="button" class="btn ghost sm" data-try="${e.id}">${ic('play')} ${t('tryIt')}</button></article>`;
 }
 
 // ---------- inbox ----------
@@ -9005,7 +9045,7 @@ function searchIndex() {
     go('#learn/' + S.doc.id);
     setTimeout(() => mentorAsk(t('whatIs', { w: g.words[0] })), 50);
   } }));
-  ERROR_CATALOG.forEach(e => items.push({ icon: 'bug', title: T(e.title).replace(/\{\d\}|\{s\}|"/g, '').trim(), kind: t('errorWord'), text: e.title.en + ' ' + e.re.source, go: '#errors' }));
+  ERROR_CATALOG.filter(e => e.ex).forEach(e => items.push({ icon: 'bug', title: T(sampleExplanation(e, e.lang === 'js' ? 'js' : 'py').title), kind: t('errorWord'), text: e.title.en + ' ' + e.re.source, go: '#errors' }));
   NAV.forEach(n => items.push({ icon: n.icon, title: t('nav_' + n.id), kind: t('page'), text: n.id, go: n.href }));
   playPrograms().forEach(p => items.push({ icon: 'folder', title: p.name, kind: t('program'), text: p.name, go: '#play/' + p.id }));
   return items;
@@ -9070,7 +9110,7 @@ function renderSettings() {
           ${selectRow('stFont', 'fontSizeLbl', 'fontSizeD', [12, 13, 14, 15, 16, 18, 20, 22, 24].map(n => [n, n + ' px']), s.fontSize)}
           ${switchRow('stClose', 'autoClose', 'autoCloseD', s.autoClose)}
         </div>
-        <div class="card"><h3>${ic('play')} ${t('running')}</h3>
+        <div class="card"><h3>${ic('play')} ${t('runningTitle')}</h3>
           ${selectRow('stTime', 'timeLimit', 'timeLimitD', [1, 2, 3, 5, 8, 10].map(n => [n, t('seconds', { n })]), s.timeLimit)}
           ${selectRow('stEngine', 'pyEngineTitle', 'pyEngineShort', [['auto', t('eng_auto')], ['mini', t('eng_mini')], ['full', t('eng_full')]], s.pyEngine)}
           <div class="setrow"><div class="lbl"><b>${t('fullPython')}</b><span id="pyStatus">${pyStatusText()}</span></div><button type="button" class="btn ghost sm" id="stLoadPy" ${pyodideState.status === 'ready' || pyodideState.status === 'loading' ? 'disabled' : ''}>${ic('download')} ${t('loadFullPython')}</button></div>
@@ -9101,6 +9141,8 @@ function pyStatusText() {
   return t('pyNotLoaded');
 }
 
+const usd = n => (n < 1 ? n.toFixed(2) : String(n));
+
 function aiSettingsHTML(s) {
   const key = aiKey();
   return `<h3>${ic('sparkles')} ${t('liveAi')}</h3>
@@ -9111,7 +9153,7 @@ function aiSettingsHTML(s) {
     <div class="row" style="flex-wrap:nowrap"><input type="password" id="aiKeyIn" value="${esc(key)}" autocomplete="off" spellcheck="false" placeholder="sk-ant-..." style="flex:1;min-width:0"><button type="button" class="iconbtn" id="aiShow" aria-label="${esc(t('showKey'))}">${ic('eye')}</button></div>
     <label class="small" style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="aiRemember" ${s.ai.remember ? 'checked' : ''}> ${t('rememberKey')}</label>
     <fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="f" style="margin:0 0 6px">${t('model')}</legend>
-      ${AI_MODELS.map(m => `<label class="profile-row ${s.ai.model === m.id ? 'on' : ''}" style="margin-bottom:6px;cursor:pointer"><input type="radio" name="aiModel" value="${m.id}" ${s.ai.model === m.id ? 'checked' : ''}><span style="flex:1"><b>${m.name}</b> <span class="mono small muted">${m.id}</span><span class="small muted" style="display:block">${t('pricePer', { i: m.inUsd, o: m.outUsd })}${m.id === 'claude-haiku-5-5' ? ' · ' + t('noFallback') : ' · ' + t('withFallback')}</span></span></label>`).join('')}
+      ${AI_MODELS.map(m => `<label class="profile-row ${s.ai.model === m.id ? 'on' : ''}" style="margin-bottom:6px;cursor:pointer"><input type="radio" name="aiModel" value="${m.id}" ${s.ai.model === m.id ? 'checked' : ''}><span style="flex:1"><b>${m.name}</b> <span class="mono small muted">${m.id}</span><span class="small muted" style="display:block">${t('pricePer', { i: usd(m.inUsd), o: usd(m.outUsd) })}${m.id === 'claude-haiku-5-5' ? ' · ' + t('noFallback') : ' · ' + t('withFallback')}</span></span></label>`).join('')}
     </fieldset>
     ${switchRow('aiStream', 'aiStreamLbl', 'aiStreamD', s.ai.stream)}
     <div class="row" style="margin-top:10px"><button type="button" class="btn" id="aiSave">${ic('save')} ${t('save')}</button><button type="button" class="btn ghost" id="aiTest">${ic('zap')} ${t('testConnection')}</button><button type="button" class="btn flat" id="aiForget">${ic('trash')} ${t('forgetKey')}</button></div>
@@ -9330,7 +9372,7 @@ async function resetAll() {
 // Onboarding tour, keyboard shortcuts, About page with student TODOs
 // =====================================================================
 const TOUR_STEPS = [
-  { el: '#rail', key: 'tour1', pane: 'lesson' },
+  { el: '#lessonCard', key: 'tour1', pane: 'lesson' },
   { el: '#editor', key: 'tour2', pane: 'code' },
   { el: '#runBtn', key: 'tour3', pane: 'code' },
   { el: '#inputsBox', key: 'tour4', pane: 'code' },
