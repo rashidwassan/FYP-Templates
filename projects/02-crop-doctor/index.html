@@ -123,6 +123,7 @@ label.f{display:block;font-size:.78rem;font-weight:700;color:var(--muted);margin
 .stage .cropper{position:absolute;inset:0;cursor:crosshair;touch-action:none}
 .stage .cropper .box{position:absolute;border:2px solid var(--lime);box-shadow:0 0 0 9999px rgba(15,28,21,.55);display:none}
 .stage .cropper .box.on{display:block}
+.stage .cropper .hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(15,28,21,.82);color:#dff5e6;padding:5px 12px;border-radius:999px;font-size:.78rem;font-weight:600;pointer-events:none;white-space:nowrap}
 .tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .samples{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
 .imgtools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
@@ -587,7 +588,7 @@ table.tbl td.file{white-space:nowrap;max-width:200px;overflow:hidden;text-overfl
   <img id="shot" alt="" class="hidden">
   <canvas id="overlay" class="overlay"></canvas>
   <div class="empty" id="stageEmpty"><div><b data-i18n="st_title">Drop a leaf photo here</b><span data-i18n="st_sub">or use the camera · JPG/PNG · fill the frame with one leaf on a plain background</span></div></div>
-  <div class="cropper hidden" id="cropper"><div class="box" id="cropBox"></div></div>
+  <div class="cropper hidden" id="cropper"><div class="box" id="cropBox"></div><span class="hint" id="cropHint" data-i18n="it_hint">Drag a box over the leaf, then apply</span></div>
   <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><i class="scanline"></i>
 </div>
 <canvas id="work" class="hidden"></canvas>
@@ -868,6 +869,7 @@ const L = {
     it_contrast: 'Auto-contrast',
     it_reset: 'Original',
     it_small: 'Selection too small — drag a larger box over the leaf',
+    it_hint: 'Drag a box over the leaf, then apply',
     // result
     health: 'Leaf health index',
     health_short: 'Health',
@@ -1279,6 +1281,7 @@ const L = {
     it_contrast: 'خودکار کنٹراسٹ',
     it_reset: 'اصل تصویر',
     it_small: 'انتخاب بہت چھوٹا ہے — پتے پر بڑا خانہ بنائیں',
+    it_hint: 'پتے پر خانہ کھینچیں، پھر لاگو کریں',
     health: 'پتے کی صحت کا اشاریہ',
     health_short: 'صحت',
     healthy: 'صحت مند لگتا ہے',
@@ -2881,6 +2884,7 @@ function renderCropButton() {
   b.innerHTML = `${ic(icon)} <span>${label}</span>`;
   b.classList.toggle('violet', cropOn && !!cropRect);
   b.classList.toggle('ghost', !(cropOn && cropRect));
+  $('#cropHint').classList.toggle('hidden', !!cropRect);
 }
 
 function pointInStage(e) {
@@ -3651,11 +3655,11 @@ async function evaluateKnn() {
 }
 
 // the colour analyzer as a 4-class rule: healthy / yellowing / spots / powdery
+// necrotic centres are always smaller than their yellow halos, so any clear brown share means spots
 function baselineLabel(p) {
   if (p.green >= .85) return 'healthy';
-  const best = Math.max(p.yellow, p.brown, p.white);
-  if (best === p.white) return 'powdery';
-  if (best === p.brown) return 'spots';
+  if (p.white >= Math.max(p.yellow, p.brown)) return 'powdery';
+  if (p.brown > .07) return 'spots';
   return 'chlorosis';
 }
 

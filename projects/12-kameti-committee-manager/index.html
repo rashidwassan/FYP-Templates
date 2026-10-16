@@ -3037,3 +3037,938 @@ function renderAbout() {
   $('#abTour').onclick = startTour;
 }
 
+// ---------- 10. modals & popovers ----------
+const modalHead = (title, icon) => `<header><h2>${ic(icon)}${title}</h2><button class="close" aria-label="${t('close')}">${ic('x')}</button></header>`;
+function openModal(html, wide = false) {
+  const sh = $('#sheet');
+  sh.className = 'sheet' + (wide ? ' wide' : '');
+  sh.innerHTML = html;
+  document.body.classList.add('modal-open');
+  $$('.close', sh).forEach(b => (b.onclick = closeModal));
+  const f = $('input:not([type=hidden]):not([type=range]),select,textarea', sh);
+  setTimeout(() => f && f.focus(), 60);
+}
+function closeModal() {
+  document.body.classList.remove('modal-open');
+  $('#sheet').innerHTML = '';
+}
+function closePop() {
+  const p = $('#pop');
+  p.classList.remove('open');
+  p.innerHTML = '';
+}
+$('#scrim').onclick = () => {
+  closeModal();
+  closePop();
+  closeDrawer();
+};
+document.addEventListener('pointerdown', e => {
+  const p = $('#pop');
+  if (p.classList.contains('open') && !p.contains(e.target) && !e.target.closest('.cell')) closePop();
+});
+const confirmDlg = (msg, ok = t('confirm'), danger = true) => new Promise(res => {
+  openModal(`${modalHead(t('confirm'), 'alert')}<div class="body txt">${esc(msg)}</div><div class="foot"><button class="btn ghost" id="cNo">${t('cancel')}</button><button class="btn ${danger ? 'danger' : ''}" id="cYes">${esc(ok)}</button></div>`);
+  $('#cNo').onclick = () => {
+    closeModal();
+    res(false);
+  };
+  $('#cYes').onclick = () => {
+    closeModal();
+    res(true);
+  };
+});
+const field = (id, label, input, err = true) => `<label class="f" for="${id}">${label}</label>${input}${err ? `<div class="err" id="${id}Err"></div>` : ''}`;
+function setErr(id, msg) {
+  const i = $('#' + id);
+  const e = $('#' + id + 'Err');
+  if (i) i.classList.toggle('bad', !!msg);
+  if (e) e.textContent = msg || '';
+  return !msg;
+}
+function printEl(html) {
+  const root = $('#printRoot');
+  root.innerHTML = html;
+  document.body.classList.add('printing');
+  const done = () => {
+    document.body.classList.remove('printing');
+    root.innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  setTimeout(() => window.print(), 60);
+}
+
+/* --- Committee form --- */
+function committeeForm(c = null) {
+  const v = c || { name: '', contribution: 5000, planned: 10, startMonth: addMonths(curMonth, 1), collectionDay: 5, method: 'lottery', lateFee: { type: 'none', value: 0 }, graceDays: SETTINGS.graceDays, feeCap: 0, organizer: { name: '', phone: '' }, notes: '' };
+  const lateOpts = ['none', 'flat', 'pct'].map(x => `<option value="${x}" ${v.lateFee.type === x ? 'selected' : ''}>${x === 'none' ? t('lf_none') : x === 'flat' ? t('lf_flat').replace('{a} ', '').replace(' {a}', '') : t('lf_pct').replace('{a}', '')}</option>`).join('');
+  openModal(`${modalHead(c ? t('f_edit') : t('f_create'), c ? 'edit' : 'plus')}<div class="body"><form id="cForm" novalidate>
+      ${field('fName', t('f_name'), `<input id="fName" type="text" value="${esc(v.name)}" maxlength="60" required>`)}
+      <div class="cols">${field('fContrib', t('f_contrib'), `<input id="fContrib" class="mono" type="number" min="100" step="100" value="${v.contribution}">`)}${field('fPlanned', t('f_planned'), `<input id="fPlanned" class="mono" type="number" min="2" max="60" value="${v.planned}">`)}</div>
+      <div class="cols">${field('fStart', t('f_start'), `<input id="fStart" type="month" value="${v.startMonth}">`)}${field('fDay', t('f_day'), `<input id="fDay" class="mono" type="number" min="1" max="28" value="${v.collectionDay}">`)}</div>
+      <div class="cols">${field('fMethod', t('f_method'), `<select id="fMethod">${METHODS.map(m => `<option value="${m}" ${v.method === m ? 'selected' : ''}>${methodName(m)}</option>`).join('')}</select>`, false)}
+        ${field('fLate', t('f_late'), `<select id="fLate">${lateOpts}</select>`, false)}
+        ${field('fLateVal', t('f_lateval'), `<input id="fLateVal" class="mono" type="number" min="0" step="1" value="${v.lateFee.value || 0}" ${v.lateFee.type === 'none' ? 'disabled' : ''}>`)}</div>
+      <div class="cols">${field('fGrace', t('f_grace'), `<input id="fGrace" class="mono" type="number" min="0" max="10" value="${v.graceDays || 0}">`)}${field('fCap', t('f_cap'), `<input id="fCap" class="mono" type="number" min="0" step="100" value="${v.feeCap || 0}">`)}</div>
+      <div class="cols">${field('fOrg', t('f_org'), `<input id="fOrg" type="text" value="${esc(v.organizer.name)}" maxlength="60">`)}${field('fOrgPhone', t('f_orgphone'), `<input id="fOrgPhone" class="mono" type="tel" placeholder="03xx-xxxxxxx" value="${esc(v.organizer.phone)}">`)}</div>
+      ${field('fNotes', t('f_notes'), `<textarea id="fNotes" maxlength="400">${esc(v.notes)}</textarea>`, false)}
+    </form></div><div class="foot">${c ? `<button class="btn danger left" id="fDel">${ic('trash')}${t('f_delete')}</button>` : ''}<button class="btn ghost" id="fCancel">${t('f_cancel')}</button><button class="btn" id="fSave">${ic('save')}${t('f_save')}</button></div>`);
+  $('#fLate').onchange = e => ($('#fLateVal').disabled = e.target.value === 'none');
+  $('#fCancel').onclick = closeModal;
+  if (c) $('#fDel').onclick = () => {
+    closeModal();
+    deleteCommittee(c);
+  };
+  $('#fSave').onclick = () => submitCommittee(c);
+  $('#cForm').onsubmit = e => {
+    e.preventDefault();
+    submitCommittee(c);
+  };
+}
+function submitCommittee(c) {
+  const name = $('#fName').value.trim();
+  const contrib = +$('#fContrib').value;
+  const planned = +$('#fPlanned').value;
+  const start = $('#fStart').value;
+  const day = +$('#fDay').value;
+  const phone = $('#fOrgPhone').value.trim();
+  const lateT = $('#fLate').value;
+  const lateV = +$('#fLateVal').value;
+  const grace = +$('#fGrace').value;
+  const cap = +$('#fCap').value;
+  let ok = setErr('fName', name ? '' : t('f_required'));
+  ok = setErr('fContrib', contrib >= 100 ? '' : t('f_num_err')) && ok;
+  ok = setErr('fPlanned', planned >= 2 && planned <= 60 ? '' : t('f_num_err')) && ok;
+  ok = setErr('fStart', /^\d{4}-\d{2}$/.test(start) ? '' : t('f_required')) && ok;
+  ok = setErr('fDay', day >= 1 && day <= 28 ? '' : t('f_day_err')) && ok;
+  ok = setErr('fOrgPhone', !phone || PHONE_RE.test(phone) ? '' : t('f_phone_err')) && ok;
+  ok = setErr('fLateVal', lateT === 'none' || lateV >= 0 ? '' : t('f_num_err')) && ok;
+  ok = setErr('fGrace', grace >= 0 && grace <= 10 ? '' : t('f_num_err')) && ok;
+  ok = setErr('fCap', cap >= 0 ? '' : t('f_num_err')) && ok;
+  if (!ok) return;
+  const data = { name, contribution: contrib, planned, startMonth: start, collectionDay: day, method: $('#fMethod').value, lateFee: { type: lateT, value: lateT === 'none' ? 0 : lateV }, graceDays: grace, feeCap: cap, organizer: { name: $('#fOrg').value.trim(), phone }, notes: $('#fNotes').value.trim() };
+  if (c) {
+    Object.assign(c, data);
+    logEvent('lg_c_edit', {}, c.id);
+  } else {
+    const nc = { id: 'c-' + uid(), ...data, members: [], order: [], payments: {}, payouts: {}, needs: [], disputes: [], created: iso(today) };
+    DB.committees.push(nc);
+    DB.activeId = nc.id;
+    logEvent('lg_c_new', { c: nc.name }, nc.id);
+  }
+  syncOrder(c || active());
+  selMonth = null;
+  save();
+  closeModal();
+  toast(t('saved'), 'ok');
+  if (!c) location.hash = '#members';
+  renderAll();
+}
+
+/* --- Member form --- */
+function memberForm(c, m = null) {
+  const v = m || { name: '', phone: '', cnic4: '', slots: 1 };
+  const firstTurn = m ? turnsOf(c, m.id)[0] : undefined;
+  const posOpts = `<option value="">${t('mf_pos_any')}</option>` + c.order.map((id, k) => {
+    const taken = id && id !== m?.id ? ' · ' + esc(memberById(c, id).name) : '';
+    const dis = cycleState(c, k) === 'done' && firstTurn !== k ? 'disabled' : '';
+    return `<option value="${k}" ${firstTurn === k ? 'selected' : ''} ${dis}>#${k + 1} · ${monthLabel(monthOf(c, k), true)}${taken}</option>`;
+  }).join('');
+  openModal(`${modalHead(m ? t('mf_edit') : t('mf_add'), 'user')}<div class="body"><form id="mForm" novalidate>
+      ${field('mName', t('mf_name'), `<input id="mName" type="text" value="${esc(v.name)}" maxlength="60">`)}
+      <div class="cols">${field('mPhone', t('mf_phone'), `<input id="mPhone" class="mono" type="tel" placeholder="0300-1234567" value="${esc(v.phone)}">`)}${field('mSlots', t('mf_slots'), `<input id="mSlots" class="mono" type="number" min="1" max="4" value="${v.slots || 1}">`)}</div>
+      ${field('mCnic', t('mf_cnic'), `<input id="mCnic" class="mono" type="text" placeholder="${v.cnic4 ? '•••••-•••••••-' + esc(v.cnic4) : '35202-1234567-1'}" maxlength="15">`)}
+      ${field('mPos', t('mf_pos'), `<select id="mPos">${posOpts}</select>`, false)}
+      <p class="small muted txt" style="margin:8px 0 0">${ic('lock')} ${tf('mf_cnic_hint', { a: '1234' })}</p>
+    </form></div><div class="foot"><button class="btn ghost" id="mCancel">${t('f_cancel')}</button><button class="btn" id="mSave">${ic('save')}${t('f_save')}</button></div>`);
+  $('#mCancel').onclick = closeModal;
+  $('#mSave').onclick = () => submitMember(c, m);
+  $('#mForm').onsubmit = e => {
+    e.preventDefault();
+    submitMember(c, m);
+  };
+}
+function submitMember(c, m) {
+  const name = $('#mName').value.trim();
+  const phone = $('#mPhone').value.trim();
+  const cnic = $('#mCnic').value.trim();
+  const slots = +$('#mSlots').value;
+  const pos = $('#mPos').value;
+  let ok = setErr('mName', name ? '' : t('f_required'));
+  ok = setErr('mPhone', PHONE_RE.test(phone) ? '' : t('f_phone_err')) && ok;
+  ok = setErr('mSlots', slots >= 1 && slots <= 4 ? '' : t('f_num_err')) && ok;
+  ok = setErr('mCnic', !cnic || CNIC_RE.test(cnic) ? '' : t('f_cnic_err')) && ok;
+  if (!ok) return;
+  let mem = m;
+  if (mem) {
+    Object.assign(mem, { name, phone, slots });
+  } else {
+    mem = { id: 'm-' + uid(), name, phone, slots, cnic4: '' };
+    c.members.push(mem);
+  }
+  if (cnic) mem.cnic4 = cnic.slice(-4);           // only the last four digits are ever stored
+  syncOrder(c);
+  if (pos !== '') {
+    const k = +pos;
+    const cur = c.order.indexOf(mem.id);
+    if (cur >= 0 && cur !== k && cycleState(c, k) !== 'done') {
+      const other = c.order[k];
+      c.order[k] = mem.id;
+      c.order[cur] = other;
+    }
+  }
+  logEvent(m ? 'lg_member_edit' : 'lg_member_add', { who: name }, c.id);
+  save();
+  closeModal();
+  toast(m ? t('saved') : t('added'), 'ok');
+  refresh();
+}
+
+/* --- Lottery draw with animated shuffle --- */
+function lotteryModal(c) {
+  if (c.members.length < 2) return toast(t('lot_need'), 'bad');
+  const entries = c.order.map((id, k) => ({
+    id, k, locked: cycleState(c, k) === 'done', name: id ? memberById(c, id).name : t('ord_unassigned'),
+    sl: id && (memberById(c, id).slots || 1) > 1 ? c.order.slice(0, k + 1).filter(x => x === id).length : 0
+  }));
+  const H = 50;
+  const freeEntries = entries.filter(e => !e.locked);
+  const freeSlots = freeEntries.map(e => e.k);
+  const slotOf = entries.map(e => e.k);
+  let timer = null;
+  let finalOrder = null;
+  const items = entries.map((e, idx) => `<div class="litem ${e.locked ? 'final' : ''}" data-idx="${idx}" style="top:${e.k * H}px"><span class="pos">${e.k + 1}</span>${e.locked ? ic('lock') : ic('user')}<span>${esc(e.name)}${e.sl ? ` <small class="muted">· ${tf('mem_slot_n', { a: e.sl })}</small>` : ''}</span></div>`).join('');
+  openModal(`${modalHead(t('lot_title'), 'dice')}<div class="body"><p class="lead txt">${t('lot_s')}</p><div class="lotto" id="lotto" style="--h:${entries.length * H}px">${items}</div></div>
+    <div class="foot"><button class="btn ghost" id="lCancel">${t('cancel')}</button><button class="btn gold" id="lDraw">${ic('shuffle')}${t('lot_draw')}</button><button class="btn" id="lApply" disabled>${ic('check')}${t('lot_apply')}</button></div>`);
+  const els = $$('.litem', $('#lotto'));
+  const place = () => els.forEach((el, idx) => {
+    el.style.top = slotOf[idx] * H + 'px';
+    $('.pos', el).textContent = slotOf[idx] + 1;
+  });
+  const shuffle = arr => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const finish = () => {
+    finalOrder = slotOf.slice();
+    els.forEach((el, idx) => {
+      el.classList.remove('spin');
+      setTimeout(() => el.classList.add('final'), slotOf[idx] * 60);
+    });
+    $('#lApply').disabled = false;
+    $('#lDraw').disabled = false;
+    $('#lDraw').innerHTML = ic('shuffle') + t('lot_again');
+  };
+  const draw = () => {
+    clearTimeout(timer);
+    $('#lApply').disabled = true;
+    $('#lDraw').disabled = true;
+    finalOrder = null;
+    els.forEach(el => {
+      if (!entries[+el.dataset.idx].locked) {
+        el.classList.remove('final');
+        el.classList.add('spin');
+      }
+    });
+    let tick = 0;
+    const total = 14;
+    const step = () => {
+      const perm = shuffle(freeSlots);
+      freeEntries.forEach((e, j) => (slotOf[entries.indexOf(e)] = perm[j]));
+      place();
+      tick++;
+      if (tick < total) timer = setTimeout(step, 90 + tick * tick * 2.2);
+      else finish();
+    };
+    step();
+  };
+  $('#lDraw').onclick = draw;
+  $('#lCancel').onclick = () => {
+    clearTimeout(timer);
+    closeModal();
+  };
+  $('#lApply').onclick = () => {
+    if (!finalOrder) return;
+    const o = new Array(c.order.length).fill(null);
+    entries.forEach((e, idx) => (o[finalOrder[idx]] = e.id));
+    c.order = o;
+    logEvent('lg_lottery', {}, c.id);
+    save();
+    closeModal();
+    toast(t('lot_applied'), 'ok');
+    refresh();
+  };
+}
+
+/* --- Need requests --- */
+function needForm(c) {
+  const memOpts = c.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  const reasonOpts = NEED_REASONS.map(r => `<option value="${r}">${t('nd_r_' + r)}</option>`).join('');
+  openModal(`${modalHead(t('nd_add_t'), 'hand')}<div class="body"><form id="ndForm" novalidate>
+      ${field('ndMem', t('nd_member'), `<select id="ndMem">${memOpts}</select>`, false)}
+      <div class="cols">${field('ndReason', t('nd_reason'), `<select id="ndReason">${reasonOpts}</select>`, false)}${field('ndBy', t('nd_by'), `<input id="ndBy" type="month" value="${addMonths(curMonth, 1)}">`, false)}</div>
+      <div class="cols">${field('ndAmt', t('nd_amount'), `<input id="ndAmt" class="mono" type="number" min="0" step="1000" value="${c.contribution * totalSlots(c)}">`)}
+        <div><label class="f" for="ndUrg">${t('nd_urgency')}</label><input id="ndUrg" type="range" min="1" max="5" value="3"><div class="rangeval"><span>1</span><b id="ndUrgV">3</b><span>5</span></div></div></div>
+      ${field('ndDetail', t('nd_detail'), `<textarea id="ndDetail" maxlength="240"></textarea>`, false)}
+    </form></div><div class="foot"><button class="btn ghost" id="ndCancel">${t('cancel')}</button><button class="btn" id="ndSave">${ic('save')}${t('f_save')}</button></div>`);
+  $('#ndUrg').oninput = e => ($('#ndUrgV').textContent = e.target.value);
+  $('#ndCancel').onclick = closeModal;
+  const submit = () => {
+    if (!c.members.length) return;
+    const amt = +$('#ndAmt').value;
+    if (!setErr('ndAmt', amt >= 0 ? '' : t('f_num_err'))) return;
+    const nd = { id: 'nd-' + uid(), memberId: $('#ndMem').value, reason: $('#ndReason').value, urgency: +$('#ndUrg').value, amount: amt, byMonth: $('#ndBy').value, detail: $('#ndDetail').value.trim(), status: 'open', created: new Date().toISOString() };
+    c.needs.push(nd);
+    logEvent('lg_need', { who: memberById(c, nd.memberId)?.name || '' }, c.id);
+    save();
+    closeModal();
+    toast(t('added'), 'ok');
+    refresh();
+  };
+  $('#ndSave').onclick = submit;
+  $('#ndForm').onsubmit = e => {
+    e.preventDefault();
+    submit();
+  };
+}
+function needRankModal(c) {
+  const { ranked, proposed } = rankByNeed(c);
+  if (ranked.length < 2) return toast(t('nd_need_two'), 'bad');
+  const rows = ranked.map((r, i) => {
+    const m = memberById(c, r.nd.memberId);
+    return `<tr><td class="num">${i + 1}</td><td>${esc(m.name)}<div class="small muted">${t('nd_r_' + r.nd.reason)}${r.nd.detail ? ' · ' + esc(r.nd.detail) : ''}</div></td><td>${urgencyDots(r.nd.urgency)}</td><td class="num">${r.score}</td></tr>`;
+  }).join('');
+  const order = proposed.map((id, k) => {
+    const m = id ? memberById(c, id) : null;
+    const changed = id !== c.order[k];
+    return `<div class="oitem ${cycleState(c, k) === 'done' ? 'done' : ''}"><span class="pos">${k + 1}</span><span class="nm">${m ? esc(m.name) : `<span class="muted">${t('ord_unassigned')}</span>`}<small>${monthLabel(monthOf(c, k))}</small></span>${changed ? `<span class="badge gold">${ic('arrow-up')}</span>` : ''}</div>`;
+  }).join('');
+  openModal(`${modalHead(t('nd_rank'), 'sort')}<div class="body"><p class="lead txt">${t('nd_score_s')}</p>
+      <div class="tblwrap" style="margin-bottom:12px"><table class="tbl"><thead><tr><th>#</th><th>${t('nd_member')}</th><th>${t('nd_urgency')}</th><th class="num">${t('nd_score')}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <h3 style="font-size:.9rem;margin:0 0 8px">${t('nd_proposed')}</h3><div class="orderlist">${order}</div></div>
+    <div class="foot"><button class="btn ghost" id="nrCancel">${t('cancel')}</button><button class="btn gold" id="nrApply">${ic('check')}${t('nd_apply')}</button></div>`, true);
+  $('#nrCancel').onclick = closeModal;
+  $('#nrApply').onclick = () => {
+    c.order = proposed;
+    logEvent('lg_need_rank', {}, c.id);
+    save();
+    closeModal();
+    toast(t('nd_applied'), 'ok');
+    refresh();
+  };
+}
+
+/* --- Disputes: form + detail with status history --- */
+function disputeForm(c, preset = {}) {
+  const memOpts = c.members.map(m => `<option value="${m.id}" ${preset.memberId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
+  const cycOpts = c.order.map((_, k) => `<option value="${k}" ${(preset.cycle ?? currentCycle(c)) === k ? 'selected' : ''}>#${k + 1} · ${monthLabel(monthOf(c, k), true)}</option>`).join('');
+  const typeOpts = DISPUTE_TYPES.map(x => `<option value="${x}" ${preset.type === x ? 'selected' : ''}>${t('ds_t_' + x)}</option>`).join('');
+  openModal(`${modalHead(t('ds_new'), 'flag')}<div class="body"><form id="dsForm" novalidate>
+      <div class="cols">${field('dsMem', t('ds_who'), `<select id="dsMem">${memOpts}</select>`, false)}${field('dsCyc', t('ds_cycle'), `<select id="dsCyc">${cycOpts}</select>`, false)}</div>
+      ${field('dsType', t('ds_type'), `<select id="dsType">${typeOpts}</select>`, false)}
+      ${field('dsNote', t('ds_note'), `<textarea id="dsNote" maxlength="400"></textarea>`)}
+      <button type="button" class="btn sm ghost" id="dsEvidence">${ic('upload')}${t('ds_evidence')}</button>
+    </form></div><div class="foot"><button class="btn ghost" id="dsCancel">${t('cancel')}</button><button class="btn" id="dsSave">${ic('save')}${t('f_save')}</button></div>`);
+  $('#dsCancel').onclick = closeModal;
+  $('#dsEvidence').onclick = attachEvidence;
+  const submit = () => {
+    const note = $('#dsNote').value.trim();
+    if (!setErr('dsNote', note ? '' : t('f_required'))) return;
+    const now = new Date().toISOString();
+    const d = { id: 'd-' + uid().slice(0, 4), memberId: $('#dsMem').value, cycle: +$('#dsCyc').value, type: $('#dsType').value, note, status: 'open', created: now, history: [{ at: now, status: 'open', note: '' }] };
+    c.disputes.push(d);
+    logEvent('lg_dispute', { who: memberById(c, d.memberId)?.name || '', m: monthLabel(monthOf(c, d.cycle)) }, c.id);
+    save();
+    closeModal();
+    toast(t('ds_created'), 'ok');
+    refresh();
+  };
+  $('#dsSave').onclick = submit;
+  $('#dsForm').onsubmit = e => {
+    e.preventDefault();
+    submit();
+  };
+}
+// TODO(student): evidence uploads. Let the member attach receipt photos (resize to ~800px on a canvas, store as a data URL or upload
+// to object storage), list them in the dispute history and show a lightbox; keep the append-only history intact.
+function attachEvidence() {
+  toast(t('not_built'), 'gold', 'upload');
+}
+function disputeDetail(c, id) {
+  const d = (c.disputes || []).find(x => x.id === id);
+  if (!d) return;
+  const m = memberById(c, d.memberId);
+  const p = cell(c, d.cycle, d.memberId);
+  const hist = (d.history || []).map(h => `<div class="h"><div><b>${t('ds_' + h.status)}</b>${h.note ? ` — ${esc(h.note)}` : ''}</div><div class="at">${dateLabel(h.at.slice(0, 10), true)}</div></div>`).join('');
+  const closed = d.status === 'resolved' || d.status === 'rejected';
+  const nextStates = DISPUTE_STATES.filter(s => s !== d.status).map(s => `<button type="button" class="btn sm ${s === 'resolved' ? '' : 'ghost'}" data-st="${s}">${dsBadge(s)}</button>`).join('');
+  openModal(`${modalHead(`${t('ds_detail')} #${esc(d.id)}`, 'flag')}<div class="body">
+      <div class="who" style="margin-bottom:10px"><div class="avatar">${esc(initials(m?.name || '?'))}</div><div><div class="n">${esc(m?.name || '—')}</div><div class="p">${esc(m?.phone || '')} · ${monthLabel(monthOf(c, d.cycle), true)}</div></div><span class="spacer"></span>${dsBadge(d.status)}</div>
+      <div class="cols small" style="gap:8px 14px"><div><b class="muted">${t('ds_type')}</b><div>${t('ds_t_' + d.type)}</div></div><div><b class="muted">${t('mem_month')}</b><div>${stBadge(p?.s, false)} ${p && p.s !== 'waived' ? `<span class="amt">${rsFull(p.amt)}</span>` : ''}</div></div></div>
+      <p class="txt" style="margin:10px 0">${esc(d.note)}</p>
+      <h3 style="font-size:.9rem">${t('ds_history')}</h3><div class="hist">${hist}</div>
+      ${closed ? '' : `<label class="f" for="dsUpNote">${t('ds_add_note')}</label><input id="dsUpNote" type="text" maxlength="200"><label class="f">${t('ds_update')}</label><div style="display:flex;gap:6px;flex-wrap:wrap">${nextStates}</div>`}
+    </div><div class="foot"><button class="btn ghost left" id="dsDel">${ic('trash')}${t('del_ok')}</button><button class="btn ghost" id="dsClose">${t('close')}</button></div>`, true);
+  $('#dsClose').onclick = closeModal;
+  $('#dsDel').onclick = async () => {
+    closeModal();
+    if (!(await confirmDlg(tf('del_c', { a: `#${d.id}` }), t('del_ok')))) return;
+    c.disputes = c.disputes.filter(x => x.id !== d.id);
+    save();
+    refresh();
+  };
+  $$('[data-st]', $('#sheet')).forEach(b => (b.onclick = () => updateDispute(c, d, b.dataset.st, $('#dsUpNote').value.trim())));
+}
+function updateDispute(c, d, status, note) {
+  d.status = status;
+  d.history.push({ at: new Date().toISOString(), status, note });
+  logEvent('lg_dispute_st', { a: d.id, s: t('ds_' + status) }, c.id);
+  save();
+  toast(t('ds_updated'), 'ok');
+  refresh();
+  disputeDetail(c, d.id);
+}
+
+/* --- Receipts with a QR-style verification code --- */
+function receiptNo(c, k, mid) {
+  const who = mid ? mid.toUpperCase() : 'POUT';
+  return `KM-${shortName(c.name)}-${pad2(k + 1)}-${who}`;
+}
+/* Draws a 25×25 module pattern seeded from the payload hash: finder patterns in three corners, timing rows, then data modules. */
+function drawQR(canvas, payload) {
+  const N = 25;
+  const size = canvas.width;
+  const cellPx = size / N;
+  const ctx = canvas.getContext('2d');
+  const rnd = seeded(hash32(payload));
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#0b3b1f';
+  const finder = (ox, oy) => {
+    for (let y = 0; y < 7; y++) {
+      for (let x = 0; x < 7; x++) {
+        const ring = x === 0 || y === 0 || x === 6 || y === 6;
+        const core = x >= 2 && x <= 4 && y >= 2 && y <= 4;
+        if (ring || core) ctx.fillRect((ox + x) * cellPx, (oy + y) * cellPx, cellPx, cellPx);
+      }
+    }
+  };
+  const reserved = (x, y) => (x < 8 && y < 8) || (x >= N - 8 && y < 8) || (x < 8 && y >= N - 8);
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (reserved(x, y)) continue;
+      const timing = (y === 6 || x === 6) ? (x + y) % 2 === 0 : rnd() < 0.47;
+      if (timing) ctx.fillRect(x * cellPx, y * cellPx, cellPx, cellPx);
+    }
+  }
+  finder(0, 0);
+  finder(N - 7, 0);
+  finder(0, N - 7);
+}
+function receiptData(c, k, mid) {
+  if (mid) {
+    const m = memberById(c, mid);
+    const p = cell(c, k, mid);
+    if (!p || p.s === 'unpaid' || p.s === 'waived') return null;
+    if (!p.rcpt) {
+      p.rcpt = receiptNo(c, k, mid);
+      logEvent('lg_receipt', { a: p.rcpt }, c.id);
+      save();
+    }
+    return { kind: 'pay', no: p.rcpt, who: m, amt: p.amt, date: p.date || iso(today), status: p.s, note: p.note, m: monthLabel(monthOf(c, k), true) };
+  }
+  const po = c.payouts[k];
+  if (!po) return null;
+  const st = monthStats(c, k);
+  return { kind: 'payout', no: receiptNo(c, k, null), who: st.recipient, amt: po.amt, date: po.date, status: 'paid', note: '', m: monthLabel(monthOf(c, k), true) };
+}
+function receiptHTML(c, R, code) {
+  const title = R.kind === 'pay' ? t('rc_title') : t('rc_payout_title');
+  return `<div class="receipt"><div><h3>${title}</h3><div class="no">${esc(R.no)} · ${esc(c.name)}</div>
+      <dl><dt>${t(R.kind === 'pay' ? 'rc_member' : 'rp_recv_by')}</dt><dd>${esc(R.who?.name || '—')} <span class="muted small mono">${esc(R.who?.phone || '')}</span></dd>
+        <dt>${t('rc_month')}</dt><dd>${esc(R.m)}</dd><dt>${t('rc_amount')}</dt><dd class="amt">${rsFull(R.amt)}</dd><dt>${t('rc_date')}</dt><dd>${dateLabel(R.date, true)}</dd>
+        <dt>${t('rc_status')}</dt><dd>${stBadge(R.status, false)}${R.note ? ` <span class="small muted">${esc(R.note)}</span>` : ''}</dd><dt>${t('rc_org')}</dt><dd>${esc(c.organizer?.name || '—')}</dd></dl>
+      <span class="stamp">${t('rc_received')}</span></div>
+    <div><canvas id="rcQR" width="250" height="250" aria-label="${t('rc_code')}"></canvas><div class="code">${esc(code)}</div></div></div>`;
+}
+function receiptModal(c, k, mid) {
+  const R = receiptData(c, k, mid);
+  if (!R) return toast(t('rc_none'), 'bad');
+  const payload = [R.no, c.id, R.who?.id || '', R.amt, R.date, R.status].join('|');
+  const code = hashHex(payload).toUpperCase();
+  const text = tf(R.kind === 'pay' ? 'rc_text' : 'rc_payout_text', { no: R.no, who: R.who?.name || '', amt: rsFull(R.amt), m: R.m, c: c.name, d: dateLabel(R.date, true), code });
+  openModal(`${modalHead(R.kind === 'pay' ? t('rc_title') : t('rc_payout_title'), 'file')}<div class="body" id="rcBody">${receiptHTML(c, R, code)}<p class="small muted txt" style="margin:10px 0 0">${ic('info')} ${t('rc_qr_s')}</p></div>
+    <div class="foot">${R.who?.phone ? `<a class="btn ghost left" target="_blank" rel="noopener" href="${waLink(R.who.phone, text)}">${ic('whatsapp')}${t('rc_share')}</a>` : ''}<button class="btn ghost" id="rcClose">${t('close')}</button><button class="btn" id="rcPrint">${ic('printer')}${t('rp_print')}</button></div>`);
+  drawQR($('#rcQR'), payload);
+  $('#rcClose').onclick = closeModal;
+  $('#rcPrint').onclick = () => {
+    const img = $('#rcQR').toDataURL();
+    const html = $('#rcBody').innerHTML.replace(/<canvas[^>]*><\/canvas>/, `<img src="${img}" width="132" height="132" alt="">`);
+    printEl(`<div class="doc"><h3>${esc(c.name)}</h3><div class="sub">${dateLabel(iso(today), true)}</div>${html}</div>`);
+  };
+}
+
+/* --- Member statement --- */
+function statementHTML(c, m) {
+  const turns = turnsOf(c, m.id);
+  const tot = { paid: 0, fees: 0, due: 0, ok: 0, received: 0 };
+  const rows = c.order.map((id, k) => {
+    const p = cell(c, k, m.id);
+    const d = dueDate(c, k);
+    const s = p?.s || 'unpaid';
+    const over = s === 'unpaid' && d < today;
+    if (p && s !== 'waived') tot.paid += p.amt || 0;
+    tot.fees += lateFeeFor(c, k, m, p);
+    if (d <= today && s !== 'waived') {
+      tot.due++;
+      if (s === 'paid' && !paidAfterGrace(c, k, p.date)) tot.ok++;
+    }
+    if (id === m.id && c.payouts[k]) tot.received += c.payouts[k].amt;
+    const turn = id === m.id ? ` <span class="badge gold">${ic('award')}${t('mem_turn')}${c.payouts[k] ? ' · ' + rs(c.payouts[k].amt) : ''}</span>` : '';
+    const status = d > today && s === 'unpaid' ? `<span class="badge muted">${t('pay_future')}</span>` : stBadge(s, over);
+    return `<tr><td>${monthLabel(monthOf(c, k), true)}${turn}</td><td class="amt small">${dateLabel(iso(d))}</td><td>${status}</td><td class="num">${p && s !== 'waived' ? rs(p.amt) : '—'}</td><td class="amt small">${p?.date ? dateLabel(p.date) : '—'}</td><td class="small muted">${esc(p?.note || '')}${p?.rcpt ? ` <span class="mono">${esc(p.rcpt)}</span>` : ''}</td></tr>`;
+  }).join('');
+  return `<div class="statement"><div class="who" style="margin-bottom:6px"><div class="avatar">${esc(initials(m.name))}</div><div><div class="n" style="font-size:1.05rem">${esc(m.name)}</div><div class="p">${esc(m.phone)} · ${cnicMask(m)}</div></div><span class="spacer"></span>${trustRing(trustScore(m.phone))}</div>
+    <div class="muted small">${esc(c.name)} · ${tf('stm_s', { a: rs(c.contribution) + ' × ' + (m.slots || 1), b: m.slots || 1, c: turns.length ? turns.map(k => '#' + (k + 1)).join(', ') : '—' })}</div>
+    <div class="tot"><div><b>${t('stm_paid')}</b><span class="amt">${rs(tot.paid)}</span></div><div><b>${t('stm_fees')}</b><span class="amt">${rs(tot.fees)}</span></div><div><b>${t('stm_received')}</b><span class="amt">${rs(tot.received)}</span></div><div><b>${t('stm_ontime')}</b><span class="amt">${tot.ok}/${tot.due}</span></div></div>
+    <div class="tblwrap"><table class="tbl"><thead><tr><th>${t('pay_month')}</th><th>${t('pot_due').replace(' {a}', '')}</th><th>${t('mem_month')}</th><th class="num">${t('ce_amount')}</th><th>${t('ce_date')}</th><th>${t('ce_note')}</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function statementModal(c, m) {
+  openModal(`${modalHead(t('stm_title'), 'file')}<div class="body" id="stmBody">${statementHTML(c, m)}</div><div class="foot"><button class="btn ghost left" id="stmDispute">${ic('flag')}${t('stm_dispute')}</button><button class="btn ghost" id="stmClose">${t('close')}</button><button class="btn" id="stmPrint">${ic('printer')}${t('stm_print')}</button></div>`, true);
+  animRings($('#sheet'));
+  $('#stmClose').onclick = closeModal;
+  $('#stmDispute').onclick = () => disputeForm(c, { memberId: m.id });
+  $('#stmPrint').onclick = () => printEl(`<div class="doc"><h3>${esc(c.name)} — ${t('stm_title')}</h3><div class="sub">${dateLabel(iso(today), true)}</div>${statementHTML(c, m)}</div>`);
+}
+
+/* --- Person profile across committees --- */
+function profileModal(key) {
+  const p = allPeople().find(x => x.key === key);
+  if (!p) return;
+  const hist = trustHistory(p.phone);
+  const counts = { ontime: 0, late: 0, partial: 0, missed: 0 };
+  p.outcomes.forEach(o => counts[o.kind]++);
+  const entries = p.entries.map(({ c, m }) => {
+    const turns = turnsOf(c, m.id).map(k => `<span class="badge ${cycleState(c, k) === 'done' ? 'muted' : 'mint'}">#${k + 1} · ${monthLabel(monthOf(c, k))}</span>`).join(' ');
+    return `<div class="rowi"><div style="min-width:0"><div style="font-weight:600">${esc(c.name)} ${statusBadge(c)}</div><div class="small muted">${rs(c.contribution)} × ${m.slots || 1} · ${t('pp_turns')}: ${turns || '—'}</div></div><button class="btn sm ghost" data-stm="${c.id}:${m.id}">${ic('file')}${t('mem_statement')}</button></div>`;
+  }).join('');
+  const rows = p.outcomes.slice().reverse().slice(0, 40).map(o => {
+    const pay = cell(o.c, o.i, o.c.members.find(x => digits(x.phone) === digits(p.phone))?.id);
+    return `<tr><td>${esc(o.c.name)}</td><td>${monthLabel(monthOf(o.c, o.i), true)}</td><td><span class="badge ${o.kind === 'ontime' ? 'ok' : o.kind === 'late' ? 'late' : o.kind === 'partial' ? 'part' : 'bad'}">${t('pp_' + o.kind)}</span></td><td class="num">${pay && pay.s !== 'waived' ? rs(pay.amt) : '—'}</td></tr>`;
+  }).join('');
+  openModal(`${modalHead(t('pp_profile'), 'user')}<div class="body">
+      <div class="who" style="margin-bottom:10px"><div class="avatar" style="width:44px;height:44px">${esc(initials(p.name))}</div><div><div class="n" style="font-size:1.05rem">${esc(p.name)}</div><div class="p">${esc(p.phone)}${p.cnic4 ? ' · •••••-•••••••-' + esc(p.cnic4) : ''}</div></div><span class="spacer"></span>${trustRing(p.trust)}</div>
+      <div class="statement"><div class="tot"><div><b>${t('pp_committees')}</b><span class="amt">${p.committees}</span></div><div><b>${t('pp_paid')}</b><span class="amt">${rs(p.paid)}</span></div><div><b>${t('pp_received')}</b><span class="amt">${rs(p.received)}</span></div><div><b>${t('pp_open_disputes')}</b><span class="amt">${p.openDisputes}</span></div></div></div>
+      <div class="grid g2" style="margin-bottom:12px"><div class="card" style="padding:12px 14px"><h2 style="font-size:.92rem">${ic('trending-up')}${t('pp_trend')}</h2><p class="lead small txt">${t('pp_trend_s')}</p>${hist.length > 1 ? '<div class="chart" id="ppTrend"></div>' : `<div class="empty small">${t('pp_none_due')}</div>`}</div>
+        <div class="card" style="padding:12px 14px"><h2 style="font-size:.92rem">${ic('activity')}${t('pp_outcomes')}</h2>${hbars(['ontime', 'late', 'partial', 'missed'].map(k => ({ label: t('pp_' + k), value: p.outcomes.length ? counts[k] / p.outcomes.length : 0, text: String(counts[k]), cls: k === 'missed' ? 'bad' : k === 'ontime' ? '' : 'gold' })))}</div></div>
+      <h3 style="font-size:.9rem;margin:0 0 8px">${t('pp_committees')}</h3><div class="list" style="margin-bottom:12px">${entries}</div>
+      <h3 style="font-size:.9rem;margin:0 0 8px">${t('pp_history')}</h3>${rows ? `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('rc_committee')}</th><th>${t('pay_month')}</th><th>${t('ds_status')}</th><th class="num">${t('ce_amount')}</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty small">${t('pp_none_due')}</div>`}
+    </div><div class="foot"><button class="btn ghost" id="ppClose">${t('close')}</button></div>`, true);
+  animRings($('#sheet'));
+  animBars($('#sheet'));
+  if (hist.length > 1) lineChart($('#ppTrend'), [{ name: t('mem_trust'), color: 'var(--forest)', values: hist.map(h => h.score), area: true }], hist.map(h => dateLabel(iso(h.due))), { fmt: v => Math.round(v), max: 100, min: 0, h: 160 });
+  $('#ppClose').onclick = closeModal;
+  $$('[data-stm]', $('#sheet')).forEach(b => (b.onclick = () => {
+    const [cid, mid] = b.dataset.stm.split(':');
+    const c = committeeById(cid);
+    if (c) statementModal(c, memberById(c, mid));
+  }));
+}
+
+/* --- Cell editor (popover on desktop, sheet on phones) --- */
+// TODO(student): OTP acknowledgements. Send a one-time code to the member (SMS/WhatsApp API); when they reply with it, mark the cell
+// as acknowledged ({ ack: true, ackAt }) so both sides agree the payment happened.
+function requestAck() {
+  toast(t('not_built'), 'gold', 'shield-check');
+}
+function cellEditor(c, i, mid, anchor) {
+  const m = memberById(c, mid);
+  const p = cell(c, i, mid) || { s: 'unpaid', amt: expectedFor(c, m), date: iso(today), note: '' };
+  const exp = expectedFor(c, m);
+  const balance = p.s === 'partial' ? Math.max(0, exp - (p.amt || 0)) : 0;
+  const html = `<h4>${ic('edit')}${t('ce_title')}</h4><div class="small muted" style="margin-bottom:8px">${esc(m.name)} · ${monthLabel(monthOf(c, i), true)} · ${tf('ce_expected', { a: rsFull(exp) })}${balance ? ` · <b style="color:var(--part)">${tf('ce_balance', { a: rsFull(balance) })}</b>` : ''}</div>
+    <div class="stbtns" id="ceSt">${STATES.map(s => `<button type="button" class="${s} ${p.s === s ? 'on' : ''}" data-s="${s}">${t('st_' + s)}</button>`).join('')}</div>
+    <label class="f" for="ceAmt">${t('ce_amount')}</label><input id="ceAmt" class="mono" type="number" min="0" step="100" value="${p.amt || 0}">
+    <label class="f" for="ceDate">${t('ce_date')}</label><input id="ceDate" class="mono" type="date" value="${p.date || ''}">
+    <label class="f" for="ceNote">${t('ce_note')}</label><input id="ceNote" type="text" maxlength="120" value="${esc(p.note || '')}">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">${balance ? `<button type="button" class="btn sm mint" id="ceSettle">${ic('check')}${t('ce_settle')}</button>` : ''}<button type="button" class="btn sm ghost" id="ceRcpt">${ic('file')}${t('ce_receipt')}</button><button type="button" class="btn sm ghost" id="ceDisp">${ic('flag')}${t('ce_dispute')}</button><button type="button" class="btn sm ghost" id="ceAck">${ic('shield-check')}${t('ce_ack')}</button></div>
+    <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:10px"><button type="button" class="btn sm ghost" id="ceCancel">${t('cancel')}</button><button type="button" class="btn sm" id="ceSave">${ic('save')}${t('f_save')}</button></div>`;
+  const small = window.innerWidth < 760;
+  if (small) openModal(`${modalHead(t('ce_title'), 'edit')}<div class="body">${html.replace(/<h4>.*?<\/h4>/, '')}</div>`);
+  else placePop(html, anchor);
+  let s = p.s;
+  $$('#ceSt button').forEach(b => (b.onclick = () => {
+    s = b.dataset.s;
+    $$('#ceSt button').forEach(x => x.classList.toggle('on', x === b));
+    if (s === 'paid' || s === 'late') $('#ceAmt').value = exp;
+    if (s === 'waived') $('#ceAmt').value = 0;
+  }));
+  const done = () => {
+    closePop();
+    closeModal();
+  };
+  $('#ceCancel').onclick = done;
+  $('#ceAck').onclick = requestAck;
+  $('#ceRcpt').onclick = () => {
+    done();
+    receiptModal(c, i, mid);
+  };
+  $('#ceDisp').onclick = () => {
+    done();
+    disputeForm(c, { memberId: mid, cycle: i });
+  };
+  const settle = $('#ceSettle');
+  if (settle) settle.onclick = () => {
+    done();
+    setStatus(c, i, mid, 'paid', { amt: exp, date: iso(today), note: p.note });
+  };
+  $('#ceSave').onclick = () => {
+    const amt = Math.max(0, +$('#ceAmt').value || 0);
+    const date = $('#ceDate').value;
+    const note = $('#ceNote').value.trim();
+    done();
+    setStatus(c, i, mid, s, { amt, date, note });
+  };
+}
+function placePop(html, anchor) {
+  closeModal();
+  const pop = $('#pop');
+  pop.innerHTML = html;
+  pop.classList.add('open');
+  const r = anchor.getBoundingClientRect();
+  const ph = pop.offsetHeight;
+  const pw = pop.offsetWidth;
+  pop.style.left = Math.max(8, Math.min(window.innerWidth - pw - 8, r.left)) + 'px';
+  pop.style.top = (r.bottom + 6 + ph > window.innerHeight ? Math.max(8, r.top - ph - 6) : r.bottom + 6) + 'px';
+}
+
+/* --- WhatsApp / SMS reminders --- */
+// TODO(student): SMS reminders. Replace this stub with a backend call to an SMS gateway and a daily scheduler that runs on the
+// collection day for every unpaid member.
+function sendSms() {
+  toast(t('not_built'), 'gold', 'message');
+}
+function reminderModal(c, i) {
+  const list = c.members.filter(m => {
+    const p = cell(c, i, m.id);
+    return !p || p.s === 'unpaid' || p.s === 'partial';
+  });
+  const texts = list.map(m => reminderText(c, i, m));
+  const rows = list.map((m, k) => `<div class="rowi" style="align-items:flex-start"><div style="min-width:0;flex:1"><div class="who"><div class="avatar">${esc(initials(m.name))}</div><div><div class="n">${esc(m.name)}</div><div class="p">${esc(m.phone)}</div></div></div><p class="small muted txt" style="margin:8px 0 0">${esc(texts[k])}</p></div><div style="display:flex;flex-direction:column;gap:6px"><a class="btn sm" target="_blank" rel="noopener" href="${waLink(m.phone, texts[k])}">${ic('whatsapp')}${t('wa_send')}</a><button class="btn sm ghost" data-sms>${ic('message')}${t('wa_sms')}</button></div></div>`).join('');
+  openModal(`${modalHead(t('wa_title'), 'whatsapp')}<div class="body"><p class="lead txt">${t('wa_s')}</p>${list.length ? `<div class="list">${rows}</div>` : `<div class="note">${ic('check-circle')} ${t('pay_none_unpaid')}</div>`}</div>
+    <div class="foot"><button class="btn ghost" id="waCopy" ${list.length ? '' : 'disabled'}>${ic('copy')}${t('wa_copy')}</button><button class="btn" id="waClose">${t('close')}</button></div>`);
+  if (list.length) logEvent('lg_remind', { a: list.length }, c.id);
+  $('#waClose').onclick = closeModal;
+  $$('[data-sms]').forEach(b => (b.onclick = sendSms));
+  $('#waCopy').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(texts.join('\n\n'));
+      toast(t('wa_copied'), 'ok');
+    } catch {
+      toast(t('ab_import_err'), 'bad');
+    }
+  };
+}
+
+/* --- Organizer PIN lock --- */
+const pinHash = pin => hashHex('kameti-pin|' + pin);
+function pinSetup(change, remove = false) {
+  const title = remove ? t('se_pin_remove') : change ? t('se_pin_change') : t('se_pin_set');
+  openModal(`${modalHead(title, 'key')}<div class="body"><form id="pinForm" novalidate>
+      ${change ? field('pinCur', t('pin_current'), `<input id="pinCur" class="mono" type="password" inputmode="numeric" maxlength="6" autocomplete="off">`) : ''}
+      ${remove ? '' : field('pinNew', t('pin_new'), `<input id="pinNew" class="mono" type="password" inputmode="numeric" maxlength="6" autocomplete="off">`) + field('pinRep', t('pin_confirm'), `<input id="pinRep" class="mono" type="password" inputmode="numeric" maxlength="6" autocomplete="off">`)}
+    </form></div><div class="foot"><button class="btn ghost" id="pinCancel">${t('cancel')}</button><button class="btn ${remove ? 'danger' : ''}" id="pinSave">${ic(remove ? 'unlock' : 'key')}${title}</button></div>`);
+  $('#pinCancel').onclick = closeModal;
+  const submit = () => {
+    if (change && pinHash($('#pinCur').value) !== SETTINGS.pinHash) return setErr('pinCur', t('pin_wrong'));
+    if (remove) {
+      saveSettings({ pinHash: '', autoLock: 0 });
+      logEvent('lg_pin', {}, null);
+      closeModal();
+      toast(t('pin_removed'), 'ok');
+      refresh();
+      renderLockBtn();
+      return;
+    }
+    const a = $('#pinNew').value;
+    const b = $('#pinRep').value;
+    if (!setErr('pinNew', /^\d{4,6}$/.test(a) ? '' : t('pin_len'))) return;
+    if (!setErr('pinRep', a === b ? '' : t('pin_mismatch'))) return;
+    saveSettings({ pinHash: pinHash(a) });
+    logEvent('lg_pin', {}, null);
+    closeModal();
+    toast(t('pin_set'), 'ok');
+    refresh();
+    renderLockBtn();
+  };
+  $('#pinSave').onclick = submit;
+  $('#pinForm').onsubmit = e => {
+    e.preventDefault();
+    submit();
+  };
+}
+let pinBuffer = '';
+function lockApp() {
+  if (!SETTINGS.pinHash) return;
+  pinBuffer = '';
+  closeModal();
+  closePop();
+  closeDrawer();
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'];
+  $('#lock').innerHTML = `<div class="lockbox"><div class="logo" style="width:48px;height:48px;border-radius:14px;background:var(--mint);display:grid;place-items:center;color:var(--forest-deep);margin:0 auto">${ic('lock')}</div>
+      <h2>${t('pin_title')}</h2><p class="txt">${t('pin_s')}</p><div class="dots" id="pinDots" aria-live="polite"></div>
+      <div class="keypad">${keys.map(k => `<button type="button" data-k="${k}" aria-label="${k}">${k === 'back' ? ic('arrow-left') : k === 'ok' ? ic('check') : k}</button>`).join('')}</div></div>`;
+  document.body.classList.add('locked');
+  renderDots();
+  $$('#lock [data-k]').forEach(b => (b.onclick = () => pinKey(b.dataset.k)));
+}
+function renderDots() {
+  $('#pinDots').innerHTML = [0, 1, 2, 3, 4, 5].slice(0, Math.max(4, pinBuffer.length)).map(i => `<i class="${i < pinBuffer.length ? 'on' : ''}"></i>`).join('');
+}
+function pinKey(k) {
+  if (k === 'back') pinBuffer = pinBuffer.slice(0, -1);
+  else if (k === 'ok') return tryUnlock();
+  else if (pinBuffer.length < 6) pinBuffer += k;
+  renderDots();
+  if (pinBuffer.length >= 4 && pinHash(pinBuffer) === SETTINGS.pinHash) tryUnlock();
+}
+function tryUnlock() {
+  if (pinHash(pinBuffer) === SETTINGS.pinHash) {
+    document.body.classList.remove('locked');
+    $('#lock').innerHTML = '';
+    lastActivity = Date.now();
+    return;
+  }
+  const dots = $('#pinDots');
+  dots.classList.add('wrong');
+  setTimeout(() => dots.classList.remove('wrong'), 450);
+  pinBuffer = '';
+  renderDots();
+  toast(t('pin_wrong'), 'bad');
+}
+function renderLockBtn() {
+  $('#lockBtn').classList.toggle('hidden', !SETTINGS.pinHash);
+}
+let lastActivity = Date.now();
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => (lastActivity = Date.now()), { passive: true }));
+setInterval(() => {
+  if (SETTINGS.pinHash && SETTINGS.autoLock > 0 && !document.body.classList.contains('locked') && Date.now() - lastActivity > SETTINGS.autoLock * 60000) lockApp();
+}, 15000);
+
+/* --- Onboarding tour (spotlight steps) --- */
+const TOUR_STEPS = [
+  { sel: '#switcher', key: 1, icon: 'layers' }, { sel: '#pot', key: 2, icon: 'coins' }, { sel: '#tabs', key: 3, icon: 'grid' },
+  { sel: '#bellBtn', key: 4, icon: 'bell' }, { sel: '#settingsBtn', key: 5, icon: 'settings' }, { sel: '#newBtn', key: 6, icon: 'plus' }
+];
+let tourIdx = -1;
+function startTour() {
+  closeModal();
+  closeDrawer();
+  if (!DB.committees.length) return toast(t('pot_empty'), 'gold', 'piggy');
+  tourIdx = 0;
+  document.body.classList.add('touring');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(showTourStep, 250);
+}
+function showTourStep() {
+  const step = TOUR_STEPS[tourIdx];
+  const target = $(step.sel);
+  if (!target) return endTour();
+  const r = target.getBoundingClientRect();
+  const hi = $('#tourHi');
+  hi.style.left = r.left - 6 + 'px';
+  hi.style.top = r.top - 6 + 'px';
+  hi.style.width = r.width + 12 + 'px';
+  hi.style.height = r.height + 12 + 'px';
+  const card = $('#tourCard');
+  const last = tourIdx === TOUR_STEPS.length - 1;
+  card.innerHTML = `<h4>${ic(step.icon)}${t(`tour_${step.key}_t`)}</h4><p>${t(`tour_${step.key}_b`)}</p>
+    <div class="foot"><span class="steps">${tf('tour_step', { a: tourIdx + 1, b: TOUR_STEPS.length })}</span><span class="spacer"></span><button class="btn sm ghost" id="trSkip">${t('tour_skip')}</button>${tourIdx ? `<button class="btn sm ghost" id="trBack">${t('tour_back')}</button>` : ''}<button class="btn sm gold" id="trNext">${last ? t('tour_done') : t('tour_next')}</button></div>`;
+  const cw = Math.min(340, window.innerWidth - 24);
+  const below = r.bottom + 12 + 180 < window.innerHeight;
+  card.style.left = Math.max(12, Math.min(window.innerWidth - cw - 12, r.left)) + 'px';
+  card.style.top = (below ? r.bottom + 12 : Math.max(12, r.top - card.offsetHeight - 12)) + 'px';
+  $('#trSkip').onclick = endTour;
+  const back = $('#trBack');
+  if (back) back.onclick = () => {
+    tourIdx--;
+    showTourStep();
+  };
+  $('#trNext').onclick = () => {
+    if (last) return endTour();
+    tourIdx++;
+    showTourStep();
+  };
+  $('#trNext').focus();
+}
+function endTour() {
+  tourIdx = -1;
+  document.body.classList.remove('touring');
+  saveSettings({ tourDone: true, bannerDismissed: true });
+  renderBanner();
+}
+window.addEventListener('resize', () => {
+  if (tourIdx >= 0) showTourStep();
+  moveInk();
+});
+
+/* --- Inbox drawer: notifications + activity log --- */
+let drawerTab = 'notifs';
+function openDrawer() {
+  renderDrawer();
+  document.body.classList.add('drawer-open');
+}
+function closeDrawer() {
+  document.body.classList.remove('drawer-open');
+}
+function renderDrawer() {
+  const unread = unreadCount();
+  const seg = `<div class="seg"><button class="${drawerTab === 'notifs' ? 'on' : ''}" data-tab="notifs">${ic('bell')}${t('in_notifs')}${unread ? ` <span class="badge gold">${unread}</span>` : ''}</button><button class="${drawerTab === 'log' ? 'on' : ''}" data-tab="log">${ic('activity')}${t('in_activity')}</button></div>`;
+  const body = drawerTab === 'notifs' ? notifList() : `<div style="font-size:.9rem">${activityList(LOG.slice(0, 60))}</div>`;
+  const foot = drawerTab === 'notifs' ? `<button class="btn sm ghost" id="inAll" ${unread ? '' : 'disabled'}>${ic('check-circle')}${t('in_markall')}</button><button class="btn sm ghost" id="inClear">${ic('trash')}${t('in_clear')}</button>` : '';
+  $('#drawer').innerHTML = `<header><h2>${ic('bell')}${t('in_title')}</h2><button class="close" id="drClose" aria-label="${t('close')}">${ic('x')}</button></header><div class="dbody">${seg}<div style="margin-top:12px">${body}</div></div><div class="dfoot">${foot}</div>`;
+  $('#drClose').onclick = closeDrawer;
+  $$('#drawer [data-tab]').forEach(b => (b.onclick = () => {
+    drawerTab = b.dataset.tab;
+    renderDrawer();
+  }));
+  const all = $('#inAll');
+  if (all) all.onclick = () => {
+    markAllRead();
+    renderDrawer();
+  };
+  const clr = $('#inClear');
+  if (clr) clr.onclick = () => {
+    clearRead();
+    renderDrawer();
+  };
+  $$('.ntf', $('#drawer')).forEach((el, i) => {
+    el.style.animationDelay = Math.min(i, 8) * 40 + 'ms';
+    el.onclick = () => openNotification(el.dataset.id);
+  });
+}
+function notifList() {
+  if (!INBOX.length) return `<div class="empty">${ic('check-circle')}<p>${t('in_empty')}</p></div>`;
+  return INBOX.map(n => `<div class="ntf ${n.read ? '' : 'unread'} ${n.kind || ''}" data-id="${n.id}" role="button" tabindex="0"><div class="icw">${ic(n.icon || 'info')}</div><div style="min-width:0"><div class="t">${esc(n.title)}</div><div class="b">${esc(n.body)}</div><div class="at">${timeAgo(n.at)}</div></div></div>`).join('');
+}
+function openNotification(id) {
+  const n = INBOX.find(x => x.id === id);
+  if (!n) return;
+  markRead(id);
+  closeDrawer();
+  if (n.cid && committeeById(n.cid)) {
+    DB.activeId = n.cid;
+    if (n.cycle != null) selMonth = n.cycle;
+    save();
+  }
+  if (n.route) location.hash = '#' + n.route;
+  renderAll();
+}
+
+// ---------- 11. router & init ----------
+const ROUTES = ['dashboard', 'overview', 'members', 'payments', 'schedule', 'disputes', 'people', 'planner', 'reports', 'agreement', 'about'];
+const ICONS = { dashboard: 'layers', overview: 'pie-chart', members: 'users', payments: 'grid', schedule: 'calendar', disputes: 'flag', people: 'shield-check', planner: 'calculator', reports: 'printer', agreement: 'file', about: 'info', settings: 'settings' };
+const VIEWS = { dashboard: renderDashboard, overview: renderOverview, members: renderMembers, payments: renderPayments, schedule: renderSchedule, disputes: renderDisputes, people: renderPeople, planner: renderPlanner, reports: renderReports, agreement: renderAgreement, about: renderAbout, settings: renderSettings };
+function currentPage() {
+  const h = location.hash.replace('#', '');
+  return VIEWS[h] ? h : 'dashboard';
+}
+function renderTabs() {
+  const page = currentPage();
+  $('#tabs').innerHTML = ROUTES.map(r => `<a href="#${r}" class="${r === page ? 'active' : ''}">${ic(ICONS[r])}<span>${t('nav_' + r)}</span></a>`).join('') + '<span class="ink"></span>';
+  moveInk();
+}
+function moveInk() {
+  const tabs = $('#tabs');
+  const a = $('a.active', tabs);
+  const ink = $('.ink', tabs);
+  if (!a || !ink) return;
+  ink.style.width = a.offsetWidth + 'px';
+  ink.style.transform = `translateX(${a.offsetLeft}px)`;
+  if (a.offsetLeft + a.offsetWidth > tabs.scrollLeft + tabs.clientWidth || a.offsetLeft < tabs.scrollLeft) tabs.scrollLeft = Math.max(0, a.offsetLeft - 16);
+}
+function route(animate = true) {
+  const page = currentPage();
+  document.body.dataset.page = page;
+  renderTabs();
+  closePop();
+  view.classList.toggle('noanim', !animate);
+  VIEWS[page]();
+  if (animate) {
+    animateIn(view);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+function renderSwitcher() {
+  const sel = $('#cSel');
+  sel.innerHTML = DB.committees.map(c => `<option value="${c.id}" ${c.id === DB.activeId ? 'selected' : ''}>${esc(c.name)}</option>`).join('') || `<option>${t('noC')}</option>`;
+  sel.disabled = !DB.committees.length;
+}
+function refresh() {
+  renderSwitcher();
+  renderPot();
+  route(false);
+}
+function renderAll() {
+  renderSwitcher();
+  renderPot();
+  renderBanner();
+  route(true);
+}
+function applyLang() {
+  document.documentElement.lang = lang;
+  store.set('lang', lang);
+  document.title = t('title');
+  $('#appTitle').textContent = t('title');
+  $('#appTag').textContent = t('tag');
+  $('#newLbl').textContent = t('newC');
+  $('#langBtn span').textContent = lang === 'en' ? 'اردو' : 'English';
+  $('#bellBtn').setAttribute('aria-label', t('in_title'));
+  $('#settingsBtn').setAttribute('aria-label', t('nav_settings'));
+  renderAll();
+}
+$('#cSel').onchange = e => {
+  DB.activeId = e.target.value;
+  selMonth = null;
+  save();
+  renderAll();
+};
+$('#newBtn').onclick = () => committeeForm();
+$('#langBtn').onclick = () => {
+  lang = lang === 'en' ? 'ur' : 'en';
+  applyLang();
+};
+$('#bellBtn').onclick = () => (document.body.classList.contains('drawer-open') ? closeDrawer() : openDrawer());
+$('#lockBtn').onclick = lockApp;
+window.addEventListener('hashchange', () => route(true));
+
+/* Keyboard shortcuts: digits jump to sections, I inbox, N new, L language, Shift+L lock, Esc closes everything. */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (tourIdx >= 0) endTour();
+    closeModal();
+    closePop();
+    closeDrawer();
+    return;
+  }
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '');
+  if (typing || e.ctrlKey || e.metaKey || e.altKey || document.body.classList.contains('locked')) return;
+  if (/^[1-9]$/.test(e.key)) location.hash = '#' + ROUTES[+e.key - 1];
+  else if (e.key === 'i' || e.key === 'I') $('#bellBtn').click();
+  else if (e.key === 'n' || e.key === 'N') committeeForm();
+  else if (e.key === 'L') lockApp();
+  else if (e.key === 'l') $('#langBtn').click();
+});
+
+applyTheme();
+renderLockBtn();
+scanAlerts();
+applyLang();
+if (SETTINGS.pinHash) lockApp();
+</script>
+</body>
+</html>

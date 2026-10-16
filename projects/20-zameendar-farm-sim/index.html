@@ -1996,7 +1996,9 @@ function sustainability() {
 function grade() {
   const nw = netWorth();
   const s = sustainability();
-  const par = g.startCash + PAR_PER_ACRE_YEAR * 16 * 5;
+  // the benchmark grows with elapsed time so the interim "grade so far" is meaningful; at 60 turns it equals five years of par income
+  const yearsElapsed = Math.max(g.turn, 1) / 12;
+  const par = g.startCash + PAR_PER_ACRE_YEAR * 16 * yearsElapsed;
   const fin = clamp(50 + 50 * Math.log2(Math.max(nw, 1) / par), 0, 100);
   const score = Math.round(.6 * fin + .4 * s.index);
   let letter = 'F';

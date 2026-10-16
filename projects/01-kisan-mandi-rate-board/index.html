@@ -333,7 +333,8 @@ body.tour-on .tourspot,body.tour-on .tourcard{display:block}
   .brand small{display:none}
 }
 @media (max-width:980px){
-  .layout{grid-template-columns:1fr;padding-top:14px}
+  .layout{grid-template-columns:minmax(0,1fr);padding-top:14px}
+  #view{min-width:0}
   .sidebar{position:fixed;inset:auto 0 0 0;top:auto;max-height:80vh;overflow:auto;border-radius:18px 18px 0 0;transform:translateY(105%);transition:transform .25s;z-index:45}
   body.filters-open .sidebar{transform:none}
   .iconbtn{display:inline-block}

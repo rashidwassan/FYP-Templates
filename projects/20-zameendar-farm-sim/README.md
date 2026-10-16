@@ -2,7 +2,7 @@
 
 **Sixty months on sixteen acres.** A bilingual (English / اردو) turn-based strategy game grounded in Punjabi farming: Kharif and Rabi seasons, a warabandi canal share, soil health per plot, pests and weather, mandi prices with gluts and shocks, and the choice between a bank loan and the arhti's advance. Five years later you are graded on net worth *and* sustainability.
 
-**Scale:** ~3,840 lines in one HTML file · 12 modules · seed data: 13 crops, 13 pests, 21 events, 6 challenges, 7 mechanic articles, 16 glossary terms, 5-step tour, 10 achievements.
+**Scale:** 3926 lines in one HTML file (247 CSS, 3570 JS) · 12 modules · seed data: 13 crops, 13 pests, 21 events, 6 challenges, 7 mechanic articles, 16 glossary terms, 5-step tour, 10 achievements.
 
 ## Getting started
 

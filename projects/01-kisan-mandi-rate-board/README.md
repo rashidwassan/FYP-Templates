@@ -2,7 +2,7 @@
 
 **Know the rate before the arhti does.** A bilingual (English / اردو) dashboard of daily crop rates across 18 Pakistani mandis, with a Sell Advisor that ranks mandis by the money that actually reaches the farmer, a cost-of-production calculator, a schematic price map, seasonal analytics, a farmer's store tracker, a buyer directory and SMS/print rate sheets.
 
-**Scale:** 3,837 lines in one `index.html` · 13 routed modules + onboarding tour, global search and keyboard shortcuts · seed data: 18 commodities × 18 mandis (324 daily series), 59 districts, 4 vehicles, 18 twelve-month seasonal indices, 18 cost-of-production profiles, 30 buyers, 5 province outlines, 393 bilingual strings.
+**Scale:** 3,841 lines in one `index.html` · 13 routed modules + onboarding tour, global search and keyboard shortcuts · seed data: 18 commodities × 18 mandis (324 daily series), 59 districts, 4 vehicles, 18 twelve-month seasonal indices, 18 cost-of-production profiles, 30 buyers, 5 province outlines, 393 bilingual strings.
 
 ## Getting started
 
