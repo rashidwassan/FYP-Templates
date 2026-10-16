@@ -45,7 +45,7 @@ a{color:var(--srt)}
 .mono{font-family:var(--mono)}
 .muted{color:var(--muted)}
 .hidden{display:none!important}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.sr{position:absolute;top:0;left:0;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .ic{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:none}
 :focus-visible{outline:2px solid var(--piv);outline-offset:2px}
 ::-webkit-scrollbar{width:10px;height:10px} ::-webkit-scrollbar-thumb{background:var(--panel-3);border-radius:8px} ::-webkit-scrollbar-track{background:transparent}
@@ -337,6 +337,7 @@ body:not([data-cat=sorting]) #tRace,body:not([data-cat=sorting]):not([data-cat=p
   .topbar{gap:6px;padding:0 10px;height:auto;flex-wrap:wrap;padding-bottom:0}
   .brand{padding:8px 0;margin-right:auto} .brand small{display:none}
   .topbar .iconbtn{width:36px;height:36px}
+  #saveBtn,#aboutBtn{display:none}
   .search{display:none;order:4;flex-basis:100%;margin:0 0 8px}
   .search.open{display:flex} .search input{width:100%;max-width:none;flex:1}
   .search kbd{display:none}
@@ -4421,7 +4422,7 @@ function benchChartHtml(results, metric) {
   const X = i => pl + i / Math.max(1, sizes.length - 1) * (W - pl - pr);
   const Y = v => pt + (H - pt - pb) * (1 - Math.log10(Math.max(1, v)) / yMax);
   const gridLines = [];
-  for (let p = 0; p <= Math.ceil(yMax); p++) {
+  for (let p = 0; p <= Math.floor(yMax); p++) {
     gridLines.push(`<line x1="${pl}" x2="${W - pr}" y1="${Y(10 ** p)}" y2="${Y(10 ** p)}" stroke="${COL.line}" stroke-dasharray="3 4"/>`);
     gridLines.push(`<text x="${pl - 8}" y="${Y(10 ** p) + 4}" fill="${COL.muted}" font-size="11" text-anchor="end" font-family="Fira Code,monospace">${nf(10 ** p)}</text>`);
   }
