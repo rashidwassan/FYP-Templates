@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khoon — Blood Donor Network</title>
+<meta name="description" content="Find compatible blood donors in Pakistani cities, post emergency requests, register as a donor with eligibility tracking, and browse blood banks. Single-file FYP template.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff7f5;--surface:#fff;--surface-2:#fdeeea;--ink:#2a1215;--muted:#8a6a6e;--line:#f1d6d0;
+  --crimson:#b3122e;--crimson-deep:#8c0d24;--crimson-soft:#fde2e6;--rose:#e85d75;--gold:#d9a441;--gold-soft:#fbf1dc;--green:#2e8b57;--green-soft:#e2f3ea;--slate:#536075;--slate-soft:#eef1f5;
+  --radius:18px;--radius-sm:12px;--shadow:0 16px 40px -28px rgba(140,13,36,.45);
+  --font:"Nunito",system-ui,sans-serif;--font-ur:"Noto Nastaliq Urdu",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15.5px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.15}
+.ur{font-family:var(--font-ur);line-height:1.9}
+.muted{color:var(--muted)} .hidden{display:none!important}
+/* hero */
+.hero{background:radial-gradient(120% 140% at 100% 0%,#e03a57 0%,var(--crimson) 45%,var(--crimson-deep) 100%);color:#fff;padding:18px 20px 26px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.07)}
+.hero .in{max-width:1180px;margin:0 auto;position:relative}
+.top{display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .drop{width:40px;height:40px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#fff;display:grid;place-items:center}
+.brand .drop span{transform:rotate(45deg);color:var(--crimson);font-weight:900;font-size:1.05rem}
+.brand h1{font-size:1.25rem;font-weight:900;letter-spacing:-.01em} .brand small{display:block;font-size:.74rem;opacity:.85}
+.spacer{flex:1}
+.lang{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:10px;padding:7px 12px;font-weight:800;cursor:pointer}
+.hero h2{font-size:clamp(1.5rem,3.4vw,2.3rem);font-weight:900;margin-top:22px;letter-spacing:-.02em;max-width:720px}
+.hero p.sub{margin:6px 0 0;opacity:.9;max-width:640px}
+.searchbar{margin-top:18px;background:#fff;border-radius:16px;padding:10px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) auto;gap:8px;box-shadow:0 20px 50px -20px rgba(0,0,0,.5);color:var(--ink)}
+.groups{display:flex;gap:6px;flex-wrap:wrap}
+.g{border:2px solid var(--line);background:var(--surface);border-radius:10px;min-width:48px;padding:6px 8px;font-weight:900;cursor:pointer;color:var(--crimson);text-align:center;font-size:.95rem}
+.g.on{background:var(--crimson);border-color:var(--crimson);color:#fff}
+.g.any{color:var(--slate)} .g.any.on{background:var(--slate);border-color:var(--slate);color:#fff}
+select,input[type=text],input[type=tel],input[type=number],input[type=date],textarea{width:100%;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;outline:0}
+select:focus,input:focus,textarea:focus{border-color:var(--rose);box-shadow:0 0 0 3px var(--crimson-soft)}
+.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:800;cursor:pointer;background:var(--crimson);color:#fff;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn.gold{background:var(--gold);color:#3b2a08} .btn.green{background:var(--green)} .btn.ghost{background:var(--surface-2);color:var(--ink)} .btn.outline{background:transparent;border:2px solid var(--line);color:var(--ink)} .btn.sm{padding:7px 11px;font-size:.84rem;border-radius:10px} .btn:disabled{opacity:.5;cursor:not-allowed}
+/* tabs */
+.tabs{max-width:1180px;margin:-18px auto 0;padding:0 20px;position:relative;z-index:2}
+.tabs .in{background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;overflow:auto;box-shadow:var(--shadow);scrollbar-width:none}
+.tabs button{flex:1;border:0;background:none;padding:12px 14px;font-weight:800;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent}
+.tabs button.on{color:var(--crimson);border-bottom-color:var(--crimson)}
+.tabs button .n{display:inline-block;background:var(--crimson-soft);color:var(--crimson);border-radius:999px;padding:0 7px;font-size:.72rem;margin-left:6px}
+main{max-width:1180px;margin:0 auto;padding:22px 20px 70px}
+section[data-page]{display:none} section[data-page].on{display:block}
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.card h3{font-size:1.1rem;font-weight:900;margin-bottom:8px}
+label.f{display:block;font-size:.76rem;font-weight:800;color:var(--muted);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.07em}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 14px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:18px;align-items:start}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.9rem;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 12px}
+.toggle input{accent-color:var(--crimson);width:16px;height:16px}
+/* donor grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.donor{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;position:relative}
+.donor .head{display:flex;gap:12px;align-items:center}
+.avatar{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--rose),var(--crimson));flex:none}
+.donor .name{font-weight:900} .donor .meta{font-size:.84rem;color:var(--muted)}
+.bg{margin-left:auto;background:var(--crimson);color:#fff;border-radius:10px;padding:6px 9px;font-weight:900;font-size:1rem;letter-spacing:.02em}
+.bg.compat{background:var(--slate)}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;font-size:.76rem;font-weight:800;background:var(--surface-2);color:var(--muted)}
+.pill.ok{background:var(--green-soft);color:var(--green)} .pill.wait{background:var(--gold-soft);color:#8a6100} .pill.gold{background:var(--gold-soft);color:#8a6100} .pill.red{background:var(--crimson-soft);color:var(--crimson)}
+.donor .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.phone{font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:.03em}
+/* requests */
+.req{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--u,var(--rose));border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:start}
+.req.fulfilled{opacity:.65;--u:var(--green)}
+.req .big{font-size:1.6rem;font-weight:900;color:var(--crimson);line-height:1;background:var(--crimson-soft);border-radius:14px;width:64px;height:64px;display:grid;place-items:center}
+.req .big small{display:block;font-size:.65rem;font-weight:800;color:var(--muted)}
+.req h4{font-size:1.05rem;font-weight:900} .req .meta{font-size:.86rem;color:var(--muted);margin-top:2px}
+.req .acts{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.u-critical{--u:#b3122e} .u-urgent{--u:#e8882e} .u-routine{--u:#536075}
+.resp{font-size:.82rem;background:var(--surface-2);border-radius:10px;padding:8px 10px;margin-top:8px}
+/* my card */
+.dcard{background:linear-gradient(135deg,var(--crimson),var(--crimson-deep));color:#fff;border-radius:22px;padding:22px;position:relative;overflow:hidden;box-shadow:0 30px 60px -30px rgba(140,13,36,.7)}
+.dcard::before{content:"";position:absolute;right:-40px;bottom:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08)}
+.dcard .grp{font-size:3rem;font-weight:900;line-height:1;letter-spacing:-.03em}
+.dcard .row{display:flex;justify-content:space-between;gap:10px;margin-top:14px;font-size:.85rem;opacity:.95}
+.ring{width:96px;height:96px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.badge{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--surface);font-size:.84rem;font-weight:800}
+.badge.locked{opacity:.45;filter:grayscale(1)}
+.badge .ic{font-size:1.2rem}
+/* banks */
+.bank{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.bank h4{font-weight:900;font-size:1rem} .bank .meta{font-size:.84rem;color:var(--muted);margin:4px 0 8px}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+/* stats */
+.stat{display:grid;grid-template-columns:52px 1fr 60px;gap:10px;align-items:center;margin:6px 0;font-weight:800;font-size:.9rem}
+.stat .track{height:14px;background:var(--surface-2);border-radius:999px;overflow:hidden} .stat .fill{height:100%;background:var(--crimson);border-radius:999px}
+.stat .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800} .kpi .v{font-size:1.7rem;font-weight:900;letter-spacing:-.02em;color:var(--crimson)} .kpi .s{font-size:.8rem;color:var(--muted)}
+.matrix{border-collapse:collapse;width:100%;font-size:.82rem} .matrix th,.matrix td{border:1px solid var(--line);padding:5px;text-align:center} .matrix th{background:var(--surface-2)} .matrix td.y{background:var(--green-soft);color:var(--green);font-weight:900} .matrix td.me{outline:2px solid var(--crimson)}
+.note{background:var(--gold-soft);border-left:4px solid var(--gold);border-radius:10px;padding:10px 12px;font-size:.88rem}
+.warn{background:var(--crimson-soft);border-left:4px solid var(--crimson);border-radius:10px;padding:10px 12px;font-size:.88rem}
+.todo{border:1px dashed var(--crimson);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.todo h4{font-size:.95rem;display:flex;gap:8px;align-items:center;margin-bottom:4px} .tag{font-size:.68rem;background:var(--crimson);color:#fff;border-radius:6px;padding:2px 6px;font-weight:800}
+.list{display:grid;gap:10px}
+.empty{padding:30px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius)}
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(42,18,21,.5);z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+.scrim.on{display:flex}
+.modal{background:var(--surface);border-radius:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:22px}
+#toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:grid;gap:8px;z-index:60}
+.toast{background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:800;animation:pop .25s}
+.toast.ok{background:var(--green)} .toast.bad{background:var(--crimson)}
+@keyframes pop{from{transform:translateY(8px);opacity:0}}
+@media (max-width:860px){.searchbar{grid-template-columns:1fr}.two{grid-template-columns:minmax(0,1fr)}.req{grid-template-columns:auto minmax(0,1fr)}.req .acts{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center}.hero h2{margin-top:14px}}
+@media print{.hero,.tabs,#toasts{display:none}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="in">
+  <div class="top"><div class="brand"><div class="drop"><span>K</span></div><div><h1>Khoon</h1><small data-i18n="tagline">Blood Donor Network · Pakistan</small></div></div><div class="spacer"></div><button class="lang" id="langBtn">اردو</button></div>
+  <h2 data-i18n="hero">Find a compatible donor in minutes, not in a WhatsApp storm.</h2>
+  <p class="sub" data-i18n="heroSub">Search donors by blood group and city, post an emergency request, or register and track when you can donate next.</p>
+  <div class="searchbar"><div class="groups" id="hGroups"></div><select id="hCity"></select><button class="btn" id="hGo" data-i18n="search">Search donors</button></div>
+</div></header>
+<nav class="tabs"><div class="in" id="tabs"></div></nav>
+<main>
+  <section data-page="find" class="on"><div class="toolbar" id="findBar"></div><div id="compat" class="card hidden" style="margin-bottom:14px"></div><div class="grid" id="donors"></div></section>
+  <section data-page="requests"><div class="two"><div class="card" id="reqForm"></div><div><div class="toolbar" id="reqBar"></div><div class="list" id="reqList"></div></div></div></section>
+  <section data-page="register"><div class="two" id="register"></div></section>
+  <section data-page="banks"><div class="toolbar" id="bankBar"></div><div class="grid" id="banks"></div></section>
+  <section data-page="stats"><div class="kpis" id="skpis"></div><div class="two" id="stats"></div></section>
+  <section data-page="about"><div class="two" id="about"></div></section>
+</main>
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Khoon — Blood Donor Network (single file)
+   utils · i18n · domain (groups, compatibility, eligibility) · seed data ·
+   find · requests · register (my card, badges, donation log) · banks · stats · about
+   Student hooks: TODO(student)
+   ===================================================================== */
+const NS = 'khoon:';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = { get(k, d) { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch { return false; } } };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const toast = (m, type = '') => { const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = m; $('#toasts').append(t); setTimeout(() => t.remove(), 3200); };
+const uid = () => Math.random().toString(36).slice(2, 9);
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const DAY = 864e5, now = Date.now();
+const daysAgo = ts => Math.floor((now - ts) / DAY);
+const ago = ts => { const d = daysAgo(ts); if (d === 0) { const h = Math.floor((now - ts) / 36e5); return h <= 0 ? 'just now' : h + ' h ago'; } return d === 1 ? 'yesterday' : d < 30 ? d + ' days ago' : d < 365 ? Math.floor(d / 30) + ' mo ago' : Math.floor(d / 365) + ' y ago'; };
+const dateStr = ts => new Date(ts).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
+const initials = n => n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+const maskPhone = p => p.slice(0, 4) + '-***-**' + p.slice(-2);
+const wa = (phone, text) => `https://wa.me/92${phone.replace(/\D/g, '').slice(1)}?text=${encodeURIComponent(text)}`;
+
+// ---------- i18n ----------
+const L = {
+  en: { tagline: 'Blood Donor Network · Pakistan', hero: 'Find a compatible donor in minutes, not in a WhatsApp storm.', heroSub: 'Search donors by blood group and city, post an emergency request, or register and track when you can donate next.', search: 'Search donors',
+    nav_find: 'Find donors', nav_requests: 'Requests', nav_register: 'My donor card', nav_banks: 'Blood banks', nav_stats: 'Stats', nav_about: 'About',
+    any: 'Any', allCities: 'All cities', area: 'Area / town', eligibleOnly: 'Eligible now only', compatToggle: 'Include compatible groups', sortLast: 'Sort: recently available', sortCount: 'Sort: most donations', found: 'donors found', none: 'No donors match. Widen the search or include compatible groups.',
+    lastDon: 'Last donated', never: 'Never donated', eligible: 'Eligible now', eligibleIn: 'Eligible in', days: 'days', donations: 'donations', reveal: 'Reveal contact', revealed: 'Contact revealed — please call only for a genuine need.', call: 'Call', verified: 'Verified', compatFor: 'Who can donate to', canReceive: 'can receive from', universal: 'O− is the universal red-cell donor; AB+ is the universal recipient.',
+    r_post: 'Post a request', r_patient: 'Patient name (initials are fine)', r_group: 'Blood group', r_units: 'Units needed', r_hospital: 'Hospital', r_city: 'City', r_urg: 'Urgency', r_by: 'Needed by', r_contact: 'Contact number', r_notes: 'Notes (e.g. thalassemia, surgery, platelets)', r_submit: 'Post request', r_posted: 'Request posted', r_invalid: 'Fill patient, hospital and a valid 03xx-xxxxxxx number.',
+    critical: 'Critical', urgent: 'Urgent', routine: 'Routine', open: 'Open', fulfilled: 'Fulfilled', showFulfilled: 'Show fulfilled', units: 'units', neededBy: 'needed by', matching: 'matching donors in city', canDonate: 'I can donate', responded: 'You responded — the family will contact you.', responses: 'responses', share: 'Share', markFull: 'Mark fulfilled', reopen: 'Reopen', r_none: 'No requests in this filter.', needProfile: 'Register as a donor first so the family knows who is coming.',
+    reg_title: 'Register as a donor', reg_lead: 'Takes a minute. Your data stays on this device until a backend is connected.', name: 'Full name', phone: 'Mobile (03xx-xxxxxxx)', gender: 'Gender', male: 'Male', female: 'Female', dob: 'Date of birth', weight: 'Weight (kg)', group: 'Blood group', city: 'City', lastDonation: 'Last donation date (if any)', flags: 'Health notes', consent: 'I consent to be contacted by patients\' families for blood donation.', save: 'Save donor profile', saved: 'Profile saved', reg_invalid: 'Check name, phone (03xx-xxxxxxx) and consent.', tooYoung: 'Donors must be 18–60 years old.', tooLight: 'Donors should weigh at least 50 kg.',
+    myCard: 'My donor card', nextEligible: 'Next eligible', donorSince: 'Donor since', addDonation: 'Log a donation today', log: 'Donation log', edit: 'Edit profile', deleteP: 'Delete profile', badges: 'Badges', b1: 'First Drop', b3: 'Regular', b5: 'Hero', b10: 'Lifesaver', b1d: 'first donation', b3d: '3 donations', b5d: '5 donations', b10d: '10 donations', interval: 'Standard interval: 90 days for men, 120 days for women (whole blood).', printCard: 'Print card',
+    f_none: 'No notes', f_tattoo: 'Tattoo / piercing in last 6 months', f_preg: 'Pregnant or breastfeeding', f_med: 'On regular medication', f_ill: 'Recent illness / hepatitis history',
+    bank247: '24/7', apheresis: 'Platelets (apheresis)', thal: 'Thalassemia centre', govt: 'Government', private: 'Private', ngo: 'NGO', maps: 'Maps',
+    s_byGroup: 'Donors by blood group', s_byCity: 'Coverage by city', k_donors: 'Registered donors', k_eligible: 'Eligible today', k_open: 'Open requests', k_full: 'Fulfilled requests', k_rare: 'Rarest group', s_insight: 'Negative groups make up under 10% of donors in Pakistan; a single O− request often needs the whole city.',
+    a_title: 'About this project', a_todo: 'Left for students to build' },
+  ur: { tagline: 'خون عطیہ نیٹ ورک · پاکستان', hero: 'منٹوں میں مطابقت رکھنے والا عطیہ دہندہ تلاش کریں، واٹس ایپ کے طوفان میں نہیں۔', heroSub: 'بلڈ گروپ اور شہر سے ڈونر تلاش کریں، ایمرجنسی درخواست لگائیں، یا رجسٹر ہو کر دیکھیں کہ اگلی بار کب خون دے سکتے ہیں۔', search: 'ڈونر تلاش کریں',
+    nav_find: 'ڈونر تلاش', nav_requests: 'درخواستیں', nav_register: 'میرا کارڈ', nav_banks: 'بلڈ بینک', nav_stats: 'اعداد و شمار', nav_about: 'تعارف',
+    any: 'کوئی بھی', allCities: 'تمام شہر', area: 'علاقہ', eligibleOnly: 'صرف ابھی اہل', compatToggle: 'مطابقت والے گروپ شامل کریں', sortLast: 'ترتیب: حال ہی میں دستیاب', sortCount: 'ترتیب: زیادہ عطیات', found: 'ڈونر ملے', none: 'کوئی ڈونر نہیں ملا۔ تلاش وسیع کریں۔',
+    lastDon: 'آخری عطیہ', never: 'کبھی نہیں دیا', eligible: 'ابھی اہل', eligibleIn: 'اہل ہوں گے', days: 'دن میں', donations: 'عطیات', reveal: 'رابطہ دیکھیں', revealed: 'رابطہ ظاہر — صرف حقیقی ضرورت پر کال کریں۔', call: 'کال', verified: 'تصدیق شدہ', compatFor: 'کون خون دے سکتا ہے', canReceive: 'ان سے لے سکتا ہے', universal: 'O− ہر ایک کو دے سکتا ہے؛ AB+ ہر ایک سے لے سکتا ہے۔',
+    r_post: 'درخواست لگائیں', r_patient: 'مریض کا نام', r_group: 'بلڈ گروپ', r_units: 'بوتلیں درکار', r_hospital: 'ہسپتال', r_city: 'شہر', r_urg: 'فوری ضرورت', r_by: 'کب تک', r_contact: 'رابطہ نمبر', r_notes: 'نوٹ', r_submit: 'درخواست لگائیں', r_posted: 'درخواست لگ گئی', r_invalid: 'مریض، ہسپتال اور درست نمبر درج کریں۔',
+    critical: 'انتہائی فوری', urgent: 'فوری', routine: 'معمول', open: 'کھلی', fulfilled: 'پوری ہو گئی', showFulfilled: 'پوری شدہ دکھائیں', units: 'بوتلیں', neededBy: 'تک درکار', matching: 'شہر میں مطابق ڈونر', canDonate: 'میں خون دے سکتا/سکتی ہوں', responded: 'آپ نے جواب دیا — مریض کے گھر والے رابطہ کریں گے۔', responses: 'جوابات', share: 'شیئر', markFull: 'پوری ہو گئی', reopen: 'دوبارہ کھولیں', r_none: 'اس فلٹر میں کوئی درخواست نہیں۔', needProfile: 'پہلے ڈونر رجسٹر ہوں۔',
+    reg_title: 'ڈونر رجسٹریشن', reg_lead: 'ایک منٹ لگتا ہے۔ آپ کا ڈیٹا اسی آلے پر رہتا ہے۔', name: 'پورا نام', phone: 'موبائل (03xx-xxxxxxx)', gender: 'جنس', male: 'مرد', female: 'عورت', dob: 'تاریخ پیدائش', weight: 'وزن (کلو)', group: 'بلڈ گروپ', city: 'شہر', lastDonation: 'آخری عطیہ کی تاریخ', flags: 'صحت کے نوٹ', consent: 'میں مریضوں کے گھر والوں سے رابطے پر رضامند ہوں۔', save: 'پروفائل محفوظ', saved: 'پروفائل محفوظ ہو گیا', reg_invalid: 'نام، نمبر اور رضامندی چیک کریں۔', tooYoung: 'عمر 18 سے 60 سال ہونی چاہیے۔', tooLight: 'وزن کم از کم 50 کلو ہونا چاہیے۔',
+    myCard: 'میرا ڈونر کارڈ', nextEligible: 'اگلی اہلیت', donorSince: 'ڈونر از', addDonation: 'آج کا عطیہ درج کریں', log: 'عطیات کا ریکارڈ', edit: 'ترمیم', deleteP: 'پروفائل حذف', badges: 'اعزازات', b1: 'پہلا قطرہ', b3: 'باقاعدہ', b5: 'ہیرو', b10: 'زندگی بچانے والا', b1d: 'پہلا عطیہ', b3d: '3 عطیات', b5d: '5 عطیات', b10d: '10 عطیات', interval: 'معیاری وقفہ: مردوں کے لیے 90 دن، خواتین کے لیے 120 دن۔', printCard: 'کارڈ پرنٹ',
+    f_none: 'کوئی نوٹ نہیں', f_tattoo: 'پچھلے 6 ماہ میں ٹیٹو', f_preg: 'حاملہ یا دودھ پلانے والی', f_med: 'مستقل دوا', f_ill: 'حالیہ بیماری / ہیپاٹائٹس',
+    bank247: '24 گھنٹے', apheresis: 'پلیٹلیٹس', thal: 'تھیلیسیمیا سینٹر', govt: 'سرکاری', private: 'نجی', ngo: 'این جی او', maps: 'نقشہ',
+    s_byGroup: 'بلڈ گروپ کے لحاظ سے ڈونر', s_byCity: 'شہروں میں کوریج', k_donors: 'رجسٹرڈ ڈونر', k_eligible: 'آج اہل', k_open: 'کھلی درخواستیں', k_full: 'پوری درخواستیں', k_rare: 'نایاب ترین گروپ', s_insight: 'منفی گروپ پاکستان میں 10% سے کم ہیں؛ ایک O− درخواست کے لیے اکثر پورا شہر ڈھونڈنا پڑتا ہے۔',
+    a_title: 'اس پروجیکٹ کا تعارف', a_todo: 'طلبہ کے لیے باقی کام' }
+};
+let lang = store.get('lang', 'en');
+const t = k => L[lang][k] ?? L.en[k] ?? k;
+
+// ---------- domain ----------
+const GROUPS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+const CAN_RECEIVE = { 'O-': ['O-'], 'O+': ['O-', 'O+'], 'A-': ['O-', 'A-'], 'A+': ['O-', 'O+', 'A-', 'A+'], 'B-': ['O-', 'B-'], 'B+': ['O-', 'O+', 'B-', 'B+'], 'AB-': ['O-', 'A-', 'B-', 'AB-'], 'AB+': GROUPS };
+const INTERVAL = { m: 90, f: 120 }; // days between whole-blood donations
+const eligibleIn = d => d.last ? Math.max(0, INTERVAL[d.gender] - daysAgo(d.last)) : 0;
+const CITIES = { Karachi: ['Gulshan-e-Iqbal', 'North Nazimabad', 'DHA', 'Clifton', 'Malir', 'Korangi', 'Saddar', 'Gulistan-e-Johar'], Lahore: ['Johar Town', 'Model Town', 'Gulberg', 'DHA', 'Township', 'Shadman', 'Iqbal Town', 'Cantt'], Islamabad: ['G-9', 'F-10', 'I-8', 'Bahria Town', 'G-11'], Rawalpindi: ['Saddar', 'Satellite Town', 'Chaklala', 'Bahria Town'], Peshawar: ['Hayatabad', 'University Town', 'Saddar'], Quetta: ['Jinnah Town', 'Satellite Town'], Hyderabad: ['Latifabad', 'Qasimabad'], Multan: ['Gulgasht', 'Cantt'], Faisalabad: ['Peoples Colony', 'D Ground'] };
+const CITY_LIST = Object.keys(CITIES);
+
+// ---------- seed data (deterministic) ----------
+const MALE = ['Ahmed Raza', 'Bilal Khan', 'Hamza Siddiqui', 'Usman Tariq', 'Ali Haider', 'Zain Malik', 'Saad Qureshi', 'Fahad Iqbal', 'Hassan Shah', 'Umar Farooq', 'Danish Ali', 'Kashif Mehmood', 'Faisal Javed', 'Imran Baig', 'Noman Aslam', 'Taha Ansari', 'Shahzaib Butt', 'Waqas Ahmed', 'Rizwan Chaudhry', 'Adeel Hussain', 'Owais Memon', 'Junaid Soomro', 'Arsalan Afridi', 'Haris Lodhi', 'Moiz Rehman', 'Salman Yousuf', 'Tariq Baloch', 'Asad Mirza', 'Nabeel Sheikh', 'Zubair Khattak'];
+const FEMALE = ['Ayesha Khan', 'Fatima Noor', 'Hira Baig', 'Sana Javed', 'Mariam Shah', 'Zainab Ali', 'Amna Tariq', 'Rabia Malik', 'Khadija Siddiqui', 'Maham Qureshi', 'Iqra Farooq', 'Nida Aslam', 'Sadia Hussain', 'Bushra Chaudhry', 'Mehwish Ahmed', 'Laiba Memon', 'Hafsa Soomro', 'Anum Lodhi', 'Kiran Rehman', 'Sidra Yousuf'];
+const GROUP_W = [['B+', 32], ['O+', 30], ['A+', 20], ['AB+', 8], ['O-', 3], ['B-', 3], ['A-', 2], ['AB-', 2]];
+function pickGroup(r) { let x = r() * 100; for (const [g, w] of GROUP_W) { if (x < w) return g; x -= w; } return 'O+'; }
+const SEED_DONORS = (() => { const r = rng(20261016), out = []; const cityW = [['Karachi', 22], ['Lahore', 18], ['Islamabad', 8], ['Rawalpindi', 7], ['Peshawar', 5], ['Quetta', 3], ['Hyderabad', 4], ['Multan', 4], ['Faisalabad', 4]];
+  cityW.forEach(([city, n]) => { for (let i = 0; i < n; i++) { const gender = r() < .68 ? 'm' : 'f'; const names = gender === 'm' ? MALE : FEMALE; const name = names[Math.floor(r() * names.length)]; const count = Math.floor(r() * r() * 14); const last = count ? now - Math.floor(r() * 420) * DAY : null; out.push({ id: 's' + out.length, name, gender, group: pickGroup(r), city, area: CITIES[city][Math.floor(r() * CITIES[city].length)], phone: '03' + Math.floor(r() * 5) + Math.floor(r() * 9) + '-' + String(Math.floor(r() * 1e7)).padStart(7, '0'), count, last, verified: r() < .55, since: now - Math.floor(60 + r() * 1500) * DAY }); } }); return out; })();
+const SEED_REQUESTS = [
+  { id: 'r1', patient: 'M. Ahmed (7 y)', group: 'B+', units: 2, hospital: 'Fatimid Foundation', city: 'Karachi', urgency: 'urgent', by: now + 2 * DAY, contact: '0300-1234567', notes: 'Thalassemia major, monthly transfusion', ts: now - 3 * 36e5, status: 'open', responses: [] },
+  { id: 'r2', patient: 'S. Bibi', group: 'O-', units: 3, hospital: 'Mayo Hospital', city: 'Lahore', urgency: 'critical', by: now + 6 * 36e5, contact: '0321-7654321', notes: 'Post-partum haemorrhage, emergency OT', ts: now - 50 * 6e4, status: 'open', responses: [] },
+  { id: 'r3', patient: 'A. Khan', group: 'A+', units: 4, hospital: 'PIMS', city: 'Islamabad', urgency: 'routine', by: now + 5 * DAY, contact: '0333-1112223', notes: 'Scheduled cardiac surgery', ts: now - 9 * 36e5, status: 'open', responses: [{ name: 'Danish Ali', ts: now - 2 * 36e5 }] },
+  { id: 'r4', patient: 'R. Shah', group: 'AB-', units: 1, hospital: 'Lady Reading Hospital', city: 'Peshawar', urgency: 'urgent', by: now + DAY, contact: '0345-9876543', notes: 'Road accident', ts: now - 5 * 36e5, status: 'open', responses: [] },
+  { id: 'r5', patient: 'Baby Zara', group: 'O+', units: 1, hospital: 'Shaukat Khanum', city: 'Lahore', urgency: 'urgent', by: now + DAY, contact: '0301-5556667', notes: 'Platelets preferred (apheresis donor)', ts: now - 14 * 36e5, status: 'open', responses: [] },
+  { id: 'r6', patient: 'H. Memon', group: 'B-', units: 2, hospital: 'Liaquat University Hospital', city: 'Hyderabad', urgency: 'critical', by: now + 10 * 36e5, contact: '0312-4445556', notes: 'Dengue, platelets 18k', ts: now - 2 * 36e5, status: 'open', responses: [] },
+  { id: 'r7', patient: 'K. Qureshi', group: 'A+', units: 2, hospital: 'Nishtar Hospital', city: 'Multan', urgency: 'routine', by: now - 2 * DAY, contact: '0306-2223334', notes: '', ts: now - 4 * DAY, status: 'fulfilled', responses: [{ name: 'Saad Qureshi', ts: now - 3 * DAY }, { name: 'Hira Baig', ts: now - 3 * DAY }] },
+  { id: 'r8', patient: 'N. Baloch', group: 'O+', units: 3, hospital: 'CMH Quetta', city: 'Quetta', urgency: 'urgent', by: now - DAY, contact: '0355-6667778', notes: '', ts: now - 3 * DAY, status: 'fulfilled', responses: [{ name: 'Tariq Baloch', ts: now - 2 * DAY }] },
+];
+const BANKS = [
+  ['Fatimid Foundation', 'ngo', 'Karachi', 'Britto Road, Garden East', '021-32225284', 1, 1, 1], ['Indus Hospital Blood Centre', 'ngo', 'Karachi', 'Korangi Crossing', '021-35112709', 1, 1, 0], ['Husaini Blood Bank', 'ngo', 'Karachi', 'Multiple branches', '021-111-487-246', 1, 1, 1], ['Aga Khan University Hospital Blood Bank', 'private', 'Karachi', 'Stadium Road', '021-111-911-911', 1, 1, 0], ['JPMC Blood Bank', 'govt', 'Karachi', 'Rafiqui Shaheed Road', '021-99201300', 1, 0, 0],
+  ['Sundas Foundation', 'ngo', 'Lahore', 'Garden Town', '042-35835007', 1, 1, 1], ['Mayo Hospital Blood Bank', 'govt', 'Lahore', 'Nila Gumbad', '042-99211129', 1, 0, 0], ['Shaukat Khanum Blood Bank', 'private', 'Lahore', 'Johar Town', '042-35905000', 1, 1, 0], ['Thalassaemia Federation Pakistan', 'ngo', 'Lahore', 'Model Town', '042-35881340', 0, 0, 1],
+  ['PIMS Blood Bank', 'govt', 'Islamabad', 'G-8/3', '051-9261170', 1, 1, 0], ['Pakistan Thalassaemia Welfare Society', 'ngo', 'Rawalpindi', 'Satellite Town', '051-4571480', 0, 0, 1], ['Holy Family Hospital Blood Bank', 'govt', 'Rawalpindi', 'Satellite Town', '051-9290319', 1, 0, 0],
+  ['Lady Reading Hospital Blood Bank', 'govt', 'Peshawar', 'Soekarno Chowk', '091-9211430', 1, 0, 0], ['Frontier Foundation', 'ngo', 'Peshawar', 'Hayatabad', '091-5822444', 1, 1, 1],
+  ['Sandeman Provincial Hospital Blood Bank', 'govt', 'Quetta', 'Jinnah Road', '081-9201111', 1, 0, 0], ['Thalassemia Care Centre', 'ngo', 'Quetta', 'Satellite Town', '081-2825555', 0, 0, 1],
+  ['Liaquat University Hospital Blood Bank', 'govt', 'Hyderabad', 'Jamshoro Road', '022-9213301', 1, 0, 0], ['Nishtar Hospital Blood Bank', 'govt', 'Multan', 'Nishtar Road', '061-9200231', 1, 0, 0], ['Allied Hospital Blood Bank', 'govt', 'Faisalabad', 'Jail Road', '041-9210087', 1, 0, 0],
+].map(([name, type, city, addr, phone, h24, aph, thal]) => ({ name, type, city, addr, phone, h24: !!h24, aph: !!aph, thal: !!thal }));
+// Seeded data is illustrative; phone numbers of banks should be verified before any real use.
+
+// ---------- state ----------
+const allDonors = () => { const me = store.get('me', null); return me ? [{ ...me, id: 'me', verified: false, isMe: true }, ...SEED_DONORS] : SEED_DONORS; };
+const requests = () => { const saved = store.get('requests', null); if (saved) return saved; store.set('requests', SEED_REQUESTS); return SEED_REQUESTS; };
+const find = Object.assign({ group: 'any', city: 'all', area: '', eligible: false, compat: false, sort: 'last' }, store.get('find', {}));
+const saveFind = () => store.set('find', find);
+
+// ---------- find donors ----------
+function renderHeroSearch() {
+  $('#hGroups').innerHTML = `<button class="g any ${find.group === 'any' ? 'on' : ''}" data-g="any">${t('any')}</button>` + GROUPS.map(g => `<button class="g ${find.group === g ? 'on' : ''}" data-g="${g}">${g}</button>`).join('');
+  $('#hCity').innerHTML = `<option value="all">${t('allCities')}</option>` + CITY_LIST.map(c => `<option value="${c}" ${find.city === c ? 'selected' : ''}>${c}</option>`).join('');
+  $$('#hGroups .g').forEach(b => b.onclick = () => { find.group = b.dataset.g; saveFind(); renderHeroSearch(); if (cur === 'find') renderFind(); });
+  $('#hCity').onchange = e => { find.city = e.target.value; saveFind(); if (cur === 'find') renderFind(); };
+}
+$('#hGo').onclick = () => { go('find'); window.scrollTo({ top: $('main').offsetTop - 80, behavior: 'smooth' }); };
+function renderFind() {
+  $('#findBar').innerHTML = `<input type="text" id="fArea" placeholder="${t('area')}" value="${esc(find.area)}" style="max-width:220px"><label class="toggle"><input type="checkbox" id="fElig" ${find.eligible ? 'checked' : ''}>${t('eligibleOnly')}</label><label class="toggle"><input type="checkbox" id="fCompat" ${find.compat ? 'checked' : ''} ${find.group === 'any' ? 'disabled' : ''}>${t('compatToggle')}</label><select id="fSort" style="max-width:240px"><option value="last" ${find.sort === 'last' ? 'selected' : ''}>${t('sortLast')}</option><option value="count" ${find.sort === 'count' ? 'selected' : ''}>${t('sortCount')}</option></select><span class="spacer"></span><span class="muted" id="fCount"></span>`;
+  $('#fArea').oninput = e => { find.area = e.target.value; saveFind(); drawDonors(); }; $('#fElig').onchange = e => { find.eligible = e.target.checked; saveFind(); drawDonors(); }; $('#fCompat').onchange = e => { find.compat = e.target.checked; saveFind(); drawDonors(); }; $('#fSort').onchange = e => { find.sort = e.target.value; saveFind(); drawDonors(); };
+  drawDonors();
+}
+function drawDonors() {
+  const groups = find.group === 'any' ? null : find.compat ? CAN_RECEIVE[find.group] : [find.group];
+  let list = allDonors().filter(d => (!groups || groups.includes(d.group)) && (find.city === 'all' || d.city === find.city) && (!find.area || d.area.toLowerCase().includes(find.area.toLowerCase())) && (!find.eligible || eligibleIn(d) === 0));
+  list.sort(find.sort === 'count' ? (a, b) => b.count - a.count : (a, b) => eligibleIn(a) - eligibleIn(b) || b.count - a.count);
+  $('#fCount').textContent = `${list.length} ${t('found')}`;
+  const cm = $('#compat'); if (find.group !== 'any') { cm.classList.remove('hidden'); cm.innerHTML = `<h3>${t('compatFor')} <span style="color:var(--crimson)">${find.group}</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="muted">${find.group} ${t('canReceive')}:</span>${CAN_RECEIVE[find.group].map(g => `<span class="bg ${g === find.group ? '' : 'compat'}" style="margin:0;font-size:.9rem">${g}</span>`).join('')}</div><p class="muted" style="margin:8px 0 0;font-size:.85rem">${t('universal')}</p>`; } else cm.classList.add('hidden');
+  $('#donors').innerHTML = list.length ? list.map(d => { const e = eligibleIn(d); return `<article class="donor"><div class="head"><div class="avatar" style="${d.isMe ? 'background:linear-gradient(135deg,var(--gold),#b8811a)' : ''}">${initials(d.name)}</div><div><div class="name">${esc(d.name)} ${d.verified ? `<span title="${t('verified')}" style="color:var(--green)">✔</span>` : ''}</div><div class="meta">${esc(d.area)}, ${esc(d.city)}</div></div><span class="bg ${groups && d.group !== find.group ? 'compat' : ''}">${d.group}</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill ${e === 0 ? 'ok' : 'wait'}">${e === 0 ? '● ' + t('eligible') : '◔ ' + t('eligibleIn') + ' ' + e + ' ' + t('days')}</span><span class="pill">${d.count} ${t('donations')}</span>${d.count >= 10 ? `<span class="pill gold">🏅 ${t('b10')}</span>` : d.count >= 5 ? `<span class="pill gold">🥇 ${t('b5')}</span>` : ''}</div>
+    <div class="meta">${t('lastDon')}: ${d.last ? dateStr(d.last) + ' · ' + ago(d.last) : t('never')}</div>
+    <div class="acts" data-id="${d.id}"><span class="phone" data-ph="${esc(d.phone)}">${maskPhone(d.phone)}</span><button class="btn ghost sm" data-reveal>${t('reveal')}</button></div></article>`; }).join('') : `<div class="empty">${t('none')}</div>`;
+  $$('[data-reveal]').forEach(b => b.onclick = () => { const acts = b.closest('.acts'), ph = $('.phone', acts).dataset.ph; $('.phone', acts).textContent = ph; b.remove(); acts.insertAdjacentHTML('beforeend', `<a class="btn sm" href="tel:${ph}">📞 ${t('call')}</a><a class="btn green sm" href="${wa(ph, 'Assalam o Alaikum, I found you on Khoon. We need ' + (find.group === 'any' ? 'blood' : find.group + ' blood') + ' urgently. Can you help?')}" target="_blank" rel="noopener">WhatsApp</a>`); toast(t('revealed')); store.set('reveals', (store.get('reveals', 0)) + 1); });
+  // TODO(student): contact reveal should go through the backend (rate limit, log who revealed whom, let donors hide their number and be contacted via in-app call/SMS relay).
+}
+
+// ---------- requests ----------
+let showFull = false, reqCity = 'all';
+function renderRequests() {
+  const me = store.get('me', null);
+  $('#reqForm').innerHTML = `<h3>${t('r_post')}</h3>
+    <label class="f">${t('r_patient')}</label><input id="qPat" type="text">
+    <div class="cols"><div><label class="f">${t('r_group')}</label><select id="qGrp">${GROUPS.map(g => `<option>${g}</option>`).join('')}</select></div><div><label class="f">${t('r_units')}</label><input id="qUnits" type="number" min="1" max="20" value="2"></div></div>
+    <label class="f">${t('r_hospital')}</label><input id="qHosp" type="text" placeholder="e.g. Jinnah Hospital">
+    <div class="cols"><div><label class="f">${t('r_city')}</label><select id="qCity">${CITY_LIST.map(c => `<option ${me && me.city === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div><div><label class="f">${t('r_urg')}</label><select id="qUrg"><option value="critical">${t('critical')} (&lt;12 h)</option><option value="urgent" selected>${t('urgent')} (1–2 days)</option><option value="routine">${t('routine')}</option></select></div></div>
+    <div class="cols"><div><label class="f">${t('r_by')}</label><input id="qBy" type="date" value="${new Date(now + DAY).toISOString().slice(0, 10)}"></div><div><label class="f">${t('r_contact')}</label><input id="qPh" type="tel" placeholder="03xx-xxxxxxx" value="${me ? esc(me.phone) : ''}"></div></div>
+    <label class="f">${t('r_notes')}</label><input id="qNotes" type="text">
+    <div style="margin-top:14px"><button class="btn" id="qGo">${t('r_submit')}</button></div>
+    <!-- TODO(student): on submit, notify all compatible, eligible donors in the city by push/SMS; escalate to blood banks after N hours. -->`;
+  $('#qGo').onclick = () => { const pat = $('#qPat').value.trim(), hosp = $('#qHosp').value.trim(), ph = $('#qPh').value.trim(); if (!pat || !hosp || !/^03\d{2}-?\d{7}$/.test(ph)) return toast(t('r_invalid'), 'bad'); const list = requests(); list.unshift({ id: uid(), patient: pat, group: $('#qGrp').value, units: +$('#qUnits').value || 1, hospital: hosp, city: $('#qCity').value, urgency: $('#qUrg').value, by: new Date($('#qBy').value).getTime() || now + DAY, contact: ph, notes: $('#qNotes').value.trim(), ts: now, status: 'open', responses: [], mine: true }); store.set('requests', list); toast(t('r_posted'), 'ok'); renderRequests(); renderTabs(); };
+  $('#reqBar').innerHTML = `<select id="rqCity" style="max-width:200px"><option value="all">${t('allCities')}</option>${CITY_LIST.map(c => `<option ${reqCity === c ? 'selected' : ''}>${c}</option>`).join('')}</select><label class="toggle"><input type="checkbox" id="rqFull" ${showFull ? 'checked' : ''}>${t('showFulfilled')}</label>`;
+  $('#rqCity').onchange = e => { reqCity = e.target.value; renderRequests(); }; $('#rqFull').onchange = e => { showFull = e.target.checked; renderRequests(); };
+  const list = requests().filter(r => (reqCity === 'all' || r.city === reqCity) && (showFull || r.status === 'open')).sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || ({ critical: 0, urgent: 1, routine: 2 }[a.urgency] - { critical: 0, urgent: 1, routine: 2 }[b.urgency]) || b.ts - a.ts);
+  const donors = allDonors();
+  $('#reqList').innerHTML = list.length ? list.map(r => { const match = donors.filter(d => d.city === r.city && CAN_RECEIVE[r.group].includes(d.group) && eligibleIn(d) === 0).length; const text = `🩸 *Blood needed: ${r.group}* (${r.units} ${t('units')})\nPatient: ${r.patient}\nHospital: ${r.hospital}, ${r.city}\nUrgency: ${t(r.urgency)} · needed by ${dateStr(r.by)}\nContact: ${r.contact}${r.notes ? '\nNotes: ' + r.notes : ''}\n— shared via Khoon`; const responded = me && r.responses.some(x => x.name === me.name);
+    return `<article class="req u-${r.urgency} ${r.status}"><div class="big">${r.group}<small>${r.units} ${t('units')}</small></div><div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h4>${esc(r.patient)}</h4><span class="pill ${r.urgency === 'critical' ? 'red' : r.urgency === 'urgent' ? 'wait' : ''}">${t(r.urgency)}</span><span class="pill ${r.status === 'open' ? '' : 'ok'}">${t(r.status)}</span></div><div class="meta">🏥 ${esc(r.hospital)}, ${esc(r.city)} · ⏰ ${t('neededBy')} ${dateStr(r.by)} · ${ago(r.ts)}</div>${r.notes ? `<div class="meta">${esc(r.notes)}</div>` : ''}<div class="meta" style="margin-top:4px"><b style="color:var(--crimson)">${match}</b> ${t('matching')} · ${r.responses.length} ${t('responses')}</div>${r.responses.length ? `<div class="resp">${r.responses.map(x => `✋ ${esc(x.name)} · ${ago(x.ts)}`).join('<br>')}</div>` : ''}</div>
+    <div class="acts">${r.status === 'open' ? `<button class="btn sm ${responded ? 'ghost' : ''}" data-resp="${r.id}" ${responded ? 'disabled' : ''}>${responded ? '✓' : '✋'} ${t('canDonate')}</button>` : ''}<a class="btn green sm" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">${t('share')}</a><a class="btn ghost sm" href="tel:${r.contact}">📞</a>${r.mine || r.status === 'fulfilled' ? `<button class="btn outline sm" data-full="${r.id}">${r.status === 'open' ? t('markFull') : t('reopen')}</button>` : ''}</div></article>`; }).join('') : `<div class="empty">${t('r_none')}</div>`;
+  $$('[data-resp]').forEach(b => b.onclick = () => { if (!me) { toast(t('needProfile'), 'bad'); go('register'); return; } const list = requests(); const r = list.find(x => x.id === b.dataset.resp); r.responses.push({ name: me.name, ts: now }); store.set('requests', list); toast(t('responded'), 'ok'); renderRequests(); });
+  $$('[data-full]').forEach(b => b.onclick = () => { const list = requests(); const r = list.find(x => x.id === b.dataset.full); r.status = r.status === 'open' ? 'fulfilled' : 'open'; store.set('requests', list); renderRequests(); renderTabs(); });
+}
+
+// ---------- register / my card ----------
+const FLAGS = ['f_tattoo', 'f_preg', 'f_med', 'f_ill'];
+const BADGES = [[1, 'b1', '🩸'], [3, 'b3', '🔁'], [5, 'b5', '🥇'], [10, 'b10', '🏅']];
+function renderRegister(edit = false) {
+  const me = store.get('me', null); const el = $('#register');
+  if (me && !edit) {
+    const e = eligibleIn(me), total = INTERVAL[me.gender], pct = 1 - e / total, r = 40, c = 2 * Math.PI * r;
+    el.innerHTML = `<div><div class="dcard"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;opacity:.85">${t('myCard')}</div><div style="font-size:1.35rem;font-weight:900;margin-top:4px">${esc(me.name)}</div><div style="opacity:.9;font-size:.9rem">${esc(me.area)}, ${esc(me.city)} · ${esc(me.phone)}</div></div><div class="grp">${me.group}</div></div>
+      <div class="row"><div><div style="opacity:.8">${t('donations')}</div><b style="font-size:1.2rem">${me.count}</b></div><div><div style="opacity:.8">${t('lastDon')}</div><b>${me.last ? dateStr(me.last) : '—'}</b></div><div><div style="opacity:.8">${t('donorSince')}</div><b>${dateStr(me.since)}</b></div></div></div>
+      <div class="card" style="margin-top:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap"><svg class="ring" viewBox="0 0 96 96"><circle cx="48" cy="48" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="9"/><circle cx="48" cy="48" r="${r}" fill="none" stroke="${e === 0 ? 'var(--green)' : 'var(--gold)'}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${c * pct} ${c}" transform="rotate(-90 48 48)"/><text x="48" y="53" text-anchor="middle" font-size="${e === 0 ? 20 : 16}" font-weight="900" fill="${e === 0 ? 'var(--green)' : 'var(--gold)'}">${e === 0 ? '✓' : e + 'd'}</text></svg><div><div class="muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;font-weight:800">${t('nextEligible')}</div><div style="font-size:1.25rem;font-weight:900;color:${e === 0 ? 'var(--green)' : 'var(--ink)'}">${e === 0 ? t('eligible') : dateStr(me.last + total * DAY)}</div><div class="muted" style="font-size:.8rem">${t('interval')}</div></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn ${e === 0 ? '' : 'ghost'}" id="logDon" ${e === 0 ? '' : 'disabled'}>🩸 ${t('addDonation')}</button><button class="btn ghost" id="editP">${t('edit')}</button><button class="btn ghost" onclick="window.print()">🖨 ${t('printCard')}</button><button class="btn outline" id="delP">${t('deleteP')}</button></div></div>
+    <div><div class="card"><h3>${t('badges')}</h3><div class="badges">${BADGES.map(([n, k, ic]) => `<div class="badge ${me.count >= n ? '' : 'locked'}"><span class="ic">${ic}</span><div>${t(k)}<div class="muted" style="font-weight:600;font-size:.76rem">${t(k + 'd')}</div></div></div>`).join('')}</div></div>
+      <div class="card" style="margin-top:14px"><h3>${t('log')}</h3>${(me.log || []).length ? `<div class="list">${[...me.log].reverse().map(ts => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0"><span>🩸 ${dateStr(ts)}</span><span class="muted">${ago(ts)}</span></div>`).join('')}</div>` : `<p class="muted" style="margin:0">—</p>`}</div>
+      ${me.flags?.length ? `<div class="warn" style="margin-top:14px">${me.flags.map(f => t(f)).join(' · ')} — check with the blood bank before donating.</div>` : ''}</div>`;
+    $('#logDon').onclick = () => { me.count++; me.last = now; me.log = [...(me.log || []), now]; store.set('me', me); toast('🩸 ' + t('b1d'), 'ok'); renderRegister(); };
+    $('#editP').onclick = () => renderRegister(true);
+    $('#delP').onclick = () => { if (confirm(t('deleteP') + '?')) { store.set('me', null); renderRegister(); renderTabs(); } };
+    return;
+  }
+  const m = me || {};
+  el.innerHTML = `<div class="card"><h3>${t('reg_title')}</h3><p class="muted" style="margin:0 0 6px">${t('reg_lead')}</p>
+    <label class="f">${t('name')}</label><input id="pName" type="text" value="${esc(m.name || '')}">
+    <div class="cols"><div><label class="f">${t('phone')}</label><input id="pPhone" type="tel" value="${esc(m.phone || '')}" placeholder="03xx-xxxxxxx"></div><div><label class="f">${t('gender')}</label><select id="pGender"><option value="m" ${m.gender === 'm' ? 'selected' : ''}>${t('male')}</option><option value="f" ${m.gender === 'f' ? 'selected' : ''}>${t('female')}</option></select></div></div>
+    <div class="cols"><div><label class="f">${t('dob')}</label><input id="pDob" type="date" value="${m.dob || ''}"></div><div><label class="f">${t('weight')}</label><input id="pWt" type="number" min="30" max="200" value="${m.weight || ''}"></div></div>
+    <label class="f">${t('group')}</label><div class="groups" id="pGroups">${GROUPS.map(g => `<button type="button" class="g ${(m.group || 'O+') === g ? 'on' : ''}" data-g="${g}">${g}</button>`).join('')}</div>
+    <div class="cols"><div><label class="f">${t('city')}</label><select id="pCity">${CITY_LIST.map(c => `<option ${(m.city || 'Karachi') === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div><div><label class="f">${t('area')}</label><select id="pArea"></select></div></div>
+    <label class="f">${t('lastDonation')}</label><input id="pLast" type="date" value="${m.last ? new Date(m.last).toISOString().slice(0, 10) : ''}" max="${new Date(now).toISOString().slice(0, 10)}">
+    <label class="f">${t('flags')}</label><div style="display:grid;gap:6px">${FLAGS.map(f => `<label class="toggle" style="border-radius:12px"><input type="checkbox" data-f="${f}" ${(m.flags || []).includes(f) ? 'checked' : ''}>${t(f)}</label>`).join('')}</div>
+    <label class="toggle" style="margin-top:14px;border-radius:12px"><input type="checkbox" id="pConsent" ${me ? 'checked' : ''}>${t('consent')}</label>
+    <div style="margin-top:14px;display:flex;gap:8px"><button class="btn" id="pSave">${t('save')}</button>${me ? `<button class="btn ghost" id="pCancel">✕</button>` : ''}</div>
+    <!-- TODO(student): OTP verification of the phone number, CNIC-based duplicate prevention, and a "verified donor" flow via partner blood banks. --></div>
+    <div class="card"><h3>${t('badges')}</h3><div class="badges">${BADGES.map(([n, k, ic]) => `<div class="badge locked"><span class="ic">${ic}</span><div>${t(k)}<div class="muted" style="font-weight:600;font-size:.76rem">${t(k + 'd')}</div></div></div>`).join('')}</div><p class="muted" style="font-size:.85rem;margin:12px 0 0">${t('interval')}</p></div>`;
+  const fillAreas = () => { const c = $('#pCity').value; $('#pArea').innerHTML = CITIES[c].map(a => `<option ${m.area === a ? 'selected' : ''}>${a}</option>`).join(''); }; fillAreas(); $('#pCity').onchange = fillAreas;
+  $$('#pGroups .g').forEach(b => b.onclick = () => { $$('#pGroups .g').forEach(x => x.classList.remove('on')); b.classList.add('on'); });
+  if ($('#pCancel')) $('#pCancel').onclick = () => renderRegister();
+  $('#pSave').onclick = () => {
+    const name = $('#pName').value.trim(), phone = $('#pPhone').value.trim(), dob = $('#pDob').value, wt = +$('#pWt').value;
+    if (!name || !/^03\d{2}-?\d{7}$/.test(phone) || !$('#pConsent').checked) return toast(t('reg_invalid'), 'bad');
+    if (dob) { const age = (now - new Date(dob).getTime()) / (365.25 * DAY); if (age < 18 || age > 60) return toast(t('tooYoung'), 'bad'); }
+    if (wt && wt < 50) return toast(t('tooLight'), 'bad');
+    const lastStr = $('#pLast').value; const prof = { name, phone: phone.replace(/^(\d{4})-?(\d{7})$/, '$1-$2'), gender: $('#pGender').value, dob, weight: wt || null, group: $('#pGroups .g.on').dataset.g, city: $('#pCity').value, area: $('#pArea').value, last: lastStr ? new Date(lastStr).getTime() : null, count: me?.count ?? (lastStr ? 1 : 0), log: me?.log || (lastStr ? [new Date(lastStr).getTime()] : []), since: me?.since || now, flags: $$('[data-f]:checked').map(i => i.dataset.f) };
+    store.set('me', prof); toast(t('saved'), 'ok'); renderRegister(); renderTabs();
+  };
+}
+
+// ---------- banks ----------
+let bankCity = 'all';
+function renderBanks() {
+  $('#bankBar').innerHTML = `<select id="bCity" style="max-width:220px"><option value="all">${t('allCities')}</option>${CITY_LIST.map(c => `<option ${bankCity === c ? 'selected' : ''}>${c}</option>`).join('')}</select><span class="muted" style="font-size:.85rem">${BANKS.filter(b => bankCity === 'all' || b.city === bankCity).length} centres</span>`;
+  $('#bCity').onchange = e => { bankCity = e.target.value; renderBanks(); };
+  $('#banks').innerHTML = BANKS.filter(b => bankCity === 'all' || b.city === bankCity).map(b => `<article class="bank"><div class="tags"><span class="pill ${b.type === 'govt' ? '' : b.type === 'ngo' ? 'ok' : 'wait'}">${t(b.type)}</span>${b.h24 ? `<span class="pill">${t('bank247')}</span>` : ''}${b.aph ? `<span class="pill">${t('apheresis')}</span>` : ''}${b.thal ? `<span class="pill red">${t('thal')}</span>` : ''}</div><h4 style="margin-top:8px">${esc(b.name)}</h4><div class="meta">${esc(b.addr)}, ${esc(b.city)}</div><div style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn sm" href="tel:${b.phone.replace(/\s/g, '')}">📞 ${esc(b.phone)}</a><a class="btn ghost sm" href="https://www.google.com/maps/search/${encodeURIComponent(b.name + ' ' + b.city)}" target="_blank" rel="noopener">🗺 ${t('maps')}</a></div></article>`).join('');
+  // TODO(student): live stock levels per blood bank (needs partner API), opening hours, and a map view.
+}
+
+// ---------- stats ----------
+function renderStats() {
+  const donors = allDonors(), reqs = requests(); const byG = Object.fromEntries(GROUPS.map(g => [g, 0])); donors.forEach(d => byG[d.group]++);
+  const byC = Object.fromEntries(CITY_LIST.map(c => [c, { n: 0, e: 0 }])); donors.forEach(d => { byC[d.city].n++; if (eligibleIn(d) === 0) byC[d.city].e++; });
+  const elig = donors.filter(d => eligibleIn(d) === 0).length, rare = GROUPS.reduce((a, g) => byG[g] < byG[a] ? g : a, GROUPS[0]);
+  const kpi = (k, v, s) => `<div class="kpi"><div class="k">${t(k)}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  $('#skpis').innerHTML = kpi('k_donors', donors.length, CITY_LIST.length + ' cities') + kpi('k_eligible', elig, Math.round(elig / donors.length * 100) + '%') + kpi('k_open', reqs.filter(r => r.status === 'open').length, reqs.filter(r => r.status === 'open' && r.urgency === 'critical').length + ' ' + t('critical').toLowerCase()) + kpi('k_full', reqs.filter(r => r.status === 'fulfilled').length, '') + kpi('k_rare', rare, byG[rare] + ' ' + t('donations').replace(/.*/, 'donors'));
+  const maxG = Math.max(...Object.values(byG)), maxC = Math.max(...Object.values(byC).map(x => x.n));
+  const R = 56, C = 2 * Math.PI * R; let off = 0; const cols = ['#b3122e', '#e85d75', '#d9a441', '#536075', '#2e8b57', '#8c0d24', '#f0a3b2', '#9aa6b8'];
+  const donut = GROUPS.map((g, i) => { const f = byG[g] / donors.length; const seg = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${cols[i]}" stroke-width="22" stroke-dasharray="${C * f} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`; off += C * f; return seg; }).join('');
+  $('#stats').innerHTML = `<div class="card"><h3>${t('s_byGroup')}</h3><div style="display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:center"><svg viewBox="0 0 140 140" width="140" height="140">${donut}<text x="70" y="75" text-anchor="middle" font-weight="900" font-size="20" fill="#2a1215">${donors.length}</text></svg><div>${GROUPS.map((g, i) => `<div class="stat"><span style="color:${cols[i]}">${g}</span><div class="track"><div class="fill" style="width:${byG[g] / maxG * 100}%;background:${cols[i]}"></div></div><span class="n">${byG[g]} · ${Math.round(byG[g] / donors.length * 100)}%</span></div>`).join('')}</div></div><div class="note" style="margin-top:12px">${t('s_insight')}</div></div>
+    <div class="card"><h3>${t('s_byCity')}</h3>${CITY_LIST.map(c => `<div class="stat" style="grid-template-columns:92px 1fr 70px"><span>${c}</span><div class="track"><div class="fill" style="width:${byC[c].n / maxC * 100}%;background:linear-gradient(90deg,var(--crimson) ${byC[c].e / Math.max(1, byC[c].n) * 100}%,var(--rose) 0)"></div></div><span class="n">${byC[c].e}/${byC[c].n}</span></div>`).join('')}<p class="muted" style="font-size:.8rem;margin:10px 0 0">eligible / registered</p>
+    <h3 style="margin-top:18px">${t('compatFor')}</h3><table class="matrix"><tr><th>↓ recipient · donor →</th>${GROUPS.map(g => `<th>${g}</th>`).join('')}</tr>${GROUPS.map(r => `<tr><th>${r}</th>${GROUPS.map(d => `<td class="${CAN_RECEIVE[r].includes(d) ? 'y' : ''}">${CAN_RECEIVE[r].includes(d) ? '✓' : ''}</td>`).join('')}</tr>`).join('')}</table></div>`;
+}
+
+// ---------- about ----------
+const TODOS = [
+  ['Backend + real-time', 'Move donors and requests to a database (Firebase/Supabase/Node) so a request posted in Karachi reaches every compatible donor instantly; keep this file as the client.', 'backend'],
+  ['OTP verification', 'Verify phone numbers on registration and request posting; block spam and fake requests; mark donors verified by partner blood banks.', 'auth'],
+  ['Notifications', 'Push/SMS to compatible, eligible donors within the city when a request is posted; reminders when a donor becomes eligible again.', 'notifications'],
+  ['Nearest donors', 'Use GPS and a distance sort instead of city/area text; show a map of anonymised donor density.', 'maps'],
+  ['Privacy controls', 'Relay calls/SMS so numbers are never shown; let donors set quiet hours and max contacts per month; audit who revealed what.', 'privacy'],
+  ['Hospital integration', 'Allow blood banks to post stock levels and confirm fulfilled requests; auto-close requests after the needed-by date.', 'product'],
+  ['Thalassemia link', 'Recurring monthly requests for thalassemia patients with a donor rota, integrated with the Thalassemia Care Companion project.', 'product'],
+];
+function renderAbout() { $('#about').innerHTML = `<div class="card"><h3>${t('a_title')}</h3><p class="muted">When someone needs blood in Pakistan, families broadcast on WhatsApp and hope. Thalassemia children need transfusions every few weeks for life. Khoon turns that into a searchable, compatibility-aware donor network with an emergency request board and donor eligibility tracking.</p><p class="muted">Compatibility follows ABO/Rh red-cell rules. Eligibility intervals are 90 days (men) and 120 days (women) for whole blood, 18–60 years and ≥ 50 kg; final screening is always the blood bank's. Seed donors, requests and bank phone numbers are illustrative.</p><p class="muted" style="font-size:.85rem">Stack: one HTML file, vanilla JS, SVG charts, localStorage.</p></div><div><h3 style="margin:0 0 10px">${t('a_todo')}</h3><div class="list">${TODOS.map(([h, b, tag]) => `<div class="todo"><h4>${esc(h)} <span class="tag">${tag}</span></h4><div class="muted" style="font-size:.9rem">${esc(b)}</div></div>`).join('')}</div></div>`; }
+
+// ---------- nav / boot ----------
+const PAGES = ['find', 'requests', 'register', 'banks', 'stats', 'about']; let cur = 'find';
+function renderTabs() { const open = requests().filter(r => r.status === 'open').length; $('#tabs').innerHTML = PAGES.map(p => `<button data-p="${p}" class="${cur === p ? 'on' : ''}">${t('nav_' + p)}${p === 'requests' && open ? `<span class="n">${open}</span>` : ''}${p === 'register' && store.get('me', null) ? ' ✓' : ''}</button>`).join(''); $$('#tabs button').forEach(b => b.onclick = () => go(b.dataset.p)); }
+function go(page) { if (!PAGES.includes(page)) page = 'find'; cur = page; $$('section[data-page]').forEach(s => s.classList.toggle('on', s.dataset.page === page)); renderTabs(); ({ find: renderFind, requests: renderRequests, register: () => renderRegister(), banks: renderBanks, stats: renderStats, about: renderAbout })[page](); if (location.hash !== '#' + page) history.replaceState(null, '', '#' + page); }
+function applyLang() { document.documentElement.lang = lang; store.set('lang', lang); $$('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n)); $('#langBtn').textContent = lang === 'en' ? 'اردو' : 'English'; renderHeroSearch(); go((location.hash || '#find').slice(1)); }
+$('#langBtn').onclick = () => { lang = lang === 'en' ? 'ur' : 'en'; applyLang(); };
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+applyLang();
+</script>
+</body>
+</html>
