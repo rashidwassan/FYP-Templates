@@ -5263,7 +5263,9 @@ function boot() {
   ensureSeed();
   refreshAlerts();
   applyLang();
-  if (!store.get('tour_done', false)) setTimeout(startTour, 700);
+  // auto-start the tour only on a plain open; a deep link (#planner, #map ...) must land on its page
+  const deepLink = location.hash && location.hash !== '#scan';
+  if (!store.get('tour_done', false) && !deepLink) setTimeout(startTour, 700);
 }
 boot();
 </script>

@@ -189,7 +189,7 @@ html[data-theme=dark] .bar>i{background:var(--mint-2)}
 .empty .ic{width:38px;height:38px;color:var(--forest);opacity:.6}
 .search{position:relative;flex:1;min-width:180px;max-width:360px}
 .search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
-.search input{padding-left:36px}
+.search input[type=search]{padding-left:36px}
 
 /* ---------- Tables ---------- */
 .tblwrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
@@ -530,6 +530,9 @@ html[data-theme=dark] .doc h3,html[data-theme=dark] .receipt h3{color:var(--mint
   .topbar .spacer{display:none}
   .tb-btn .lbl{display:none}
   .tb-btn{padding:8px 10px}
+  .lang{min-width:40px}
+  .lang span{display:none}
+  .topbar{gap:6px}
   .wrap{padding:12px 12px 70px}
   .pot{grid-template-columns:auto minmax(0,1fr);padding:16px;gap:12px 14px}
   .pot .side{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;min-width:0}
