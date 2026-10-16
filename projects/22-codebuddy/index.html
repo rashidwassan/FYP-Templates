@@ -295,6 +295,7 @@ button.chip { border: 0; cursor: pointer; min-height: 34px; padding: 4px 12px; }
   transition: background .2s var(--ease), color .2s;
 }
 .seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 2px 0 var(--line-2); }
+.seg button:disabled { opacity: .4; cursor: not-allowed; }
 .switch { position: relative; width: 48px; height: 28px; flex: none; }
 .switch input { opacity: 0; width: 100%; height: 100%; margin: 0; position: absolute; cursor: pointer; z-index: 1; }
 .switch i { position: absolute; inset: 0; border-radius: 99px; background: var(--line-2); transition: background .2s; }
@@ -575,9 +576,9 @@ html.ur .vis-block h4 { text-transform: none; letter-spacing: 0; }
 .vtable tr.changed td { background: var(--sun-soft); animation: flash .6s var(--ease); }
 .vtable tr.added td { animation: fadeUp .35s var(--ease) both; background: var(--mint-soft); }
 @keyframes flash { 0% { background: var(--sun); } 100% { background: var(--sun-soft); } }
-.frames { display: grid; gap: 6px; }
+.frames { display: flex; flex-direction: column; gap: 6px; }
 .frame { border: 2px solid var(--line); border-radius: 12px; padding: 7px 10px; display: flex; gap: 8px; align-items: center; font-size: .86rem; background: var(--card); animation: fadeUp .3s var(--ease) both; }
-.frame.top { border-color: var(--sky); background: var(--sky-soft); }
+.frame.now { border-color: var(--sky); background: var(--sky-soft); }
 .frame b { font-family: var(--mono); }
 .loops { display: grid; gap: 6px; }
 .loop { border-radius: 12px; padding: 7px 10px; background: var(--mint-soft); font-size: .86rem; }
@@ -1353,7 +1354,7 @@ const I18N = {
     // projects and progress
     projectsTitle: 'Mini projects', projectsIntro: 'Five bigger builds that use everything from the lessons. Each one has goals that Buddy checks for you.', startProject: 'Start project', openAgain: 'Open again',
     noClassYet: 'Not in a class yet — join one with a code from your teacher.', switchLearner: 'Switch learner', certificate: 'Certificate', printReport: 'Print report', lessonsWord: 'lessons', projectsWord: 'projects', badgesWord: 'badges', streakDays: 'day streak (best {best})',
-    units: 'Units', activity: 'Activity (last 12 weeks)', heatLegend: 'Darker squares mean more coding that day.', heatAria: 'Coding activity on {n} days', codingStats: 'Coding stats', badges: 'Badges', earnedOn: 'Earned {d}', myClass: 'My class', recentWins: 'Recent wins', noWinsYet: 'Finish a lesson to see it here.',
+    units: 'Units', activity: 'Activity (last 12 weeks)', heatLegend: 'Darker squares mean more coding that day.', heatAria: 'Coding activity on {n} days', sparkAria: 'Coding sessions per day, last 3 weeks', sparkLegend: 'Sessions per day, last 3 weeks', codingStats: 'Coding stats', badges: 'Badges', earnedOn: 'Earned {d}', myClass: 'My class', recentWins: 'Recent wins', noWinsYet: 'Finish a lesson to see it here.',
     stat_runs: 'Runs', stat_errors: 'Errors met', stat_fixes: 'Errors fixed', stat_steps: 'Steps watched', stat_turtleLines: 'Turtle lines', stat_mentor: 'Questions',
     inClass: 'You are in {name} with {teacher}.', leaveClass: 'Leave class', joinIntro: 'Your teacher shares a class code like CB-6B24. Classes are stored on this device.', classCode: 'Class code', join: 'Join', classNotFound: 'No class with that code on this device', joinedClass: 'Joined {name}',
     learners: 'Learners', addLearner: 'Add a learner', learnerNamePh: 'Learner name', learnerAdded: '{name} added', lessonsShort: '{n} lessons', demoTag: 'sample',
@@ -1444,7 +1445,7 @@ const I18N = {
     fld_n: 'نمبر', fld_dir: 'سمت', fld_c: 'رنگ', fld_state: 'قلم کی حالت', fld_a: 'بائیں طرف', fld_op: 'موازنہ', fld_b: 'دائیں طرف', fld_name: 'ویری ایبل کا نام', fld_value: 'ویلیو', fld_question: 'سوال',
     projectsTitle: 'منی پروجیکٹس', projectsIntro: 'پانچ بڑے پروجیکٹ جن میں اسباق کی ہر چیز استعمال ہوتی ہے۔ ہر ایک کے مقاصد بڈی آپ کے لیے چیک کرتا ہے۔', startProject: 'پروجیکٹ شروع کریں', openAgain: 'دوبارہ کھولیں',
     noClassYet: 'ابھی کسی کلاس میں نہیں — استاد کے دیے گئے کوڈ سے شامل ہوں۔', switchLearner: 'سیکھنے والا بدلیں', certificate: 'سرٹیفکیٹ', printReport: 'رپورٹ پرنٹ کریں', lessonsWord: 'اسباق', projectsWord: 'پروجیکٹس', badgesWord: 'بیجز', streakDays: 'دن کا سلسلہ (بہترین {best})',
-    units: 'یونٹس', activity: 'سرگرمی (پچھلے 12 ہفتے)', heatLegend: 'گہرے خانوں کا مطلب اس دن زیادہ کوڈنگ۔', heatAria: '{n} دن کوڈنگ کی سرگرمی', codingStats: 'کوڈنگ کے اعداد', badges: 'بیجز', earnedOn: '{d} کو ملا', myClass: 'میری کلاس', recentWins: 'حالیہ کامیابیاں', noWinsYet: 'یہاں دیکھنے کے لیے کوئی سبق مکمل کریں۔',
+    units: 'یونٹس', activity: 'سرگرمی (پچھلے 12 ہفتے)', heatLegend: 'گہرے خانوں کا مطلب اس دن زیادہ کوڈنگ۔', heatAria: '{n} دن کوڈنگ کی سرگرمی', sparkAria: 'پچھلے 3 ہفتوں میں روزانہ کوڈنگ', sparkLegend: 'روزانہ سیشن، پچھلے 3 ہفتے', codingStats: 'کوڈنگ کے اعداد', badges: 'بیجز', earnedOn: '{d} کو ملا', myClass: 'میری کلاس', recentWins: 'حالیہ کامیابیاں', noWinsYet: 'یہاں دیکھنے کے لیے کوئی سبق مکمل کریں۔',
     stat_runs: 'رنز', stat_errors: 'غلطیاں ملیں', stat_fixes: 'غلطیاں درست', stat_steps: 'دیکھے گئے قدم', stat_turtleLines: 'کچھوے کی لائنیں', stat_mentor: 'سوالات',
     inClass: 'آپ {name} میں ہیں، استاد {teacher}۔', leaveClass: 'کلاس چھوڑیں', joinIntro: 'آپ کے استاد CB-6B24 جیسا کلاس کوڈ دیتے ہیں۔ کلاسیں اسی ڈیوائس پر محفوظ ہوتی ہیں۔', classCode: 'کلاس کوڈ', join: 'شامل ہوں', classNotFound: 'اس ڈیوائس پر اس کوڈ کی کوئی کلاس نہیں', joinedClass: '{name} میں شامل ہو گئے',
     learners: 'سیکھنے والے', addLearner: 'نیا سیکھنے والا', learnerNamePh: 'سیکھنے والے کا نام', learnerAdded: '{name} شامل ہو گیا', lessonsShort: '{n} اسباق', demoTag: 'نمونہ',
@@ -3521,7 +3522,9 @@ class Env {
   }
 
   find(name) {
-    for (let e = this; e; e = e.parent) if (e.vars.has(name)) return e;
+    for (let e = this; e; e = e.parent) {
+      if (e.vars.has(name)) return e;
+    }
     return null;
   }
 }
@@ -3580,7 +3583,7 @@ class Machine {
 
   *execBlock(body, env) {
     if (!this.py) {
-      for (const s of body) if (s.k === 'func') this.declare(env, s.name, new UserFn(s, env));
+      body.filter(s => s.k === 'func').forEach(s => this.declare(env, s.name, new UserFn(s, env)));
     }
     for (const s of body) yield* this.exec(s, env);
   }
@@ -5183,6 +5186,7 @@ Object.assign(CodeEditor.prototype, {
     const mod = e.ctrlKey || e.metaKey;
     if (mod && e.key === 'Enter') {
       e.preventDefault();
+      e.stopPropagation();
       if (this.opts.onRun) this.opts.onRun();
       return;
     }
@@ -5316,7 +5320,11 @@ Object.assign(CodeEditor.prototype, {
     if (q) {
       const hay = this.ta.value.toLowerCase();
       const needle = q.toLowerCase();
-      for (let i = hay.indexOf(needle); i >= 0 && matches.length < 500; i = hay.indexOf(needle, i + needle.length)) matches.push(i);
+      let i = hay.indexOf(needle);
+      while (i >= 0 && matches.length < 500) {
+        matches.push(i);
+        i = hay.indexOf(needle, i + needle.length);
+      }
     }
     this.findState = { q, matches, cur: matches.length ? 0 : -1 };
     this.render();
@@ -5644,11 +5652,14 @@ const __fmt = ${fmtJsValue.toString()};
 let __lines = 0;
 const __out = (k, s) => {
   __lines++;
-  if (__lines > ${MAX_OUTPUT_LINES}) { if (__lines === ${MAX_OUTPUT_LINES + 1}) __post({ type: 'trunc' }); return; }
+  if (__lines > ${MAX_OUTPUT_LINES}) {
+    if (__lines === ${MAX_OUTPUT_LINES + 1}) __post({ type: 'trunc' });
+    return;
+  }
   __post({ type: 'out', k, s });
 };
 const __log = (...a) => __out('out', a.map(x => __fmt(x, true)).join(' ') + '\\n');
-console.log = __log; console.info = __log; console.warn = __log; console.error = __log; console.debug = __log;
+['log', 'info', 'warn', 'error', 'debug'].forEach(k => (console[k] = __log));
 const __inputs = ${JSON.stringify(inputs)};
 let __ii = 0;
 let __asks = 0;
@@ -5667,7 +5678,9 @@ self.alert = m => __out('out', String(m) + '\\n');
 ${seed !== '' && seed != null ? `Math.random = (${mulberry32.toString()})(${Number(seed) || 0});` : ''}
 const __t = [];
 let __tn = 0;
-const __flush = () => { if (__t.length) __post({ type: 'turtle', cmds: __t.splice(0) }); };
+const __flush = () => {
+  if (__t.length) __post({ type: 'turtle', cmds: __t.splice(0) });
+};
 const __needsNum = new Set(['fd', 'bk', 'lt', 'rt', 'seth', 'size', 'circle']);
 const __mk = (name, code) => function (...a) {
   if (__needsNum.has(code) && (typeof a[0] !== 'number' || Number.isNaN(a[0]))) throw new TypeError(name + '() needs a number, but got ' + typeof a[0]);
@@ -5803,7 +5816,7 @@ self.onmessage = async e => {
     try {
       importScripts(m.base + 'pyodide.js');
       pyodide = await loadPyodide({ indexURL: m.base });
-      pyodide.registerJsModule('_cb_turtle', { push: (c, ...a) => { cmds.push([c, ...a.map(x => (typeof x === 'number' ? x : String(x)))]); } });
+      pyodide.registerJsModule('_cb_turtle', { push: (c, ...a) => cmds.push([c, ...a.map(x => (typeof x === 'number' ? x : String(x)))]) });
       await pyodide.runPythonAsync(shim);
       postMessage({ type: 'ready', version: pyodide.version });
     } catch (err) {
@@ -5816,8 +5829,12 @@ self.onmessage = async e => {
   ii = 0;
   asks = 0;
   const dec = new TextDecoder();
-  pyodide.setStdout({ write: buf => { postMessage({ type: 'out', k: 'out', s: dec.decode(buf) }); return buf.length; } });
-  pyodide.setStderr({ write: buf => { postMessage({ type: 'out', k: 'out', s: dec.decode(buf) }); return buf.length; } });
+  const write = buf => {
+    postMessage({ type: 'out', k: 'out', s: dec.decode(buf) });
+    return buf.length;
+  };
+  pyodide.setStdout({ write });
+  pyodide.setStderr({ write });
   pyodide.setStdin({ stdin: () => {
     asks++;
     const has = ii < inputs.length;
@@ -6289,7 +6306,7 @@ function lintLine(raw, n, lang, add) {
   const caps = lang === 'py' ? /\b(Print|Input|Range|Len|Int|Str)\s*\(/ : /\b(Console\.log|console\.Log|consol\.log|Console\.Log)\b/;
   const m = caps.exec(line);
   if (m) add(n, `Line ${n}: "${m[1]}" should be all lower-case letters.`, `لائن ${n}: "${m[1]}" چھوٹے حروف میں ہونا چاہیے۔`);
-  if (/[“”‘’]/.test(line)) add(n, `Line ${n}: curly quotes do not work in code — use straight " quotes.`, `لائن ${n}: ٹیڑھی کوٹس کوڈ میں نہیں چلتیں — سیدھی " کوٹس لگائیں۔`);
+  if (/[\u201C\u201D\u2018\u2019]/.test(line)) add(n, `Line ${n}: curly quotes do not work in code — use straight " quotes.`, `لائن ${n}: ٹیڑھی کوٹس کوڈ میں نہیں چلتیں — سیدھی " کوٹس لگائیں۔`);
 }
 
 function lintBrackets(code, lang, add) {
@@ -6568,7 +6585,9 @@ function demoLearner(name, classCode, i, rnd) {
   PROJECTS.slice(0, count > 14 ? Math.floor(rnd() * 4) : 0).forEach(x => (p.done[x.id] = { py: now - rnd() * 10 * DAY }));
   const recent = i === 0 ? 4 : Math.floor(rnd() * 6);
   for (let d = 0; d < recent; d++) p.days[isoDay(now - d * DAY)] = 1 + Math.floor(rnd() * 5);
-  for (let d = 0; d < 30; d++) if (rnd() > 0.55) p.days[isoDay(now - (recent + 2 + d) * DAY)] = 1 + Math.floor(rnd() * 4);
+  for (let d = 0; d < 30; d++) {
+    if (rnd() > 0.55) p.days[isoDay(now - (recent + 2 + d) * DAY)] = 1 + Math.floor(rnd() * 4);
+  }
   p.stats = {
     runs: count * 6 + Math.floor(rnd() * 20),
     errors: Math.floor(count * (0.6 + rnd())),
@@ -7545,7 +7564,7 @@ function showStep(i) {
   $('#visStatus').innerHTML = `<span class="chip sun tnum">${t('stepOf', { i: i + 1, n: tr.snaps.length })}</span>${snap.end ? `<span class="chip ${snap.error ? 'coral' : 'mint'}">${snap.error ? t('stoppedError') : t('finished')}</span>` : `<span class="chip tnum">${t('lineN', { n: snap.line })}</span>`}`;
   $('#visEvent').innerHTML = stepEventHTML(snap, prev, lines);
   $('#visVars').innerHTML = varsTableHTML(snap, prev);
-  $('#visFrames').innerHTML = snap.frames.slice().reverse().map((f, k) => `<div class="frame ${k === 0 ? 'top' : ''}">${ic(k === 0 ? 'play' : 'layers')}<b>${esc(f.name)}</b><span class="muted small tnum">${t('lineN', { n: f.line })}</span></div>`).join('');
+  $('#visFrames').innerHTML = snap.frames.slice().reverse().map((f, k) => `<div class="frame ${k === 0 ? 'now' : ''}">${ic(k === 0 ? 'play' : 'layers')}<b>${esc(f.name)}</b><span class="muted small tnum">${t('lineN', { n: f.line })}</span></div>`).join('');
   $('#visLoops').innerHTML = snap.loops.length ? snap.loops.map(l => `<div class="loop"><div class="between"><span>${ic('repeat')} <b>${esc(l.kind)}</b> · ${t('lineN', { n: l.line })}</span><span class="tnum">${l.total != null ? t('roundOf', { i: l.count, n: l.total }) : t('roundN', { i: l.count })}</span></div>${l.total ? `<div class="bar"><i style="width:${pct(l.count, l.total)}%"></i></div>` : ''}</div>`).join('') : `<p class="muted small" style="margin:0">${t('noLoops')}</p>`;
   $('#visOut').textContent = tr.outText.slice(0, snap.outLen) || '';
   if (V.turtle) V.turtle.showCommands(tr.turtle, snap.turtleLen);
@@ -8587,6 +8606,7 @@ function renderProgress() {
     <div class="cols-2">
       <div class="card"><h3>${ic('layers')} ${t('units')}</h3><div class="unit-bars">${UNITS.map(u => unitBarHTML(p, u)).join('')}</div></div>
       <div class="card"><h3>${ic('calendar')} ${t('activity')}</h3>${heatmapHTML(p)}<p class="small muted" style="margin:8px 0 0">${t('heatLegend')}</p>
+        ${activityLineSVG(p)}
         <h3 style="margin-top:14px">${ic('activity')} ${t('codingStats')}</h3><div class="row">${[['runs', 'play'], ['errors', 'bug'], ['fixes', 'check-circle'], ['steps', 'footsteps'], ['turtleLines', 'turtle'], ['mentor', 'robot']].map(([k, icon]) => `<span class="chip">${ic(icon)} ${t('stat_' + k)}: <b class="tnum">${p.stats[k] || 0}</b></span>`).join('')}</div></div>
     </div>
     <div class="card" style="margin-top:16px"><h3>${ic('trophy')} ${t('badges')}</h3><div class="badges stagger">${BADGES.map(b => badgeHTML(b, p)).join('')}</div></div>
@@ -8596,6 +8616,7 @@ function renderProgress() {
     </div>`;
   growBars($('#pgProgress'));
   $$('#pgProgress .kpi .v').forEach(el => countUp(el, Number(el.dataset.v)));
+  $$('#pgProgress .spark path').forEach(drawPath);
   bindProgress(p);
 }
 
@@ -8617,6 +8638,19 @@ function heatmapHTML(p) {
     cells.push(`<i class="${n >= 4 ? 'l3' : n >= 2 ? 'l2' : n ? 'l1' : ''}" title="${day}: ${n}"></i>`);
   }
   return `<div class="heat" role="img" aria-label="${esc(t('heatAria', { n: Object.keys(p.days).length }))}">${cells.join('')}</div>`;
+}
+
+// Coding sessions per day for the last three weeks, drawn in as a line.
+function activityLineSVG(p) {
+  const days = Array.from({ length: 21 }, (_, i) => p.days[isoDay(Date.now() - (20 - i) * DAY)] || 0);
+  const max = Math.max(4, ...days);
+  const pts = days.map((n, i) => [10 + i * 23, 70 - (n / max) * 56]);
+  const d = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 480 80" width="100%" height="80" role="img" aria-label="${esc(t('sparkAria'))}" style="margin-top:10px">
+    <line x1="10" y1="70" x2="470" y2="70" stroke="var(--line)" stroke-width="2"/>
+    <path d="${d}" fill="none" stroke="var(--sky)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map(([x, y], i) => (days[i] ? `<circle cx="${x}" cy="${y}" r="3.5" fill="var(--sun)"><title>${isoDay(Date.now() - (20 - i) * DAY)}: ${days[i]}</title></circle>` : '')).join('')}
+  </svg><p class="small muted" style="margin:2px 0 0">${t('sparkLegend')}</p>`;
 }
 
 function badgeHTML(b, p) {
