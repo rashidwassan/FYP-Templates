@@ -561,6 +561,8 @@ html[data-theme="dark"] .playbtn { color: #0d1b28; }
 
 /* ---------- charts ---------- */
 .chart { width: 100%; overflow: visible; }
+/* Chart geometry stays left to right in Urdu too; the bidi algorithm still shapes Urdu labels correctly. */
+.chart svg, .xsec svg, .plan svg, .schem svg, .kcmini { direction: ltr; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
 .chart .grid line { stroke: var(--line); stroke-width: 1; }
 .chart .axis text { font: 600 11px var(--font); fill: var(--muted); }
@@ -2148,8 +2150,8 @@ Object.assign(STR, {
   // notices and log
   nt_welcome: ['Welcome. The villages are fictional and the numbers illustrative; see About for what the twin can and cannot do.', 'خوش آمدید۔ گاؤں فرضی اور اعداد مثالی ہیں؛ جڑواں کیا کر سکتا ہے اور کیا نہیں، تعارف میں دیکھیں۔'],
   nt_calibHint: ['The model has not been calibrated yet. Try Auto-calibrate.', 'ماڈل ابھی کیلیبریٹ نہیں ہوا۔ خودکار کیلیبریشن آزمائیں۔'],
-  nt_wellDry: ['{w} in {v} is dry: the water table is below its pump intake.', '{v} میں {w} خشک ہے: پانی کی سطح پمپ کے منہ سے نیچے ہے۔'],
-  nt_wellRisk: ['{w} has only {m} of water above its pump intake.', '{w} کے پمپ کے منہ سے اوپر صرف {m} پانی ہے۔'],
+  nt_wellsDry: ['{n} tubewells in {v} are dry (water below the pump intake): {list}', '{v} میں {n} ٹیوب ویل خشک ہیں (پانی پمپ کے منہ سے نیچے): {list}'],
+  nt_wellsRisk: ['{n} tubewells in {v} have less than {m} of water above the pump: {list}', '{v} میں {n} ٹیوب ویلوں کے پمپ سے اوپر {m} سے کم پانی ہے: {list}'],
   nt_forecastDry: ['If nothing changes, {n} wells will be dry by {y}.', 'اگر کچھ نہ بدلا تو {y} تک {n} کنویں خشک ہوں گے۔'],
   nt_outlier: ['Reading at {w} on {d} looks like an outlier (z = {z}).', '{w} پر {d} کی ریڈنگ غلط لگتی ہے (z = {z})۔'],
   nt_readingDry: ['{w}: water measured at {d}, below its pump intake.', '{w}: پانی {d} پر ناپا گیا، پمپ کے منہ سے نیچے۔'],
@@ -3889,13 +3891,15 @@ function twinKpis(v, run, k) {
   };
 }
 
-/** Inbox notices after a fresh run: wells near or below their pump setting. */
+/** Inbox notices after a fresh run: one for wells already dry, one for wells close to their pump intake. */
 function afterRun(v, run) {
-  irrWells(v).forEach(w => {
-    const st = wellStatus(v, run, w, NOW_K);
-    if (st.status === 'dry') notify('nt_wellDry', { w: w.id, v: vName(v) }, { route: 'model', level: 'bad', key: `dry-${v.id}-${w.id}-${w.pump}` });
-    else if (st.status === 'risk') notify('nt_wellRisk', { w: w.id, m: fmtDepth(st.margin + 1) }, { route: 'model', level: 'warn', key: `risk-${v.id}-${w.id}-${w.pump}` });
-  });
+  const st = irrWells(v).map(w => ({ w, s: wellStatus(v, run, w, NOW_K) }));
+  const ids = status => st.filter(x => x.s.status === status).map(x => x.w.id);
+  const list = a => a.slice(0, 6).join(', ') + (a.length > 6 ? ' …' : '');
+  const dry = ids('dry');
+  const risk = ids('risk');
+  if (dry.length) notify('nt_wellsDry', { n: dry.length, v: vName(v), list: list(dry) }, { route: 'model', level: 'bad', key: `dry-${v.id}-${dry.join()}` });
+  if (risk.length) notify('nt_wellsRisk', { n: risk.length, v: vName(v), m: fmtDepth(S.settings.riskMargin, 0), list: list(risk) }, { route: 'model', level: 'warn', key: `risk-${v.id}-${risk.join()}` });
   const dry10 = run.years.at(-1)?.dry || 0;
   if (dry10) notify('nt_forecastDry', { n: dry10, y: calYear(TOTAL_MONTHS - 1) }, { route: 'scenarios', level: 'warn', key: `fc-${v.id}-${dry10}` });
   if (curRoute) rerenderIfNeeds();
