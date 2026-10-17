@@ -5722,9 +5722,9 @@ function coachStep(f) {
   const kmh = f.kmh ?? 0;
   c.hist.push({ t: f.t, kmh });
   while (c.hist.length > 1 && f.t - c.hist[0].t > 2) c.hist.shift();
-  const h0 = c.hist[0];
-  // GPS speed updates about once a second, so the slope is taken over two seconds.
-  const aLong = (kmh - h0.kmh) / 3.6 / Math.max(1, f.t - h0.t);
+  // GPS speed updates about once a second, so slopes are taken over spans of at least one second.
+  // The steepest span in the last two seconds wins, so a short hard stop is not averaged away.
+  const aLong = steepestSlope(c.hist, f.t, kmh);
   c.yaw = 0.7 * c.yaw + 0.3 * f.yaw;
   const aLat = (kmh / 3.6) * c.yaw * RAD;
   c.gLong = aLong / G0;
@@ -5741,6 +5741,18 @@ function coachStep(f) {
   else st.leanR = Math.max(st.leanR, f.lean);
   RIDE.trail.push([c.gLat, c.gLong]);
   if (RIDE.trail.length > 28) RIDE.trail.shift();
+}
+
+/** Longitudinal acceleration (m/s²) with the largest magnitude over any span of at least 1 s in the history. */
+function steepestSlope(hist, tNow, kmhNow) {
+  let best = 0;
+  for (const h of hist) {
+    const dt = tNow - h.t;
+    if (dt < 1) continue;
+    const a = (kmhNow - h.kmh) / 3.6 / dt;
+    if (Math.abs(a) > Math.abs(best)) best = a;
+  }
+  return best;
 }
 
 function coachEvent(kind, val, f) {
