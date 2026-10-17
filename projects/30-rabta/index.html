@@ -408,6 +408,7 @@ html[data-theme="sand"] .bub .who { color: color-mix(in srgb, var(--av, var(--sa
 .meshsvg .nodec.sos { stroke: var(--orange); stroke-width: 3; }
 .meshsvg text { font-family: var(--mono); font-size: 9px; fill: var(--ink-2); text-anchor: middle; }
 .meshsvg .pulse { fill: var(--green); }
+html[lang="ur"] .meshsvg text, html[lang="ur"] .mapsvg .lbl { font-family: var(--font-ur); font-size: 11px; }
 .evlog { font-family: var(--mono); font-size: .72rem; color: var(--ink-2); max-height: 220px; overflow-y: auto; }
 .evlog div { padding: 4px 0; border-bottom: 1px dashed var(--line); display: flex; gap: 8px; }
 .evlog time { color: var(--muted); flex: none; }
@@ -470,9 +471,11 @@ html[data-theme="sand"] .bub .who { color: color-mix(in srgb, var(--av, var(--sa
 .chart .gridl { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
 .chart text { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
 .chart .val { fill: var(--ink); font-size: 11px; }
+.chart .barr { transform-box: fill-box; transform-origin: left center; animation: growX .6s var(--ease) both; }
+@keyframes growX { from { transform: scaleX(0); } to { transform: none; } }
 .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--ink-2); }
 .legend i { display: inline-block; width: 12px; height: 4px; border-radius: 2px; margin-inline-end: 5px; vertical-align: middle; }
-.simcanvas { width: 100%; aspect-ratio: 1; display: block; border-radius: var(--radius); background: var(--bg-2); border: 1px solid var(--line); }
+.simcanvas { width: 100%; max-width: 560px; margin-inline: auto; aspect-ratio: 1; display: block; border-radius: var(--radius); background: var(--bg-2); border: 1px solid var(--line); }
 .paramgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px; }
 .range { display: flex; flex-direction: column; gap: 2px; font-size: .8rem; }
 .range span { display: flex; justify-content: space-between; color: var(--muted); }
@@ -635,6 +638,8 @@ html[data-theme="field"] .toast.ok .ic { color: #0f7a40; }
   #printArea .meta { font-size: 9pt; color: #333; }
   #printArea .chart text { fill: #000; }
   #printArea svg { max-width: 100%; }
+  #printArea svg.chart { max-width: 15cm; }
+  #printArea * { animation: none !important; }
 }
 </style>
 </head>
@@ -1421,7 +1426,6 @@ function rng(seed) {
 // ---------- dates, durations, sizes ----------
 const MIN = 60000;
 const HOUR = 36e5;
-const DAY = 864e5;
 const pad2 = n => String(n).padStart(2, '0');
 const locale = () => (lang === 'ur' ? 'ur-PK-u-nu-latn' : 'en-PK');
 const fmtDate = (ts, opts = { day: 'numeric', month: 'short' }) => new Date(ts).toLocaleDateString(locale(), opts);
@@ -3482,7 +3486,6 @@ function fskModulate(bits, fs, { lead = 0.25, tail = 0.2 } = {}) {
   return out;
 }
 
-const fskEncode = (text, fs) => fskModulate(fskFrameBits(utf8(text)), fs);
 const fskSeconds = bytes => (FSK.preamble + 16 + 8 * (bytes + 3)) / FSK.baud + 0.45;
 
 // White Gaussian noise at a chosen signal-to-noise ratio (signal power measured where the tone is on).
@@ -5729,13 +5732,13 @@ function niceMax(v) {
 function barChart(rows, { max = null, fmt = v => fmtNum(v, 2), w = 520, log = false } = {}) {
   const rowH = 30;
   const h = rows.length * rowH + 10;
-  const labelW = 92;
+  const labelW = 112;
   const top = max ?? niceMax(Math.max(...rows.map(r => r.value), 0));
   const scale = v => (log ? Math.log10(1 + v) / Math.log10(1 + top) : v / top);
   const bars = rows.map((r, i) => {
     const y = 6 + i * rowH;
     const bw = Math.max(2, (w - labelW - 70) * clamp(scale(r.value), 0, 1));
-    return `<text x="0" y="${y + 17}">${esc(r.label)}</text><rect x="${labelW}" y="${y + 4}" width="${bw.toFixed(1)}" height="18" rx="4" fill="${r.color}"><animate attributeName="width" from="0" to="${bw.toFixed(1)}" dur=".6s" fill="freeze"/></rect><text class="val" x="${labelW + bw + 6}" y="${y + 17}">${esc(fmt(r.value))}</text>`;
+    return `<text x="0" y="${y + 17}">${esc(r.label)}</text><rect class="barr" x="${labelW}" y="${y + 4}" width="${bw.toFixed(1)}" height="18" rx="4" fill="${r.color}"/><text class="val" x="${labelW + bw + 6}" y="${y + 17}">${esc(fmt(r.value))}</text>`;
   }).join('');
   return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img">${bars}</svg>`;
 }
@@ -5967,7 +5970,7 @@ const simProgress = f => $('#simProg') && ($('#simProg').style.width = Math.roun
 
 async function runSimUI() {
   SIMV.running = true;
-  $('#simRun').disabled = true;
+  if ($('#simRun')) $('#simRun').disabled = true;
   simProgress(0.02);
   await sleep(30);
   const p = { ...SIM_DEFAULTS, ...SIMV.params };
@@ -7304,7 +7307,7 @@ function sitrepHtml() {
   const fieldsOf = (b, item) => BOARDS[b].fields.map(f => esc(item[f.k] === undefined || item[f.k] === '' ? '' : fieldText(f, item[f.k])));
   return `${reportHead('rp_sitrep')}
     <h2>${t('rp_summary')}</h2><p>${t('rp_summaryLine', { inc: openIncidents().length, imm: openIncidents().filter(i => i.triage === 'immediate').length, safe: roll.filter(p => p.status === 'safe').length, total: roll.length, missing: board('missing').filter(p => p.status === 'missing').length, needs: board('needs').filter(n => n.status !== 'met').length })}</p>
-    <h2>${t('nav_sos')}</h2>${reportTable([t('inc_triage'), t('co_incident'), t('inc_from'), t('sos_people'), t('sos_injured'), t('sos_needs'), t('inc_status'), t('inc_assigned'), t('inc_reachT')], incs.map(i => [`<span class="tri">${opt(i.triage || 'unknown')}</span>`, esc(incTitle(i)), `${esc(nameOf(i.from, i.name))}<br>${fmtDT(i.at)}`, i.people ?? '', i.injured ?? '', (i.needs || []).map(opt).join(', '), t('life_' + incLife(i.id)), i.assigned ? esc(nameOf(i.assigned.id, i.assigned.n)) : '', reachOf(i).n]))}
+    <h2>${t('nav_sos')}</h2>${reportTable([t('inc_triage'), t('co_incident'), t('inc_from'), t('sosf_people'), t('sosf_injured'), t('f_needsShort'), t('inc_status'), t('inc_assigned'), t('inc_reachT')], incs.map(i => [`<span class="tri">${opt(i.triage || 'unknown')}</span>`, esc(incTitle(i)), `${esc(nameOf(i.from, i.name))}<br>${fmtDT(i.at)}`, i.people ?? '', i.injured ?? '', (i.needs || []).map(opt).join(', '), t('life_' + incLife(i.id)), i.assigned ? esc(nameOf(i.assigned.id, i.assigned.n)) : '', reachOf(i).n]))}
     <h2>${t('st_roll')}</h2>${reportTable([t('roll_houseLabel'), t('f_name'), t('inc_status'), t('roll_lastSeen'), t('f_note')], roll.map(p => [esc(p.house || ''), esc(p.name), t('roll_' + (p.status || 'unknown')), p.last ? fmtDT(p.last) : '', esc(p.note || '')]))}
     ${PAPER_BOARDS.map(b => `<h2>${t('bd_' + b)}</h2>${reportTable(BOARDS[b].fields.map(f => fieldLabel(b, f.k)), board(b).map(i => fieldsOf(b, i)))}`).join('')}
     <p class="meta">${t('rp_footer')}</p>`;
@@ -7660,7 +7663,7 @@ Object.assign(STR, {
   hp_encSub: ['ECDH P-256 → HKDF-SHA-256 → AES-GCM-256, key per message', 'ای سی ڈی ایچ P-256 → ایچ کے ڈی ایف → اے ای ایس-جی سی ایم-256، ہر پیغام کی الگ چابی'],
   hp_holders: ['Demo view: simulated villagers holding a copy right now: {names}', 'نمونہ منظر: ابھی جن فرضی دیہاتیوں کے پاس نقل ہے: {names}'],
   // banner
-  bn_mine: ['Your SOS is active · reached {n} phones · {a} responding · {life}', 'آپ کا ایس او ایس فعال ہے · {n} فونوں تک پہنچا · {a} جواب دے رہے ہیں · {life}'],
+  bn_mine: ['Your SOS is active · phones reached: {n} · responders: {a} · {life}', 'آپ کا ایس او ایس فعال ہے · پہنچا: {n} فون · جواب دہندگان: {a} · {life}'],
   bn_in: ['SOS from {name} ({n} waiting for help)', '{name} کا ایس او ایس ({n} مدد کے منتظر)'],
   bn_respond: ['Respond', 'جواب دیں'],
   // notifications and activity log
@@ -7778,7 +7781,7 @@ Object.assign(STR, {
   inc_where: ['Where', 'کہاں'],
   inc_status: ['Status', 'حالت'],
   inc_reachT: ['Reach', 'رسائی'],
-  inc_reachLong: ['{n} phones stored it, up to {h} hops away', '{n} فونوں نے محفوظ کیا، {h} ہاپ دور تک'],
+  inc_reachLong: ['Phones that stored it: {n} (up to {h} hops away)', 'محفوظ کرنے والے فون: {n} ({h} ہاپ دور تک)'],
   inc_assigned: ['Assigned', 'ذمہ دار'],
   inc_triage: ['Triage', 'ترجیحی درجہ'],
   inc_acks: ['Responders ({n})', 'جواب دہندگان ({n})'],
@@ -7874,6 +7877,7 @@ Object.assign(STR, {
   f_people: ['People', 'افراد'],
   f_urgency: ['Urgency', 'فوریت'],
   f_note: ['Note', 'نوٹ'],
+  f_needsShort: ['Needs', 'ضروریات'],
   f_last: ['Updated', 'اپ ڈیٹ'],
   opt_f: ['Female', 'عورت'],
   opt_m: ['Male', 'مرد'],
@@ -8482,7 +8486,7 @@ function renderNav() {
 }
 
 function openMoreSheet() {
-  const sh = openModal(`${sheetHead(t('more'), 'menu')}<div class="list">${MORE_ROUTES.map(r => `<a class="li chan" href="#${r}" data-close>${ic(ROUTES[r].icon)}<span class="grow"><b>${t('nav_' + r)}</b></span>${navBadge(r) ? `<span class="unread">${navBadge(r)}</span>` : ''}</a>`).join('')}</div>
+  const sh = openModal(`${sheetHead(t('more'), 'menu')}<div class="list">${MORE_ROUTES.map(r => `<a class="li chan" href="#${r}" data-close>${ic(ROUTES[r].icon)}<span class="grow"><b>${t('nav_' + r)}</b></span>${navBadge(r) ? `<span class="unread ${r === 'sos' ? 'sos' : ''}">${navBadge(r)}</span>` : ''}</a>`).join('')}</div>
     <div class="row mt"><button type="button" class="btn ghost sm" id="mSearch">${ic('search')} ${t('search')}</button><button type="button" class="btn ghost sm" id="mTour">${ic('sparkles')} ${t('replayTour')}</button><button type="button" class="btn ghost sm" id="mKeys">${ic('keyboard')} ${t('shortcuts')}</button></div>`);
   $$('[data-close]', sh).forEach(a => (a.onclick = closeModal));
   $('#mSearch', sh).onclick = openPalette;
