@@ -1520,7 +1520,7 @@ Object.assign(STR, {
   etExt: ['Evaporation extinction depth (m)', 'بخارات کی آخری گہرائی (میٹر)'],
   unconfinedT: ['Transmissivity falls as the aquifer drains (unconfined)', 'ذخیرہ خالی ہونے پر ترسیل پذیری کم ہو (غیر محصور)'],
   fixErrors: ['Please fix the highlighted values', 'نشان زدہ اعداد درست کریں'],
-  zonesHint: ['Sy = specific yield, T = transmissivity (m²/day), base = depth to the bottom of fresh aquifer (m), initial depth to water (m). Illustrative values.', 'Sy = مخصوص پیداوار، T = ترسیل پذیری (مربع میٹر/دن)، بنیاد = میٹھے ذخیرے کی تہہ تک گہرائی (میٹر)، ابتدائی پانی کی گہرائی (میٹر)۔ مثالی اعداد۔'],
+  zonesHint: ['Sy = specific yield, T = transmissivity (m²/day), base = depth to the bottom of fresh aquifer (m), initial depth to water (m), which sets the initial head = ground − depth. Illustrative values.', 'Sy = مخصوص پیداوار، T = ترسیل پذیری (مربع میٹر/دن)، بنیاد = میٹھے ذخیرے کی تہہ تک گہرائی (میٹر)، ابتدائی پانی کی گہرائی (میٹر)۔ مثالی اعداد۔'],
   name: ['Name', 'نام'],
   colour: ['Colour', 'رنگ'],
   baseDepth: ['Base (m)', 'بنیاد (میٹر)'],
@@ -4554,7 +4554,8 @@ function pageHead(title, sub, actions = '', icon = '') {
 
 /** Skeleton shown while the first model run is computed. */
 function runSkeleton(title) {
-  return `${pageHead(title, t('runBusyLong'))}<div class="twin"><div class="skeleton" style="height:320px"></div><div class="skeleton" style="height:320px"></div></div><div class="kpis mt">${'<div class="skeleton" style="height:92px"></div>'.repeat(4)}</div>`;
+  return `${pageHead(title, t('runBusyLong'))}<div class="twin"><div class="skeleton" style="height:320px"></div>
+      <div class="skeleton" style="height:320px"></div></div><div class="kpis mt">${'<div class="skeleton" style="height:92px"></div>'.repeat(4)}</div>`;
 }
 
 function renderHome() {
@@ -4574,7 +4575,8 @@ function renderHome() {
       <section class="card core"><div class="between"><h3>${ic('layers')} ${t('xsTitle')}</h3><button class="btn ghost sm" type="button" id="hmSection">${ic('edit')} ${t('xsChange')}</button></div>
         <p class="sub">${t('xsSub')}</p><div class="xsec" id="hmXsec"></div>
         <div class="legend mt"><span><i class="line" style="background:#143e63"></i>${t('lgWaterNow')}</span><span><i class="line" style="background:repeating-linear-gradient(90deg,#b9826a 0 4px,transparent 4px 7px)"></i>${t('lgWater2021')}</span><span><i style="background:#3d7533"></i>${t('st_ok')}</span><span><i style="background:#c48f1f"></i>${t('st_risk')}</span><span><i style="background:#b0332a"></i>${t('st_dry')}</span></div></section>
-      <section class="card core"><div class="between"><h3>${ic('map')} ${t('planTitle')}</h3><div class="seg" id="hmLayer">${['depth', 'change'].map(l => `<button type="button" data-l="${l}" class="${TWIN.layer === l ? 'on' : ''}">${t('layer_' + l)}</button>`).join('')}</div></div>
+      <section class="card core"><div class="between"><h3>${ic('map')} ${t('planTitle')}</h3>
+          <div class="seg" id="hmLayer">${['depth', 'change'].map(l => `<button type="button" data-l="${l}" class="${TWIN.layer === l ? 'on' : ''}">${t('layer_' + l)}</button>`).join('')}</div></div>
         <p class="sub">${t('planSub')}</p>${planHtml('home', t('planTitle'))}<div class="mt" id="hmScale"></div></section>
     </div>
     <section class="card mt">${timebarHtml()}</section>
@@ -4668,7 +4670,9 @@ function updateTwin(v, run, first = false) {
 }
 
 function kpiTiles(kp, k) {
-  const tile = (icon, lbl, val, unit, note, cls = '', dec = 1) => `<div class="kpi ${cls}"><div class="lbl">${ic(icon)}${lbl}</div><div class="val"><span data-count="${val}" data-dec="${dec}">${fmtN(val, dec)}</span><small>${unit}</small></div><div class="note">${note}</div></div>`;
+  const tile = (icon, lbl, val, unit, note, cls = '', dec = 1) => `<div class="kpi ${cls}"><div class="lbl">${ic(icon)}${lbl}</div>
+      <div class="val"><span data-count="${val}" data-dec="${dec}">${fmtN(val, dec)}</span><small>${unit}</small></div>
+      <div class="note">${note}</div></div>`;
   const ch = kp.change12;
   const chNote = `<span class="delta ${ch > 0 ? 'up' : 'down'}">${ch > 0 ? '+' : ''}${fmtN(toUnit(ch), 2)} ${t('u_' + depthUnit())}</span> ${t('in12m')}`;
   return [
@@ -4693,10 +4697,12 @@ function homeInsights(v, run) {
   }
   const risky = irrWells(v).map(w => ({ w, st: wellStatus(v, run, w, NOW_K), dryK: firstDryMonth(run, w) })).sort((a, b) => a.st.margin - b.st.margin).slice(0, 5);
   const b = run.steps.slice(HIST_MONTHS - 12, HIST_MONTHS).reduce((a, s) => ({ rech: a.rech + s.bud.inn.rain + s.bud.inn.ret + s.bud.inn.wc + s.bud.inn.pond + s.bud.inn.canal, pump: a.pump + s.bud.out.pump }), { rech: 0, pump: 0 });
-  const trend = `<section class="card lift"><h3>${ic('trending-down')} ${t('insTrend')}</h3><p class="big num" style="font-family:var(--font-head);font-size:1.6rem;margin:.2rem 0">${fit.b > 0 ? '+' : ''}${fmtN(toUnit(fit.b * 12), 2)} ${t('u_' + depthUnit())}/${t('u_yr')}</p>
+  const trend = `<section class="card lift"><h3>${ic('trending-down')} ${t('insTrend')}</h3>
+      <p class="big num" style="font-family:var(--font-head);font-size:1.6rem;margin:.2rem 0">${fit.b > 0 ? '+' : ''}${fmtN(toUnit(fit.b * 12), 2)} ${t('u_' + depthUnit())}/${t('u_yr')}</p>
     <p class="small">${t('insTrendBody', { r: fmtDepth(mean(rebounds), 2) })}</p><a class="btn ghost sm" href="#readings">${ic('activity')} ${t('nav_readings')}</a></section>`;
   const wells = `<section class="card lift"><h3>${ic('alert')} ${t('insRisk')}</h3>${risky.map(({ w, st, dryK }) => `<div class="lrow"><span class="av ${st.status === 'dry' ? 'bad' : st.status === 'risk' ? 'wheat' : 'leaf'}">${ic('droplet')}</span><div class="meta"><b>${esc(w.id)} · ${esc(farmerName(v, w.owner))}</b><small>${t('marginLeft', { m: fmtDepth(Math.max(0, st.margin)) })}${dryK >= 0 ? ' · ' + t('dryFrom', { y: simLabel(dryK) }) : ''}</small></div><span class="chip ${st.status === 'dry' ? 'bad' : st.status === 'risk' ? 'wheat' : 'leaf'}">${t('st_' + st.status)}</span></div>`).join('')}</section>`;
-  const bal = `<section class="card lift"><h3>${ic('scale')} ${t('insBalance')}</h3><div class="lrow"><span class="av">${ic('cloud-rain')}</span><div class="meta"><b class="num">${fmtMm3(b.rech)}</b><small>${t('insRecharge')}</small></div></div><div class="lrow"><span class="av clay">${ic('droplet')}</span><div class="meta"><b class="num">${fmtMm3(b.pump)}</b><small>${t('insPumping')}</small></div></div>
+  const bal = `<section class="card lift"><h3>${ic('scale')} ${t('insBalance')}</h3><div class="lrow"><span class="av">${ic('cloud-rain')}</span><div class="meta"><b class="num">${fmtMm3(b.rech)}</b><small>${t('insRecharge')}</small></div>
+      </div><div class="lrow"><span class="av clay">${ic('droplet')}</span><div class="meta"><b class="num">${fmtMm3(b.pump)}</b><small>${t('insPumping')}</small></div></div>
     <p class="small mt">${b.pump > b.rech ? t('insOverdraft', { p: fmtPct((100 * (b.pump - b.rech)) / b.pump) }) : t('insBalanced')}</p><a class="btn ghost sm" href="#budget">${ic('scale')} ${t('nav_budget')}</a></section>`;
   return trend + wells + bal;
 }
@@ -4728,7 +4734,8 @@ function renderSetup() {
         <div class="legend mt">${CELL_TYPES.map((c, i) => `<span><i style="background:${CELL_COLORS[i]}"></i>${t('ct_' + c.id)}</span>`).join('')}${[['#143e63', 'pt_electric'], ['#5b3a29', 'pt_diesel'], ['#c48f1f', 'pt_solar']].map(([c, k]) => `<span><i style="background:${c};border-radius:50%"></i>${ic('tubewell')} ${t(k)}</span>`).join('')}<span><i style="background:#fff;border:1px solid #22608f;border-radius:50%"></i>${t('piezometer')}</span></div>
         <div class="card soft mt inspector" id="suInspect"></div>
       </section>
-      <section class="card"><div class="seg" id="suTabs" style="margin-bottom:.9rem">${SETUP_TABS.map(id => `<button type="button" data-tab="${id}" class="${SETUP.tab === id ? 'on' : ''}">${t('stab_' + id)}</button>`).join('')}</div><div id="suPanel"></div></section>
+      <section class="card"><div class="seg" id="suTabs" style="margin-bottom:.9rem">${SETUP_TABS.map(id => `<button type="button" data-tab="${id}" class="${SETUP.tab === id ? 'on' : ''}">${t('stab_' + id)}</button>`).join('')}</div>
+          <div id="suPanel"></div></section>
     </div>`;
   bindSetup(v);
   drawSwatches(v);
@@ -5007,8 +5014,11 @@ function saveVillagePanel(v, box) {
 }
 
 function panelZones(v, box) {
-  box.innerHTML = `<p class="small muted">${t('zonesHint')}</p><div class="tblwrap"><table class="tbl"><thead><tr><th></th><th>${t('name')}</th><th class="n">Sy</th><th class="n">T m²/d</th><th class="n">${t('baseDepth')}</th><th class="n">${t('dtw0')}</th></tr></thead><tbody>
-    ${v.zones.map((z, i) => `<tr><td><input type="color" value="${z.color}" data-z="${i}" data-k="color" aria-label="${t('colour')}" style="width:34px;height:30px;border:0;background:none"></td><td><input class="inp" data-z="${i}" data-k="name" value="${esc(zoneName(z))}" style="min-width:140px"></td>
+  box.innerHTML = `<p class="small muted">${t('zonesHint')}</p><div class="tblwrap"><table class="tbl"><thead><tr><th></th>
+      <th>${t('name')}</th><th class="n">Sy</th><th class="n">T m²/d</th><th class="n">${t('baseDepth')}</th>
+      <th class="n">${t('dtw0')}</th></tr></thead><tbody>
+    ${v.zones.map((z, i) => `<tr><td><input type="color" value="${z.color}" data-z="${i}" data-k="color" aria-label="${t('colour')}" style="width:34px;height:30px;border:0;background:none"></td>
+        <td><input class="inp" data-z="${i}" data-k="name" value="${esc(zoneName(z))}" style="min-width:140px"></td>
       ${['sy', 't', 'base', 'dtw0'].map(k => `<td class="n"><input class="inp num" style="width:84px" type="number" step="any" data-z="${i}" data-k="${k}" value="${z[k]}" aria-label="${k}"></td>`).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="sfoot"><button class="btn ghost" type="button" id="pzAdd">${ic('plus')} ${t('addZone')}</button><button class="btn" type="button" id="pzSave">${ic('save')} ${t('save')}</button></div>`;
   $('#pzAdd', box).onclick = () => {
@@ -5045,8 +5055,12 @@ function panelFields(v, box) {
   const owner = SETUP.ownerFilter || '';
   const list = v.fields.filter(f => !owner || f.owner === owner);
   box.innerHTML = `<div class="between">${selectField('pfOwner', t('owner'), [['', t('all')], ...v.farmers.map(f => [f.id, farmerName(v, f.id)])], owner)}<button class="btn ghost sm" type="button" id="pfNew">${ic('plus')} ${t('newField')}</button></div>
-    <div class="tblwrap mt" style="max-height:520px"><table class="tbl"><thead><tr><th>${t('field')}</th><th>${t('owner')}</th><th>${t('crops')}</th><th class="n">${t('u_acres')}</th><th>${t('well')}</th></tr></thead><tbody>
-    ${list.map(f => `<tr data-f="${f.n}" style="cursor:pointer"><td><b>${t('fieldN', { n: f.n })}</b></td><td>${esc(farmerName(v, f.owner))}</td><td class="small">${cropName(f.rabi)} / ${cropName(f.kharif)}<br><span class="muted">${t('m_' + f.method)}${f.canal ? ' · ' + t('canalShort') : ''}</span></td><td class="n">${fmtN(fieldAcres(v, f), 1)}</td><td>${esc(f.well || '–')}</td></tr>`).join('') || `<tr><td colspan="5" class="empty">${t('noFields')}</td></tr>`}</tbody></table></div>`;
+    <div class="tblwrap mt" style="max-height:520px"><table class="tbl"><thead><tr><th>${t('field')}</th>
+        <th>${t('owner')}</th><th>${t('crops')}</th><th class="n">${t('u_acres')}</th><th>${t('well')}</th></tr></thead><tbody>
+    ${list.map(f => `<tr data-f="${f.n}" style="cursor:pointer"><td><b>${t('fieldN', { n: f.n })}</b></td>
+        <td>${esc(farmerName(v, f.owner))}</td><td class="small">${cropName(f.rabi)} / ${cropName(f.kharif)}<br><span class="muted">${t('m_' + f.method)}${f.canal ? ' · ' + t('canalShort') : ''}</span></td>
+        <td class="n">${fmtN(fieldAcres(v, f), 1)}</td><td>${esc(f.well || '–')}</td></tr>`).join('') || `<tr><td colspan="5" class="empty">${t('noFields')}</td>
+        </tr>`}</tbody></table></div>`;
   $('#pfOwner', box).onchange = e => {
     SETUP.ownerFilter = e.target.value;
     panelFields(v, box);
@@ -5056,8 +5070,11 @@ function panelFields(v, box) {
 }
 
 function panelWells(v, box) {
-  box.innerHTML = `<p class="small muted">${t('wellsHint')}</p><div class="tblwrap" style="max-height:520px"><table class="tbl"><thead><tr><th>${t('well')}</th><th>${t('owner')}</th><th>${t('pumpType')}</th><th class="n">${t('dischargeShort')}</th><th class="n">${t('pumpSetting')}</th></tr></thead><tbody>
-    ${v.wells.map(w => `<tr data-w="${esc(w.id)}" style="cursor:pointer"><td><b>${esc(w.id)}</b>${w.monitored ? ` <span class="chip aq">${t('monitored')}</span>` : ''}</td><td>${esc(farmerName(v, w.owner))}</td><td>${t('pt_' + w.type)}</td><td class="n">${w.use === 'irr' ? discharge(w) : '–'}</td><td class="n">${w.use === 'irr' ? fmtDepth(w.pump, 0) : '–'}</td></tr>`).join('')}</tbody></table></div>`;
+  box.innerHTML = `<p class="small muted">${t('wellsHint')}</p><div class="tblwrap" style="max-height:520px"><table class="tbl"><thead><tr><th>${t('well')}</th>
+      <th>${t('owner')}</th><th>${t('pumpType')}</th><th class="n">${t('dischargeShort')}</th><th class="n">${t('pumpSetting')}</th></tr></thead><tbody>
+    ${v.wells.map(w => `<tr data-w="${esc(w.id)}" style="cursor:pointer"><td><b>${esc(w.id)}</b>${w.monitored ? ` <span class="chip aq">${t('monitored')}</span>` : ''}</td>
+        <td>${esc(farmerName(v, w.owner))}</td><td>${t('pt_' + w.type)}</td><td class="n">${w.use === 'irr' ? discharge(w) : '–'}</td>
+        <td class="n">${w.use === 'irr' ? fmtDepth(w.pump, 0) : '–'}</td></tr>`).join('')}</tbody></table></div>`;
   $$('[data-w]', box).forEach(r => (r.onclick = () => openWellForm(v, wellById(v, r.dataset.w))));
 }
 
@@ -5387,8 +5404,11 @@ function monsoonRows(list) {
 function monsoonTable(list) {
   const rows = monsoonRows(list.filter(r => !r.excluded));
   const cell = x => (Number.isFinite(x) ? fmtN(toUnit(x), 2) : '–');
-  return `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('year')}</th><th class="n">${t('preMonsoon')}</th><th class="n">${t('postMonsoon')}</th><th class="n">${t('rebound')}</th></tr></thead><tbody>
-    ${rows.map(r => `<tr><td>${r.y}</td><td class="n">${cell(r.pre)}</td><td class="n">${cell(r.post)}</td><td class="n"><b class="${r.rebound > 0 ? 'delta down' : 'delta up'}">${Number.isFinite(r.rebound) ? (r.rebound > 0 ? '+' : '') + cell(r.rebound) : '–'}</b></td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('year')}</th><th class="n">${t('preMonsoon')}</th>
+      <th class="n">${t('postMonsoon')}</th><th class="n">${t('rebound')}</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${r.y}</td><td class="n">${cell(r.pre)}</td><td class="n">${cell(r.post)}</td>
+        <td class="n"><b class="${r.rebound > 0 ? 'delta down' : 'delta up'}">${Number.isFinite(r.rebound) ? (r.rebound > 0 ? '+' : '') + cell(r.rebound) : '–'}</b></td>
+        </tr>`).join('')}</tbody></table></div>`;
 }
 
 /** Mean rebound per year across all monitored wells (bar chart). */
@@ -5424,7 +5444,10 @@ function readingsTable(list, z) {
   const page = rows.slice(READ.page * PER_PAGE, (READ.page + 1) * PER_PAGE);
   const pager = pages > 1 ? `<div class="row mt"><button class="btn ghost sm" type="button" data-page="${READ.page - 1}" ${READ.page ? '' : 'disabled'}>${ic('chevron-left', 'flip')}</button><span class="small">${t('pageXofY', { x: READ.page + 1, y: pages })}</span><button class="btn ghost sm" type="button" data-page="${READ.page + 1}" ${READ.page < pages - 1 ? '' : 'disabled'}>${ic('chevron-right', 'flip')}</button></div>` : '';
   return `<div class="tblwrap"><table class="tbl"><thead><tr><th>${t('date')}</th><th class="n">${t('depthShort')}</th><th>${t('method')}</th><th>${t('recorder')}</th><th></th></tr></thead><tbody>
-    ${page.map(r => `<tr class="${isOutlier(z.get(r.id)) ? 'flag' : ''}"><td class="nowrap">${r.d}</td><td class="n">${fmtDepth(r.v, 2)}</td><td>${t('rm_' + r.m)}</td><td>${t('rc_' + r.r)}</td><td><div class="acts"><button class="ibtn sm" type="button" data-redit="${r.id}" aria-label="${t('edit')}">${ic('edit')}</button></div></td></tr>`).join('')}</tbody></table></div>${pager}`;
+    ${page.map(r => `<tr class="${isOutlier(z.get(r.id)) ? 'flag' : ''}"><td class="nowrap">${r.d}</td>
+        <td class="n">${fmtDepth(r.v, 2)}</td><td>${t('rm_' + r.m)}</td><td>${t('rc_' + r.r)}</td>
+        <td><div class="acts"><button class="ibtn sm" type="button" data-redit="${r.id}" aria-label="${t('edit')}">${ic('edit')}</button></div></td>
+        </tr>`).join('')}</tbody></table></div>${pager}`;
 }
 
 function toggleReading(v, id) {
@@ -5530,7 +5553,7 @@ function importReadingsCsv(v, text) {
 }
 
 // ---------- aquifer model page: layers, drawable section, water balance, solver, verification ----------
-const MODEL = { k: NOW_K, layer: 'depth', drag: null, verify: null, cmp: null };
+const MODEL = { k: NOW_K, layer: 'depth', drag: null, verify: null, cmp: null, timer: 0 };
 const MODEL_LAYERS = ['depth', 'head', 'change', 'pumping'];
 
 function renderModel() {
@@ -5546,10 +5569,13 @@ function renderModel() {
   $('#view').innerHTML = `${pageHead(t('nav_model'), t('mdSub'), acts)}
     <section class="card soft"><div class="formula">S<sub>y</sub> ∂h/∂t = ∂/∂x(T ∂h/∂x) + ∂/∂y(T ∂h/∂y) + R − Q</div><p class="small mt" style="margin-bottom:0">${t('mdEquation')}</p></section>
     <div class="cols two mt">
-      <section class="card core"><div class="between"><h3>${ic('map')} ${t('planTitle')}</h3><div class="seg" id="mdLayer">${MODEL_LAYERS.map(l => `<button type="button" data-l="${l}" class="${MODEL.layer === l ? 'on' : ''}">${t('layer_' + l)}</button>`).join('')}</div></div>
+      <section class="card core"><div class="between"><h3>${ic('map')} ${t('planTitle')}</h3>
+          <div class="seg" id="mdLayer">${MODEL_LAYERS.map(l => `<button type="button" data-l="${l}" class="${MODEL.layer === l ? 'on' : ''}">${t('layer_' + l)}</button>`).join('')}</div></div>
         <p class="sub">${t('mdDrawHint')}</p>${planHtml('model', t('planTitle'))}<div class="mt" id="mdScale"></div>
-        <div class="range mt"><div class="between"><span class="small">${t('month')}</span><b id="mdWhen"></b></div><input type="range" id="mdSlider" min="-1" max="${TOTAL_MONTHS - 1}" value="${MODEL.k}" aria-label="${t('timeSlider')}"></div></section>
-      <section class="card core"><div class="between"><h3>${ic('layers')} ${t('xsTitle')}</h3><button class="btn ghost sm" type="button" id="mdResetSec">${ic('rotate')} ${t('xsReset')}</button></div><p class="sub">${t('xsSubModel')}</p>
+        <div class="row mt" style="flex-wrap:nowrap"><button class="playbtn" type="button" id="mdPlay" aria-label="${t('play')}">${ic('play')}</button>
+        <div class="range grow"><div class="between"><span class="small">${t('month')}</span><b id="mdWhen"></b></div><input type="range" id="mdSlider" min="-1" max="${TOTAL_MONTHS - 1}" value="${MODEL.k}" aria-label="${t('timeSlider')}"></div></div></section>
+      <section class="card core"><div class="between"><h3>${ic('layers')} ${t('xsTitle')}</h3><button class="btn ghost sm" type="button" id="mdResetSec">${ic('rotate')} ${t('xsReset')}</button></div>
+          <p class="sub">${t('xsSubModel')}</p>
         <div class="xsec" id="mdXsec"></div><div class="card soft mt inspector" id="mdCell"><p class="small muted" style="margin:0">${t('cellHint')}</p></div></section>
     </div>
     <div class="cols wide-left mt">
@@ -5579,9 +5605,11 @@ function bindModel(v, run) {
     updateModelView();
   }));
   $('#mdSlider').oninput = e => {
+    stopModelPlay();
     MODEL.k = Number(e.target.value);
     updateModelView();
   };
+  $('#mdPlay').onclick = () => (MODEL.timer ? stopModelPlay() : startModelPlay());
   $('#mdResetSec').onclick = () => {
     delete v.section;
     persist('villages');
@@ -5589,6 +5617,32 @@ function bindModel(v, run) {
   };
   bindSectionDraw(v, run);
   bindSolver(v);
+}
+
+/** Animate the plan view and the section along the drawn line through the months. */
+function startModelPlay() {
+  if (MODEL.k >= TOTAL_MONTHS - 1) MODEL.k = -1;
+  $('#mdPlay').innerHTML = ic('pause');
+  $('#mdPlay').setAttribute('aria-label', t('pause'));
+  const step = () => {
+    if (curRoute !== 'model' || !$('#mdSlider')) return stopModelPlay();
+    MODEL.k = Math.min(TOTAL_MONTHS - 1, MODEL.k + (calm() ? 12 : 1));
+    $('#mdSlider').value = MODEL.k;
+    updateModelView();
+    if (MODEL.k >= TOTAL_MONTHS - 1) return stopModelPlay();
+    MODEL.timer = setTimeout(step, calm() ? 600 : 140);
+  };
+  step();
+}
+
+function stopModelPlay() {
+  clearTimeout(MODEL.timer);
+  MODEL.timer = 0;
+  const b = $('#mdPlay');
+  if (b) {
+    b.innerHTML = ic('play');
+    b.setAttribute('aria-label', t('play'));
+  }
 }
 
 /** Counterfactual run without any pumping: the difference is the drawdown caused by wells. */
@@ -5697,7 +5751,8 @@ function balanceTable(run) {
   const ys = yearBudgets(run);
   const n = x => fmtN(x / 1e6, 2);
   return `<div class="tblwrap" style="max-height:340px"><table class="tbl"><thead><tr><th>${t('waterYear')}</th>${BUD_IN.map(k => `<th class="n">${t('bi_' + k)}</th>`).join('')}${BUD_OUT.map(k => `<th class="n">${t('bo_' + k)}</th>`).join('')}<th class="n">${t('closure')}</th></tr></thead><tbody>
-    ${ys.map(y => `<tr class="${y.wy === 4 ? 'sel' : ''}"><td class="nowrap"><b>${wyLabel(y.wy)}</b>${y.wy >= 5 ? ` <span class="chip wheat">${t('projShort')}</span>` : ''}</td>${BUD_IN.map(k => `<td class="n">${n(y.inn[k])}</td>`).join('')}${BUD_OUT.map(k => `<td class="n">${n(y.out[k])}</td>`).join('')}<td class="n"><span class="chip ${y.err < 1 ? 'leaf' : 'bad'}">${fmtN(y.err, 4)}%</span></td></tr>`).join('')}</tbody></table></div><p class="tiny muted">${t('balanceUnits')}</p>`;
+    ${ys.map(y => `<tr class="${y.wy === 4 ? 'sel' : ''}"><td class="nowrap"><b>${wyLabel(y.wy)}</b>${y.wy >= 5 ? ` <span class="chip wheat">${t('projShort')}</span>` : ''}</td>${BUD_IN.map(k => `<td class="n">${n(y.inn[k])}</td>`).join('')}${BUD_OUT.map(k => `<td class="n">${n(y.out[k])}</td>`).join('')}<td class="n"><span class="chip ${y.err < 1 ? 'leaf' : 'bad'}">${fmtN(y.err, 4)}%</span></td>
+        </tr>`).join('')}</tbody></table></div><p class="tiny muted">${t('balanceUnits')}</p>`;
 }
 
 const SUP = { '-': '⁻', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
@@ -5722,7 +5777,9 @@ function solverPanel(v, run) {
   const its = run.steps.map(x => x.iters);
   const stats = `<div class="kpis mt" style="grid-template-columns:repeat(2,minmax(0,1fr))">
     <div class="kpi"><div class="lbl">${ic('rotate')}${t('avgIter')}</div><div class="val">${fmtN(mean(its), 0)}</div><div class="note">${t('maxIter', { n: Math.max(...its) })}</div></div>
-    <div class="kpi ${run.steps.every(x => x.conv) ? 'good' : 'bad'}"><div class="lbl">${ic('check-circle')}${t('converged')}</div><div class="val">${run.steps.filter(x => x.conv).length}<small>/ ${run.steps.length}</small></div><div class="note">${t('convergedNote')}</div></div></div>`;
+    <div class="kpi ${run.steps.every(x => x.conv) ? 'good' : 'bad'}"><div class="lbl">${ic('check-circle')}${t('converged')}</div>
+        <div class="val">${run.steps.filter(x => x.conv).length}<small>/ ${run.steps.length}</small></div>
+        <div class="note">${t('convergedNote')}</div></div></div>`;
   return `<p class="small">${t('solverIntro')}</p>
     <div class="range"><div class="between"><span class="small">${t('omega')}</span><b id="svOmegaV">${fmtN(s.omega, 2)}</b></div><input type="range" id="svOmega" min="1" max="1.95" step="0.05" value="${s.omega}" aria-label="${t('omega')}"></div>
     <div class="fgrid mt">${selectField('svTol', t('tolerance'), [['0.0001', '0.0001 m'], ['0.00001', '0.00001 m'], ['0.000001', '0.000001 m']], String(s.tol))}${numField('svMax', t('maxIterLbl'), s.maxIter, { min: 50, max: 10000, step: 50 })}</div>
@@ -5761,7 +5818,10 @@ async function compareOmega(v) {
 
 function omegaTable(rows) {
   const best = rows.reduce((a, b) => (b.iters < a.iters ? b : a));
-  return `<div class="tblwrap"><table class="tbl"><thead><tr><th>ω</th><th class="n">${t('avgIter')}</th><th class="n">ms</th><th class="n">${t('dtwAfter12')}</th></tr></thead><tbody>${rows.map(r => `<tr class="${r === best ? 'sel' : ''}"><td>${fmtN(r.omega, 1)}${r.omega === 1 ? ' <small class="muted">Gauss–Seidel</small>' : ''}</td><td class="n">${fmtN(r.iters, 0)}</td><td class="n">${fmtN(r.ms, 0)}</td><td class="n">${fmtN(r.dtw, 4)}</td></tr>`).join('')}</tbody></table></div><p class="tiny muted">${t('omegaNote')}</p>`;
+  return `<div class="tblwrap"><table class="tbl"><thead><tr><th>ω</th><th class="n">${t('avgIter')}</th>
+      <th class="n">ms</th><th class="n">${t('dtwAfter12')}</th></tr></thead><tbody>${rows.map(r => `<tr class="${r === best ? 'sel' : ''}"><td>${fmtN(r.omega, 1)}${r.omega === 1 ? ' <small class="muted">Gauss–Seidel</small>' : ''}</td>
+      <td class="n">${fmtN(r.iters, 0)}</td><td class="n">${fmtN(r.ms, 0)}</td><td class="n">${fmtN(r.dtw, 4)}</td>
+      </tr>`).join('')}</tbody></table></div><p class="tiny muted">${t('omegaNote')}</p>`;
 }
 
 // ---------- verification ----------
@@ -5787,7 +5847,10 @@ function verifyHtml() {
   const coneSpec = { aria: t('coneChart'), series: [{ color: 'var(--aq5)', pts: cone.profile.map((s, i) => [i * 100, s]), dots: true }], x: { min: 0, max: 1500, ticks: [0, 500, 1000, 1500].map(x => [x, x + ' m']) }, y: { invert: true, min: 0, max: Math.ceil(cone.centre * 10) / 10 + 0.1, title: t('drawdownM') }, hover: { xs: cone.profile.map((_, i) => i * 100), tip: i => `${i * 100} m: ${fmtN(cone.profile[i], 3)} m` } };
   return `${head}<div class="cols two"><div>${cards}<p class="tiny muted mt">${t('checksTime', { ms: fmtN(MODEL.verify.ms, 0) })}</p></div><div>
     <h4>${t('coneChart')}</h4>${chartBox('mdCone', coneSpec, 200)}
-    <h4 class="mt">${t('theisTitle')}</h4><div class="tblwrap"><table class="tbl"><thead><tr><th class="n">r (m)</th><th class="n">${t('numerical')}</th><th class="n">Theis</th><th class="n">%</th></tr></thead><tbody>${theis.rows.map(r => `<tr><td class="n">${r.r}</td><td class="n">${fmtN(r.num, 3)}</td><td class="n">${fmtN(r.ana, 3)}</td><td class="n">${fmtN(r.diff, 2)}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+    <h4 class="mt">${t('theisTitle')}</h4><div class="tblwrap"><table class="tbl"><thead><tr><th class="n">r (m)</th>
+        <th class="n">${t('numerical')}</th><th class="n">Theis</th><th class="n">%</th></tr></thead><tbody>${theis.rows.map(r => `<tr><td class="n">${r.r}</td>
+        <td class="n">${fmtN(r.num, 3)}</td><td class="n">${fmtN(r.ana, 3)}</td><td class="n">${fmtN(r.diff, 2)}</td>
+        </tr>`).join('')}</tbody></table></div></div></div>`;
 }
 
 // ---------- wells at a glance ----------
@@ -5798,8 +5861,13 @@ function wellTable(v, run) {
     const hrs = run.steps.slice(HIST_MONTHS - 12, HIST_MONTHS).reduce((a, s) => a + (s.wells?.find(x => x.id === w.id)?.hours || 0), 0);
     return { w, st, dk, hrs };
   }).sort((a, b) => a.st.margin - b.st.margin);
-  return `<div class="tblwrap" style="max-height:420px"><table class="tbl"><thead><tr><th>${t('well')}</th><th>${t('owner')}</th><th>${t('pumpType')}</th><th class="n">${t('depthNow')}</th><th class="n">${t('pumpSetting')}</th><th class="n">${t('margin')}</th><th class="n">${t('hoursYr')}</th><th>${t('dryFromCol')}</th></tr></thead><tbody>
-    ${rows.map(({ w, st, dk, hrs }) => `<tr><td><b>${esc(w.id)}</b></td><td>${esc(farmerName(v, w.owner))}</td><td>${t('pt_' + w.type)}</td><td class="n">${fmtDepth(st.depth)}</td><td class="n">${fmtDepth(w.pump, 0)}</td><td class="n"><span class="chip ${st.status === 'dry' ? 'bad' : st.status === 'risk' ? 'wheat' : 'leaf'}">${fmtDepth(st.margin)}</span></td><td class="n">${fmtN(hrs)}</td><td>${dk >= 0 ? simLabel(dk) : '–'}</td></tr>`).join('')}</tbody></table></div>
+  return `<div class="tblwrap" style="max-height:420px"><table class="tbl"><thead><tr><th>${t('well')}</th>
+      <th>${t('owner')}</th><th>${t('pumpType')}</th><th class="n">${t('depthNow')}</th><th class="n">${t('pumpSetting')}</th>
+      <th class="n">${t('margin')}</th><th class="n">${t('hoursYr')}</th><th>${t('dryFromCol')}</th></tr></thead><tbody>
+    ${rows.map(({ w, st, dk, hrs }) => `<tr><td><b>${esc(w.id)}</b></td><td>${esc(farmerName(v, w.owner))}</td>
+        <td>${t('pt_' + w.type)}</td><td class="n">${fmtDepth(st.depth)}</td><td class="n">${fmtDepth(w.pump, 0)}</td>
+        <td class="n"><span class="chip ${st.status === 'dry' ? 'bad' : st.status === 'risk' ? 'wheat' : 'leaf'}">${fmtDepth(st.margin)}</span></td>
+        <td class="n">${fmtN(hrs)}</td><td>${dk >= 0 ? simLabel(dk) : '–'}</td></tr>`).join('')}</tbody></table></div>
     <div class="row mt"><button class="btn ghost sm" type="button" id="mdCapture">${ic('target')} ${t('todo2t')} ${t('stu')}</button><button class="btn ghost sm" type="button" id="mdSaline">${ic('droplet')} ${t('todo6t')} ${t('stu')}</button><span class="small muted">${t('captureHint')}</span></div>`;
 }
 
@@ -5828,7 +5896,8 @@ function renderCalib() {
   }
   const mult = CAL.trial || v.calib;
   if (CAL.key !== calKey(v, mult)) {
-    $('#view').innerHTML = `${pageHead(t('nav_calib'), t('calSub'))}<div class="kpis">${'<div class="skeleton" style="height:92px"></div>'.repeat(4)}</div><div class="skeleton mt" style="height:300px"></div>`;
+    $('#view').innerHTML = `${pageHead(t('nav_calib'), t('calSub'))}<div class="kpis">${'<div class="skeleton" style="height:92px"></div>'.repeat(4)}</div>
+        <div class="skeleton mt" style="height:300px"></div>`;
     nextFrame().then(() => {
       CAL.stats = calibStats(v, mult, obs);
       CAL.key = calKey(v, mult);
@@ -5847,7 +5916,8 @@ function renderCalib() {
         <div class="row mt"><button class="btn ghost" type="button" id="calTry">${ic('play')} ${t('calTry')}</button><button class="btn" type="button" id="calSave" ${CAL.trial ? '' : 'disabled'}>${ic('save')} ${t('calSave')}</button></div>
         <h4 class="mt">${ic('history')} ${t('calLog')}</h4>${calLogList(v)}</section>
       <section class="card core"><h3>${ic('grid')} ${t('calGridTitle')}</h3><p class="sub">${t('calGridSub')}</p>
-        <div class="progress"><i id="calBar" style="width:${(CAL.done / (SY_GRID.length * T_GRID.length)) * 100}%"></i></div><p class="small muted" id="calProg">${CAL.busy ? t('calRunning', { n: CAL.done, m: SY_GRID.length * T_GRID.length }) : CAL.best ? t('calBest', { sy: CAL.best.sy, t: CAL.best.t, r: fmtDepth(CAL.best.rmse, 3) }) : t('calIdle')}</p>
+        <div class="progress"><i id="calBar" style="width:${(CAL.done / (SY_GRID.length * T_GRID.length)) * 100}%"></i></div>
+            <p class="small muted" id="calProg">${CAL.busy ? t('calRunning', { n: CAL.done, m: SY_GRID.length * T_GRID.length }) : CAL.best ? t('calBest', { sy: CAL.best.sy, t: CAL.best.t, r: fmtDepth(CAL.best.rmse, 3) }) : t('calIdle')}</p>
         <div id="calGrid">${rmseGridHtml(v)}</div><div class="row mt">${CAL.best && !CAL.busy ? `<button class="btn leaf" type="button" id="calApply">${ic('check')} ${t('calApplyBest')}</button>` : ''}<button class="btn ghost sm" type="button" id="calLM">${ic('trending-down')} ${t('todo3t')} ${t('stu')}</button></div></section>
     </div>
     <div class="cols two mt">
@@ -5979,10 +6049,12 @@ function scatterSpec(st) {
 function perWellTable(st, v) {
   const byW = new Map();
   st.pairs.forEach(p => (byW.get(p.w) || byW.set(p.w, []).get(p.w)).push(p));
-  return `<div class="tblwrap" style="max-height:330px"><table class="tbl"><thead><tr><th>${t('well')}</th><th class="n">n</th><th class="n">RMSE</th><th class="n">${t('bias')}</th></tr></thead><tbody>
+  return `<div class="tblwrap" style="max-height:330px"><table class="tbl"><thead><tr><th>${t('well')}</th>
+      <th class="n">n</th><th class="n">RMSE</th><th class="n">${t('bias')}</th></tr></thead><tbody>
     ${monWells(v).map(w => {
       const e = errorStats(byW.get(w.id) || []);
-      return `<tr data-cw="${esc(w.id)}" class="${w.id === CAL.sel ? 'sel' : ''}" style="cursor:pointer"><td><b>${esc(w.id)}</b></td><td class="n">${e.n}</td><td class="n">${fmtN(toUnit(e.rmse), 2)}</td><td class="n">${e.bias > 0 ? '+' : ''}${fmtN(toUnit(e.bias), 2)}</td></tr>`;
+      return `<tr data-cw="${esc(w.id)}" class="${w.id === CAL.sel ? 'sel' : ''}" style="cursor:pointer"><td><b>${esc(w.id)}</b></td>
+          <td class="n">${e.n}</td><td class="n">${fmtN(toUnit(e.rmse), 2)}</td><td class="n">${e.bias > 0 ? '+' : ''}${fmtN(toUnit(e.bias), 2)}</td></tr>`;
     }).join('')}</tbody></table></div><p class="tiny muted">${t('perWellNote')}</p>`;
 }
 
@@ -6034,7 +6106,8 @@ function renderCrops() {
   $('#view').innerHTML = `${pageHead(t('nav_crops'), t('crSub'), `<button class="btn ghost" type="button" id="crReset">${ic('rotate')} ${t('crResetLib')}</button>`)}
     <div class="note-box" style="margin-bottom:1rem">${ic('info')}<span>${t('crIllustrative')}</span></div>
     <div class="cols wide-left">
-      <section class="card core"><h3>${ic('sun')} ${t('climTitle', { d: t('dist_' + v.district), lat: fmtN(v.lat, 2) })}</h3><p class="sub">${t('climSub')}</p>${climateTableHtml(dt.clim)}${chartBox('crClim', climSpec(dt.clim), 220)}
+      <section class="card core"><h3>${ic('sun')} ${t('climTitle', { d: t('dist_' + v.district), lat: fmtN(v.lat, 2) })}</h3>
+          <p class="sub">${t('climSub')}</p>${climateTableHtml(dt.clim)}${chartBox('crClim', climSpec(dt.clim), 220)}
         <div class="legend"><span><i style="background:var(--clay)"></i>ET0</span><span><i style="background:var(--aq4)"></i>${t('rain')}</span><span><i style="background:var(--leaf)"></i>${t('peff')}</span></div></section>
       <section class="card soft"><h3>${ic('book')} ${t('formulas')}</h3>${formulaHtml()}</section>
     </div>
@@ -6042,8 +6115,16 @@ function renderCrops() {
     <section class="card mt"><h3>${ic('bar-chart')} ${t('demandTitle')}</h3><p class="sub">${t('demandSub')}</p>${chartBox('crDemand', demandSpec(dt), 260)}
       <div class="legend">${CROP_GROUPS.map(([g], i) => `<span><i style="background:${GROUP_COLORS[i]}"></i>${t('cg_' + g)}</span>`).join('')}</div></section>
     <section class="card mt"><h3>${ic('wheat')} ${t('fieldDemandTitle')}</h3><p class="sub">${t('fieldDemandSub')}</p>
-      <div class="tblwrap" style="max-height:420px"><table class="tbl"><thead><tr><th>${t('field')}</th><th>${t('owner')}</th><th>${t('crops')}</th><th class="n">${t('u_acres')}</th><th class="n">ETc</th><th class="n">${t('peff')}</th><th class="n">${t('canalWater')}</th><th class="n">${t('netIrr')}</th><th class="n">${t('grossIrr')}</th><th class="n">${t('gwM3')}</th></tr></thead><tbody>
-      ${dt.fields.map(r => `<tr><td><b>${t('fieldN', { n: r.f.n })}</b></td><td>${esc(farmerName(v, r.f.owner))}</td><td class="small">${cropName(r.f.rabi)} / ${cropName(r.f.kharif)} · ${t('m_' + r.f.method)}</td><td class="n">${fmtN(r.area / ACRE_M2, 1)}</td><td class="n">${fmtN(yearSum(r, 'etc'))}</td><td class="n">${fmtN(yearSum(r, 'peff'))}</td><td class="n">${fmtN(yearSum(r, 'canal'))}</td><td class="n">${fmtN(yearSum(r, 'need'))}</td><td class="n">${fmtN(yearSum(r, 'gross'))}</td><td class="n">${fmtN(yearSum(r, 'gwM3'))}</td></tr>`).join('')}</tbody></table></div><p class="tiny muted">${t('mmPerYear')}</p></section>
+      <div class="tblwrap" style="max-height:420px"><table class="tbl"><thead><tr><th>${t('field')}</th>
+          <th>${t('owner')}</th><th>${t('crops')}</th><th class="n">${t('u_acres')}</th><th class="n">ETc</th>
+          <th class="n">${t('peff')}</th><th class="n">${t('canalWater')}</th><th class="n">${t('netIrr')}</th>
+          <th class="n">${t('grossIrr')}</th><th class="n">${t('gwM3')}</th></tr></thead><tbody>
+      ${dt.fields.map(r => `<tr><td><b>${t('fieldN', { n: r.f.n })}</b></td><td>${esc(farmerName(v, r.f.owner))}</td>
+          <td class="small">${cropName(r.f.rabi)} / ${cropName(r.f.kharif)} · ${t('m_' + r.f.method)}</td>
+          <td class="n">${fmtN(r.area / ACRE_M2, 1)}</td><td class="n">${fmtN(yearSum(r, 'etc'))}</td>
+          <td class="n">${fmtN(yearSum(r, 'peff'))}</td><td class="n">${fmtN(yearSum(r, 'canal'))}</td>
+          <td class="n">${fmtN(yearSum(r, 'need'))}</td><td class="n">${fmtN(yearSum(r, 'gross'))}</td>
+          <td class="n">${fmtN(yearSum(r, 'gwM3'))}</td></tr>`).join('')}</tbody></table></div><p class="tiny muted">${t('mmPerYear')}</p></section>
     <section class="card mt"><h3>${ic('clock')} ${t('hoursTitle')}</h3><p class="sub">${t('hoursSub')}</p>${hoursTable(v, dt)}</section>`;
   $$('[data-crop]').forEach(b => (b.onclick = () => openCropForm(b.dataset.crop)));
   $('#crReset').onclick = resetCropLibrary;
@@ -6052,7 +6133,8 @@ function renderCrops() {
 function climateTableHtml(clim) {
   const cols = [['tmax', 'Tmax °C', 0], ['tmin', 'Tmin °C', 0], ['ra', 'Ra MJ', 1], ['et0d', 'ET0 mm/d', 1], ['et0', 'ET0 mm', 0], ['rain', t('rain') + ' mm', 0], ['peff', t('peff') + ' mm', 0]];
   return `<div class="tblwrap"><table class="tbl"><thead><tr><th></th>${clim.map(c => `<th class="n">${monthName(c.m)}</th>`).join('')}<th class="n">${t('total')}</th></tr></thead><tbody>
-    ${cols.map(([k, lbl, d]) => `<tr><td class="nowrap"><b>${lbl}</b></td>${clim.map(c => `<td class="n">${fmtN(c[k], d)}</td>`).join('')}<td class="n">${['et0', 'rain', 'peff'].includes(k) ? `<b>${fmtN(sum(clim.map(c => c[k])))}</b>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+    ${cols.map(([k, lbl, d]) => `<tr><td class="nowrap"><b>${lbl}</b></td>${clim.map(c => `<td class="n">${fmtN(c[k], d)}</td>`).join('')}<td class="n">${['et0', 'rain', 'peff'].includes(k) ? `<b>${fmtN(sum(clim.map(c => c[k])))}</b>` : ''}</td>
+        </tr>`).join('')}</tbody></table></div>`;
 }
 
 function climSpec(clim) {
@@ -6109,8 +6191,10 @@ function hoursTable(v, dt) {
     const cap = dt.clim.map(c => wellHoursCap(w.type, c.m));
     return { w, hrs, cap };
   });
-  return `<div class="tblwrap" style="max-height:420px"><table class="tbl"><thead><tr><th>${t('well')}</th><th>${t('pumpType')}</th>${dt.clim.map(c => `<th class="n">${monthName(c.m).slice(0, 3)}</th>`).join('')}<th class="n">${t('total')}</th></tr></thead><tbody>
-    ${rows.map(r => `<tr><td><b>${esc(r.w.id)}</b></td><td>${t('pt_' + r.w.type)}</td>${r.hrs.map((h, m) => `<td class="n" ${h > r.cap[m] ? `style="background:var(--danger-soft);color:var(--danger);font-weight:800" data-tip="${esc(t('overCap', { c: fmtN(r.cap[m]) }))}"` : ''}>${fmtN(h)}</td>`).join('')}<td class="n"><b>${fmtN(sum(r.hrs))}</b></td></tr>`).join('')}</tbody></table></div><p class="tiny muted">${t('hoursNote')}</p>`;
+  return `<div class="tblwrap" style="max-height:420px"><table class="tbl"><thead><tr><th>${t('well')}</th>
+      <th>${t('pumpType')}</th>${dt.clim.map(c => `<th class="n">${monthName(c.m).slice(0, 3)}</th>`).join('')}<th class="n">${t('total')}</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td><b>${esc(r.w.id)}</b></td><td>${t('pt_' + r.w.type)}</td>${r.hrs.map((h, m) => `<td class="n" ${h > r.cap[m] ? `style="background:var(--danger-soft);color:var(--danger);font-weight:800" data-tip="${esc(t('overCap', { c: fmtN(r.cap[m]) }))}"` : ''}>${fmtN(h)}</td>`).join('')}<td class="n"><b>${fmtN(sum(r.hrs))}</b></td>
+        </tr>`).join('')}</tbody></table></div><p class="tiny muted">${t('hoursNote')}</p>`;
 }
 
 // ---------- editable crop library (stored as overrides in settings) ----------
@@ -6171,8 +6255,10 @@ function renderScenarios() {
     <div class="cols wide-right">
       <section class="card core"><h3>${ic('git-branch')} ${t('scList')}</h3><p class="sub">${t('scListSub')}</p><div class="scen">${SCENARIOS.map(s => scenCard(v, s)).join('')}</div></section>
       <section class="card core first-narrow"><h3>${ic('trending-down')} ${t('smallMultiples')}</h3><p class="sub">${t('smallSub')}</p>
-        <div class="progress ${LAB.busy ? '' : 'hidden'}" id="scProgWrap"><i id="scBar" style="width:${LAB.n ? (LAB.i / LAB.n) * 100 : 0}%"></i></div><p class="small muted ${LAB.busy ? '' : 'hidden'}" id="scProg">${LAB.busy ? t('scRunning', { s: scenName(LAB.cur), i: LAB.i + 1, n: LAB.n }) : ''}</p>
-        ${done.length ? `<div class="smalls">${done.map(id => smallMultiple(v, id)).join('')}</div><div class="row mt"><button class="btn ghost sm" type="button" id="scBands">${ic('activity')} ${t('todo4t')} ${t('stu')}</button></div>` : `<div class="empty">${ic('play')}<p>${t('scNoResults')}</p></div>`}</section>
+        <div class="progress ${LAB.busy ? '' : 'hidden'}" id="scProgWrap"><i id="scBar" style="width:${LAB.n ? (LAB.i / LAB.n) * 100 : 0}%"></i></div>
+            <p class="small muted ${LAB.busy ? '' : 'hidden'}" id="scProg">${LAB.busy ? t('scRunning', { s: scenName(LAB.cur), i: LAB.i + 1, n: LAB.n }) : ''}</p>
+        ${done.length ? `<div class="smalls">${done.map(id => smallMultiple(v, id)).join('')}</div>
+            <div class="row mt"><button class="btn ghost sm" type="button" id="scBands">${ic('activity')} ${t('todo4t')} ${t('stu')}</button></div>` : `<div class="empty">${ic('play')}<p>${t('scNoResults')}</p></div>`}</section>
     </div>
     ${done.length ? `<section class="card mt"><h3>${ic('award')} ${t('rankTitle')}</h3><p class="sub">${t('rankSub')}</p>${rankTable(v, done)}</section>
     <div class="cols two mt"><section class="card"><h3>${ic('x-circle')} ${t('dryByScenario')}</h3>${chartBox('scDry', dryBarSpec(v, done), 240)}</section>
@@ -6303,7 +6389,11 @@ function rankTable(v, ids) {
   rows.sort((a, b) => dir * (a[LAB.sort] - b[LAB.sort]));
   const th = (k, lbl) => `<th class="n"><button type="button" data-sort="${k}">${lbl}${LAB.sort === k ? ic('sort') : ''}</button></th>`;
   const html = `<div class="tblwrap"><table class="tbl rank"><thead><tr><th>#</th><th>${t('scenario')}</th>${th('dtw', t('y10Depth'))}<th class="n">${t('vsBau')}</th>${th('dry', t('dryY10'))}${th('pump', t('pumpYr'))}${th('cost', t('energyYr'))}${th('income', t('incomeYr'))}${th('net', t('netYr'))}${th('score', t('score'))}</tr></thead><tbody>
-    ${rows.map((r, i) => `<tr><td>${i + 1}</td><td class="nowrap"><span class="swatchdot" style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${SCENARIOS.find(s => s.id === r.id).color}"></span> ${scenName(r.id)}</td><td class="n">${fmtDepth(r.dtw)}</td><td class="n">${bau && r.id !== 'bau' ? `<span class="delta ${r.dtw > bau.dtw ? 'up' : 'down'}">${r.dtw > bau.dtw ? '+' : ''}${fmtN(toUnit(r.dtw - bau.dtw), 2)}</span>` : '–'}</td><td class="n">${r.dry}</td><td class="n">${fmtN(r.pump / 1e6, 2)}</td><td class="n">${fmtRs(r.cost)}</td><td class="n">${fmtRs(r.income)}</td><td class="n">${fmtRs(r.net)}</td><td class="n"><span class="chip ${r.score >= 66 ? 'leaf' : r.score >= 33 ? 'wheat' : 'bad'}">${r.score}</span></td></tr>`).join('')}</tbody></table></div>`;
+    ${rows.map((r, i) => `<tr><td>${i + 1}</td><td class="nowrap"><span class="swatchdot" style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${SCENARIOS.find(s => s.id === r.id).color}"></span> ${scenName(r.id)}</td>
+        <td class="n">${fmtDepth(r.dtw)}</td><td class="n">${bau && r.id !== 'bau' ? `<span class="delta ${r.dtw > bau.dtw ? 'up' : 'down'}">${r.dtw > bau.dtw ? '+' : ''}${fmtN(toUnit(r.dtw - bau.dtw), 2)}</span>` : '–'}</td>
+        <td class="n">${r.dry}</td><td class="n">${fmtN(r.pump / 1e6, 2)}</td><td class="n">${fmtRs(r.cost)}</td>
+        <td class="n">${fmtRs(r.income)}</td><td class="n">${fmtRs(r.net)}</td><td class="n"><span class="chip ${r.score >= 66 ? 'leaf' : r.score >= 33 ? 'wheat' : 'bad'}">${r.score}</span></td>
+        </tr>`).join('')}</tbody></table></div>`;
   later(() => $$('[data-sort]').forEach(b => (b.onclick = () => {
     LAB.sort = b.dataset.sort;
     rerender();
@@ -6453,7 +6543,8 @@ function allocControls(v) {
   const q = quotaCfg(v);
   const s = (id, lbl, val, min, max, step, fmt) => `<div class="range"><div class="between"><span class="small">${lbl}</span><b id="${id}V">${fmt(val)}</b></div><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}" aria-label="${lbl}"></div>`;
   return `<div class="fgrid">${s('qaW', t('wAcre'), q.wAcre, 0, 1, 0.05, x => `${fmtPct(x * 100)} / ${fmtPct((1 - x) * 100)}`)}${s('qaF', t('equityFloor'), q.floor, 0, 0.8, 0.05, x => fmtPct(x * 100))}${s('qaR', t('reserve'), q.reserve, 0, 0.4, 0.05, x => fmtPct(x * 100))}</div>
-    <div class="row mt"><button class="btn ghost" type="button" id="qaTest" ${BUDGET.testing ? 'disabled' : ''}>${ic('play')} ${t('testAlloc')}</button><span class="small muted">${t('testAllocHint')}</span></div><div id="qaTestOut" class="mt">${BUDGET.test && BUDGET.test.vid === v.id ? testResultHtml(BUDGET.test) : ''}</div>`;
+    <div class="row mt"><button class="btn ghost" type="button" id="qaTest" ${BUDGET.testing ? 'disabled' : ''}>${ic('play')} ${t('testAlloc')}</button><span class="small muted">${t('testAllocHint')}</span></div>
+        <div id="qaTestOut" class="mt">${BUDGET.test && BUDGET.test.vid === v.id ? testResultHtml(BUDGET.test) : ''}</div>`;
 }
 
 /** Each farmer's acres, groundwater need (average year) and recent use. */
@@ -6494,10 +6585,16 @@ function renderAllocation(v, run, sy) {
   const trades = tradeTotals(v);
   const acreIn = m3 => m3 / (ACRE_M2 * 0.0254);
   $('#bgAlloc').innerHTML = `<p class="small"><b>${t('pool')}:</b> ${fmtMm3(pool)} · ${t('poolNote')}</p>
-    <div class="tblwrap" style="max-height:440px"><table class="tbl"><thead><tr><th>${t('farmer')}</th><th class="n">${t('u_acres')}</th><th class="n">${t('needM3')}</th><th class="n">${t('allocM3')}</th><th class="n">${t('acreInches')}</th><th class="n">${t('useM3')}</th><th class="n">${t('balanceM3')}</th><th class="n">${t('afterTrades')}</th></tr></thead><tbody>
+    <div class="tblwrap" style="max-height:440px"><table class="tbl"><thead><tr><th>${t('farmer')}</th>
+        <th class="n">${t('u_acres')}</th><th class="n">${t('needM3')}</th><th class="n">${t('allocM3')}</th>
+        <th class="n">${t('acreInches')}</th><th class="n">${t('useM3')}</th><th class="n">${t('balanceM3')}</th>
+        <th class="n">${t('afterTrades')}</th></tr></thead><tbody>
     ${rows.map(r => {
       const net = r.balance + (trades.get(r.id) || 0);
-      return `<tr><td><b>${esc(farmerName(v, r.id))}</b></td><td class="n">${fmtN(r.acres, 0)}</td><td class="n">${fmtN(r.need)}</td><td class="n">${fmtN(r.alloc)}</td><td class="n">${fmtN(acreIn(r.alloc) / r.acres, 1)}</td><td class="n">${fmtN(r.use)}</td><td class="n"><span class="chip ${r.balance >= 0 ? 'leaf' : 'bad'}">${r.balance >= 0 ? '+' : ''}${fmtN(r.balance)}</span></td><td class="n"><b class="${net >= 0 ? 'delta down' : 'delta up'}">${net >= 0 ? '+' : ''}${fmtN(net)}</b></td></tr>`;
+      return `<tr><td><b>${esc(farmerName(v, r.id))}</b></td><td class="n">${fmtN(r.acres, 0)}</td>
+          <td class="n">${fmtN(r.need)}</td><td class="n">${fmtN(r.alloc)}</td><td class="n">${fmtN(acreIn(r.alloc) / r.acres, 1)}</td>
+          <td class="n">${fmtN(r.use)}</td><td class="n"><span class="chip ${r.balance >= 0 ? 'leaf' : 'bad'}">${r.balance >= 0 ? '+' : ''}${fmtN(r.balance)}</span></td>
+          <td class="n"><b class="${net >= 0 ? 'delta down' : 'delta up'}">${net >= 0 ? '+' : ''}${fmtN(net)}</b></td></tr>`;
     }).join('')}</tbody></table></div><p class="tiny muted">${t('allocNote')}</p>`;
 }
 
@@ -6553,9 +6650,11 @@ function testResultHtml(tr) {
   const q = tr.quota.years.at(-1);
   const b = tr.bau.years.at(-1);
   const inc = r => mean(r.years.map(y => y.income));
-  return `<div class="kpis"><div class="kpi good"><div class="lbl">${ic('arrow-down')}${t('y10Depth')}</div><div class="val">${fmtDepth(q.dtw)}</div><div class="note">${scenName('bau')}: ${fmtDepth(b.dtw)}</div></div>
+  return `<div class="kpis"><div class="kpi good"><div class="lbl">${ic('arrow-down')}${t('y10Depth')}</div>
+      <div class="val">${fmtDepth(q.dtw)}</div><div class="note">${scenName('bau')}: ${fmtDepth(b.dtw)}</div></div>
     <div class="kpi"><div class="lbl">${ic('x-circle')}${t('dryY10')}</div><div class="val">${q.dry}</div><div class="note">${scenName('bau')}: ${b.dry}</div></div>
-    <div class="kpi"><div class="lbl">${ic('wheat')}${t('incomeYr')}</div><div class="val" style="font-size:1.2rem">${fmtRs(inc(tr.quota))}</div><div class="note">${scenName('bau')}: ${fmtRs(inc(tr.bau))}</div></div></div>`;
+    <div class="kpi"><div class="lbl">${ic('wheat')}${t('incomeYr')}</div><div class="val" style="font-size:1.2rem">${fmtRs(inc(tr.quota))}</div>
+        <div class="note">${scenName('bau')}: ${fmtRs(inc(tr.bau))}</div></div></div>`;
 }
 
 // ---------- tradable water credits ledger ----------
@@ -6578,8 +6677,14 @@ function renderLedger(v, run, sy) {
   const value = sum(list.map(x => x.vol * x.price));
   box.innerHTML = `<div class="between"><h3>${ic('wallet')} ${t('ledgerTitle')}</h3><div class="row"><button class="btn ghost sm" type="button" id="lgCsv">${ic('download')} ${t('exportCsv')}</button><button class="btn sm" type="button" id="lgAdd">${ic('plus')} ${t('newTrade')}</button></div></div>
     <p class="sub">${t('ledgerSub')}</p><div class="row" style="margin-bottom:.6rem"><span class="chip aq">${t('tradesN', { n: list.length })}</span><span class="chip">${fmtN(vol)} ${t('u_m3')}</span><span class="chip wheat">${fmtRs(value)}</span><span class="chip illus">${t('pricesIllustrative')}</span></div>
-    ${list.length ? `<div class="tblwrap" style="max-height:360px"><table class="tbl"><thead><tr><th>${t('date')}</th><th>${t('seller')}</th><th>${t('buyer')}</th><th class="n">${t('u_m3')}</th><th class="n">${t('rsPerM3')}</th><th class="n">${t('value')}</th><th>${t('note')}</th><th></th></tr></thead><tbody>
-    ${list.map(tr => `<tr><td class="nowrap">${tr.date}</td><td>${esc(farmerName(v, tr.from))}</td><td>${esc(farmerName(v, tr.to))}</td><td class="n">${fmtN(tr.vol)}</td><td class="n">${fmtN(tr.price, 2)}</td><td class="n">${fmtRs(tr.vol * tr.price)}</td><td class="small">${esc(txtOf(tr, 'note'))}</td><td><button class="ibtn sm" type="button" data-deltr="${tr.id}" aria-label="${t('delete')}">${ic('trash')}</button></td></tr>`).join('')}</tbody></table></div>` : `<div class="empty">${ic('wallet')}<p>${t('noTrades')}</p></div>`}`;
+    ${list.length ? `<div class="tblwrap" style="max-height:360px"><table class="tbl"><thead><tr><th>${t('date')}</th>
+        <th>${t('seller')}</th><th>${t('buyer')}</th><th class="n">${t('u_m3')}</th><th class="n">${t('rsPerM3')}</th>
+        <th class="n">${t('value')}</th><th>${t('note')}</th><th></th></tr></thead><tbody>
+    ${list.map(tr => `<tr><td class="nowrap">${tr.date}</td><td>${esc(farmerName(v, tr.from))}</td>
+        <td>${esc(farmerName(v, tr.to))}</td><td class="n">${fmtN(tr.vol)}</td><td class="n">${fmtN(tr.price, 2)}</td>
+        <td class="n">${fmtRs(tr.vol * tr.price)}</td><td class="small">${esc(txtOf(tr, 'note'))}</td>
+        <td><button class="ibtn sm" type="button" data-deltr="${tr.id}" aria-label="${t('delete')}">${ic('trash')}</button></td>
+        </tr>`).join('')}</tbody></table></div>` : `<div class="empty">${ic('wallet')}<p>${t('noTrades')}</p></div>`}`;
   $('#lgAdd', box).onclick = () => openTradeForm(v, run, sy);
   $('#lgCsv', box).onclick = () => downloadFile(`credits-${v.id}.csv`, toCsv([['date', 'seller', 'buyer', 'volume_m3', 'price_rs_per_m3', 'note'], ...list.map(x => [x.date, farmerName(v, x.from), farmerName(v, x.to), x.vol, x.price, txtOf(x, 'note')])]), 'text/csv');
   $$('[data-deltr]', box).forEach(b => (b.onclick = () => deleteTrade(v, b.dataset.deltr, run, sy)));
@@ -6596,7 +6701,8 @@ function openTradeForm(v, run, sy) {
   const sh = openModal(`${sheetHead(t('newTrade'), 'wallet')}<p class="small muted">${t('tradeHint')}</p><div class="fgrid">
     ${selectField('trFrom', t('seller'), sellers, sellers[0]?.[0])}${selectField('trTo', t('buyer'), v.farmers.map(f => [f.id, farmerName(v, f.id)]), v.farmers[1]?.id)}
     ${numField('trVol', t('volumeM3'), 5000, { min: 100, max: 1e6, step: 100 })}${numField('trPrice', t('rsPerM3'), 3, { min: 0, max: 100, step: 0.1 })}
-    <label class="field"><span>${t('date')}</span><input id="trDate" type="date" value="${TODAY}" max="${TODAY}"></label><label class="field"><span>${t('note')}</span><input id="trNote" maxlength="80"></label></div>
+    <label class="field"><span>${t('date')}</span><input id="trDate" type="date" value="${TODAY}" max="${TODAY}"></label>
+        <label class="field"><span>${t('note')}</span><input id="trNote" maxlength="80"></label></div>
     <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('cancel')}</button><button class="btn" type="button" id="trSave">${ic('check')} ${t('recordTrade')}</button></div>`);
   $('#trSave', sh).onclick = () => {
     const vol = readNum(sh, 'trVol', 100, 1e6);
@@ -6653,8 +6759,10 @@ function renderMeeting() {
   $('#view').innerHTML = `${pageHead(t('nav_meeting'), t('mtSub'), `<button class="btn soil" type="button" id="mtStart">${ic('maximize')} ${t('startPresentation')}</button>`)}
     <div class="cols wide-left">
       <section class="card core"><h3>${ic('calendar')} ${t('mtSetup')}</h3><div class="fgrid">
-        <label class="field"><span>${t('mtTitle')}</span><input id="mtTitle" value="${esc(txtOf(m, 'title'))}"></label><label class="field"><span>${t('date')}</span><input id="mtDate" type="date" value="${m.date}"></label>
-        <label class="field"><span>${t('mtPlace')}</span><input id="mtPlace" value="${esc(txtOf(m, 'place'))}"></label><label class="field"><span>${t('mtChair')}</span><input id="mtChair" value="${esc(m.chair)}"></label>
+        <label class="field"><span>${t('mtTitle')}</span><input id="mtTitle" value="${esc(txtOf(m, 'title'))}"></label>
+            <label class="field"><span>${t('date')}</span><input id="mtDate" type="date" value="${m.date}"></label>
+        <label class="field"><span>${t('mtPlace')}</span><input id="mtPlace" value="${esc(txtOf(m, 'place'))}"></label>
+            <label class="field"><span>${t('mtChair')}</span><input id="mtChair" value="${esc(m.chair)}"></label>
         ${numField('mtAtt', t('mtAttendees'), m.attendees, { min: 1, max: 2000, step: 1 })}</div>
         <label class="field mt"><span>${t('mtAgenda')}</span><textarea id="mtAgenda" rows="6">${esc(txtOf(m, 'agenda'))}</textarea></label>
         <h4 class="mt">${t('mtOptions')}</h4><div class="pills" id="mtOpts">${SCENARIOS.map(s => `<button type="button" data-o="${s.id}" class="${m.options.includes(s.id) ? 'on' : ''}" aria-pressed="${m.options.includes(s.id)}">${scenName(s.id)}${st.results[s.id] ? '' : ' *'}</button>`).join('')}</div>
@@ -6818,7 +6926,9 @@ function stageSlide(s, v, m, run) {
   if (s === 'flows') return `<h2>${t('stFlows')}</h2>${stageCap('stFlowsCap')}<div class="panel">${chartBox('stSankey', { type: 'sankey', y: yearBudgets(run)[HIST_MONTHS / 12 - 1], aria: t('stFlows') }, 320)}</div>`;
   if (s === 'future') {
     const end = twinKpis(v, run, TOTAL_MONTHS - 1);
-    return `<h2>${t('stFuture', { y: calYear(TOTAL_MONTHS - 1) })}</h2>${stageCap('stFutureCap')}<div class="bigrow"><div><div class="big">${fmtDepth(end.dtw)}</div><p>${t('stDepthThen')}</p></div><div><div class="big">${end.dry}</div><p>${t('stDryThen', { n: end.total })}</p></div></div><div class="panel xsec" id="stXsec" data-k="${TOTAL_MONTHS - 1}"></div>`;
+    return `<h2>${t('stFuture', { y: calYear(TOTAL_MONTHS - 1) })}</h2>${stageCap('stFutureCap')}<div class="bigrow"><div><div class="big">${fmtDepth(end.dtw)}</div>
+        <p>${t('stDepthThen')}</p></div><div><div class="big">${end.dry}</div><p>${t('stDryThen', { n: end.total })}</p>
+        </div></div><div class="panel xsec" id="stXsec" data-k="${TOTAL_MONTHS - 1}"></div>`;
   }
   if (s === 'options') {
     return `<h2>${t('stOptions')}</h2>${stageCap('stOptionsCap')}<div class="opt">${m.options.map(o => {
@@ -6864,7 +6974,8 @@ function renderMap() {
     <div class="note-box aq" style="margin-bottom:1rem">${ic('info')}<span>${t('mapNote')}${navigator.onLine === false ? ' ' + t('mapOffline') : ''}</span></div>
     <div class="cols wide-left">
       <section class="card core">${MAPV.mode === 'leaflet' ? `<div id="leafMap" class="leafmap" role="application" aria-label="${t('nav_map')}"></div>` : `<div class="schem">${schematicSvg(v, b)}</div>`}</section>
-      <section class="card"><h3>${ic('map-pin')} ${t('mapPlace')}</h3><p class="sub">${t('mapPlaceSub')}</p><div class="fgrid">${numField('mpLat', t('latitude'), v.lat, { min: 23, max: 37, step: 0.0001 })}${numField('mpLng', t('longitude'), v.lng, { min: 60, max: 78, step: 0.0001 })}</div>
+      <section class="card"><h3>${ic('map-pin')} ${t('mapPlace')}</h3><p class="sub">${t('mapPlaceSub')}</p>
+          <div class="fgrid">${numField('mpLat', t('latitude'), v.lat, { min: 23, max: 37, step: 0.0001 })}${numField('mpLng', t('longitude'), v.lng, { min: 60, max: 78, step: 0.0001 })}</div>
         <div class="row mt"><button class="btn" type="button" id="mpSave">${ic('save')} ${t('save')}</button><button class="btn ghost" type="button" id="mpGeo" ${geo ? '' : 'disabled'}>${ic('locate')} ${t('useMyLocation')}</button></div>
         <p class="tiny muted">${geo ? t('geoNote') : t('geoMissing')}</p>
         <h4 class="mt">${t('extent')}</h4><dl class="inspector" style="display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem">
@@ -7005,7 +7116,8 @@ function renderGuide(g) {
   const next = GUIDES[(idx + 1) % GUIDES.length];
   $('#view').innerHTML = `${pageHead(L(g.title), '', `<a class="btn ghost" href="#learn">${ic('chevron-left', 'flip')} ${t('allGuides')}</a>`, g.icon)}
     <article class="card core article"><p><b>${L(g.intro)}</b></p>${g.sections.map(s => `<h3>${L(s.h)}</h3><p>${L(s.p)}</p>`).join('')}
-      <details class="mt"><summary class="small">${t('readOther')}</summary><div class="${other === 'ur' ? 'ur' : ''}" lang="${other}" dir="${other === 'ur' ? 'rtl' : 'ltr'}"><p><b>${g.intro[other]}</b></p>${g.sections.map(s => `<h4>${s.h[other]}</h4><p class="small">${s.p[other]}</p>`).join('')}</div></details></article>
+      <details class="mt"><summary class="small">${t('readOther')}</summary><div class="${other === 'ur' ? 'ur' : ''}" lang="${other}" dir="${other === 'ur' ? 'rtl' : 'ltr'}"><p><b>${g.intro[other]}</b></p>${g.sections.map(s => `<h4>${s.h[other]}</h4>
+          <p class="small">${s.p[other]}</p>`).join('')}</div></details></article>
     <div class="row mt"><a class="btn" href="#learn/${next.id}">${t('nextGuide')}: ${L(next.title)} ${ic('chevron-right', 'flip')}</a><a class="btn ghost" href="#learn/quiz">${ic('award')} ${t('quizTitle')}</a></div>`;
 }
 
@@ -7044,7 +7156,8 @@ function renderQuizResult() {
   $('#view').innerHTML = `${pageHead(t('quizTitle'), '')}<section class="card core article" style="text-align:center">${ringScore(score / QUIZ.length)}
     <h3 style="justify-content:center">${t('yourScore', { s: score, n: QUIZ.length })}</h3><p>${score >= 10 ? t('quizGreat') : score >= 6 ? t('quizGood') : t('quizTry')}</p>
     <div class="row" style="justify-content:center"><button class="btn" type="button" id="qzAgain">${ic('refresh')} ${t('tryAgain')}</button><a class="btn ghost" href="#learn">${t('allGuides')}</a></div>
-    <h4 class="mt">${t('history')}</h4>${S.quiz.slice(0, 5).map(q => `<div class="lrow"><span class="av wheat">${ic('award')}</span><div class="meta"><b>${q.score} / ${QUIZ.length}</b><small>${fmtDT(q.ts)}</small></div></div>`).join('')}</section>`;
+    <h4 class="mt">${t('history')}</h4>${S.quiz.slice(0, 5).map(q => `<div class="lrow"><span class="av wheat">${ic('award')}</span><div class="meta"><b>${q.score} / ${QUIZ.length}</b><small>${fmtDT(q.ts)}</small></div>
+        </div>`).join('')}</section>`;
   $('#qzAgain').onclick = () => {
     Object.assign(QZ, { i: 0, picks: [], done: false });
     rerender();
@@ -7110,9 +7223,11 @@ function logList() {
 // ---------- settings: language, display, units, model limits, prices, data ----------
 
 function segRow(id, label, sub, opts, val) {
-  return `<div class="setrow"><div class="lbl"><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</div><div class="seg" id="${id}">${opts.map(([k, l]) => `<button type="button" data-v="${k}" class="${String(val) === String(k) ? 'on' : ''}">${l}</button>`).join('')}</div></div>`;
+  return `<div class="setrow"><div class="lbl"><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</div>
+      <div class="seg" id="${id}">${opts.map(([k, l]) => `<button type="button" data-v="${k}" class="${String(val) === String(k) ? 'on' : ''}">${l}</button>`).join('')}</div></div>`;
 }
-const switchRow = (id, label, sub, on) => `<div class="setrow"><div class="lbl"><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</div><label class="switch"><input type="checkbox" id="${id}" ${on ? 'checked' : ''} aria-label="${label}"><i></i></label></div>`;
+const switchRow = (id, label, sub, on) => `<div class="setrow"><div class="lbl"><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</div>
+    <label class="switch"><input type="checkbox" id="${id}" ${on ? 'checked' : ''} aria-label="${label}"><i></i></label></div>`;
 
 function renderSettings() {
   const s = S.settings;
@@ -7136,7 +7251,8 @@ function renderSettings() {
       <div class="stack">
         <section class="card core"><h3>${ic('folder')} ${t('stData')}</h3>
           ${switchRow('setDemo', t('demoData'), t('demoDataSub'), s.demo)}
-          <div class="setrow"><div class="lbl"><b>${t('backup')}</b><small>${s.lastBackup ? t('lastBackup', { d: fmtDT(s.lastBackup) }) : t('neverBackedUp')}</small></div><div class="row"><button class="btn ghost sm" type="button" id="setExport">${ic('download')} ${t('exportJson')}</button><button class="btn ghost sm" type="button" id="setImport">${ic('upload')} ${t('importJson')}</button></div></div>
+          <div class="setrow"><div class="lbl"><b>${t('backup')}</b><small>${s.lastBackup ? t('lastBackup', { d: fmtDT(s.lastBackup) }) : t('neverBackedUp')}</small></div>
+              <div class="row"><button class="btn ghost sm" type="button" id="setExport">${ic('download')} ${t('exportJson')}</button><button class="btn ghost sm" type="button" id="setImport">${ic('upload')} ${t('importJson')}</button></div></div>
           <div class="setrow"><div class="lbl"><b>${t('resetAll')}</b><small>${t('resetAllSub')}</small></div><button class="btn danger sm" type="button" id="setReset">${ic('trash')} ${t('reset')}</button></div>
           <p class="tiny muted">${t('storageUsed', { kb })} · <code>${NS}*</code></p></section>
         <section class="card"><h3>${ic('help')} ${t('stHelp')}</h3><div class="row"><button class="btn ghost" type="button" id="setTour">${ic('sparkles')} ${t('replayTour')}</button><button class="btn ghost" type="button" id="setKeys">${ic('hash')} ${t('shortcuts')}</button><a class="btn ghost" href="#about">${ic('info')} ${t('nav_about')}</a></div></section>
@@ -7283,7 +7399,8 @@ function openPalette() {
   if ($('#stage').classList.contains('on')) return;
   closeModal();
   const p = $('#palette');
-  p.innerHTML = `<div class="palbox"><input class="inp" id="palIn" type="search" placeholder="${t('searchAll')}" aria-label="${t('searchAll')}" autocomplete="off" dir="auto"><div class="palres" id="palRes" role="listbox"></div><div class="palhint">${t('palHint')}</div></div>`;
+  p.innerHTML = `<div class="palbox"><input class="inp" id="palIn" type="search" placeholder="${t('searchAll')}" aria-label="${t('searchAll')}" autocomplete="off" dir="auto"><div class="palres" id="palRes" role="listbox"></div>
+      <div class="palhint">${t('palHint')}</div></div>`;
   p.classList.add('on');
   const index = paletteIndex();
   const draw = () => {
@@ -7303,7 +7420,7 @@ function openPalette() {
   $('#palIn').onkeydown = palKeys;
   p.onclick = e => e.target === p && closePalette();
   draw();
-  setTimeout(() => $('#palIn').focus(), 30);
+  $('#palIn').focus();
 }
 
 function palKeys(e) {
@@ -7469,11 +7586,14 @@ function renderAbout() {
   $('#view').innerHTML = `${pageHead(t('nav_about'), t('ab_sub'), `<button type="button" class="btn ghost" id="abTour">${ic('sparkles')} ${t('replayTour')}</button><button type="button" class="btn ghost" id="abKeys">${ic('hash')} ${t('shortcuts')}</button>`)}
     <div class="cols two"><div class="stack">
       <section class="card core"><h3>${ic('droplet')} ${t('ab_problemTitle')}</h3><p>${t('ab_problem')}</p><p class="small muted">${t('ab_sources')}</p></section>
-      <section class="card"><h3>${ic('layers')} ${t('ab_whatTitle')}</h3>${features.map(([i, k]) => `<div class="lrow"><span class="av">${ic(i)}</span><div class="meta"><small style="white-space:normal;color:var(--ink)">${t(k)}</small></div></div>`).join('')}</section>
-      <section class="card soft"><h3>${ic('alert')} ${t('ab_limitsTitle')}</h3>${limits.map(k => `<div class="lrow"><span class="av bad">${ic('x-circle')}</span><div class="meta"><small style="white-space:normal;color:var(--ink)">${t(k)}</small></div></div>`).join('')}</section>
+      <section class="card"><h3>${ic('layers')} ${t('ab_whatTitle')}</h3>${features.map(([i, k]) => `<div class="lrow"><span class="av">${ic(i)}</span><div class="meta"><small style="white-space:normal;color:var(--ink)">${t(k)}</small></div>
+          </div>`).join('')}</section>
+      <section class="card soft"><h3>${ic('alert')} ${t('ab_limitsTitle')}</h3>${limits.map(k => `<div class="lrow"><span class="av bad">${ic('x-circle')}</span><div class="meta"><small style="white-space:normal;color:var(--ink)">${t(k)}</small></div>
+          </div>`).join('')}</section>
     </div><div class="stack">
       <section class="card core"><h3>${ic('code')} ${t('todoTitle')}</h3><p class="small muted">${t('todoIntro')}</p>
-        ${TODOS.map(([k, lvl, where]) => `<div class="lrow" style="align-items:flex-start"><span class="av ${lvl === 'Hard' ? 'bad' : 'wheat'}">${ic(lvl === 'Hard' ? 'zap' : 'sliders')}</span><div class="meta"><b style="white-space:normal">${t(k + 't')} <span class="chip ${lvl === 'Hard' ? 'bad' : 'wheat'}">${t('lvl_' + lvl)}</span></b><small style="white-space:normal">${t(k + 'b')}</small><small class="ltr"><code>${where}</code></small></div></div>`).join('')}</section>
+        ${TODOS.map(([k, lvl, where]) => `<div class="lrow" style="align-items:flex-start"><span class="av ${lvl === 'Hard' ? 'bad' : 'wheat'}">${ic(lvl === 'Hard' ? 'zap' : 'sliders')}</span><div class="meta"><b style="white-space:normal">${t(k + 't')} <span class="chip ${lvl === 'Hard' ? 'bad' : 'wheat'}">${t('lvl_' + lvl)}</span></b><small style="white-space:normal">${t(k + 'b')}</small><small class="ltr"><code>${where}</code></small></div>
+            </div>`).join('')}</section>
       <section class="card soft"><h3>${ic('info')} ${t('ab_dataTitle')}</h3><p class="small">${t('ab_data')}</p><p class="tiny muted">${t('ab_version')}</p></section>
     </div></div>`;
   $('#abTour').onclick = startTour;
@@ -7629,6 +7749,7 @@ function route() {
 function renderRoute(r, arg) {
   const same = r === curRoute && arg === curArg;
   if (curRoute === 'home' && r !== 'home') stopPlay();
+  if (curRoute === 'model' && r !== 'model') stopModelPlay();
   if (curRoute === 'map' && r !== 'map') dropLeaflet();
   curRoute = r;
   curArg = arg;

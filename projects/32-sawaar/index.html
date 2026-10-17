@@ -106,7 +106,12 @@ html.calm *, html.calm *::before, html.calm *::after { animation-duration: .01ms
 .card, .tile { transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s; }
 .tile:hover, .card.lift:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 .fill, .bar > i { transition: width .6s var(--ease); }
-.skeleton { background: linear-gradient(90deg, var(--panel-2) 25%, var(--panel-3) 50%, var(--panel-2) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 8px; }
+.skeleton {
+  background: linear-gradient(90deg, var(--panel-2) 25%, var(--panel-3) 50%, var(--panel-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 8px;
+}
 
 /* ---------- base ---------- */
 * { box-sizing: border-box; }
@@ -126,7 +131,16 @@ h1, h2, h3, h4 { margin: 0; line-height: 1.2; font-weight: 700; }
 p { margin: 0 0 .6em; }
 a { color: var(--cyan); }
 code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .86em; }
-kbd { display: inline-block; min-width: 1.6em; padding: 1px 6px; border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 6px; background: var(--panel-2); text-align: center; }
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 6px;
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  text-align: center;
+}
 .num { font-family: var(--font-c); font-variant-numeric: tabular-nums lining-nums; direction: ltr; unicode-bidi: isolate; }
 html[lang="ur"] .num { line-height: 1.3; }
 .muted { color: var(--muted); }
@@ -149,7 +163,18 @@ html[lang="ur"] .num { line-height: 1.3; }
 .gr { color: var(--green); }
 .or { color: var(--orange); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 8px; }
-.skip { position: absolute; inset-inline-start: 12px; top: -70px; z-index: 1000; background: var(--yellow); color: var(--yellow-ink); padding: 8px 14px; border-radius: 10px; font-weight: 700; text-decoration: none; }
+.skip {
+  position: absolute;
+  inset-inline-start: 12px;
+  top: -70px;
+  z-index: 1000;
+  background: var(--yellow);
+  color: var(--yellow-ink);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
 .skip:focus { top: 10px; }
 html[dir="rtl"] .flip { transform: scaleX(-1); }
 
@@ -188,7 +213,16 @@ html[dir="rtl"] .flip { transform: scaleX(-1); }
 html[lang="ur"] .brand-m b { font-family: var(--font-ur); font-size: 1.05rem; letter-spacing: 0; line-height: 2; }
 .mark svg { width: 34px; height: 34px; display: block; }
 .ttl { flex: 1; min-width: 0; }
-.ttl .kicker { display: block; font: 600 .7rem/1 var(--font-c); letter-spacing: .16em; text-transform: uppercase; color: var(--yellow-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ttl .kicker {
+  display: block;
+  font: 600 .7rem/1 var(--font-c);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--yellow-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .ttl h1 { font: 700 1.5rem/1.1 var(--font-c); letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 html[lang="ur"] .ttl h1 { font-family: var(--font-ur); text-transform: none; letter-spacing: 0; font-size: 1.15rem; line-height: 1.9; }
 html[lang="ur"] .ttl .kicker { font-family: var(--font-ur); letter-spacing: 0; font-size: .7rem; line-height: 1.6; }
@@ -210,7 +244,19 @@ html[lang="ur"] .ttl .kicker { font-family: var(--font-ur); letter-spacing: 0; f
 }
 .tbtn:hover { border-color: var(--line-2); background: var(--panel-2); }
 .tbtn.lang { font-weight: 700; font-size: .85rem; }
-.badge { position: absolute; top: -4px; inset-inline-end: -4px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff; font: 700 .7rem/19px var(--font); text-align: center; }
+.badge {
+  position: absolute;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--red);
+  color: #fff;
+  font: 700 .7rem/19px var(--font);
+  text-align: center;
+}
 #view { padding: 16px 14px calc(var(--tab-h) + 30px); max-width: 1260px; margin: 0 auto; outline: none; }
 @media (max-width: 899px) {
   .top { gap: 8px; padding: 0 10px; }
@@ -257,7 +303,17 @@ html[lang="ur"] .tabs a, html[lang="ur"] .tabs button { font-family: var(--font-
 .tabs .on { color: var(--yellow-text); }
 .tabs .on::before { content: ""; position: absolute; top: 0; width: 34px; height: 3px; border-radius: 0 0 3px 3px; background: var(--yellow); }
 .tabs .ride-tab .ic { width: 27px; height: 27px; }
-.tdot { position: absolute; top: 8px; inset-inline-end: calc(50% - 22px); min-width: 16px; height: 16px; border-radius: 8px; background: var(--red); color: #fff; font: 700 .62rem/16px var(--font); }
+.tdot {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: calc(50% - 22px);
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--red);
+  color: #fff;
+  font: 700 .62rem/16px var(--font);
+}
 
 @media (min-width: 900px) {
   .rail {
@@ -297,8 +353,27 @@ html[lang="ur"] .tabs a, html[lang="ur"] .tabs button { font-family: var(--font-
   .rail-nav a .ic { width: 22px; height: 22px; }
   .rail-nav a:hover { background: var(--panel-2); color: var(--ink); }
   .rail-nav a.on { color: var(--yellow-text); background: var(--yellow-soft); }
-  .rail-nav a.on::before { content: ""; position: absolute; inset-inline-start: -8px; top: 10px; bottom: 10px; width: 4px; border-radius: 0 4px 4px 0; background: repeating-linear-gradient(180deg, var(--yellow) 0 7px, transparent 7px 11px); }
-  .rail-nav .cnt { position: absolute; top: 4px; inset-inline-end: 12px; min-width: 16px; height: 16px; border-radius: 8px; background: var(--red); color: #fff; font: 700 .62rem/16px var(--font); }
+  .rail-nav a.on::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -8px;
+    top: 10px;
+    bottom: 10px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: repeating-linear-gradient(180deg, var(--yellow) 0 7px, transparent 7px 11px);
+  }
+  .rail-nav .cnt {
+    position: absolute;
+    top: 4px;
+    inset-inline-end: 12px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background: var(--red);
+    color: #fff;
+    font: 700 .62rem/16px var(--font);
+  }
   .rail-nav .sep { height: 1px; background: var(--line); margin: 6px 10px; }
   .main { margin-inline-start: var(--rail-w); }
   .tabs, .brand-m { display: none; }
@@ -336,10 +411,32 @@ html[lang="ur"] .btn { white-space: normal; line-height: 1.7; padding-block: 6px
 .btn.lg { min-height: 58px; padding: 10px 22px; font-size: 1.08rem; border-radius: 16px; }
 .btn.block { width: 100%; }
 .btn[disabled], .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
-.ibtn { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; flex: none; }
+.ibtn {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink);
+  cursor: pointer;
+  flex: none;
+}
 .ibtn:hover { border-color: var(--line-2); }
 .ibtn.sm { width: 32px; height: 32px; border-radius: 9px; }
-.chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: .78rem; font-weight: 600; background: var(--panel-3); color: var(--ink-2); white-space: nowrap; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+  background: var(--panel-3);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
 html[lang="ur"] .chip { line-height: 1.9; }
 .chip.y { background: var(--yellow-soft); color: var(--yellow-text); }
 .chip.r { background: var(--red-soft); color: var(--red); }
@@ -347,7 +444,19 @@ html[lang="ur"] .chip { line-height: 1.9; }
 .chip.g { background: var(--green-soft); color: var(--green); }
 .chip.o { background: var(--orange-soft); color: var(--orange); }
 .seg { display: inline-flex; padding: 3px; gap: 3px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); flex-wrap: wrap; max-width: 100%; }
-.seg button { border: 0; background: none; padding: 6px 12px; border-radius: 9px; font-weight: 600; font-size: .88rem; color: var(--muted); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.seg button {
+  border: 0;
+  background: none;
+  padding: 6px 12px;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: .88rem;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
 .seg button.on { background: var(--yellow); color: var(--yellow-ink); }
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .field > span { font-size: .8rem; font-weight: 600; color: var(--muted); }
@@ -367,8 +476,28 @@ select.inp { cursor: pointer; }
 .inp:focus { outline: 2px solid var(--focus); outline-offset: 0; border-color: transparent; }
 .fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
 .switch { display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; }
-.switch input { appearance: none; width: 44px; height: 26px; border-radius: 13px; background: var(--line-2); position: relative; cursor: pointer; flex: none; transition: background .2s; }
-.switch input::after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s var(--ease); }
+.switch input {
+  appearance: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--line-2);
+  position: relative;
+  cursor: pointer;
+  flex: none;
+  transition: background .2s;
+}
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  inset-inline-start: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s var(--ease);
+}
 .switch input:checked { background: var(--yellow); }
 .switch input:checked::after { transform: translateX(18px); }
 html[dir="rtl"] .switch input:checked::after { transform: translateX(-18px); }
@@ -442,7 +571,16 @@ button.li:hover { background: var(--panel-2); }
 .note.r > .ic { color: var(--red); }
 .tbl-wrap { overflow-x: auto; max-width: 100%; }
 table.tbl { width: 100%; border-collapse: collapse; font-size: .9rem; }
-.tbl th { text-align: start; font: 600 .72rem var(--font-c); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 8px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.tbl th {
+  text-align: start;
+  font: 600 .72rem var(--font-c);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px;
+  border-bottom: 1px solid var(--line-2);
+  white-space: nowrap;
+}
 html[lang="ur"] .tbl th { font-family: var(--font-ur); letter-spacing: 0; font-size: .74rem; }
 .tbl td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .tbl tr.click { cursor: pointer; }
@@ -487,27 +625,87 @@ html[lang="ur"] .shead h3 { font-family: var(--font-ur); text-transform: none; l
 }
 .palette { position: fixed; inset: 0; z-index: 700; display: none; justify-content: center; align-items: flex-start; padding: 70px 12px; background: rgba(4, 5, 7, .55); }
 .palette.on { display: flex; animation: fadeIn .2s both; }
-.palbox { width: min(620px, 100%); background: var(--panel); border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--shadow-lg); overflow: hidden; animation: pop .2s var(--ease) both; }
+.palbox {
+  width: min(620px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: pop .2s var(--ease) both;
+}
 .palbox .inp { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; min-height: 54px; font-size: 1.05rem; background: var(--panel); }
 .palres { max-height: 55vh; overflow: auto; padding: 6px; }
 .palres .pg { font: 600 .7rem var(--font-c); letter-spacing: .14em; text-transform: uppercase; color: var(--yellow-text); padding: 8px 10px 4px; }
-.palres button { display: flex; width: 100%; align-items: center; gap: 10px; padding: 9px 10px; border: 0; background: none; border-radius: 10px; text-align: start; cursor: pointer; }
+.palres button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  background: none;
+  border-radius: 10px;
+  text-align: start;
+  cursor: pointer;
+}
 .palres button small { margin-inline-start: auto; color: var(--muted); font-size: .78rem; text-align: end; }
 .palres button.on, .palres button:hover { background: var(--panel-3); }
 .palhint { padding: 8px 14px; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); }
 #tour { position: fixed; inset: 0; z-index: 800; display: none; }
 #tour.on { display: block; }
-#tourSpot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(3, 4, 6, .72); border: 2px solid var(--yellow); transition: all .35s var(--ease); pointer-events: none; }
-#tourTip { position: fixed; width: min(340px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line-2); border-radius: 16px; padding: 14px; box-shadow: var(--shadow-lg); animation: pop .25s var(--ease) both; }
+#tourSpot {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(3, 4, 6, .72);
+  border: 2px solid var(--yellow);
+  transition: all .35s var(--ease);
+  pointer-events: none;
+}
+#tourTip {
+  position: fixed;
+  width: min(340px, calc(100vw - 32px));
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: var(--shadow-lg);
+  animation: pop .25s var(--ease) both;
+}
 #tourTip h4 { font: 700 1.15rem var(--font-c); letter-spacing: .04em; text-transform: uppercase; margin: 6px 0 4px; }
 html[lang="ur"] #tourTip h4 { font-family: var(--font-ur); text-transform: none; letter-spacing: 0; line-height: 2; }
 #tourTip p { font-size: .9rem; color: var(--ink-2); }
 .dots { display: flex; gap: 5px; }
 .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
 .dots i.on { background: var(--yellow); width: 18px; border-radius: 4px; }
-#toasts { position: fixed; z-index: 950; inset-inline: 0; bottom: calc(var(--tab-h) + 14px); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; padding: 0 12px; }
+#toasts {
+  position: fixed;
+  z-index: 950;
+  inset-inline: 0;
+  bottom: calc(var(--tab-h) + 14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  padding: 0 12px;
+}
 @media (min-width: 900px) { #toasts { bottom: 24px; } }
-.toast { display: flex; gap: 10px; align-items: center; max-width: min(460px, 100%); padding: 11px 15px; border-radius: 12px; background: var(--ink); color: var(--bg); font-weight: 600; font-size: .92rem; box-shadow: var(--shadow-lg); animation: fadeUp .3s var(--ease) both; transition: opacity .3s, transform .3s; }
+.toast {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  max-width: min(460px, 100%);
+  padding: 11px 15px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: .92rem;
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp .3s var(--ease) both;
+  transition: opacity .3s, transform .3s;
+}
 .toast.ok .ic { color: var(--green); }
 .toast.bad .ic { color: var(--red); }
 .toast.out { opacity: 0; transform: translateY(8px); }
@@ -534,7 +732,16 @@ html[data-theme="light"] .toast.bad .ic { color: #ff9c94; }
 .spark.y polyline { stroke: var(--yellow); }
 .spark.r polyline { stroke: var(--red); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; color: var(--muted); }
-.legend span::before { content: ""; display: inline-block; width: 14px; height: 4px; border-radius: 2px; margin-inline-end: 6px; vertical-align: middle; background: var(--line-2); }
+.legend span::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+  margin-inline-end: 6px;
+  vertical-align: middle;
+  background: var(--line-2);
+}
 .legend .lg1::before { background: var(--cyan); }
 .legend .lg2::before { background: var(--orange); }
 .legend .lg3::before { background: var(--ink); }
@@ -551,7 +758,20 @@ html[data-theme="light"] .toast.bad .ic { color: #ff9c94; }
 .hud-card { background: radial-gradient(ellipse at 50% 120%, var(--yellow-soft), transparent 60%), var(--panel); overflow: hidden; }
 .hud-prev { opacity: .9; }
 .pv-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
-.check { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; border: 2px dashed var(--line-2); background: var(--bg-2); color: var(--ink); text-align: start; cursor: pointer; min-height: 72px; }
+.check {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px dashed var(--line-2);
+  background: var(--bg-2);
+  color: var(--ink);
+  text-align: start;
+  cursor: pointer;
+  min-height: 72px;
+}
 .check small { display: block; color: var(--muted); font-size: .8rem; }
 .check .ic.lg { color: var(--muted); width: 32px; height: 32px; }
 .check .tick { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line-2); display: grid; place-items: center; color: transparent; flex: none; }
@@ -620,7 +840,19 @@ html[lang="ur"] .hlbl { font-family: var(--font-ur); letter-spacing: 0; }
 .ibar i.hot { background: var(--red); }
 .ibar b { position: absolute; inset-inline: -2px; height: 3px; background: var(--yellow); }
 .stages { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
-.stages li { display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: var(--panel-2); color: var(--muted); font: 700 .7rem var(--font-c); letter-spacing: .08em; text-transform: uppercase; border: 1px solid var(--line); }
+.stages li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font: 700 .7rem var(--font-c);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+}
 html[lang="ur"] .stages li { font-family: var(--font-ur); letter-spacing: 0; line-height: 1.8; }
 .stages li i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
 .stages li.on { color: var(--ink-2); }
@@ -630,11 +862,32 @@ html[lang="ur"] .stages li { font-family: var(--font-ur); letter-spacing: 0; lin
 .stages li[data-i="4"].cur { background: var(--red); border-color: var(--red); color: #fff; }
 
 /* ---------- live HUD layer ---------- */
-#hud { position: fixed; inset: 0; z-index: 500; display: none; background: radial-gradient(ellipse at 50% 115%, var(--yellow-soft), transparent 55%), var(--bg); color: var(--ink); overflow-y: auto; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); }
+#hud {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: none;
+  background: radial-gradient(ellipse at 50% 115%, var(--yellow-soft), transparent 55%), var(--bg);
+  color: var(--ink);
+  overflow-y: auto;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+}
 #hud.on { display: flex; flex-direction: column; gap: 8px; animation: fadeIn .25s both; }
 html.riding body { overflow: hidden; }
 .hud-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.hchip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font: 700 .76rem var(--font-c); letter-spacing: .08em; text-transform: uppercase; background: var(--panel-2); color: var(--ink-2); border: 1px solid var(--line); }
+.hchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font: 700 .76rem var(--font-c);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: var(--panel-2);
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
 html[lang="ur"] .hchip { font-family: var(--font-ur); letter-spacing: 0; line-height: 1.8; }
 .hchip.sim { background: var(--cyan-soft); color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 40%, transparent); }
 .hchip.live { background: var(--green-soft); color: var(--green); }
@@ -643,7 +896,17 @@ html[lang="ur"] .hchip { font-family: var(--font-ur); letter-spacing: 0; line-he
 .hclock { font-size: 1.3rem; }
 .hud .hud-main { flex: 1; min-height: 0; }
 .hud .hpanel svg { max-width: 300px; }
-.hud-warn { display: none; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: var(--yellow); color: var(--yellow-ink); font: 700 1.15rem var(--font-c); letter-spacing: .03em; }
+.hud-warn {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--yellow);
+  color: var(--yellow-ink);
+  font: 700 1.15rem var(--font-c);
+  letter-spacing: .03em;
+}
 html[lang="ur"] .hud-warn { font-family: var(--font-ur); font-size: 1rem; line-height: 2; }
 .hud-warn.on { display: flex; animation: fadeUp .3s var(--ease) both; }
 .hud-msg { min-height: 30px; text-align: center; font: 700 1.05rem var(--font-c); letter-spacing: .04em; opacity: 0; transition: opacity .3s; }
@@ -654,14 +917,52 @@ html[lang="ur"] .hud-msg { font-family: var(--font-ur); font-size: .95rem; line-
 .hud-msg.y { color: var(--yellow-text); }
 .hud-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
 .hs { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px; text-align: center; min-width: 0; }
-.hs span { display: block; font: 600 .68rem var(--font-c); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hs span {
+  display: block;
+  font: 600 .68rem var(--font-c);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 html[lang="ur"] .hs span { font-family: var(--font-ur); letter-spacing: 0; line-height: 1.8; }
 .hs b { font-size: 1.6rem; line-height: 1.05; }
 .hs small { color: var(--muted); font-size: .7rem; margin-inline-start: 2px; }
-.sim-pad { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; padding: 6px; border: 1px dashed color-mix(in srgb, var(--cyan) 45%, transparent); border-radius: 12px; }
+.sim-pad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: 1px dashed color-mix(in srgb, var(--cyan) 45%, transparent);
+  border-radius: 12px;
+}
 .sim-pad > span { color: var(--cyan); font-weight: 700; margin-inline-end: 4px; }
 .hud-actions { display: grid; grid-template-columns: 1fr 1.3fr 1.3fr 1fr; gap: 10px; }
-.hbtn { --p: 0; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 76px; border-radius: 18px; border: 2px solid var(--line-2); background: var(--panel-2); color: var(--ink); font: 800 1.1rem var(--font-c); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; touch-action: none; user-select: none; }
+.hbtn {
+  --p: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 76px;
+  border-radius: 18px;
+  border: 2px solid var(--line-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  font: 800 1.1rem var(--font-c);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
 html[lang="ur"] .hbtn { font-family: var(--font-ur); letter-spacing: 0; font-size: .95rem; line-height: 1.8; }
 .hbtn small { font: 600 .66rem var(--font); letter-spacing: .06em; opacity: .8; }
 .hbtn::before { content: ""; position: absolute; inset: 0; transform-origin: left; transform: scaleX(var(--p)); background: rgba(255, 255, 255, .22); pointer-events: none; }
@@ -673,7 +974,15 @@ html[dir="rtl"] .hbtn::before { transform-origin: right; }
 .hud.paused #hPause { border-color: var(--yellow); color: var(--yellow-text); }
 @media (max-width: 760px) {
   #hud { padding: 8px 10px 0; gap: 6px; }
-  .hud-actions { position: sticky; bottom: 0; z-index: 2; margin: 0 -10px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
+  .hud-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 0 -10px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+  }
   .sim-pad { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
   .sim-pad .btn { flex: none; }
   .hud .hud-main { grid-template-columns: 1fr 1fr; flex: none; }
@@ -698,7 +1007,16 @@ html[dir="rtl"] .hbtn::before { transform-origin: right; }
 @keyframes pulseEdge { 50% { box-shadow: inset 0 0 0 14px rgba(255, 65, 54, .55); } }
 #alarm.practice { background: radial-gradient(circle at 50% 40%, #3b3207, #120f03 70%); }
 .al-wrap { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
-.al-stripe { align-self: stretch; padding: 6px; border-radius: 10px; background: #ffcc1a; border: 3px dashed #17130a; color: #17130a; font: 800 1rem var(--font-c); letter-spacing: .2em; }
+.al-stripe {
+  align-self: stretch;
+  padding: 6px;
+  border-radius: 10px;
+  background: #ffcc1a;
+  border: 3px dashed #17130a;
+  color: #17130a;
+  font: 800 1rem var(--font-c);
+  letter-spacing: .2em;
+}
 .al-title { display: flex; align-items: center; gap: 10px; font: 800 clamp(1.8rem, 6vw, 3rem)/1.05 var(--font-c); letter-spacing: .04em; text-transform: uppercase; }
 html[lang="ur"] .al-title { font-family: var(--font-ur); letter-spacing: 0; line-height: 1.9; font-size: clamp(1.4rem, 5vw, 2.2rem); }
 .al-title .ic { width: 1.1em; height: 1.1em; color: #ff6a60; }
@@ -710,7 +1028,24 @@ html[lang="ur"] .al-title { font-family: var(--font-ur); letter-spacing: 0; line
 .al-ring .val { fill: none; stroke: #ff4136; stroke-width: 14; stroke-linecap: round; transition: stroke-dasharray 1s linear; }
 #alarm.practice .al-ring .val { stroke: #ffcc1a; }
 .al-ring b { position: absolute; inset: 0; display: grid; place-items: center; font: 800 clamp(64px, 18vw, 110px) var(--font-c); }
-.okbtn { width: min(620px, 100%); min-height: 120px; border-radius: 26px; border: 0; background: #f3f2ec; color: #0b0d10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; box-shadow: 0 0 0 6px rgba(255, 255, 255, .18), 0 20px 50px -20px #000; font: 800 2.4rem var(--font-c); letter-spacing: .06em; text-transform: uppercase; }
+.okbtn {
+  width: min(620px, 100%);
+  min-height: 120px;
+  border-radius: 26px;
+  border: 0;
+  background: #f3f2ec;
+  color: #0b0d10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, .18), 0 20px 50px -20px #000;
+  font: 800 2.4rem var(--font-c);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
 html[lang="ur"] .okbtn { font-family: var(--font-ur); letter-spacing: 0; font-size: 1.9rem; line-height: 1.8; }
 .okbtn .ic { width: 38px; height: 38px; color: #13804a; }
 .okbtn small { font: 600 .9rem var(--font); letter-spacing: 0; text-transform: none; color: #3a3f45; }
@@ -750,9 +1085,29 @@ html[lang="ur"] .machine .mn text { font-family: var(--font-ur); letter-spacing:
 .machine .mnum { fill: var(--panel-3); stroke: var(--muted); stroke-width: 1.5; }
 .machine .mnum.ok { stroke: var(--green); }
 .machine .mnum-t { fill: var(--ink); font: 700 11px var(--font-c); text-anchor: middle; }
-.mrej { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; font-size: .84rem; color: var(--muted); min-width: 0; }
+.mrej {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 14px;
+  font-size: .84rem;
+  color: var(--muted);
+  min-width: 0;
+}
 .mrej li { display: flex; gap: 8px; align-items: baseline; }
-.mrej b { flex: none; width: 20px; height: 20px; border-radius: 50%; display: inline-grid; place-items: center; border: 1.5px solid var(--muted); font: 700 .72rem var(--font-c); color: var(--ink); }
+.mrej b {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  border: 1.5px solid var(--muted);
+  font: 700 .72rem var(--font-c);
+  color: var(--ink);
+}
 .mrej li.ok b { border-color: var(--green); }
 @media (max-width: 720px) { .mrej { grid-template-columns: minmax(0, 1fr); } }
 .machine marker path { fill: var(--cyan); }
@@ -857,7 +1212,22 @@ a.li:hover { background: var(--panel-2); }
 
 /* ---------- medical card and sticker ---------- */
 .cards-prev { display: grid; gap: 12px; justify-items: center; }
-.wcard { width: min(100%, 340px); aspect-ratio: 85.6 / 54; border-radius: 14px; padding: 12px 14px; background: #f3f2ec; color: #15171a; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px; overflow: hidden; position: relative; font-size: 11.5px; line-height: 1.35; }
+.wcard {
+  width: min(100%, 340px);
+  aspect-ratio: 85.6 / 54;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #f3f2ec;
+  color: #15171a;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+  position: relative;
+  font-size: 11.5px;
+  line-height: 1.35;
+}
 .wcard.front { border-top: 10px solid #ffcc1a; }
 .wcard.back { flex-direction: row; align-items: center; gap: 12px; border-top: 10px solid #0b0d10; }
 .wc-top { display: flex; align-items: center; gap: 6px; font: 800 13px var(--font-c); letter-spacing: .08em; text-transform: uppercase; }
@@ -874,7 +1244,19 @@ html[lang="ur"] .wc-top { font-family: var(--font-ur); letter-spacing: 0; font-s
 .wcard ul { margin: 4px 0; padding-inline-start: 16px; }
 .wc-tip { font-size: 9.5px; color: #5b6067; margin: 0; }
 .sticker { width: min(100%, 330px); margin: 0 auto; border-radius: 18px; overflow: hidden; border: 3px solid #0b0d10; background: #ffcc1a; color: #0b0d10; }
-.st-head { background: #cf2a1f; color: #fff; text-align: center; padding: 6px; font: 800 15px var(--font-c); letter-spacing: .1em; text-transform: uppercase; display: flex; gap: 6px; justify-content: center; align-items: center; }
+.st-head {
+  background: #cf2a1f;
+  color: #fff;
+  text-align: center;
+  padding: 6px;
+  font: 800 15px var(--font-c);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
 html[lang="ur"] .st-head { font-family: var(--font-ur); letter-spacing: 0; line-height: 1.9; }
 .st-body { display: flex; gap: 10px; align-items: center; padding: 10px; }
 .st-qr { width: 45%; flex: none; background: #fff; padding: 4px; border-radius: 8px; }
@@ -884,7 +1266,16 @@ html[lang="ur"] .st-body p, html[lang="ur"] .wcard { line-height: 1.9; }
 
 /* ---------- garage, hazards, fleet ---------- */
 .calgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; max-width: 460px; margin: 0 auto; }
-.cal { aspect-ratio: 1; border-radius: 8px; background: var(--panel-2); color: var(--muted); display: grid; place-items: center; font: 600 .8rem var(--font-c); border: 1px solid var(--line); }
+.cal {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  font: 600 .8rem var(--font-c);
+  border: 1px solid var(--line);
+}
 .cal.ok { background: var(--green-soft); color: var(--green); border-color: var(--green); }
 .cal.miss { background: var(--red-soft); color: var(--red); border-color: var(--red); }
 .ticks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: .9rem; }
@@ -894,7 +1285,18 @@ html[lang="ur"] .st-body p, html[lang="ur"] .wcard { line-height: 1.9; }
 .warn-card { border-color: var(--yellow); background: linear-gradient(var(--yellow-soft), var(--yellow-soft)), var(--panel); }
 .hz-types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .hz-t input { position: absolute; opacity: 0; pointer-events: none; }
-.hz-t span { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 12px; border: 2px solid var(--line); cursor: pointer; font-size: .82rem; text-align: center; }
+.hz-t span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  cursor: pointer;
+  font-size: .82rem;
+  text-align: center;
+}
 .hz-t input:checked + span { border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow-text); }
 .hz-t input:focus-visible + span { outline: 3px solid var(--focus); }
 .heat { width: 100%; height: auto; display: block; }
@@ -905,7 +1307,21 @@ html[lang="ur"] .heat .hm-l { font-family: var(--font-ur); }
 .riders tr.me td { background: var(--yellow-soft); }
 .li.acked { opacity: .6; }
 .more-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.more-grid a { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px; border-radius: 14px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: .84rem; font-weight: 600; text-align: center; }
+.more-grid a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 6px;
+  border-radius: 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: .84rem;
+  font-weight: 600;
+  text-align: center;
+}
 .more-grid a .ic { color: var(--yellow-text); }
 
 /* ---------- learn, quiz ---------- */
@@ -927,7 +1343,18 @@ html[lang="ur"] .heat .hm-l { font-family: var(--font-ur); }
 html[lang="ur"] .card h2.qtext { font-family: var(--font-ur); line-height: 2.1; }
 .qbar { max-width: 260px; }
 .opts { display: flex; flex-direction: column; gap: 8px; }
-.opt { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel-2); text-align: start; cursor: pointer; font-size: 1rem; }
+.opt {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: var(--panel-2);
+  text-align: start;
+  cursor: pointer;
+  font-size: 1rem;
+}
 .opt:hover:not([disabled]) { border-color: var(--yellow); }
 .opt.right { border-color: var(--green); background: var(--green-soft); }
 .opt.wrong { border-color: var(--red); background: var(--red-soft); }
@@ -1373,7 +1800,8 @@ function fillRing(c) {
 
 function ringSvg(frac, { size = 112, r = 46, color = '' } = {}) {
   const st = color ? ` style="stroke:${color}"` : '';
-  return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle class="track" cx="${size / 2}" cy="${size / 2}" r="${r}"/><circle class="val"${st} cx="${size / 2}" cy="${size / 2}" r="${r}" data-ring="${clamp(frac, 0, 1)}"/></svg>`;
+  return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle class="track" cx="${size / 2}" cy="${size / 2}" r="${r}"/>
+      <circle class="val"${st} cx="${size / 2}" cy="${size / 2}" r="${r}" data-ring="${clamp(frac, 0, 1)}"/></svg>`;
 }
 
 // ---------- small SVG charts (hand-drawn, theme-aware through CSS classes) ----------
@@ -1388,7 +1816,8 @@ function lineChart(series, { w = 600, h = 180, yMin = null, yMax = null, labels 
   const py = v => h - 22 - ((v - lo) / span) * (h - 34);
   const grid = [0, 0.5, 1].map(f => {
     const v = lo + span * f;
-    return `<line class="gl" x1="34" x2="${w - 10}" y1="${py(v)}" y2="${py(v)}"/><text class="ax" x="28" y="${py(v) + 4}" text-anchor="end">${fmtN(v, span < 5 ? 1 : 0)}</text>`;
+    return `<line class="gl" x1="34" x2="${w - 10}" y1="${py(v)}" y2="${py(v)}"/>
+        <text class="ax" x="28" y="${py(v) + 4}" text-anchor="end">${fmtN(v, span < 5 ? 1 : 0)}</text>`;
   }).join('');
   const refLine = ref != null ? `<line class="refl" x1="34" x2="${w - 10}" y1="${py(ref)}" y2="${py(ref)}"/>` : '';
   const lines = series.map(s => {
@@ -1407,7 +1836,8 @@ function barChart(bars, { w = 600, h = 170, max = null } = {}) {
   const body = bars.map((b, i) => {
     const bh = ((h - 40) * b.v) / hi;
     const x = 30 + i * bw + bw * 0.15;
-    return `<rect class="br ${b.cls || ''}" x="${x.toFixed(1)}" y="${(h - 22 - bh).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${Math.max(0, bh).toFixed(1)}" rx="3"><title>${esc(b.label)}: ${fmtN(b.v, b.v % 1 ? 1 : 0)}</title></rect>
+    return `<rect class="br ${b.cls || ''}" x="${x.toFixed(1)}" y="${(h - 22 - bh).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${Math.max(0, bh).toFixed(1)}" rx="3">
+        <title>${esc(b.label)}: ${fmtN(b.v, b.v % 1 ? 1 : 0)}</title></rect>
       <text class="ax" x="${(x + bw * 0.35).toFixed(1)}" y="${h - 6}" text-anchor="middle">${esc(b.label)}</text>`;
   }).join('');
   return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img"><line class="gl" x1="26" x2="${w - 6}" y1="${h - 22}" y2="${h - 22}"/>${body}</svg>`;
@@ -1426,7 +1856,8 @@ let modalReturn = null;
 let modalOnClose = null;
 
 function sheetHead(title, icon = 'info') {
-  return `<div class="shead"><h3 id="sheetTitle">${ic(icon)}<span>${title}</span></h3><button class="ibtn" type="button" data-close aria-label="${t('close')}">${ic('x')}</button></div>`;
+  return `<div class="shead"><h3 id="sheetTitle">${ic(icon)}<span>${title}</span></h3>
+      <button class="ibtn" type="button" data-close aria-label="${t('close')}">${ic('x')}</button></div>`;
 }
 
 function openModal(html, { wide = false, onClose = null } = {}) {
@@ -4994,7 +5425,8 @@ function renderRide() {
 
 function howItWorksHtml() {
   const steps = [['crash', 'how1'], ['siren', 'how2'], ['phone', 'how3'], ['send', 'how4']];
-  return `<section class="card"><h2>${ic('help')} ${t('how_title')}</h2><ol class="how stagger">${steps.map(([i, k], n) => `<li><span class="hn">${n + 1}</span>${ic(i, 'lg')}<span><b>${t(k + 't')}</b><small>${t(k + 'b')}</small></span></li>`).join('')}</ol></section>`;
+  return `<section class="card"><h2>${ic('help')} ${t('how_title')}</h2><ol class="how stagger">${steps.map(([i, k], n) => `<li>
+      <span class="hn">${n + 1}</span>${ic(i, 'lg')}<span><b>${t(k + 't')}</b><small>${t(k + 'b')}</small></span></li>`).join('')}</ol></section>`;
 }
 
 function prepHtml() {
@@ -5002,15 +5434,23 @@ function prepHtml() {
   const sim = s.source !== 'sensors';
   const opt = (v, cur, label) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${label}</option>`;
   return `<h2>${ic('helmet')} ${t('rd_before')}</h2><div class="lane"></div>
-    <button type="button" class="check ${PREP.rider ? 'on' : ''}" id="pkRider" aria-pressed="${PREP.rider}">${ic('helmet', 'lg')}<span class="grow"><b>${t('rd_riderHelmet')}</b><small>${t('rd_riderHelmetSub')}</small></span><i class="tick">${ic('check')}</i></button>
+    <button type="button" class="check ${PREP.rider ? 'on' : ''}" id="pkRider" aria-pressed="${PREP.rider}">${ic('helmet', 'lg')}<span class="grow">
+        <b>${t('rd_riderHelmet')}</b><small>${t('rd_riderHelmetSub')}</small></span><i class="tick">${ic('check')}</i></button>
     <div class="field mt"><span>${t('rd_pillion')}</span><div class="seg" id="pkPillion" role="group" aria-label="${t('rd_pillion')}">
-      ${['none', 'helmet', 'nohelmet'].map(v => `<button type="button" data-v="${v}" class="${PREP.pillion === v ? 'on' : ''}">${t('rd_p_' + v)}</button>`).join('')}</div></div>
-    <label class="note y switch mt ${PREP.pillion === 'none' ? 'hidden' : ''}" id="pkDupatta">${ic('alert')}<span class="grow small">${t('rd_dupatta')}</span><input type="checkbox" ${PREP.dupatta ? 'checked' : ''} aria-label="${t('rd_dupattaOk')}"></label>
+      ${['none', 'helmet', 'nohelmet'].map(v => `<button type="button" data-v="${v}" class="${PREP.pillion === v ? 'on' : ''}">${t('rd_p_' + v)}</button>`).join('')}</div>
+          </div>
+    <label class="note y switch mt ${PREP.pillion === 'none' ? 'hidden' : ''}" id="pkDupatta">${ic('alert')}<span class="grow small">${t('rd_dupatta')}</span>
+        <input type="checkbox" ${PREP.dupatta ? 'checked' : ''} aria-label="${t('rd_dupattaOk')}"></label>
     <div class="fgrid mt">
-      <label class="field"><span>${t('rd_source')}</span><select class="inp" id="pkSource">${['auto', 'sim', 'sensors'].map(v => opt(v, s.source, t('src_' + v))).join('')}</select></label>
-      <label class="field"><span>${t('rd_road')}</span><select class="inp" id="pkRoad">${ROAD_TYPES.map(r => opt(r.id, s.road, `${L(r.n)} · ${r.limit} km/h`)).join('')}</select></label>
-      <label class="field ${sim ? '' : 'hidden'}" id="pkScnWrap"><span>${t('rd_scenario')}</span><select class="inp" id="pkScenario">${SCENARIOS.map(x => opt(x.id, s.scenario, t('scn_' + x.id))).join('')}</select></label>
-      <div class="field ${sim ? '' : 'hidden'}" id="pkSpdWrap"><span>${t('rd_simSpeed')}</span><div class="seg" id="pkSpeed">${[1, 2, 4, 8].map(v => `<button type="button" data-v="${v}" class="${s.simSpeed === v ? 'on' : ''}">${v}x</button>`).join('')}</div></div>
+      <label class="field"><span>${t('rd_source')}</span>
+          <select class="inp" id="pkSource">${['auto', 'sim', 'sensors'].map(v => opt(v, s.source, t('src_' + v))).join('')}</select></label>
+      <label class="field"><span>${t('rd_road')}</span>
+          <select class="inp" id="pkRoad">${ROAD_TYPES.map(r => opt(r.id, s.road, `${L(r.n)} · ${r.limit} km/h`)).join('')}</select></label>
+      <label class="field ${sim ? '' : 'hidden'}" id="pkScnWrap"><span>${t('rd_scenario')}</span>
+          <select class="inp" id="pkScenario">${SCENARIOS.map(x => opt(x.id, s.scenario, t('scn_' + x.id))).join('')}</select></label>
+      <div class="field ${sim ? '' : 'hidden'}" id="pkSpdWrap"><span>${t('rd_simSpeed')}</span>
+          <div class="seg" id="pkSpeed">${[1, 2, 4, 8].map(v => `<button type="button" data-v="${v}" class="${s.simSpeed === v ? 'on' : ''}">${v}x</button>`).join('')}</div>
+          </div>
     </div>
     <button type="button" class="btn y lg block mt" id="startRide">${ic('play')} ${RIDE.on ? t('rd_backToHud') : t('rd_start')}</button>
     <div class="row mt sens" id="sensChips">${sensorChips()}</div>
@@ -5031,7 +5471,8 @@ function readinessHtml() {
   const week = S.trips.filter(tr => tr.start > now() - 7 * DAY);
   const due = servicesStatus().filter(x => x.frac >= 0.9);
   const near = S.hazards.filter(h => h.status === 'open').length;
-  const tile = (route, icon, cls, k, v, s) => `<a class="tile ${cls}" href="#${route}"><span class="k">${ic(icon)} ${k}</span><span class="v">${v}</span><span class="s">${s}</span></a>`;
+  const tile = (route, icon, cls, k, v, s) => `<a class="tile ${cls}" href="#${route}"><span class="k">${ic(icon)} ${k}</span>
+      <span class="v">${v}</span><span class="s">${s}</span></a>`;
   return [
     tile('medical', 'users', real ? 'g' : 'r', t('rd_contacts'), real + '<small>/' + S.contacts.length + '</small>', real ? t('rd_contactsOk') : t('rd_contactsDemo')),
     tile('medical', 'medical', p.blood ? 'g' : 'y', t('rd_medical'), esc(p.blood || '—'), p.name ? esc(p.name) : t('rd_medicalAdd')),
@@ -5310,10 +5751,12 @@ function showRideSummary(trip) {
   const counts = COACH_KINDS.map(k => `<span class="chip ${trip.events.some(e => e.kind === k) ? 'o' : 'g'}">${ic(COACH_ICONS[k])} ${t('ev_' + k)}: ${trip.events.filter(e => e.kind === k).length}</span>`).join('');
   const sh = openModal(`${sheetHead(t('rd_summary'), 'flag')}
     <div class="row"><div class="ring">${ringSvg(sc.score / 100)}<b class="num">${sc.score}</b></div>
-    <div class="grow kpis">${miniKpi(t('k_distance'), fmtN(trip.km, 2), 'km')}${miniKpi(t('k_time'), clock(trip.durS), '')}${miniKpi(t('k_avg'), fmtN(trip.avgKmh, 0), 'km/h')}${miniKpi(t('k_max'), trip.maxKmh, 'km/h')}</div></div>
+    <div class="grow kpis">${miniKpi(t('k_distance'), fmtN(trip.km, 2), 'km')}${miniKpi(t('k_time'), clock(trip.durS), '')}${miniKpi(t('k_avg'), fmtN(trip.avgKmh, 0), 'km/h')}${miniKpi(t('k_max'), trip.maxKmh, 'km/h')}</div>
+        </div>
     <div class="row mt">${counts}</div>
     <p class="small muted mt">${scoreExplain(sc)}</p>
-    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('close')}</button><button class="btn y" type="button" id="sumView">${ic('route')} ${t('rd_viewTrip')}</button></div>`);
+    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('close')}</button>
+        <button class="btn y" type="button" id="sumView">${ic('route')} ${t('rd_viewTrip')}</button></div>`);
   animateIn(sh);
   $('#sumView', sh).onclick = () => {
     closeModal();
@@ -5413,7 +5856,8 @@ function hudHtml() {
     </div>
     <div class="hud-warn" id="hWarn" role="alert"></div>
     <div class="hud-main">
-      <div class="hpanel"><div class="gwrap">${gMeterSvg()}<div class="ibar" title="${t('hud_impact')}"><i id="hImp"></i><b style="bottom:${clamp((S.engine.impactG / 4) * 100, 0, 100)}%"></b></div></div>
+      <div class="hpanel"><div class="gwrap">${gMeterSvg()}<div class="ibar" title="${t('hud_impact')}"><i id="hImp"></i>
+          <b style="bottom:${clamp((S.engine.impactG / 4) * 100, 0, 100)}%"></b></div></div>
         <div class="hlbl">${t('hud_g')} <b class="num" id="hGv">0.00</b></div></div>
       <div class="hspeed">${speedArcSvg(lim)}<div class="spd-num"><b class="num" id="hSpd">0</b><span>km/h</span>
         <small id="hLimit">${t('hud_limit', { n: lim })}</small><em id="hHead">${ic('navigation')} —</em></div></div>
@@ -5421,11 +5865,14 @@ function hudHtml() {
     </div>
     <div class="hud-msg" id="hMsg" aria-live="polite"></div>
     <div class="hud-stats">${hudStat('hKm', t('k_distance'), 'km')}${hudStat('hTime', t('k_time'), '')}${hudStat('hAvg', t('k_avg'), 'km/h')}${hudStat('hMax', t('k_max'), 'km/h')}${hudStat('hEv', t('k_events'), '')}${hudStat('hScore', t('k_score'), '/100')}</div>
-    ${sim ? `<div class="sim-pad" id="simPad"><span class="tiny">${t('hud_simPad')}</span>${pad}<button type="button" class="btn sm ghost" data-ff>${ic('skip')} +10 s</button></div>` : ''}
+    ${sim ? `<div class="sim-pad" id="simPad">
+        <span class="tiny">${t('hud_simPad')}</span>${pad}<button type="button" class="btn sm ghost" data-ff>${ic('skip')} +10 s</button></div>` : ''}
     <div class="hud-actions">
       <button type="button" class="hbtn" id="hPause">${ic('pause', 'lg')}<span>${t('hud_pause')}</span></button>
-      <button type="button" class="hbtn sos hold" id="hSos" aria-label="${t('hud_sosAria')}">${ic('siren', 'lg')}<span>${t('hud_sos')}</span><small>${t('hud_hold')}</small></button>
-      <button type="button" class="hbtn end hold" id="hEnd" aria-label="${t('hud_endAria')}">${ic('flag', 'lg')}<span>${t('hud_end')}</span><small>${t('hud_hold')}</small></button>
+      <button type="button" class="hbtn sos hold" id="hSos" aria-label="${t('hud_sosAria')}">${ic('siren', 'lg')}<span>${t('hud_sos')}</span>
+          <small>${t('hud_hold')}</small></button>
+      <button type="button" class="hbtn end hold" id="hEnd" aria-label="${t('hud_endAria')}">${ic('flag', 'lg')}<span>${t('hud_end')}</span>
+          <small>${t('hud_hold')}</small></button>
       <button type="button" class="hbtn" id="hMin" aria-label="${t('hud_min')}">${ic('minimize', 'lg')}<span>${t('hud_minShort')}</span></button>
     </div>`;
 }
@@ -5434,7 +5881,8 @@ function hudHtml() {
 function hudPreview() {
   return `<div class="hud-prev"><div class="pv-top"><span class="chip y">${ic('helmet')} ${t('rd_standby')}</span>${stageLights()}</div>
     <div class="hud-main"><div class="hpanel">${gMeterSvg()}</div>
-    <div class="hspeed">${speedArcSvg(roadType(S.settings.road).limit)}<div class="spd-num"><b class="num">0</b><span>km/h</span><small>${t('hud_limit', { n: roadType(S.settings.road).limit })}</small></div></div>
+    <div class="hspeed">${speedArcSvg(roadType(S.settings.road).limit)}<div class="spd-num"><b class="num">0</b><span>km/h</span>
+        <small>${t('hud_limit', { n: roadType(S.settings.road).limit })}</small></div></div>
     <div class="hpanel">${leanSvg()}</div></div></div>`.replace(/ id="h[A-Za-z]+"/g, '');
 }
 
@@ -5737,7 +6185,9 @@ function countdownHtml() {
   return `<div class="al-wrap">${ALARM.practice ? `<div class="al-stripe">${t('al_practice')}</div>` : ''}
     <h2 class="al-title" id="alTitle">${ic('crash')} ${t('al_title')}</h2>
     <p class="al-sub">${t(realContacts().length ? 'al_sub' : 'al_subNone', { n: `<b id="alLeft" class="num">${ALARM.left}</b>`, c: realContacts().length })}</p>
-    <div class="al-ring"><svg viewBox="0 0 220 220" aria-hidden="true"><circle class="trk" cx="110" cy="110" r="96"/><circle class="val" id="alRing" cx="110" cy="110" r="96" pathLength="100" stroke-dasharray="100 100"/></svg><b id="alNum" class="num">${ALARM.left}</b></div>
+    <div class="al-ring"><svg viewBox="0 0 220 220" aria-hidden="true"><circle class="trk" cx="110" cy="110" r="96"/>
+        <circle class="val" id="alRing" cx="110" cy="110" r="96" pathLength="100" stroke-dasharray="100 100"/></svg><b id="alNum" class="num">${ALARM.left}</b>
+        </div>
     <button type="button" class="okbtn" id="alOk">${ic('check-circle')}<span>${t('al_ok')}</span><small>${t('al_okSub')}</small></button>
     <div class="row al-row"><button type="button" class="btn r lg" id="alNow">${ic('siren')} ${t('al_now')}</button>
     <button type="button" class="btn ghost lg" id="alMute">${ic(ALARM.muted ? 'volume-x' : 'volume')} ${t(ALARM.muted ? 'al_unmute' : 'al_mute')}</button>
@@ -5759,12 +6209,15 @@ function alertHtml() {
       <div class="stack"><a class="btn r lg block" id="alCall" href="tel:1122" ${prac ? dis : ''}>${ic('phone')} ${t('al_call1122')}</a>
         <a class="btn y lg block" id="alSmsAll" href="${reals.length ? smsHref(reals.map(c => c.phone), ALARM.msg) : '#'}" ${prac || !reals.length ? 'aria-disabled="true" tabindex="-1"' : ''}>${ic('message')} ${t('al_smsAll', { n: reals.length })}</a>
         <div class="al-contacts">${contacts}</div></div>
-      <div class="stack"><div class="between"><b>${t('al_message')}</b><div class="seg" id="alLang"><button type="button" data-l="en" class="${ALARM.msgLang === 'en' ? 'on' : ''}">English</button><button type="button" data-l="ur" class="${ALARM.msgLang === 'ur' ? 'on' : ''}">اردو</button></div></div>
+      <div class="stack"><div class="between"><b>${t('al_message')}</b><div class="seg" id="alLang">
+          <button type="button" data-l="en" class="${ALARM.msgLang === 'en' ? 'on' : ''}">English</button>
+          <button type="button" data-l="ur" class="${ALARM.msgLang === 'ur' ? 'on' : ''}">اردو</button></div></div>
         <textarea class="inp" id="alMsg" rows="6" dir="auto" aria-label="${t('al_message')}">${esc(ALARM.msg)}</textarea>
         <p class="tiny">${l ? `${ic('locate')} ${l.lat.toFixed(5)}, ${l.lng.toFixed(5)} ±${Math.round(l.acc || 0)} m · <a href="${mapLink(l)}" target="_blank" rel="noopener">${t('al_openMap')}</a>` : t('al_noLoc')}</p>
         <p class="tiny">${ic('medical')} ${t('al_medLine', { b: esc(S.profile.blood || '?'), a: esc(S.profile.allergies || '-') })}</p></div>
     </div>
-    <div class="row al-row"><button type="button" class="btn ghost lg" id="alMute">${ic(ALARM.muted ? 'volume-x' : 'volume')} ${t(ALARM.muted ? 'al_unmute' : 'al_mute')}</button>
+    <div class="row al-row">
+        <button type="button" class="btn ghost lg" id="alMute">${ic(ALARM.muted ? 'volume-x' : 'volume')} ${t(ALARM.muted ? 'al_unmute' : 'al_mute')}</button>
       <button type="button" class="btn lg" id="alDone">${ic('check-circle')} ${t('al_done')}</button></div></div>`;
 }
 
@@ -5821,8 +6274,11 @@ function refreshAlertLinks(el) {
 /** After a false alarm, offer to keep the last ~40 s as a labelled trace for the Signal Lab. */
 function offerFalseAlarmTrace() {
   const sh = openModal(`${sheetHead(t('fa_title'), 'activity')}<p>${t('fa_body')}</p>
-    <label class="field"><span>${t('fa_label')}</span><select class="inp" id="faKind">${TRACE_KINDS.filter(k => !k.crash).map(k => `<option value="${k.id}">${t('kind_' + k.id)}</option>`).join('')}</select></label>
-    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('fa_skip')}</button><button class="btn y" type="button" id="faSave">${ic('save')} ${t('fa_save')}</button></div>`);
+    <label class="field"><span>${t('fa_label')}</span>
+        <select class="inp" id="faKind">${TRACE_KINDS.filter(k => !k.crash).map(k => `<option value="${k.id}">${t('kind_' + k.id)}</option>`).join('')}</select>
+        </label>
+    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('fa_skip')}</button>
+        <button class="btn y" type="button" id="faSave">${ic('save')} ${t('fa_save')}</button></div>`);
   $('#faSave', sh).onclick = () => {
     saveBufferAsRecording($('#faKind', sh).value, RIDE.src);
     closeModal();
@@ -5897,7 +6353,8 @@ function tracePlot(tr, res, cfg) {
       <path class="sig ${ln.cls}" d="${lanePath(decimate(F.t, F[ln.key], x0, pw, tMax, ln.mode || 'max'), y0, 64, ln.max)}"/>`;
   });
   svg += stageWindows(res.events, cfg, X, tMax);
-  if (tr.eventT != null) svg += `<line class="mark" x1="${X(tr.eventT).toFixed(1)}" x2="${X(tr.eventT).toFixed(1)}" y1="6" y2="238"/><text class="mark-l" x="${(X(tr.eventT) + 4).toFixed(1)}" y="250">${t('kind_' + tr.kind)}</text>`;
+  if (tr.eventT != null) svg += `<line class="mark" x1="${X(tr.eventT).toFixed(1)}" x2="${X(tr.eventT).toFixed(1)}" y1="6" y2="238"/>
+      <text class="mark-l" x="${(X(tr.eventT) + 4).toFixed(1)}" y="250">${t('kind_' + tr.kind)}</text>`;
   for (let s = 0; s <= tMax; s += tMax > 30 ? 10 : 4) svg += `<text class="ax" x="${X(s).toFixed(1)}" y="262" text-anchor="middle">${s}s</text>`;
   return `<svg class="tplot" viewBox="0 0 ${W} 266" role="img" aria-label="${t('pl_aria')}">${svg}</svg>`;
 }
@@ -5910,7 +6367,8 @@ function stageWindows(events, cfg, X, tMax) {
     if (e.type === 'candidate') cand = e.t;
     if (e.type === 'reject' && cand != null) {
       out += `<rect class="win w1" x="${X(cand).toFixed(1)}" y="6" width="${Math.max(2, X(e.t) - X(cand)).toFixed(1)}" height="232"/>`;
-      out += `<line class="rej" x1="${X(e.t).toFixed(1)}" x2="${X(e.t).toFixed(1)}" y1="6" y2="238"/><text class="rej-l" x="${(X(e.t) + 3).toFixed(1)}" y="${e.reason === 'drop' ? 30 : 18}">${t('rjs_' + e.reason)}</text>`;
+      out += `<line class="rej" x1="${X(e.t).toFixed(1)}" x2="${X(e.t).toFixed(1)}" y1="6" y2="238"/>
+          <text class="rej-l" x="${(X(e.t) + 3).toFixed(1)}" y="${e.reason === 'drop' ? 30 : 18}">${t('rjs_' + e.reason)}</text>`;
       cand = null;
       still = null;
     }
@@ -5919,7 +6377,8 @@ function stageWindows(events, cfg, X, tMax) {
       const c0 = cand ?? e.t;
       out += `<rect class="win w1" x="${X(c0).toFixed(1)}" y="6" width="${(X(still ?? c0) - X(c0)).toFixed(1)}" height="232"/>`;
       out += `<rect class="win w2" x="${X(still ?? c0).toFixed(1)}" y="6" width="${Math.max(2, X(e.t) - X(still ?? c0)).toFixed(1)}" height="232"/>`;
-      out += `<line class="conf" x1="${X(e.t).toFixed(1)}" x2="${X(e.t).toFixed(1)}" y1="4" y2="240"/><text class="conf-l" x="${(X(e.t) - 3).toFixed(1)}" y="16" text-anchor="end">${t('pl_alert')}</text>`;
+      out += `<line class="conf" x1="${X(e.t).toFixed(1)}" x2="${X(e.t).toFixed(1)}" y1="4" y2="240"/>
+          <text class="conf-l" x="${(X(e.t) - 3).toFixed(1)}" y="16" text-anchor="end">${t('pl_alert')}</text>`;
       cand = null;
       still = null;
     }
@@ -5952,7 +6411,8 @@ const OUT_CLS = { tp: 'g', tn: 'g', fp: 'r', fn: 'o' };
 
 function confusionHtml(cm) {
   const tot = Math.max(1, cm.tp + cm.fp + cm.tn + cm.fn);
-  const cell = (k, good) => `<div class="cm-c ${good ? 'good' : 'bad'}" style="--a:${(0.12 + (cm[k] / tot) * 1.6).toFixed(2)}"><b class="num">${cm[k]}</b><small>${t('cm_' + k)}</small></div>`;
+  const cell = (k, good) => `<div class="cm-c ${good ? 'good' : 'bad'}" style="--a:${(0.12 + (cm[k] / tot) * 1.6).toFixed(2)}">
+      <b class="num">${cm[k]}</b><small>${t('cm_' + k)}</small></div>`;
   return `<div class="cm" role="table" aria-label="${t('lab_cm')}">
     <div></div><div class="cm-h">${t('cm_predCrash')}</div><div class="cm-h">${t('cm_predOk')}</div>
     <div class="cm-h side">${t('cm_actCrash')}</div>${cell('tp', true)}${cell('fn', false)}
@@ -5966,8 +6426,11 @@ function rocSvg(roc, param, cur) {
   const X = f => S0 + f * Wd;
   const Y = r => 10 + (1 - r) * Wd;
   const path = roc.curve.map((p, i) => `${i ? 'L' : 'M'}${X(p.fpr).toFixed(1)} ${Y(p.tpr).toFixed(1)}`).join('');
-  const dots = roc.pts.map(p => `<circle class="${p.v === cur ? 'cur' : 'pt'}" cx="${X(p.fpr).toFixed(1)}" cy="${Y(p.tpr).toFixed(1)}" r="${p.v === cur ? 7 : 3.5}"><title>${t('p_' + param)} ${p.v}: TPR ${fmtN(p.tpr, 2)}, FPR ${fmtN(p.fpr, 2)}</title></circle>`).join('');
-  const grid = [0, 0.25, 0.5, 0.75, 1].map(f => `<line class="gl" x1="${X(f)}" x2="${X(f)}" y1="10" y2="${10 + Wd}"/><line class="gl" x1="${S0}" x2="${S0 + Wd}" y1="${Y(f)}" y2="${Y(f)}"/><text class="ax" x="${X(f)}" y="${Wd + 24}" text-anchor="middle">${f}</text><text class="ax" x="${S0 - 5}" y="${Y(f) + 4}" text-anchor="end">${f}</text>`).join('');
+  const dots = roc.pts.map(p => `<circle class="${p.v === cur ? 'cur' : 'pt'}" cx="${X(p.fpr).toFixed(1)}" cy="${Y(p.tpr).toFixed(1)}" r="${p.v === cur ? 7 : 3.5}">
+      <title>${t('p_' + param)} ${p.v}: TPR ${fmtN(p.tpr, 2)}, FPR ${fmtN(p.fpr, 2)}</title></circle>`).join('');
+  const grid = [0, 0.25, 0.5, 0.75, 1].map(f => `<line class="gl" x1="${X(f)}" x2="${X(f)}" y1="10" y2="${10 + Wd}"/>
+      <line class="gl" x1="${S0}" x2="${S0 + Wd}" y1="${Y(f)}" y2="${Y(f)}"/><text class="ax" x="${X(f)}" y="${Wd + 24}" text-anchor="middle">${f}</text>
+      <text class="ax" x="${S0 - 5}" y="${Y(f) + 4}" text-anchor="end">${f}</text>`).join('');
   return `<svg class="roc" viewBox="0 0 260 270" role="img" aria-label="${t('lab_roc')} AUC ${fmtN(roc.auc, 3)}">${grid}
     <line class="diag" x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}"/><path class="curve" d="${path}" data-draw/>${dots}
     <text class="ax" x="${S0 + Wd / 2}" y="${Wd + 40}" text-anchor="middle">${t('lab_fpr')}</text>
@@ -5976,13 +6439,15 @@ function rocSvg(roc, param, cur) {
 
 /** Per-scenario rate: detection for crash kinds (higher is better), false alarms for the rest. */
 function perKindTable(per) {
-  return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t('lab_kind')}</th><th>${t('lab_truth')}</th><th class="n">${t('lab_detected')}</th><th>${t('lab_rate')}</th></tr></thead><tbody>
+  return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t('lab_kind')}</th><th>${t('lab_truth')}</th><th class="n">${t('lab_detected')}</th>
+      <th>${t('lab_rate')}</th></tr></thead><tbody>
     ${TRACE_KINDS.filter(k => per[k.id]).map(k => {
       const p = per[k.id];
       const rate = p.n ? p.det / p.n : 0;
       const good = k.crash ? rate >= 0.8 : rate === 0;
       return `<tr><td>${ic(k.icon)} ${t('kind_' + k.id)}</td><td><span class="chip ${k.crash ? 'r' : 'c'}">${t(k.crash ? 'ex_crash' : 'ex_notCrash')}</span></td>
-        <td class="n">${p.det}/${p.n}</td><td style="min-width:120px"><div class="bar ${good ? 'g' : k.crash ? 'o' : 'r'}"><i data-w="${Math.max(2, rate * 100)}"></i></div></td></tr>`;
+        <td class="n">${p.det}/${p.n}</td><td style="min-width:120px"><div class="bar ${good ? 'g' : k.crash ? 'o' : 'r'}">
+            <i data-w="${Math.max(2, rate * 100)}"></i></div></td></tr>`;
     }).join('')}</tbody></table></div>`;
 }
 
@@ -5999,25 +6464,38 @@ function renderEngine() {
   $('#view').innerHTML = `
     <div class="note r mb">${ic('alert')}<span>${t('eng_notCertified')}</span></div>
     <div class="kpis stagger">
-      <div class="tile ${RIDE.on ? 'g' : 'c'}"><span class="k">${ic('activity')} ${t('eng_state')}</span><span class="v" id="engState">${RIDE.on ? t(STAGE_KEYS[RIDE.engine.stage()]) : t('eng_idle')}</span><span class="s">${RIDE.on ? t('src_' + RIDE.src) : t('eng_idleSub')}</span></div>
-      <div class="tile y"><span class="k">${ic('crash')} ${t('p_impactG')}</span><span class="v"><span data-count="${S.engine.impactG}" data-dp="1">0</span><small>g</small></span><span class="s">${t('eng_thrSub', { r: S.engine.rotDps, s: S.engine.stillS })}</span></div>
-      <div class="tile r"><span class="k">${ic('siren')} ${t('eng_alerts')}</span><span class="v" data-count="${count('alert') + count('manual')}">0</span><span class="s">${t('eng_alertsSub')}</span></div>
-      <div class="tile g"><span class="k">${ic('shield-check')} ${t('eng_cancelled')}</span><span class="v" data-count="${count('cancelled')}">0</span><span class="s">${t('eng_cancelledSub')}</span></div>
-      <div class="tile c"><span class="k">${ic('activity')} ${t('eng_labF1')}</span><span class="v">${S.lab.last ? fmtN(S.lab.last.f1, 2) : '—'}</span><span class="s">${S.lab.last ? t('eng_labSub', { p: fmtPct(S.lab.last.precision), r: fmtPct(S.lab.last.recall) }) : t('eng_labNone')}</span></div>
+      <div class="tile ${RIDE.on ? 'g' : 'c'}"><span class="k">${ic('activity')} ${t('eng_state')}</span>
+          <span class="v" id="engState">${RIDE.on ? t(STAGE_KEYS[RIDE.engine.stage()]) : t('eng_idle')}</span>
+          <span class="s">${RIDE.on ? t('src_' + RIDE.src) : t('eng_idleSub')}</span></div>
+      <div class="tile y"><span class="k">${ic('crash')} ${t('p_impactG')}</span><span class="v">
+          <span data-count="${S.engine.impactG}" data-dp="1">0</span><small>g</small></span>
+          <span class="s">${t('eng_thrSub', { r: S.engine.rotDps, s: S.engine.stillS })}</span></div>
+      <div class="tile r"><span class="k">${ic('siren')} ${t('eng_alerts')}</span>
+          <span class="v" data-count="${count('alert') + count('manual')}">0</span><span class="s">${t('eng_alertsSub')}</span></div>
+      <div class="tile g"><span class="k">${ic('shield-check')} ${t('eng_cancelled')}</span><span class="v" data-count="${count('cancelled')}">0</span>
+          <span class="s">${t('eng_cancelledSub')}</span></div>
+      <div class="tile c"><span class="k">${ic('activity')} ${t('eng_labF1')}</span><span class="v">${S.lab.last ? fmtN(S.lab.last.f1, 2) : '—'}</span>
+          <span class="s">${S.lab.last ? t('eng_labSub', { p: fmtPct(S.lab.last.precision), r: fmtPct(S.lab.last.recall) }) : t('eng_labNone')}</span></div>
     </div>
     <div class="side-r mt">
       <section class="card"><h2>${ic('git-branch')} ${t('eng_machine')}</h2><div class="sm-scroll">${machineSvg(S.engine)}</div>
         <p class="small muted mt">${t('eng_machineNote')}</p></section>
       <section class="card" id="engCfg"><h2>${ic('sliders')} ${t('eng_thresholds')}</h2><div class="stack">${paramSliders(S.engine, 'ep_')}</div>
-        <label class="field mt"><span>${t('eng_countdown')}</span><select class="inp" id="engCount">${[15, 30, 45, 60].map(v => `<option value="${v}" ${v === S.engine.countdown ? 'selected' : ''}>${v} s</option>`).join('')}</select></label>
-        <div class="row mt"><button type="button" class="btn ghost sm" id="engReset">${ic('undo')} ${t('eng_reset')}</button><button type="button" class="btn ghost sm" id="engFromLab">${ic('download')} ${t('eng_fromLab')}</button><a class="btn c sm" href="#lab">${ic('activity')} ${t('eng_openLab')}</a></div></section>
+        <label class="field mt"><span>${t('eng_countdown')}</span>
+            <select class="inp" id="engCount">${[15, 30, 45, 60].map(v => `<option value="${v}" ${v === S.engine.countdown ? 'selected' : ''}>${v} s</option>`).join('')}</select>
+            </label>
+        <div class="row mt"><button type="button" class="btn ghost sm" id="engReset">${ic('undo')} ${t('eng_reset')}</button>
+            <button type="button" class="btn ghost sm" id="engFromLab">${ic('download')} ${t('eng_fromLab')}</button>
+            <a class="btn c sm" href="#lab">${ic('activity')} ${t('eng_openLab')}</a></div></section>
     </div>
     <div class="grid2 mt">
       <section class="card" id="engTry">${tryHtml()}</section>
       <section class="card"><h2>${ic('siren')} ${t('eng_log')}</h2>
-        <div class="row mb"><button type="button" class="btn y" id="engPractice">${ic('play')} ${t('eng_practice')}</button><button type="button" class="btn ghost" id="engTone">${ic('volume')} ${t('eng_testTone')}</button></div>
+        <div class="row mb"><button type="button" class="btn y" id="engPractice">${ic('play')} ${t('eng_practice')}</button>
+            <button type="button" class="btn ghost" id="engTone">${ic('volume')} ${t('eng_testTone')}</button></div>
         <div class="list">${crashLogHtml()}</div>
-        <h3 class="mt">${t('eng_limits')}</h3><ul class="limits">${['lim1', 'lim2', 'lim3', 'lim4', 'lim5'].map(k => `<li>${ic('info')} ${t('eng_' + k)}</li>`).join('')}</ul></section>
+        <h3 class="mt">${t('eng_limits')}</h3>
+            <ul class="limits">${['lim1', 'lim2', 'lim3', 'lim4', 'lim5'].map(k => `<li>${ic('info')} ${t('eng_' + k)}</li>`).join('')}</ul></section>
     </div>`;
   bindEngine();
 }
@@ -6031,7 +6509,8 @@ function machineSvg(c) {
   const back = [t('mc_rjDrop', { ms: c.freefallMs }), t('mc_rjBump'), t('mc_rjStill', { k: c.continueKmh, s: c.stillTimeoutS }), t('mc_rjOk')];
   let s = '<defs><marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker></defs>';
   nodes.forEach(([k], i) => {
-    s += `<g class="mn ${i === cur ? 'cur' : ''} ${i === 4 ? 'alert' : ''}" data-node="${i}"><rect x="${xs[i]}" y="96" width="100" height="52" rx="12"/><text x="${xs[i] + 50}" y="127" text-anchor="middle">${t(k)}</text></g>`;
+    s += `<g class="mn ${i === cur ? 'cur' : ''} ${i === 4 ? 'alert' : ''}" data-node="${i}"><rect x="${xs[i]}" y="96" width="100" height="52" rx="12"/>
+        <text x="${xs[i] + 50}" y="127" text-anchor="middle">${t(k)}</text></g>`;
   });
   go.forEach((txt, i) => {
     s += `<line class="ma" x1="${xs[i] + 102}" y1="122" x2="${xs[i + 1] - 4}" y2="122" marker-end="url(#arw)"/>`;
@@ -6040,7 +6519,8 @@ function machineSvg(c) {
   back.forEach((txt, i) => {
     const x = xs[i + 1] + 50;
     const y = 172 + i * 18;
-    s += `<path class="mb ${i === 3 ? 'ok' : ''}" d="M${x} 150 V${y} H60 V152" marker-end="url(#arw)"/><circle class="mnum ${i === 3 ? 'ok' : ''}" cx="${x}" cy="${y}" r="9"/><text class="mnum-t" x="${x}" y="${y + 4}">${i + 1}</text>`;
+    s += `<path class="mb ${i === 3 ? 'ok' : ''}" d="M${x} 150 V${y} H60 V152" marker-end="url(#arw)"/>
+        <circle class="mnum ${i === 3 ? 'ok' : ''}" cx="${x}" cy="${y}" r="9"/><text class="mnum-t" x="${x}" y="${y + 4}">${i + 1}</text>`;
   });
   const legend = back.map((txt, i) => `<li class="${i === 3 ? 'ok' : ''}"><b>${i + 1}</b> ${txt}</li>`).join('');
   return `<svg class="machine" viewBox="0 0 640 240" role="img" aria-label="${t('eng_machine')}">${s}</svg><ol class="mrej">${legend}</ol>`;
@@ -6051,7 +6531,8 @@ function tryHtml() {
   const res = runTrace(tr, S.engine);
   const out = outcomeOf(tr, res);
   return `<h2>${ic('play')} ${t('eng_try')}</h2>
-    <div class="row mb"><select class="inp grow" id="engKind" aria-label="${t('lab_kind')}">${TRACE_KINDS.map(k => `<option value="${k.id}" ${k.id === ENG.kind ? 'selected' : ''}>${t('kind_' + k.id)}</option>`).join('')}</select>
+    <div class="row mb">
+        <select class="inp grow" id="engKind" aria-label="${t('lab_kind')}">${TRACE_KINDS.map(k => `<option value="${k.id}" ${k.id === ENG.kind ? 'selected' : ''}>${t('kind_' + k.id)}</option>`).join('')}</select>
     <button type="button" class="btn ghost" id="engNew">${ic('shuffle')} ${t('eng_another')}</button></div>
     <div class="between mb"><span class="chip ${OUT_CLS[out]}">${t('out_' + out)}</span><span class="tiny muted">${t('eng_seed', { s: ENG.seed })}</span></div>
     <div class="plotwrap">${tracePlot(tr, res, S.engine)}</div>${explainTrace(tr, res, S.engine)}`;
@@ -6064,7 +6545,8 @@ function crashLogHtml() {
     const [i, cls] = icon[x.kind] || ['info', ''];
     const where = x.lat != null ? ` · <a href="${mapLink(x)}" target="_blank" rel="noopener">${t('al_openMap')}</a>` : '';
     return `<div class="li"><span class="ico ${cls}">${ic(i)}</span><span class="grow"><b>${t('cl_' + x.kind, { s: x.waited })}</b>
-      <small>${fmtDT(x.ts)} · ${t('src_' + (x.src === 'demo' ? 'demo' : x.src === 'sensors' ? 'sensors' : 'sim'))}${x.peak ? ' · ' + fmtN(x.peak, 1) + ' g' : ''}${where}</small></span></div>`;
+      <small>${fmtDT(x.ts)} · ${t('src_' + (x.src === 'demo' ? 'demo' : x.src === 'sensors' ? 'sensors' : 'sim'))}${x.peak ? ' · ' + fmtN(x.peak, 1) + ' g' : ''}${where}</small>
+          </span></div>`;
   }).join('');
 }
 
@@ -6187,7 +6669,8 @@ const scheduleRoc = debounce(() => {
 function renderLab(arg) {
   if (arg && ['eval', 'traces', 'data', 'rec'].includes(arg)) LAB.tab = arg;
   const tabs = [['eval', 'target'], ['traces', 'activity'], ['data', 'layers'], ['rec', 'record']];
-  $('#view').innerHTML = `<div class="between mb"><div class="seg" role="tablist" id="labTabs">${tabs.map(([k, i]) => `<button type="button" role="tab" aria-selected="${LAB.tab === k}" data-tab="${k}" class="${LAB.tab === k ? 'on' : ''}">${ic(i)} ${t('lab_t_' + k)}</button>`).join('')}</div>
+  $('#view').innerHTML = `<div class="between mb">
+      <div class="seg" role="tablist" id="labTabs">${tabs.map(([k, i]) => `<button type="button" role="tab" aria-selected="${LAB.tab === k}" data-tab="${k}" class="${LAB.tab === k ? 'on' : ''}">${ic(i)} ${t('lab_t_' + k)}</button>`).join('')}</div>
     <button type="button" class="btn ghost sm" id="labPrint">${ic('printer')} ${t('lab_print')}</button></div>
     <div id="labBody"><div class="skeleton" style="height:320px"></div></div>`;
   $$('#labTabs button').forEach(b => (b.onclick = () => go('lab/' + b.dataset.tab)));
@@ -6215,13 +6698,17 @@ function renderLabBody() {
 function labEvalHtml() {
   return `<div class="side-l lab-eval">
     <section class="card"><h2>${ic('sliders')} ${t('lab_thresholds')}</h2><div class="stack" id="labSliders">${paramSliders(S.lab.cfg, 'lp_')}</div>
-      <div class="row mt"><button type="button" class="btn ghost sm" id="labReset">${ic('undo')} ${t('eng_reset')}</button><button type="button" class="btn y sm" id="labApply">${ic('check')} ${t('lab_apply')}</button></div></section>
+      <div class="row mt"><button type="button" class="btn ghost sm" id="labReset">${ic('undo')} ${t('eng_reset')}</button>
+          <button type="button" class="btn y sm" id="labApply">${ic('check')} ${t('lab_apply')}</button></div></section>
     <div class="stack"><div id="labMetrics">${labMetricsHtml()}</div>
       <div class="grid2"><section class="card"><h2>${ic('grid')} ${t('lab_cm')}</h2><div id="labCm">${confusionHtml(LAB.ev.cm)}</div></section>
-        <section class="card"><div class="between"><h2>${ic('roc')} ${t('lab_roc')}</h2><select class="inp sweep" id="labSweep" aria-label="${t('lab_sweep')}">${Object.keys(SWEEPS).map(k => `<option value="${k}" ${k === S.lab.sweep ? 'selected' : ''}>${t('p_' + k)}</option>`).join('')}</select></div>
+        <section class="card"><div class="between"><h2>${ic('roc')} ${t('lab_roc')}</h2>
+            <select class="inp sweep" id="labSweep" aria-label="${t('lab_sweep')}">${Object.keys(SWEEPS).map(k => `<option value="${k}" ${k === S.lab.sweep ? 'selected' : ''}>${t('p_' + k)}</option>`).join('')}</select>
+            </div>
           <div id="rocBox">${LAB.roc ? rocInner() : '<div class="skeleton" style="height:240px"></div>'}</div></section></div>
       <section class="card"><h2>${ic('list')} ${t('lab_perKind')}</h2><div id="labPer">${perKindTable(LAB.ev.per)}</div></section>
-      <section class="card flat"><div class="between"><span class="small"><b>${t('lab_mlTitle')}</b> — ${t('lab_mlSub')}</span><button type="button" class="btn ghost sm" id="labMl">${ic('brain')} ${t('lab_mlBtn')}</button></div></section></div></div>`;
+      <section class="card flat"><div class="between"><span class="small"><b>${t('lab_mlTitle')}</b> — ${t('lab_mlSub')}</span>
+          <button type="button" class="btn ghost sm" id="labMl">${ic('brain')} ${t('lab_mlBtn')}</button></div></section></div></div>`;
 }
 
 // TODO(student): train a learned classifier (logistic regression or a small decision tree) on windowed features —
@@ -6241,7 +6728,8 @@ function labMetricsHtml() {
 
 function rocInner() {
   const r = LAB.roc;
-  return `${rocSvg(r, S.lab.sweep, S.lab.cfg[S.lab.sweep])}<p class="small"><b class="yel num">AUC ${fmtN(r.auc, 3)}</b> · ${t('lab_rocNote', { p: t('p_' + S.lab.sweep) })}</p>`;
+  return `${rocSvg(r, S.lab.sweep, S.lab.cfg[S.lab.sweep])}<p class="small">
+      <b class="yel num">AUC ${fmtN(r.auc, 3)}</b> · ${t('lab_rocNote', { p: t('p_' + S.lab.sweep) })}</p>`;
 }
 
 function bindLabEval() {
@@ -6283,9 +6771,14 @@ function labTracesHtml() {
   const rows = LAB.ev.rows.filter(r => LAB.filter === 'all' || r.outcome === LAB.filter);
   if (!LAB.sel || !rows.some(r => r.tr.id === LAB.sel)) LAB.sel = (rows[0] || LAB.ev.rows[0]).tr.id;
   const filters = ['all', 'tp', 'fn', 'fp', 'tn'];
-  const list = rows.map(r => `<button type="button" class="li ${r.tr.id === LAB.sel ? 'sel' : ''}" data-id="${esc(r.tr.id)}"><span class="ico ${OUT_CLS[r.outcome]}">${ic(kindInfo(r.tr.kind).icon)}</span>
-    <span class="grow"><b>${r.tr.rec ? esc(L(r.tr.name)) : t('kind_' + r.tr.kind)}</b><small>${r.tr.rec ? t('lab_recorded') : '#' + r.tr.seed}${r.tr.pocket ? ' · ' + t('lab_pocket') : ''}</small></span><span class="chip ${OUT_CLS[r.outcome]}">${t('cm_' + r.outcome)}</span></button>`).join('');
-  return `<div class="side-l"><section class="card"><div class="seg mb" id="trFilter">${filters.map(f => `<button type="button" data-f="${f}" class="${LAB.filter === f ? 'on' : ''}">${f === 'all' ? t('all') : t('cm_' + f)} <span class="tiny">${f === 'all' ? LAB.ev.rows.length : LAB.ev.cm[f]}</span></button>`).join('')}</div>
+  const list = rows.map(r => `<button type="button" class="li ${r.tr.id === LAB.sel ? 'sel' : ''}" data-id="${esc(r.tr.id)}">
+      <span class="ico ${OUT_CLS[r.outcome]}">${ic(kindInfo(r.tr.kind).icon)}</span>
+    <span class="grow"><b>${r.tr.rec ? esc(L(r.tr.name)) : t('kind_' + r.tr.kind)}</b>
+        <small>${r.tr.rec ? t('lab_recorded') : '#' + r.tr.seed}${r.tr.pocket ? ' · ' + t('lab_pocket') : ''}</small></span>
+        <span class="chip ${OUT_CLS[r.outcome]}">${t('cm_' + r.outcome)}</span></button>`).join('');
+  return `<div class="side-l"><section class="card">
+      <div class="seg mb" id="trFilter">${filters.map(f => `<button type="button" data-f="${f}" class="${LAB.filter === f ? 'on' : ''}">${f === 'all' ? t('all') : t('cm_' + f)} <span class="tiny">${f === 'all' ? LAB.ev.rows.length : LAB.ev.cm[f]}</span>
+      </button>`).join('')}</div>
     <div class="list tlist">${list || `<div class="empty">${ic('check-circle')}${t('lab_noneHere')}</div>`}</div></section>
     <section class="card" id="trView">${traceViewHtml()}</section></div>`;
 }
@@ -6294,10 +6787,12 @@ function traceViewHtml() {
   const row = LAB.ev.rows.find(r => r.tr.id === LAB.sel);
   if (!row) return `<div class="empty">${ic('activity')}${t('lab_pick')}</div>`;
   const { tr, res, outcome } = row;
-  return `<div class="between"><h2>${ic(kindInfo(tr.kind).icon)} ${tr.rec ? esc(L(tr.name)) : t('kind_' + tr.kind)}</h2><span class="chip ${OUT_CLS[outcome]}">${t('out_' + outcome)}</span></div>
+  return `<div class="between"><h2>${ic(kindInfo(tr.kind).icon)} ${tr.rec ? esc(L(tr.name)) : t('kind_' + tr.kind)}</h2>
+      <span class="chip ${OUT_CLS[outcome]}">${t('out_' + outcome)}</span></div>
     <p class="small muted">${tr.rec ? t('lab_recordedNote') : esc(L(KIND_TEXT[tr.kind]))}</p>
     <div class="plotwrap">${tracePlot(tr, res, S.lab.cfg)}</div>
-    <div class="legend tiny"><span class="lg1">${t('pl_impact')}</span><span class="lg2">${t('pl_rot')}</span><span class="lg3">${t('pl_speed')}</span><span class="lgw1">${t('pl_tumbleWin')}</span><span class="lgw2">${t('pl_stillWin')}</span></div>
+    <div class="legend tiny"><span class="lg1">${t('pl_impact')}</span><span class="lg2">${t('pl_rot')}</span><span class="lg3">${t('pl_speed')}</span>
+        <span class="lgw1">${t('pl_tumbleWin')}</span><span class="lgw2">${t('pl_stillWin')}</span></div>
     ${explainTrace(tr, res, S.lab.cfg)}
     <div class="row mt"><button type="button" class="btn ghost sm" id="trCsv">${ic('download')} ${t('lab_csv')}</button></div>`;
 }
@@ -6332,12 +6827,21 @@ function labDataHtml() {
   return `<div class="side-l"><section class="card"><h2>${ic('layers')} ${t('lab_genTitle')}</h2>
       <div class="fgrid"><label class="field"><span>${t('lab_seed')}</span><input class="inp" type="number" id="dsSeed" value="${l.seed}"></label>
       <label class="field"><span>${t('lab_per')}</span><input class="inp" type="number" min="2" max="40" id="dsPer" value="${l.per}"></label>
-      <label class="field"><span>${t('lab_noise')}</span><select class="inp" id="dsNoise">${[0.5, 1, 1.5, 2].map(v => `<option value="${v}" ${v === l.noise ? 'selected' : ''}>${v}x</option>`).join('')}</select></label>
-      <label class="field"><span>${t('lab_pocketShare')}</span><select class="inp" id="dsPocket">${[0, 0.3, 0.6, 1].map(v => `<option value="${v}" ${v === l.pocket ? 'selected' : ''}>${Math.round(v * 100)}%</option>`).join('')}</select></label></div>
-      <label class="switch"><input type="checkbox" id="dsRec" ${l.includeRec ? 'checked' : ''}><span>${t('lab_includeRec', { n: S.recordings.filter(r => r.include).length })}</span></label>
-      <div class="row mt"><button type="button" class="btn y" id="dsGen">${ic('refresh')} ${t('lab_regen')}</button><button type="button" class="btn ghost" id="dsCsv">${ic('download')} ${t('lab_exportSet')}</button></div>
+      <label class="field"><span>${t('lab_noise')}</span>
+          <select class="inp" id="dsNoise">${[0.5, 1, 1.5, 2].map(v => `<option value="${v}" ${v === l.noise ? 'selected' : ''}>${v}x</option>`).join('')}</select>
+          </label>
+      <label class="field"><span>${t('lab_pocketShare')}</span>
+          <select class="inp" id="dsPocket">${[0, 0.3, 0.6, 1].map(v => `<option value="${v}" ${v === l.pocket ? 'selected' : ''}>${Math.round(v * 100)}%</option>`).join('')}</select>
+          </label></div>
+      <label class="switch"><input type="checkbox" id="dsRec" ${l.includeRec ? 'checked' : ''}>
+          <span>${t('lab_includeRec', { n: S.recordings.filter(r => r.include).length })}</span></label>
+      <div class="row mt"><button type="button" class="btn y" id="dsGen">${ic('refresh')} ${t('lab_regen')}</button>
+          <button type="button" class="btn ghost" id="dsCsv">${ic('download')} ${t('lab_exportSet')}</button></div>
       <p class="tiny muted mt">${t('lab_genNote', { n: LAB.set.length, r: recs })}</p></section>
-    <section class="card"><h2>${ic('list')} ${t('lab_classes')}</h2><div class="list">${TRACE_KINDS.map(k => `<div class="li"><span class="ico ${k.crash ? 'r' : 'c'}">${ic(k.icon)}</span><span class="grow"><b>${t('kind_' + k.id)} <span class="chip ${k.crash ? 'r' : 'c'}">${t(k.crash ? 'ex_crash' : 'ex_notCrash')}</span></b><small>${esc(L(KIND_TEXT[k.id]))}</small></span><span class="num">${LAB.set.filter(x => x.kind === k.id).length}</span></div>`).join('')}</div>
+    <section class="card"><h2>${ic('list')} ${t('lab_classes')}</h2><div class="list">${TRACE_KINDS.map(k => `<div class="li">
+        <span class="ico ${k.crash ? 'r' : 'c'}">${ic(k.icon)}</span><span class="grow">
+        <b>${t('kind_' + k.id)} <span class="chip ${k.crash ? 'r' : 'c'}">${t(k.crash ? 'ex_crash' : 'ex_notCrash')}</span></b>
+        <small>${esc(L(KIND_TEXT[k.id]))}</small></span><span class="num">${LAB.set.filter(x => x.kind === k.id).length}</span></div>`).join('')}</div>
       <p class="small muted mt">${t('lab_modelNote')}</p></section></div>`;
 }
 
@@ -6371,10 +6875,13 @@ function labRecHtml() {
     return `<div class="li"><span class="ico ${kindInfo(r.kind).crash ? 'r' : 'c'}">${ic(kindInfo(r.kind).icon)}</span><span class="grow"><b>${esc(L(r.name))}</b>
       <small>${t('kind_' + r.kind)} · ${fmtN(dur, 1)} s · ${t('src_' + r.src)} · ${fmtDate(r.ts)}</small></span>
       <label class="switch" title="${t('lab_include')}"><input type="checkbox" data-inc="${r.id}" ${r.include ? 'checked' : ''} aria-label="${t('lab_include')}"></label>
-      <button type="button" class="ibtn sm" data-view="${r.id}" aria-label="${t('lab_view')}">${ic('eye')}</button><button type="button" class="ibtn sm" data-csv="${r.id}" aria-label="CSV">${ic('download')}</button><button type="button" class="ibtn sm" data-del="${r.id}" aria-label="${t('delete')}">${ic('trash')}</button></div>`;
+      <button type="button" class="ibtn sm" data-view="${r.id}" aria-label="${t('lab_view')}">${ic('eye')}</button>
+          <button type="button" class="ibtn sm" data-csv="${r.id}" aria-label="CSV">${ic('download')}</button>
+          <button type="button" class="ibtn sm" data-del="${r.id}" aria-label="${t('delete')}">${ic('trash')}</button></div>`;
   }).join('');
   return `<div class="grid2"><section class="card" id="recCard">${recorderHtml()}</section>
-    <section class="card"><div class="between"><h2>${ic('folder')} ${t('lab_saved')}</h2><button type="button" class="btn ghost sm" id="recImport">${ic('upload')} ${t('lab_importCsv')}</button></div>
+    <section class="card"><div class="between"><h2>${ic('folder')} ${t('lab_saved')}</h2>
+        <button type="button" class="btn ghost sm" id="recImport">${ic('upload')} ${t('lab_importCsv')}</button></div>
     <div class="list">${recs || `<div class="empty">${ic('record')}${t('lab_noRec')}</div>`}</div><p class="tiny muted mt">${t('lab_recStorage')}</p></section></div>`;
 }
 
@@ -6384,8 +6891,11 @@ function recorderHtml() {
   const src = REC.on ? (REC.fromRide ? t('rec_fromRide') : REC.own && REC.own.sim ? t('src_sim') : t('src_sensors')) : t('rec_srcAuto');
   return `<h2>${ic('record')} ${t('lab_recorder')}</h2>
     <div class="row mb">${sensorChips()}</div>
-    <label class="field"><span>${t('lab_recLabel')}</span><select class="inp" id="recKind" ${REC.on ? 'disabled' : ''}>${TRACE_KINDS.map(k => `<option value="${k.id}" ${k.id === REC.kind ? 'selected' : ''}>${t('kind_' + k.id)}</option>`).join('')}</select></label>
-    <div class="rec-live ${REC.on ? 'on' : ''}"><span class="dotrec"></span><b class="num" id="recDur">${fmtN(dur, 1)} s</b><span class="tiny"><span id="recN">${n}</span> ${t('rec_samples')} · ${src}</span></div>
+    <label class="field"><span>${t('lab_recLabel')}</span>
+        <select class="inp" id="recKind" ${REC.on ? 'disabled' : ''}>${TRACE_KINDS.map(k => `<option value="${k.id}" ${k.id === REC.kind ? 'selected' : ''}>${t('kind_' + k.id)}</option>`).join('')}</select>
+        </label>
+    <div class="rec-live ${REC.on ? 'on' : ''}"><span class="dotrec"></span><b class="num" id="recDur">${fmtN(dur, 1)} s</b><span class="tiny">
+        <span id="recN">${n}</span> ${t('rec_samples')} · ${src}</span></div>
     ${REC.on && REC.own && REC.own.sim ? `<div class="row mb">${['breaker', 'pothole', 'brake', 'drop', 'skid'].map(k => `<button type="button" class="btn sm ghost" data-rinj="${k}">${ic(kindInfo(k).icon)} ${t('inj_' + k)}</button>`).join('')}</div>` : ''}
     <button type="button" class="btn ${REC.on ? 'r' : 'y'} lg block" id="recBtn">${ic(REC.on ? 'square' : 'record')} ${t(REC.on ? 'rec_stop' : 'rec_start')}</button>
     <p class="tiny muted mt">${t('rec_note')}</p>`;
@@ -6552,7 +7062,8 @@ function printLabReport() {
   const roc = LAB.roc || rocCurve(LAB.set, S.lab.cfg, S.lab.sweep);
   const e = LAB.ev;
   const rows = ENGINE_PARAMS.map(p => `<tr><td>${t('p_' + p.k)}</td><td>${fmtParam(p, S.lab.cfg[p.k])}</td></tr>`).join('');
-  printDoc(`<div class="pdoc"><h1>${t('appName')} — ${t('lab_reportTitle')}</h1><p>${fmtDT(now())} · ${t('lab_genNote', { n: LAB.set.length, r: LAB.set.filter(x => x.rec).length })}</p>
+  printDoc(`<div class="pdoc"><h1>${t('appName')} — ${t('lab_reportTitle')}</h1>
+      <p>${fmtDT(now())} · ${t('lab_genNote', { n: LAB.set.length, r: LAB.set.filter(x => x.rec).length })}</p>
     <p><b>Precision</b> ${fmtPct(e.precision, 1)} · <b>Recall</b> ${fmtPct(e.recall, 1)} · <b>F1</b> ${fmtN(e.f1, 3)} · <b>${t('lab_accuracy')}</b> ${fmtPct(e.accuracy, 1)} · <b>FPR</b> ${fmtPct(e.fpr, 1)} · <b>AUC</b> ${fmtN(roc.auc, 3)}</p>
     <div class="pcols"><div>${confusionHtml(e.cm)}</div><div>${rocSvg(roc, S.lab.sweep, S.lab.cfg[S.lab.sweep])}</div></div>
     <h2>${t('lab_perKind')}</h2>${perKindTable(e.per)}<h2>${t('lab_thresholds')}</h2><table class="tbl">${rows}</table>
@@ -6657,10 +7168,14 @@ function renderCoach() {
     return;
   }
   $('#view').innerHTML = `<div class="kpis stagger">
-      <div class="tile y"><span class="k">${ic('award')} ${t('co_avg10')}</span><span class="v" data-count="${Math.round(mean(last10.map(x => x.score)))}">0</span><span class="s">${t('co_avg10Sub')}</span></div>
-      <div class="tile c"><span class="k">${ic('route')} ${t('co_weekKm')}</span><span class="v"><span data-count="${Math.round(w0.km)}">0</span><small>km</small></span><span class="s">${t('co_rides', { n: w0.rides })}</span></div>
-      <div class="tile ${per100 > 15 ? 'r' : 'g'}"><span class="k">${ic('alert')} ${t('co_per100')}</span><span class="v" data-count="${round(per100, 1)}" data-dp="1">0</span><span class="s">${t('co_per100Sub')}</span></div>
-      <div class="tile g"><span class="k">${ic('helmet')} ${t('co_streak')}</span><span class="v" data-count="${hs.current}">0</span><span class="s">${t('co_best', { n: hs.best })}</span></div>
+      <div class="tile y"><span class="k">${ic('award')} ${t('co_avg10')}</span>
+          <span class="v" data-count="${Math.round(mean(last10.map(x => x.score)))}">0</span><span class="s">${t('co_avg10Sub')}</span></div>
+      <div class="tile c"><span class="k">${ic('route')} ${t('co_weekKm')}</span><span class="v"><span data-count="${Math.round(w0.km)}">0</span>
+          <small>km</small></span><span class="s">${t('co_rides', { n: w0.rides })}</span></div>
+      <div class="tile ${per100 > 15 ? 'r' : 'g'}"><span class="k">${ic('alert')} ${t('co_per100')}</span>
+          <span class="v" data-count="${round(per100, 1)}" data-dp="1">0</span><span class="s">${t('co_per100Sub')}</span></div>
+      <div class="tile g"><span class="k">${ic('helmet')} ${t('co_streak')}</span><span class="v" data-count="${hs.current}">0</span>
+          <span class="s">${t('co_best', { n: hs.best })}</span></div>
     </div>
     <div class="side-r mt"><section class="card"><div class="between"><h2>${ic('trending-up')} ${t('co_trend')}</h2><span class="chip c">${t('co_trendSub')}</span></div>
       ${lineChart([{ values: tr.slice(-30).map(x => x.score), cls: 'c' }, { values: movingAvg(tr.slice(-30).map(x => x.score), 5), cls: 'y' }], { yMin: 0, yMax: 100, labels: tr.slice(-30).map(x => fmtDate(x.start, { day: 'numeric', month: 'short' })), ref: 85 })}
@@ -6703,15 +7218,18 @@ function badgeHtml(b) {
 function tripRow(tr) {
   const title = tr.from ? `${esc(L(tr.from))} → ${esc(L(tr.to))}` : t('tr_ride', { c: L(CITIES[tr.city].name) });
   return `<a class="li" href="#trips/${tr.id}"><span class="ico ${scoreCls(tr.score)}"><b class="num">${tr.score}</b></span><span class="grow"><b>${title}</b>
-    <small>${fmtDT(tr.start)} · ${fmtN(tr.km, 1)} km · ${durMin(tr.durS)}${tr.night ? ' · ' + t('tr_night') : ''}</small></span>${tr.events.length ? `<span class="chip o">${tr.events.length}</span>` : `<span class="chip g">${ic('check')}</span>`}</a>`;
+    <small>${fmtDT(tr.start)} · ${fmtN(tr.km, 1)} km · ${durMin(tr.durS)}${tr.night ? ' · ' + t('tr_night') : ''}</small>
+        </span>${tr.events.length ? `<span class="chip o">${tr.events.length}</span>` : `<span class="chip g">${ic('check')}</span>`}</a>`;
 }
 
 function printWeekly(w0, w1) {
-  const rows = w0.list.map(x => `<tr><td>${fmtDT(x.start)}</td><td>${x.from ? esc(L(x.from)) + ' → ' + esc(L(x.to)) : '—'}</td><td>${fmtN(x.km, 1)}</td><td>${x.score}</td><td>${x.events.length}</td></tr>`).join('');
+  const rows = w0.list.map(x => `<tr><td>${fmtDT(x.start)}</td><td>${x.from ? esc(L(x.from)) + ' → ' + esc(L(x.to)) : '—'}</td><td>${fmtN(x.km, 1)}</td>
+      <td>${x.score}</td><td>${x.events.length}</td></tr>`).join('');
   printDoc(`<div class="pdoc"><h1>${t('appName')} — ${t('co_week')}</h1><p>${esc(S.profile.name || '')} · ${fmtDate(now() - 7 * DAY)} – ${fmtDate(now())}</p>
     <p>${t('co_rides', { n: w0.rides })} · ${t('co_kmWeek', { n: fmtN(w0.km, 1) })} · ${t('co_scoreWeek', { n: w0.score == null ? '—' : Math.round(w0.score) })} · ${t('co_per100Week', { n: fmtN(w0.per100, 1) })}</p>
     <p class="small">${t('co_prevWeek', { r: w1.rides, k: fmtN(w1.km, 1), s: w1.score == null ? '—' : Math.round(w1.score) })}</p>
-    <table class="tbl"><thead><tr><th>${t('tr_when')}</th><th>${t('tr_route')}</th><th>km</th><th>${t('k_score')}</th><th>${t('k_events')}</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="tbl"><thead><tr><th>${t('tr_when')}</th><th>${t('tr_route')}</th><th>km</th><th>${t('k_score')}</th><th>${t('k_events')}</th></tr>
+        </thead><tbody>${rows}</tbody></table>
     <p class="small">${t('co_formula')}</p></div>`);
 }
 
@@ -6835,10 +7353,15 @@ function renderTrips(arg) {
   const list = filteredTrips();
   const all = S.trips;
   $('#view').innerHTML = `<div class="kpis stagger">
-      <div class="tile y"><span class="k">${ic('route')} ${t('tr_rides')}</span><span class="v" data-count="${all.length}">0</span><span class="s">${t('tr_ridesSub')}</span></div>
-      <div class="tile c"><span class="k">${ic('map')} ${t('tr_total')}</span><span class="v"><span data-count="${Math.round(sum(all.map(x => x.km)))}">0</span><small>km</small></span><span class="s">${t('tr_totalSub', { h: Math.round(sum(all.map(x => x.durS)) / 3600) })}</span></div>
-      <div class="tile g"><span class="k">${ic('award')} ${t('k_score')}</span><span class="v" data-count="${all.length ? Math.round(mean(all.map(x => x.score))) : 0}">0</span><span class="s">${t('tr_scoreSub')}</span></div>
-      <div class="tile"><span class="k">${ic('moon')} ${t('tr_nightShare')}</span><span class="v">${all.length ? fmtPct(all.filter(x => x.night).length / all.length) : '—'}</span><span class="s">${t('tr_nightSub')}</span></div>
+      <div class="tile y"><span class="k">${ic('route')} ${t('tr_rides')}</span><span class="v" data-count="${all.length}">0</span>
+          <span class="s">${t('tr_ridesSub')}</span></div>
+      <div class="tile c"><span class="k">${ic('map')} ${t('tr_total')}</span><span class="v">
+          <span data-count="${Math.round(sum(all.map(x => x.km)))}">0</span><small>km</small></span>
+          <span class="s">${t('tr_totalSub', { h: Math.round(sum(all.map(x => x.durS)) / 3600) })}</span></div>
+      <div class="tile g"><span class="k">${ic('award')} ${t('k_score')}</span>
+          <span class="v" data-count="${all.length ? Math.round(mean(all.map(x => x.score))) : 0}">0</span><span class="s">${t('tr_scoreSub')}</span></div>
+      <div class="tile"><span class="k">${ic('moon')} ${t('tr_nightShare')}</span>
+          <span class="v">${all.length ? fmtPct(all.filter(x => x.night).length / all.length) : '—'}</span><span class="s">${t('tr_nightSub')}</span></div>
     </div>
     <div class="card mt"><div class="row filters">
       <div class="seg" id="trCity">${['all', 'lhr', 'khi'].map(c => `<button type="button" data-c="${c}" class="${TRIPS.city === c ? 'on' : ''}">${c === 'all' ? t('all') : L(CITIES[c].name)}</button>`).join('')}</div>
@@ -6883,7 +7406,8 @@ function tripCard(tr) {
     <div class="between"><b class="tt">${esc(tripTitle(tr))}</b><span class="chip ${scoreCls(tr.score)} num">${tr.score}</span></div>
     <small class="muted">${fmtDT(tr.start)}</small>
     <div class="row tiny mt-s"><span>${ic('route')} ${fmtN(tr.km, 1)} km</span><span>${ic('clock')} ${durMin(tr.durS)}</span><span>${ic('gauge')} ${tr.maxKmh} km/h</span>
-    ${tr.night ? `<span class="chip">${ic('moon')}</span>` : ''}${tr.pillion ? `<span class="chip ${tr.helmet.pillion ? 'g' : 'r'}">${ic('users')}</span>` : ''}${tr.src === 'sim' ? `<span class="chip c">${t('src_sim')}</span>` : ''}</div></div></a>`;
+    ${tr.night ? `<span class="chip">${ic('moon')}</span>` : ''}${tr.pillion ? `<span class="chip ${tr.helmet.pillion ? 'g' : 'r'}">${ic('users')}</span>` : ''}${tr.src === 'sim' ? `<span class="chip c">${t('src_sim')}</span>` : ''}</div>
+        </div></a>`;
 }
 
 // ---------- trip detail ----------
@@ -6895,15 +7419,24 @@ function renderTripDetail(id) {
   }
   const sc = rideScore(tr);
   $('#view').innerHTML = `<div class="between mb"><a class="btn ghost sm" href="#trips">${ic('arrow-left', 'flip')} ${t('tr_all')}</a>
-      <div class="row"><button type="button" class="btn ghost sm" id="tdGpx">${ic('download')} GPX</button><button type="button" class="btn ghost sm" id="tdPrint">${ic('printer')} ${t('print')}</button><button type="button" class="btn ghost sm" id="tdDel">${ic('trash')} ${t('delete')}</button></div></div>
-    <h2 class="h2">${ic('route')} ${esc(tripTitle(tr))}</h2><p class="muted small">${fmtDT(tr.start)} · ${L(roadType(tr.road).n)} · ${t('src_' + (tr.src === 'seed' ? 'demo' : tr.src))}</p>
+      <div class="row"><button type="button" class="btn ghost sm" id="tdGpx">${ic('download')} GPX</button>
+          <button type="button" class="btn ghost sm" id="tdPrint">${ic('printer')} ${t('print')}</button>
+          <button type="button" class="btn ghost sm" id="tdDel">${ic('trash')} ${t('delete')}</button></div></div>
+    <h2 class="h2">${ic('route')} ${esc(tripTitle(tr))}</h2>
+        <p class="muted small">${fmtDT(tr.start)} · ${L(roadType(tr.road).n)} · ${t('src_' + (tr.src === 'seed' ? 'demo' : tr.src))}</p>
     <div class="kpis stagger">${miniKpi(t('k_distance'), fmtN(tr.km, 2), 'km')}${miniKpi(t('k_time'), clock(tr.durS), '')}${miniKpi(t('k_avg'), fmtN(tr.avgKmh, 0), 'km/h')}${miniKpi(t('k_max'), tr.maxKmh, 'km/h')}${miniKpi(t('k_lean'), tr.maxLean, '°')}${miniKpi(t('k_score'), sc.score, '/100')}</div>
-    <div class="side-r mt"><section class="card"><div class="between"><h2>${ic('map')} ${t('tr_map')}</h2><button type="button" class="btn ghost sm" id="tdStreet">${ic('globe')} ${t('tr_street')}</button></div>
+    <div class="side-r mt"><section class="card"><div class="between"><h2>${ic('map')} ${t('tr_map')}</h2>
+        <button type="button" class="btn ghost sm" id="tdStreet">${ic('globe')} ${t('tr_street')}</button></div>
       <div class="mapbox"><canvas id="tdMap" aria-label="${t('tr_mapAria')}"></canvas><div id="tdLeaflet" class="leaf hidden"></div></div>
-      <div class="legend tiny"><span class="lg1">${t('tr_slow')}</span><span class="lgy">${t('tr_mid')}</span><span class="lgr">${t('tr_fast')}</span><span>${ic('alert')} ${t('tr_hazardsShown')}</span></div></section>
-      <section class="card"><h2>${ic('award')} ${t('tr_scoreTitle')}</h2><div class="row"><div class="ring">${ringSvg(sc.score / 100)}<b class="num">${sc.score}</b></div><p class="small grow">${scoreExplain(sc)}</p></div>
-      <div class="row mt">${tr.helmet.rider ? `<span class="chip g">${ic('helmet')} ${t('tr_helmetYes')}</span>` : `<span class="chip r">${ic('helmet')} ${t('tr_helmetNo')}</span>`}${tr.pillion ? `<span class="chip ${tr.helmet.pillion ? 'g' : 'r'}">${ic('users')} ${t(tr.helmet.pillion ? 'tr_pillionYes' : 'tr_pillionNo')}</span>` : ''}${tr.crashes ? `<span class="chip r">${ic('siren')} ${t('tr_crashes', { n: tr.crashes })}</span>` : ''}</div></section></div>
-    <section class="card mt"><h2>${ic('activity')} ${t('tr_timeline')}</h2>${timelineSvg(tr)}<div class="list mt">${tr.events.map(e => eventRow(e)).join('') || `<div class="empty">${ic('check-circle')}${t('tr_noEvents')}</div>`}</div></section>`;
+      <div class="legend tiny"><span class="lg1">${t('tr_slow')}</span><span class="lgy">${t('tr_mid')}</span><span class="lgr">${t('tr_fast')}</span>
+          <span>${ic('alert')} ${t('tr_hazardsShown')}</span></div></section>
+      <section class="card"><h2>${ic('award')} ${t('tr_scoreTitle')}</h2><div class="row">
+          <div class="ring">${ringSvg(sc.score / 100)}<b class="num">${sc.score}</b></div><p class="small grow">${scoreExplain(sc)}</p></div>
+      <div class="row mt">${tr.helmet.rider ? `<span class="chip g">${ic('helmet')} ${t('tr_helmetYes')}</span>` : `<span class="chip r">${ic('helmet')} ${t('tr_helmetNo')}</span>`}${tr.pillion ? `<span class="chip ${tr.helmet.pillion ? 'g' : 'r'}">${ic('users')} ${t(tr.helmet.pillion ? 'tr_pillionYes' : 'tr_pillionNo')}</span>` : ''}${tr.crashes ? `<span class="chip r">${ic('siren')} ${t('tr_crashes', { n: tr.crashes })}</span>` : ''}</div>
+          </section></div>
+    <section class="card mt">
+        <h2>${ic('activity')} ${t('tr_timeline')}</h2>${timelineSvg(tr)}<div class="list mt">${tr.events.map(e => eventRow(e)).join('') || `<div class="empty">${ic('check-circle')}${t('tr_noEvents')}</div>`}</div>
+        </section>`;
   requestAnimationFrame(() => drawTripMap(tr));
   $('#tdGpx').onclick = () => downloadFile(`sawaar-ride-${isoDay(tr.start)}.gpx`, tripGpx(tr), 'application/gpx+xml');
   $('#tdPrint').onclick = () => printTrip(tr, sc);
@@ -6918,7 +7451,8 @@ function renderTripDetail(id) {
 
 function eventRow(e) {
   const unit = e.kind === 'speed' || e.kind === 'touch' ? 'km/h' : 'm/s²';
-  return `<div class="li"><span class="ico o">${ic(COACH_ICONS[e.kind])}</span><span class="grow"><b>${t('ev_' + e.kind)}</b><small>${clock(e.t)} · ${fmtN(e.val, 1)} ${unit}</small></span></div>`;
+  return `<div class="li"><span class="ico o">${ic(COACH_ICONS[e.kind])}</span><span class="grow"><b>${t('ev_' + e.kind)}</b>
+      <small>${clock(e.t)} · ${fmtN(e.val, 1)} ${unit}</small></span></div>`;
 }
 
 function drawTripMap(tr) {
@@ -6946,22 +7480,28 @@ function timelineSvg(tr) {
   const Y = v => H - 18 - (v / maxV) * (H - 30);
   const line = tr.pts.map((p, i) => `${i ? 'L' : 'M'}${X(p[3]).toFixed(1)} ${Y(p[2]).toFixed(1)}`).join('');
   const lim = roadType(tr.road).limit;
-  const marks = tr.events.map(e => `<g class="evm ${e.kind}"><line x1="${X(e.t).toFixed(1)}" x2="${X(e.t).toFixed(1)}" y1="8" y2="${H - 18}"/><circle cx="${X(e.t).toFixed(1)}" cy="10" r="4"><title>${t('ev_' + e.kind)} ${clock(e.t)}</title></circle></g>`).join('');
-  return `<svg class="chart tl" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('tr_timeline')}"><line class="refl" x1="30" x2="${W - 10}" y1="${Y(lim)}" y2="${Y(lim)}"/>
+  const marks = tr.events.map(e => `<g class="evm ${e.kind}"><line x1="${X(e.t).toFixed(1)}" x2="${X(e.t).toFixed(1)}" y1="8" y2="${H - 18}"/>
+      <circle cx="${X(e.t).toFixed(1)}" cy="10" r="4"><title>${t('ev_' + e.kind)} ${clock(e.t)}</title></circle></g>`).join('');
+  return `<svg class="chart tl" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('tr_timeline')}">
+      <line class="refl" x1="30" x2="${W - 10}" y1="${Y(lim)}" y2="${Y(lim)}"/>
     <text class="ax" x="26" y="${Y(lim) + 4}" text-anchor="end">${lim}</text>${marks}<path class="ln c" d="${line}" data-draw/>
     <text class="ax" x="30" y="${H - 3}">0:00</text><text class="ax" x="${W - 10}" y="${H - 3}" text-anchor="end">${clock(dur)}</text></svg>`;
 }
 
 function tripGpx(tr) {
-  const pts = tr.pts.map(p => `<trkpt lat="${p[0]}" lon="${p[1]}"><time>${new Date(tr.start + p[3] * 1000).toISOString()}</time><extensions><speed>${(p[2] / 3.6).toFixed(2)}</speed></extensions></trkpt>`).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Sawaar FYP template" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>${esc(tripTitle(tr))}</name><trkseg>\n${pts}\n</trkseg></trk></gpx>`;
+  const pts = tr.pts.map(p => `<trkpt lat="${p[0]}" lon="${p[1]}"><time>${new Date(tr.start + p[3] * 1000).toISOString()}</time><extensions>
+      <speed>${(p[2] / 3.6).toFixed(2)}</speed></extensions></trkpt>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Sawaar FYP template" xmlns="http://www.topografix.com/GPX/1/1"><trk>
+      <name>${esc(tripTitle(tr))}</name><trkseg>\n${pts}\n</trkseg></trk></gpx>`;
 }
 
 function printTrip(tr, sc) {
   const rows = tr.events.map(e => `<tr><td>${clock(e.t)}</td><td>${t('ev_' + e.kind)}</td><td>${fmtN(e.val, 1)}</td></tr>`).join('');
-  printDoc(`<div class="pdoc"><h1>${t('appName')} — ${esc(tripTitle(tr))}</h1><p>${fmtDT(tr.start)} · ${fmtN(tr.km, 2)} km · ${clock(tr.durS)} · ${t('k_avg')} ${fmtN(tr.avgKmh, 0)} km/h · ${t('k_max')} ${tr.maxKmh} km/h</p>
+  printDoc(`<div class="pdoc"><h1>${t('appName')} — ${esc(tripTitle(tr))}</h1>
+      <p>${fmtDT(tr.start)} · ${fmtN(tr.km, 2)} km · ${clock(tr.durS)} · ${t('k_avg')} ${fmtN(tr.avgKmh, 0)} km/h · ${t('k_max')} ${tr.maxKmh} km/h</p>
     <p><b>${t('k_score')}: ${sc.score}/100</b> — ${scoreExplain(sc)}</p>${timelineSvg(tr)}
-    <table class="tbl"><thead><tr><th>${t('k_time')}</th><th>${t('tr_event')}</th><th>${t('tr_value')}</th></tr></thead><tbody>${rows || `<tr><td colspan="3">${t('tr_noEvents')}</td></tr>`}</tbody></table></div>`);
+    <table class="tbl"><thead><tr><th>${t('k_time')}</th><th>${t('tr_event')}</th><th>${t('tr_value')}</th></tr></thead><tbody>${rows || `<tr>
+        <td colspan="3">${t('tr_noEvents')}</td></tr>`}</tbody></table></div>`);
 }
 
 // ---------- optional street map (Leaflet 1.9.4, loaded only on request; schematic canvas otherwise) ----------
@@ -7019,28 +7559,36 @@ function renderMedical() {
     <div class="side-r"><div class="stack">
       <section class="card"><h2>${ic('medical')} ${t('md_profile')}</h2><form id="mdForm" class="fgrid" autocomplete="off">
         <label class="field"><span>${t('md_name')}</span><input class="inp" name="name" value="${esc(p.name)}" dir="auto"></label>
-        <label class="field"><span>${t('md_blood')}</span><select class="inp" name="blood"><option value="">—</option>${BLOOD.map(b => `<option ${b === p.blood ? 'selected' : ''}>${b}</option>`).join('')}</select></label>
+        <label class="field"><span>${t('md_blood')}</span><select class="inp" name="blood">
+            <option value="">—</option>${BLOOD.map(b => `<option ${b === p.blood ? 'selected' : ''}>${b}</option>`).join('')}</select></label>
         <label class="field"><span>${t('md_allergies')}</span><input class="inp" name="allergies" value="${esc(p.allergies)}" dir="auto"></label>
         <label class="field"><span>${t('md_conditions')}</span><input class="inp" name="conditions" value="${esc(p.conditions)}" dir="auto"></label>
         <label class="field"><span>${t('md_meds')}</span><input class="inp" name="meds" value="${esc(p.meds)}" dir="auto"></label>
         <label class="field"><span>${t('md_notes')}</span><input class="inp" name="notes" value="${esc(p.notes)}" dir="auto"></label>
-        <label class="field"><span>${t('md_city')}</span><select class="inp" name="city">${Object.keys(CITIES).map(c => `<option value="${c}" ${c === p.city ? 'selected' : ''}>${L(CITIES[c].name)}</option>`).join('')}</select></label>
+        <label class="field"><span>${t('md_city')}</span>
+            <select class="inp" name="city">${Object.keys(CITIES).map(c => `<option value="${c}" ${c === p.city ? 'selected' : ''}>${L(CITIES[c].name)}</option>`).join('')}</select>
+            </label>
         <label class="field"><span>${t('md_reg')}</span><input class="inp ltr" name="reg" value="${esc(S.bike.reg)}"></label>
         <label class="switch"><input type="checkbox" name="donor" ${p.donor ? 'checked' : ''}><span>${t('md_donor')}</span></label>
         <div class="row"><button class="btn y" type="submit">${ic('save')} ${t('save')}</button></div></form></section>
-      <section class="card"><div class="between"><h2>${ic('users')} ${t('md_contacts')}</h2><button type="button" class="btn ghost sm" id="mdAdd">${ic('plus')} ${t('add')}</button></div>
+      <section class="card"><div class="between"><h2>${ic('users')} ${t('md_contacts')}</h2>
+          <button type="button" class="btn ghost sm" id="mdAdd">${ic('plus')} ${t('add')}</button></div>
         <div class="list" id="mdContacts">${contactsHtml()}</div><p class="tiny muted mt">${t('md_contactsNote')}</p></section></div>
       <div class="stack"><section class="card"><h2>${ic('id-card')} ${t('md_card')}</h2><div class="cards-prev" id="cardPrev">${walletFront()}${walletBack()}</div>
-        <div class="row mt"><button type="button" class="btn y" id="mdPrint">${ic('printer')} ${t('md_printCard')}</button><button type="button" class="btn ghost" id="mdPng">${ic('download')} ${t('md_qrPng')}</button></div></section>
+        <div class="row mt"><button type="button" class="btn y" id="mdPrint">${ic('printer')} ${t('md_printCard')}</button>
+            <button type="button" class="btn ghost" id="mdPng">${ic('download')} ${t('md_qrPng')}</button></div></section>
         <section class="card"><h2>${ic('helmet')} ${t('md_sticker')}</h2><div id="stickerPrev">${stickerHtml()}</div>
-        <p class="tiny muted mt">${t('md_stickerNote')}</p><details class="mt"><summary class="small">${t('md_qrText')}</summary><pre class="qrtext" dir="ltr">${esc(qrPayload())}</pre></details></section></div></div>`;
+        <p class="tiny muted mt">${t('md_stickerNote')}</p><details class="mt"><summary class="small">${t('md_qrText')}</summary>
+            <pre class="qrtext" dir="ltr">${esc(qrPayload())}</pre></details></section></div></div>`;
   bindMedical();
 }
 
 function contactsHtml() {
   if (!S.contacts.length) return `<div class="empty">${ic('users')}${t('md_noContacts')}</div>`;
-  return S.contacts.map(c => `<div class="li"><span class="ico ${c.demo ? 'y' : 'g'}">${ic('user')}</span><span class="grow"><b>${esc(c.name)}</b><small><span class="ltr">${esc(c.phone)}</span> · ${t('rel_' + c.relation)}${c.demo ? ' · ' + t('demoContact') : ''}</small></span>
-    <button type="button" class="ibtn sm" data-edit="${c.id}" aria-label="${t('edit')}">${ic('edit')}</button><button type="button" class="ibtn sm" data-del="${c.id}" aria-label="${t('delete')}">${ic('trash')}</button></div>`).join('');
+  return S.contacts.map(c => `<div class="li"><span class="ico ${c.demo ? 'y' : 'g'}">${ic('user')}</span><span class="grow"><b>${esc(c.name)}</b>
+      <small><span class="ltr">${esc(c.phone)}</span> · ${t('rel_' + c.relation)}${c.demo ? ' · ' + t('demoContact') : ''}</small></span>
+    <button type="button" class="ibtn sm" data-edit="${c.id}" aria-label="${t('edit')}">${ic('edit')}</button>
+        <button type="button" class="ibtn sm" data-del="${c.id}" aria-label="${t('delete')}">${ic('trash')}</button></div>`).join('');
 }
 
 /** Plain-text QR payload: readable by any camera app, no app or network needed. Kept short so the code stays scannable. */
@@ -7066,9 +7614,11 @@ function qrSvg(label) {
 
 function walletFront() {
   const p = S.profile;
-  return `<div class="wcard front"><div class="wc-top"><span class="wc-mark">${ic('helmet')}</span><b>${t('md_cardTitle')}</b><span class="wc-blood">${esc(p.blood || '?')}</span></div>
+  return `<div class="wcard front"><div class="wc-top"><span class="wc-mark">${ic('helmet')}</span><b>${t('md_cardTitle')}</b>
+      <span class="wc-blood">${esc(p.blood || '?')}</span></div>
     <div class="wc-name">${esc(p.name || t('md_yourName'))}</div>
-    <dl><dt>${t('md_allergies')}</dt><dd>${esc(p.allergies || '—')}</dd><dt>${t('md_conditions')}</dt><dd>${esc(p.conditions || '—')}</dd><dt>${t('md_meds')}</dt><dd>${esc(p.meds || '—')}</dd></dl>
+    <dl><dt>${t('md_allergies')}</dt><dd>${esc(p.allergies || '—')}</dd><dt>${t('md_conditions')}</dt><dd>${esc(p.conditions || '—')}</dd>
+        <dt>${t('md_meds')}</dt><dd>${esc(p.meds || '—')}</dd></dl>
     <div class="wc-foot">${ic('phone')} ${t('md_call1122')}${p.donor ? ' · ' + t('md_donorShort') : ''}</div></div>`;
 }
 
@@ -7111,9 +7661,14 @@ function openContactForm(c = null) {
   const v = c || { name: '', phone: '', relation: 'mother' };
   const sh = openModal(`${sheetHead(c ? t('md_editContact') : t('md_addContact'), 'user')}<form id="ctForm" class="stack" novalidate>
     <label class="field"><span>${t('md_cName')}</span><input class="inp" name="name" value="${esc(v.name)}" required dir="auto"></label>
-    <label class="field"><span>${t('md_cPhone')}</span><input class="inp ltr" name="phone" type="tel" value="${esc(v.phone)}" placeholder="0300-1234567"><small class="err hidden" id="ctErr">${t('err_phone')}</small></label>
-    <label class="field"><span>${t('md_cRel')}</span><select class="inp" name="relation">${RELATIONS.map(r => `<option value="${r}" ${r === v.relation ? 'selected' : ''}>${t('rel_' + r)}</option>`).join('')}</select></label>
-    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('cancel')}</button><button class="btn y" type="submit">${ic('save')} ${t('save')}</button></div></form>`);
+    <label class="field"><span>${t('md_cPhone')}</span>
+        <input class="inp ltr" name="phone" type="tel" value="${esc(v.phone)}" placeholder="0300-1234567">
+        <small class="err hidden" id="ctErr">${t('err_phone')}</small></label>
+    <label class="field"><span>${t('md_cRel')}</span>
+        <select class="inp" name="relation">${RELATIONS.map(r => `<option value="${r}" ${r === v.relation ? 'selected' : ''}>${t('rel_' + r)}</option>`).join('')}</select>
+        </label>
+    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('cancel')}</button>
+        <button class="btn y" type="submit">${ic('save')} ${t('save')}</button></div></form>`);
   $('#ctForm', sh).onsubmit = e => {
     e.preventDefault();
     const d = formData(e.target);
@@ -7192,13 +7747,19 @@ function garageSafetyHtml() {
   const pillionLesson = LESSONS.find(l => l.id === 'pillion');
   const weather = LESSONS.find(l => l.id === 'weather');
   return `<div class="kpis stagger">
-      <div class="tile g"><span class="k">${ic('helmet')} ${t('co_streak')}</span><span class="v" data-count="${hs.current}">0</span><span class="s">${t('co_best', { n: hs.best })}</span></div>
-      <div class="tile ${pill.length && pillOk / pill.length < 0.8 ? 'r' : 'y'}"><span class="k">${ic('users')} ${t('gr_pillionRate')}</span><span class="v">${pill.length ? fmtPct(pillOk / pill.length) : '—'}</span><span class="s">${t('gr_pillionSub', { a: pillOk, b: pill.length })}</span></div></div>
+      <div class="tile g"><span class="k">${ic('helmet')} ${t('co_streak')}</span><span class="v" data-count="${hs.current}">0</span>
+          <span class="s">${t('co_best', { n: hs.best })}</span></div>
+      <div class="tile ${pill.length && pillOk / pill.length < 0.8 ? 'r' : 'y'}"><span class="k">${ic('users')} ${t('gr_pillionRate')}</span>
+          <span class="v">${pill.length ? fmtPct(pillOk / pill.length) : '—'}</span><span class="s">${t('gr_pillionSub', { a: pillOk, b: pill.length })}</span>
+          </div></div>
     <div class="side-r mt"><section class="card"><h2>${ic('calendar')} ${t('gr_calendar')}</h2>${helmetCalendar()}
       <div class="legend tiny"><span class="lgg">${t('gr_calAll')}</span><span class="lgr">${t('gr_calMiss')}</span><span>${t('gr_calNone')}</span></div></section>
-      <section class="card warn-card"><h2>${ic('alert')} ${L(pillionLesson.title)}</h2><p class="small">${L(pillionLesson.intro)}</p><ul class="ticks">${pillionLesson.points.slice(0, 3).map(p => `<li>${ic('check')} ${L(p)}</li>`).join('')}</ul></section></div>
-    <div class="grid2 mt"><section class="card"><h2>${ic('shield-check')} ${t('gr_helmetGuide')}</h2><ul class="ticks">${HELMET_GUIDE.map(p => `<li>${ic('check')} ${L(p)}</li>`).join('')}</ul><p class="tiny muted">${t('gr_guideNote')}</p></section>
-      <section class="card"><h2>${ic('cloud-rain')} ${L(weather.title)}</h2><ul class="ticks">${weather.points.map(p => `<li>${ic('check')} ${L(p)}</li>`).join('')}</ul></section></div>`;
+      <section class="card warn-card"><h2>${ic('alert')} ${L(pillionLesson.title)}</h2><p class="small">${L(pillionLesson.intro)}</p>
+          <ul class="ticks">${pillionLesson.points.slice(0, 3).map(p => `<li>${ic('check')} ${L(p)}</li>`).join('')}</ul></section></div>
+    <div class="grid2 mt"><section class="card"><h2>${ic('shield-check')} ${t('gr_helmetGuide')}</h2>
+        <ul class="ticks">${HELMET_GUIDE.map(p => `<li>${ic('check')} ${L(p)}</li>`).join('')}</ul><p class="tiny muted">${t('gr_guideNote')}</p></section>
+      <section class="card"><h2>${ic('cloud-rain')} ${L(weather.title)}</h2>
+          <ul class="ticks">${weather.points.map(p => `<li>${ic('check')} ${L(p)}</li>`).join('')}</ul></section></div>`;
 }
 
 /** Last 35 days: green when every ride had a helmet (rider and pillion), red when one did not. */
@@ -7223,15 +7784,21 @@ function garageServiceHtml() {
   const hist = S.services.flatMap(s => s.history.map(h => ({ ...h, key: s.key }))).sort((a, c) => c.ts - a.ts);
   const year = hist.filter(h => new Date(h.ts).getFullYear() === new Date().getFullYear());
   return `<div class="side-l"><section class="card"><h2>${ic('bike')} ${t('gr_bike')}</h2><form id="bkForm" class="stack">
-      <label class="field"><span>${t('gr_model')}</span><select class="inp" name="preset">${Object.keys(BIKES).map(k => `<option value="${k}" ${k === b.preset ? 'selected' : ''}>${esc(L(BIKES[k].n))}</option>`).join('')}</select></label>
+      <label class="field"><span>${t('gr_model')}</span>
+          <select class="inp" name="preset">${Object.keys(BIKES).map(k => `<option value="${k}" ${k === b.preset ? 'selected' : ''}>${esc(L(BIKES[k].n))}</option>`).join('')}</select>
+          </label>
       <label class="field"><span>${t('gr_odo')}</span><input class="inp" type="number" name="odo" min="0" value="${b.odo}"></label>
-      <label class="field"><span>${ev ? t('gr_kwhPrice') : t('gr_petrolPrice')}</span><input class="inp" type="number" name="${ev ? 'kwh' : 'petrol'}" min="0" value="${ev ? b.kwh : b.petrol}"></label>
+      <label class="field"><span>${ev ? t('gr_kwhPrice') : t('gr_petrolPrice')}</span>
+          <input class="inp" type="number" name="${ev ? 'kwh' : 'petrol'}" min="0" value="${ev ? b.kwh : b.petrol}"></label>
       <button class="btn y" type="submit">${ic('save')} ${t('save')}</button></form>
       <p class="tiny muted mt">${t('gr_bikeNote')}</p>
       <div class="tile y mt"><span class="k">${ic('coins')} ${t('gr_spentYear')}</span><span class="v">${fmtRs(sum(year.map(h => h.cost || 0)))}</span></div></section>
     <div class="stack"><section class="card"><h2>${ic('wrench')} ${t('gr_due')}</h2><div class="list stagger">${items.map(serviceRow).join('')}</div></section>
-      <section class="card"><h2>${ic('list')} ${t('gr_history')}</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t('tr_when')}</th><th>${t('gr_item')}</th><th class="n">km</th><th class="n">Rs</th></tr></thead>
-      <tbody>${hist.slice(0, 12).map(h => `<tr><td>${fmtDate(h.ts)}</td><td>${t('sv_' + h.key)}</td><td class="n">${fmtN(h.odo)}</td><td class="n">${fmtN(h.cost || 0)}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">${t('gr_noHistory')}</td></tr>`}</tbody></table></div></section></div></div>`;
+      <section class="card"><h2>${ic('list')} ${t('gr_history')}</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t('tr_when')}</th>
+          <th>${t('gr_item')}</th><th class="n">km</th><th class="n">Rs</th></tr></thead>
+      <tbody>${hist.slice(0, 12).map(h => `<tr><td>${fmtDate(h.ts)}</td><td>${t('sv_' + h.key)}</td><td class="n">${fmtN(h.odo)}</td>
+          <td class="n">${fmtN(h.cost || 0)}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">${t('gr_noHistory')}</td></tr>`}</tbody></table></div>
+          </section></div></div>`;
 }
 
 function serviceRow(x) {
@@ -7239,7 +7806,8 @@ function serviceRow(x) {
   const soon = x.frac >= 0.85;
   const unit = x.it.km ? 'km' : t('days');
   const left = over ? t('gr_overBy', { n: fmtN(-x.left), u: unit }) : t('gr_left', { n: fmtN(x.left), u: unit });
-  return `<div class="li"><span class="ico ${over ? 'r' : soon ? 'o' : 'g'}">${ic(x.it.icon)}</span><span class="grow"><b>${t('sv_' + x.key)}</b><small>${t('gr_every', { n: fmtN(x.every), u: unit })} · ${left}</small>
+  return `<div class="li"><span class="ico ${over ? 'r' : soon ? 'o' : 'g'}">${ic(x.it.icon)}</span><span class="grow"><b>${t('sv_' + x.key)}</b>
+      <small>${t('gr_every', { n: fmtN(x.every), u: unit })} · ${left}</small>
     <div class="bar ${over ? 'r' : soon ? 'o' : 'g'} mt-s"><i data-w="${Math.min(100, x.frac * 100).toFixed(0)}"></i></div></span>
     <button type="button" class="btn sm ${over ? 'y' : 'ghost'}" data-done="${x.key}">${ic('check')} ${t('gr_done')}</button></div>`;
 }
@@ -7261,7 +7829,8 @@ function openServiceDone(key) {
   const sh = openModal(`${sheetHead(t('gr_doneTitle', { item: t('sv_' + key) }), 'wrench')}<form id="svForm" class="stack">
     <label class="field"><span>${t('gr_odo')}</span><input class="inp" type="number" name="odo" value="${S.bike.odo}" min="0"></label>
     <label class="field"><span>${t('gr_cost')}</span><input class="inp" type="number" name="cost" value="0" min="0"></label>
-    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('cancel')}</button><button class="btn y" type="submit">${ic('check')} ${t('save')}</button></div></form>`);
+    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('cancel')}</button>
+        <button class="btn y" type="submit">${ic('check')} ${t('save')}</button></div></form>`);
   $('#svForm', sh).onsubmit = e => {
     e.preventDefault();
     const d = formData(e.target);
@@ -7299,18 +7868,27 @@ function garageFuelHtml() {
   const effTxt = effAvg == null ? '—' : ev ? fmtN(1000 / effAvg, 0) : fmtN(effAvg, 1);
   const unitQ = ev ? 'kWh' : 'L';
   return `<div class="kpis stagger">
-      <div class="tile y"><span class="k">${ic('fuel')} ${t(ev ? 'gr_whkm' : 'gr_kmpl')}</span><span class="v">${effTxt}</span><span class="s">${t('gr_typical', { n: ev ? bikeInfo().whkm + ' Wh/km' : bikeInfo().kmpl + ' km/L' })}</span></div>
-      <div class="tile c"><span class="k">${ic('coins')} ${t('gr_rsKm')}</span><span class="v">${rsKm == null ? '—' : fmtN(rsKm, 2)}</span><span class="s">${t('gr_rsKmSub')}</span></div>
-      <div class="tile"><span class="k">${ic('wallet')} ${t('gr_spent30')}</span><span class="v">${fmtRs(spent30)}</span><span class="s">${t('gr_fills', { n: S.fuel.filter(f => f.ts > now() - 30 * DAY).length })}</span></div></div>
+      <div class="tile y"><span class="k">${ic('fuel')} ${t(ev ? 'gr_whkm' : 'gr_kmpl')}</span><span class="v">${effTxt}</span>
+          <span class="s">${t('gr_typical', { n: ev ? bikeInfo().whkm + ' Wh/km' : bikeInfo().kmpl + ' km/L' })}</span></div>
+      <div class="tile c"><span class="k">${ic('coins')} ${t('gr_rsKm')}</span><span class="v">${rsKm == null ? '—' : fmtN(rsKm, 2)}</span>
+          <span class="s">${t('gr_rsKmSub')}</span></div>
+      <div class="tile"><span class="k">${ic('wallet')} ${t('gr_spent30')}</span><span class="v">${fmtRs(spent30)}</span>
+          <span class="s">${t('gr_fills', { n: S.fuel.filter(f => f.ts > now() - 30 * DAY).length })}</span></div></div>
     <div class="side-l mt"><section class="card"><h2>${ic('plus')} ${t(ev ? 'gr_addCharge' : 'gr_addFill')}</h2><form id="fuForm" class="stack">
       <label class="field"><span>${t('gr_odo')}</span><input class="inp" type="number" name="odo" value="${S.bike.odo}" min="0" required></label>
       <label class="field"><span>${t('gr_qty', { u: unitQ })}</span><input class="inp" type="number" name="qty" step="0.01" min="0.1" required></label>
-      <label class="field"><span>${t('gr_price', { u: unitQ })}</span><input class="inp" type="number" name="price" value="${ev ? S.bike.kwh : S.bike.petrol}" step="0.5" min="1"></label>
+      <label class="field"><span>${t('gr_price', { u: unitQ })}</span>
+          <input class="inp" type="number" name="price" value="${ev ? S.bike.kwh : S.bike.petrol}" step="0.5" min="1"></label>
       <label class="switch"><input type="checkbox" name="full" checked><span>${t(ev ? 'gr_fullCharge' : 'gr_fullTank')}</span></label>
       <button class="btn y" type="submit">${ic('save')} ${t('save')}</button></form><p class="tiny muted mt">${t('gr_fuelNote')}</p></section>
-      <div class="stack"><section class="card"><h2>${ic('trending-up')} ${t(ev ? 'gr_whkm' : 'gr_kmpl')}</h2>${withEff.length > 1 ? lineChart([{ values: withEff.map(x => round(ev ? 1000 / x.eff : x.eff, 1)), cls: 'y' }], { labels: withEff.map(x => fmtDate(x.ts, { day: 'numeric', month: 'short' })), ref: ev ? bikeInfo().whkm : bikeInfo().kmpl }) : `<div class="empty">${t('gr_needTwo')}</div>`}</section>
-      <section class="card"><h2>${ic('list')} ${t('gr_log')}</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t('tr_when')}</th><th class="n">km</th><th class="n">${unitQ}</th><th class="n">Rs</th><th class="n">${t(ev ? 'gr_whkmShort' : 'gr_kmplShort')}</th><th></th></tr></thead>
-      <tbody>${[...st].reverse().map(f => `<tr><td>${fmtDate(f.ts)}</td><td class="n">${fmtN(f.odo)}</td><td class="n">${fmtN(f.qty, 2)}</td><td class="n">${fmtN(f.qty * f.price)}</td><td class="n">${f.eff ? fmtN(ev ? 1000 / f.eff : f.eff, 1) : '—'}</td><td><button type="button" class="ibtn sm" data-fdel="${f.id}" aria-label="${t('delete')}">${ic('trash')}</button></td></tr>`).join('') || `<tr><td colspan="6" class="muted">${t('gr_noFuel')}</td></tr>`}</tbody></table></div></section></div></div>`;
+      <div class="stack"><section class="card">
+          <h2>${ic('trending-up')} ${t(ev ? 'gr_whkm' : 'gr_kmpl')}</h2>${withEff.length > 1 ? lineChart([{ values: withEff.map(x => round(ev ? 1000 / x.eff : x.eff, 1)), cls: 'y' }], { labels: withEff.map(x => fmtDate(x.ts, { day: 'numeric', month: 'short' })), ref: ev ? bikeInfo().whkm : bikeInfo().kmpl }) : `<div class="empty">${t('gr_needTwo')}</div>`}</section>
+      <section class="card"><h2>${ic('list')} ${t('gr_log')}</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t('tr_when')}</th>
+          <th class="n">km</th><th class="n">${unitQ}</th><th class="n">Rs</th><th class="n">${t(ev ? 'gr_whkmShort' : 'gr_kmplShort')}</th><th></th></tr></thead>
+      <tbody>${[...st].reverse().map(f => `<tr><td>${fmtDate(f.ts)}</td><td class="n">${fmtN(f.odo)}</td><td class="n">${fmtN(f.qty, 2)}</td>
+          <td class="n">${fmtN(f.qty * f.price)}</td><td class="n">${f.eff ? fmtN(ev ? 1000 / f.eff : f.eff, 1) : '—'}</td><td>
+          <button type="button" class="ibtn sm" data-fdel="${f.id}" aria-label="${t('delete')}">${ic('trash')}</button></td></tr>`).join('') || `<tr>
+          <td colspan="6" class="muted">${t('gr_noFuel')}</td></tr>`}</tbody></table></div></section></div></div>`;
 }
 
 function bindFuel() {
@@ -7376,17 +7954,25 @@ function renderFleet() {
   const open = S.fleetAlerts.filter(a => !a.ack).length;
   $('#view').innerHTML = `<div class="note y mb">${ic('info')}<span>${t('fl_demoNote')}</span></div>
     <div class="kpis stagger">
-      <div class="tile c"><span class="k">${ic('users')} ${t('fl_active')}</span><span class="v"><span data-count="${active}">0</span><small>/${rows.length}</small></span><span class="s">${t('fl_activeSub')}</span></div>
-      <div class="tile y"><span class="k">${ic('award')} ${t('fl_avg')}</span><span class="v" data-count="${Math.round(mean(rows.map(r => r.score)))}">0</span><span class="s">${t('fl_avgSub')}</span></div>
-      <div class="tile ${per100 > 5 ? 'r' : 'g'}"><span class="k">${ic('alert')} ${t('co_per100')}</span><span class="v" data-count="${round(per100, 1)}" data-dp="1">0</span><span class="s">${t('fl_kmSub', { n: fmtN(km) })}</span></div>
-      <div class="tile g"><span class="k">${ic('helmet')} ${t('fl_helmet')}</span><span class="v">${fmtPct(mean(rows.map(r => r.helmetPct)) / 100)}</span><span class="s">${t('fl_helmetSub')}</span></div>
-      <div class="tile r"><span class="k">${ic('bell')} ${t('fl_alertsOpen')}</span><span class="v" data-count="${open}">0</span><span class="s">${t('fl_alertsSub')}</span></div>
+      <div class="tile c"><span class="k">${ic('users')} ${t('fl_active')}</span><span class="v"><span data-count="${active}">0</span>
+          <small>/${rows.length}</small></span><span class="s">${t('fl_activeSub')}</span></div>
+      <div class="tile y"><span class="k">${ic('award')} ${t('fl_avg')}</span>
+          <span class="v" data-count="${Math.round(mean(rows.map(r => r.score)))}">0</span><span class="s">${t('fl_avgSub')}</span></div>
+      <div class="tile ${per100 > 5 ? 'r' : 'g'}"><span class="k">${ic('alert')} ${t('co_per100')}</span>
+          <span class="v" data-count="${round(per100, 1)}" data-dp="1">0</span><span class="s">${t('fl_kmSub', { n: fmtN(km) })}</span></div>
+      <div class="tile g"><span class="k">${ic('helmet')} ${t('fl_helmet')}</span>
+          <span class="v">${fmtPct(mean(rows.map(r => r.helmetPct)) / 100)}</span><span class="s">${t('fl_helmetSub')}</span></div>
+      <div class="tile r"><span class="k">${ic('bell')} ${t('fl_alertsOpen')}</span><span class="v" data-count="${open}">0</span>
+          <span class="s">${t('fl_alertsSub')}</span></div>
     </div>
-    <section class="card mt"><div class="between"><h2>${ic('users')} ${t('fl_riders')}</h2><div class="row"><select class="inp sel-sm" id="flSort" aria-label="${t('tr_sort')}">${['score', 'km', 'harsh', 'name'].map(s => `<option value="${s}" ${FLEET.sort === s ? 'selected' : ''}>${t('fl_sort_' + s)}</option>`).join('')}</select>
-      <button type="button" class="btn ghost sm" id="flSync">${ic('refresh')} ${t('fl_sync')}</button><button type="button" class="btn y sm" id="flReport">${ic('printer')} ${t('fl_report')}</button></div></div>
+    <section class="card mt"><div class="between"><h2>${ic('users')} ${t('fl_riders')}</h2><div class="row">
+        <select class="inp sel-sm" id="flSort" aria-label="${t('tr_sort')}">${['score', 'km', 'harsh', 'name'].map(s => `<option value="${s}" ${FLEET.sort === s ? 'selected' : ''}>${t('fl_sort_' + s)}</option>`).join('')}</select>
+      <button type="button" class="btn ghost sm" id="flSync">${ic('refresh')} ${t('fl_sync')}</button>
+          <button type="button" class="btn y sm" id="flReport">${ic('printer')} ${t('fl_report')}</button></div></div>
       <div class="tbl-wrap">${riderTable(rows)}</div></section>
     <div class="side-r mt"><section class="card" id="heatCard">${heatCardHtml()}</section>
-      <section class="card"><div class="between"><h2>${ic('bell')} ${t('fl_alerts')}</h2><label class="switch small"><input type="checkbox" id="flUnacked" ${FLEET.unacked ? 'checked' : ''}><span>${t('fl_unacked')}</span></label></div>
+      <section class="card"><div class="between"><h2>${ic('bell')} ${t('fl_alerts')}</h2><label class="switch small">
+          <input type="checkbox" id="flUnacked" ${FLEET.unacked ? 'checked' : ''}><span>${t('fl_unacked')}</span></label></div>
       <div class="list" id="flAlerts">${fleetAlertsHtml()}</div></section></div>`;
   bindFleet();
 }
@@ -7397,10 +7983,16 @@ function sortRiders(rows) {
 }
 
 function riderTable(rows) {
-  const body = sortRiders(rows).map(r => `<tr class="click ${r.me ? 'me' : ''}" data-rider="${r.id}" tabindex="0"><td><b>${esc(r.name)}</b>${r.me ? ` <span class="chip y">${t('fl_you')}</span>` : ''}<small class="blk muted">${esc(L(r.zone))} · ${esc(L(BIKES[r.bike].n))}</small></td>
-    <td class="n">${fmtN(r.km30)}</td><td class="n">${r.rides30}</td><td><span class="chip ${scoreCls(r.score)} num">${r.score}</span> ${sparkline(r.trend, { cls: scoreCls(r.score) })}</td>
-    <td class="n">${harshTotal(r)}</td><td class="n">${r.helmetPct}%</td><td class="n">${r.incidents ? `<span class="chip r">${r.incidents}</span>` : '0'}</td></tr>`).join('');
-  return `<table class="tbl riders"><thead><tr><th>${t('fl_rider')}</th><th class="n">km</th><th class="n">${t('fl_rides')}</th><th>${t('k_score')}</th><th class="n">${t('fl_harsh')}</th><th class="n">${t('fl_helmetShort')}</th><th class="n">${t('fl_incidents')}</th></tr></thead><tbody>${body}</tbody></table>`;
+  const body = sortRiders(rows).map(r => `<tr class="click ${r.me ? 'me' : ''}" data-rider="${r.id}" tabindex="0"><td>
+      <b>${esc(r.name)}</b>${r.me ? ` <span class="chip y">${t('fl_you')}</span>` : ''}<small class="blk muted">${esc(L(r.zone))} · ${esc(L(BIKES[r.bike].n))}</small>
+      </td>
+    <td class="n">${fmtN(r.km30)}</td><td class="n">${r.rides30}</td><td>
+        <span class="chip ${scoreCls(r.score)} num">${r.score}</span> ${sparkline(r.trend, { cls: scoreCls(r.score) })}</td>
+    <td class="n">${harshTotal(r)}</td><td class="n">${r.helmetPct}%</td>
+        <td class="n">${r.incidents ? `<span class="chip r">${r.incidents}</span>` : '0'}</td></tr>`).join('');
+  return `<table class="tbl riders"><thead><tr><th>${t('fl_rider')}</th><th class="n">km</th><th class="n">${t('fl_rides')}</th><th>${t('k_score')}</th>
+      <th class="n">${t('fl_harsh')}</th><th class="n">${t('fl_helmetShort')}</th><th class="n">${t('fl_incidents')}</th></tr></thead><tbody>${body}</tbody>
+      </table>`;
 }
 
 /** Harsh events binned on a 16 × 11 grid over the city; colour runs cyan → yellow → red with the count. */
@@ -7425,11 +8017,15 @@ function heatCardHtml() {
   const cw = 640 / cols;
   const ch = 400 / rowsN;
   const color = f => (f < 0.5 ? `color-mix(in srgb, var(--cyan) ${Math.round(30 + f * 120)}%, transparent)` : `color-mix(in srgb, var(--red) ${Math.round((f - 0.5) * 200)}%, var(--yellow))`);
-  const cells = grid.flatMap((row, r) => row.map((n, c) => (n ? `<rect x="${(c * cw).toFixed(1)}" y="${(r * ch).toFixed(1)}" width="${(cw - 2).toFixed(1)}" height="${(ch - 2).toFixed(1)}" rx="4" style="fill:${color(n / max)}"><title>${n}</title></rect>` : ''))).join('');
+  const cells = grid.flatMap((row, r) => row.map((n, c) => (n ? `<rect x="${(c * cw).toFixed(1)}" y="${(r * ch).toFixed(1)}" width="${(cw - 2).toFixed(1)}" height="${(ch - 2).toFixed(1)}" rx="4" style="fill:${color(n / max)}">
+      <title>${n}</title></rect>` : ''))).join('');
   const labels = CITIES[FLEET.city].places.map(p => `<text class="hm-l" x="${(((p.lng - b.w) / (b.e - b.w)) * 640).toFixed(1)}" y="${(((b.n - p.lat) / (b.n - b.s)) * 400).toFixed(1)}">${esc(L(p.n))}</text>`).join('');
   const top = topHotspots(grid, cols, rowsN, b);
-  return `<div class="between"><h2>${ic('flame')} ${t('fl_hotspots')}</h2><div class="row"><div class="seg" id="flCity">${['lhr', 'khi'].map(c => `<button type="button" data-c="${c}" class="${FLEET.city === c ? 'on' : ''}">${L(CITIES[c].name)}</button>`).join('')}</div>
-    <select class="inp sel-sm" id="flKind" aria-label="${t('fl_kind')}"><option value="all">${t('all')}</option>${COACH_KINDS.map(k => `<option value="${k}" ${FLEET.kind === k ? 'selected' : ''}>${t('ev_' + k)}</option>`).join('')}</select></div></div>
+  return `<div class="between"><h2>${ic('flame')} ${t('fl_hotspots')}</h2><div class="row">
+      <div class="seg" id="flCity">${['lhr', 'khi'].map(c => `<button type="button" data-c="${c}" class="${FLEET.city === c ? 'on' : ''}">${L(CITIES[c].name)}</button>`).join('')}</div>
+    <select class="inp sel-sm" id="flKind" aria-label="${t('fl_kind')}">
+        <option value="all">${t('all')}</option>${COACH_KINDS.map(k => `<option value="${k}" ${FLEET.kind === k ? 'selected' : ''}>${t('ev_' + k)}</option>`).join('')}</select>
+        </div></div>
     <svg class="heat" viewBox="0 0 640 400" role="img" aria-label="${t('fl_hotspots')}"><rect class="hm-bg" width="640" height="400" rx="10"/>${cells}${labels}</svg>
     <ol class="small mt">${top.map(h => `<li>${t('fl_hotItem', { n: h.n, p: L(h.place.n) })}</li>`).join('')}</ol><p class="tiny muted">${t('fl_heatNote')}</p>`;
 }
@@ -7446,7 +8042,9 @@ function fleetAlertsHtml() {
   return list.map(a => {
     const r = S.riders.find(x => x.id === a.rider);
     const [i, cls] = icon[a.kind] || ['bell', ''];
-    return `<div class="li ${a.ack ? 'acked' : ''}"><span class="ico ${cls}">${ic(i)}</span><span class="grow"><b>${t('fa_' + a.kind, { kmh: a.kmh || '', s: a.waited || '' })}</b><small>${esc(r ? r.name : '—')} · ${ago(a.ts)}${a.note ? ' · ' + esc(L(a.note)) : ''}</small></span>
+    return `<div class="li ${a.ack ? 'acked' : ''}"><span class="ico ${cls}">${ic(i)}</span><span class="grow">
+        <b>${t('fa_' + a.kind, { kmh: a.kmh || '', s: a.waited || '' })}</b>
+        <small>${esc(r ? r.name : '—')} · ${ago(a.ts)}${a.note ? ' · ' + esc(L(a.note)) : ''}</small></span>
       ${a.ack ? `<span class="chip g">${t('fl_acked')}</span>` : `<button type="button" class="btn sm" data-ack="${a.id}">${ic('check')} ${t('fl_ack')}</button>`}</div>`;
   }).join('');
 }
@@ -7503,7 +8101,8 @@ function openRider(id) {
     <div class="kpis">${miniKpi(t('k_score'), r.score, '/100')}${miniKpi('km', fmtN(r.km30), '')}${miniKpi(t('fl_rides'), r.rides30, '')}${miniKpi(t('fl_helmetShort'), r.helmetPct, '%')}</div>
     <h3 class="mt">${t('fl_trend')}</h3>${r.trend.length > 1 ? lineChart([{ values: r.trend, cls: 'y' }], { yMin: 0, yMax: 100, h: 140, ref: 85 }) : `<p class="muted small">${t('gr_needTwo')}</p>`}
     <h3 class="mt">${t('fl_harsh')}</h3>${barChart(COACH_KINDS.map(k => ({ v: r.harsh[k], label: t('ev_' + k), cls: k })), { h: 140 })}
-    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('close')}</button>${r.me ? '' : `<a class="btn y" ${ok ? `href="${waHref(r.phone, msg)}" target="_blank" rel="noopener"` : 'aria-disabled="true"'}>${ic('send')} ${t('fl_whatsapp')}</a>`}</div>
+    <div class="sfoot">
+        <button class="btn ghost" type="button" data-close>${t('close')}</button>${r.me ? '' : `<a class="btn y" ${ok ? `href="${waHref(r.phone, msg)}" target="_blank" rel="noopener"` : 'aria-disabled="true"'}>${ic('send')} ${t('fl_whatsapp')}</a>`}</div>
     ${!r.me && !ok ? `<p class="tiny muted">${t('fl_demoPhone')}</p>` : ''}`, { wide: true });
   animateIn(sh);
 }
@@ -7511,10 +8110,12 @@ function openRider(id) {
 function printFleetReport() {
   const rows = sortRiders(fleetRows());
   const month = fmtDate(now(), { month: 'long', year: 'numeric' });
-  const body = rows.map(r => `<tr><td>${esc(r.name)}</td><td>${fmtN(r.km30)}</td><td>${r.score}</td><td>${harshTotal(r)}</td><td>${r.helmetPct}%</td><td>${r.incidents}</td></tr>`).join('');
+  const body = rows.map(r => `<tr><td>${esc(r.name)}</td><td>${fmtN(r.km30)}</td><td>${r.score}</td><td>${harshTotal(r)}</td><td>${r.helmetPct}%</td>
+      <td>${r.incidents}</td></tr>`).join('');
   const alerts = S.fleetAlerts.filter(a => a.ts > now() - 30 * DAY).map(a => `<li>${fmtDate(a.ts)} — ${t('fa_' + a.kind, { kmh: a.kmh || '', s: a.waited || '' })} (${esc((S.riders.find(x => x.id === a.rider) || {}).name || '')})${a.ack ? '' : ' — ' + t('fl_open')}</li>`).join('');
   printDoc(`<div class="pdoc"><h1>${t('appName')} — ${t('fl_reportTitle', { m: month })}</h1><p class="small">${t('fl_demoNote')}</p>
-    <table class="tbl"><thead><tr><th>${t('fl_rider')}</th><th>km</th><th>${t('k_score')}</th><th>${t('fl_harsh')}</th><th>${t('fl_helmetShort')}</th><th>${t('fl_incidents')}</th></tr></thead><tbody>${body}</tbody></table>
+    <table class="tbl"><thead><tr><th>${t('fl_rider')}</th><th>km</th><th>${t('k_score')}</th><th>${t('fl_harsh')}</th><th>${t('fl_helmetShort')}</th>
+        <th>${t('fl_incidents')}</th></tr></thead><tbody>${body}</tbody></table>
     <h2>${t('fl_hotspots')}</h2>${heatCardHtml()}<h2>${t('fl_alerts')}</h2><ul>${alerts}</ul>
     <h2>${t('fl_recs')}</h2><ul>${['fl_rec1', 'fl_rec2', 'fl_rec3'].map(k => `<li>${t(k)}</li>`).join('')}</ul></div>`);
   logEvent('lg_print', { what: t('fl_report') }, 'printer');
@@ -7555,14 +8156,21 @@ function renderHazards() {
   const onRoutes = mine.filter(h => distToRoutes(h) < 60).length;
   $('#view').innerHTML = `<div class="note mb">${ic('lock')}<span>${t('hz_localNote')}</span></div>
     <div class="kpis stagger">
-      <div class="tile y"><span class="k">${ic('pothole')} ${t('hz_open')}</span><span class="v" data-count="${mine.length}">0</span><span class="s">${t('hz_openSub')}</span></div>
-      <div class="tile r"><span class="k">${ic('route')} ${t('hz_onRoutes')}</span><span class="v" data-count="${onRoutes}">0</span><span class="s">${t('hz_onRoutesSub')}</span></div>
-      <div class="tile g"><span class="k">${ic('check-circle')} ${t('hz_fixed')}</span><span class="v" data-count="${S.hazards.filter(h => h.status === 'fixed').length}">0</span><span class="s">${t('hz_fixedSub')}</span></div></div>
-    <div class="side-r mt"><section class="card"><div class="between"><h2>${ic('map')} ${t('hz_map')}</h2><div class="seg" id="hzCity">${['lhr', 'khi'].map(c => `<button type="button" data-c="${c}" class="${HZ.city === c ? 'on' : ''}">${L(CITIES[c].name)}</button>`).join('')}</div></div>
+      <div class="tile y"><span class="k">${ic('pothole')} ${t('hz_open')}</span><span class="v" data-count="${mine.length}">0</span>
+          <span class="s">${t('hz_openSub')}</span></div>
+      <div class="tile r"><span class="k">${ic('route')} ${t('hz_onRoutes')}</span><span class="v" data-count="${onRoutes}">0</span>
+          <span class="s">${t('hz_onRoutesSub')}</span></div>
+      <div class="tile g"><span class="k">${ic('check-circle')} ${t('hz_fixed')}</span>
+          <span class="v" data-count="${S.hazards.filter(h => h.status === 'fixed').length}">0</span><span class="s">${t('hz_fixedSub')}</span></div></div>
+    <div class="side-r mt"><section class="card"><div class="between"><h2>${ic('map')} ${t('hz_map')}</h2>
+        <div class="seg" id="hzCity">${['lhr', 'khi'].map(c => `<button type="button" data-c="${c}" class="${HZ.city === c ? 'on' : ''}">${L(CITIES[c].name)}</button>`).join('')}</div>
+        </div>
       <div class="mapbox tall"><canvas id="hzMap" tabindex="0" aria-label="${t('hz_mapAria')}"></canvas></div><p class="tiny muted">${t('hz_tapToAdd')}</p></section>
-      <section class="card"><div class="row mb"><select class="inp sel-sm" id="hzType" aria-label="${t('hz_type')}"><option value="all">${t('all')}</option>${HAZARD_TYPES.map(h => `<option value="${h.id}" ${HZ.type === h.id ? 'selected' : ''}>${t('hz_' + h.id)}</option>`).join('')}</select>
+      <section class="card"><div class="row mb"><select class="inp sel-sm" id="hzType" aria-label="${t('hz_type')}">
+          <option value="all">${t('all')}</option>${HAZARD_TYPES.map(h => `<option value="${h.id}" ${HZ.type === h.id ? 'selected' : ''}>${t('hz_' + h.id)}</option>`).join('')}</select>
         <select class="inp sel-sm" id="hzStatus" aria-label="${t('hz_status')}">${['open', 'fixed', 'all'].map(s => `<option value="${s}" ${HZ.status === s ? 'selected' : ''}>${t('hz_st_' + s)}</option>`).join('')}</select>
-        <button type="button" class="btn ghost sm" id="hzExport">${ic('download')} JSON</button><button type="button" class="btn ghost sm" id="hzShare">${ic('share')} ${t('hz_share')}</button></div>
+        <button type="button" class="btn ghost sm" id="hzExport">${ic('download')} JSON</button>
+            <button type="button" class="btn ghost sm" id="hzShare">${ic('share')} ${t('hz_share')}</button></div>
         <div class="list" id="hzList">${hazardRowsHtml()}</div></section></div>`;
   bindHazards();
   requestAnimationFrame(drawHazardMap);
@@ -7574,8 +8182,10 @@ function hazardRowsHtml() {
   return list.map(h => {
     const d = distToRoutes(h);
     return `<div class="li ${HZ.sel === h.id ? 'sel' : ''}" data-hz="${h.id}"><span class="ico ${h.status === 'fixed' ? 'g' : 'y'}">${ic(hazardType(h.type).icon)}</span>
-      <span class="grow"><b>${t('hz_' + h.type)}</b><small>${esc(L(h.note)) || '—'} · ${ago(h.ts)} · ${t('hz_seen', { n: h.seen })}${d < 60 ? ' · ' + t('hz_onRoute') : ''}</small></span>
-      ${h.status === 'open' ? `<button type="button" class="btn sm ghost" data-seen="${h.id}" aria-label="${t('hz_stillThere')}">${ic('eye')}</button><button type="button" class="btn sm ghost" data-fix="${h.id}" aria-label="${t('hz_markFixed')}">${ic('check')}</button>` : ''}
+      <span class="grow"><b>${t('hz_' + h.type)}</b>
+          <small>${esc(L(h.note)) || '—'} · ${ago(h.ts)} · ${t('hz_seen', { n: h.seen })}${d < 60 ? ' · ' + t('hz_onRoute') : ''}</small></span>
+      ${h.status === 'open' ? `<button type="button" class="btn sm ghost" data-seen="${h.id}" aria-label="${t('hz_stillThere')}">${ic('eye')}</button>
+          <button type="button" class="btn sm ghost" data-fix="${h.id}" aria-label="${t('hz_markFixed')}">${ic('check')}</button>` : ''}
       <button type="button" class="ibtn sm" data-hdel="${h.id}" aria-label="${t('delete')}">${ic('trash')}</button></div>`;
   }).join('');
 }
@@ -7660,10 +8270,12 @@ function onHazardMapClick(e) {
 
 function openHazardForm(pos) {
   const sh = openModal(`${sheetHead(t('hz_add'), 'map-pin')}<form id="hzForm" class="stack">
-    <div class="hz-types">${HAZARD_TYPES.map((h, i) => `<label class="hz-t"><input type="radio" name="type" value="${h.id}" ${i ? '' : 'checked'}><span>${ic(h.icon, 'lg')}${t('hz_' + h.id)}</span></label>`).join('')}</div>
+    <div class="hz-types">${HAZARD_TYPES.map((h, i) => `<label class="hz-t"><input type="radio" name="type" value="${h.id}" ${i ? '' : 'checked'}>
+        <span>${ic(h.icon, 'lg')}${t('hz_' + h.id)}</span></label>`).join('')}</div>
     <label class="field"><span>${t('hz_note')}</span><input class="inp" name="note" maxlength="120" dir="auto" placeholder="${t('hz_notePh')}"></label>
     <p class="tiny muted ltr">${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}</p>
-    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('cancel')}</button><button class="btn y" type="submit">${ic('plus')} ${t('add')}</button></div></form>`);
+    <div class="sfoot"><button class="btn ghost" type="button" data-close>${t('cancel')}</button>
+        <button class="btn y" type="submit">${ic('plus')} ${t('add')}</button></div></form>`);
   $('#hzForm', sh).onsubmit = e => {
     e.preventDefault();
     const type = $('[name=type]:checked', sh).value;
@@ -7704,11 +8316,15 @@ function renderLearn(arg) {
   if (arg === 'quiz') return renderQuiz();
   if (arg) return renderLesson(arg);
   const qz = S.quiz;
-  $('#view').innerHTML = `<div class="lessons stagger">${LESSONS.map(l => `<a class="card lesson lift" href="#learn/${l.id}"><span class="ico-xl ${l.id === 'firstaid' ? 'r' : 'y'}">${ic(l.icon, 'xl')}</span>
-      <div><h3>${esc(L(l.title))}</h3><p class="small muted">${esc(L(l.intro))}</p><span class="chip c">${t('ln_points', { n: l.points.length })}</span></div></a>`).join('')}
-      <a class="card lesson quizcard lift" href="#learn/quiz"><span class="ico-xl c">${ic('help', 'xl')}</span><div><h3>${t('qz_title')}</h3><p class="small muted">${t('qz_sub', { n: QUIZ.length })}</p>
+  $('#view').innerHTML = `<div class="lessons stagger">${LESSONS.map(l => `<a class="card lesson lift" href="#learn/${l.id}">
+      <span class="ico-xl ${l.id === 'firstaid' ? 'r' : 'y'}">${ic(l.icon, 'xl')}</span>
+      <div><h3>${esc(L(l.title))}</h3><p class="small muted">${esc(L(l.intro))}</p><span class="chip c">${t('ln_points', { n: l.points.length })}</span>
+          </div></a>`).join('')}
+      <a class="card lesson quizcard lift" href="#learn/quiz"><span class="ico-xl c">${ic('help', 'xl')}</span><div><h3>${t('qz_title')}</h3>
+          <p class="small muted">${t('qz_sub', { n: QUIZ.length })}</p>
       <span class="chip ${qz.best == null ? '' : 'g'}">${qz.best == null ? t('qz_notYet') : t('qz_best', { s: qz.best, n: QUIZ.length })}</span></div></a></div>
-    <section class="card mt"><h2>${ic('phone')} ${t('ln_helplines')}</h2><div class="row">${HELPLINES.map(h => `<a class="btn ${h.num === '1122' ? 'r' : 'ghost'}" href="tel:${h.num}">${ic('phone')} <b class="num">${h.num}</b> ${t(h.key)}</a>`).join('')}</div>
+    <section class="card mt"><h2>${ic('phone')} ${t('ln_helplines')}</h2>
+        <div class="row">${HELPLINES.map(h => `<a class="btn ${h.num === '1122' ? 'r' : 'ghost'}" href="tel:${h.num}">${ic('phone')} <b class="num">${h.num}</b> ${t(h.key)}</a>`).join('')}</div>
       <p class="tiny muted mt">${t('ln_helplinesNote')}</p></section>`;
 }
 
@@ -7717,12 +8333,16 @@ function renderLesson(id) {
   if (!l) return go('learn');
   const i = LESSONS.indexOf(l);
   const next = LESSONS[i + 1];
-  const signs = id === 'signs' ? `<div class="signs">${SIGNS.map(s => `<figure><svg viewBox="0 0 100 100" role="img" aria-label="${t(s.k)}">${s.svg}</svg><figcaption>${t(s.k)}</figcaption></figure>`).join('')}</div><p class="tiny muted">${t('sg_note')}</p>` : '';
+  const signs = id === 'signs' ? `<div class="signs">${SIGNS.map(s => `<figure>
+      <svg viewBox="0 0 100 100" role="img" aria-label="${t(s.k)}">${s.svg}</svg><figcaption>${t(s.k)}</figcaption></figure>`).join('')}</div>
+      <p class="tiny muted">${t('sg_note')}</p>` : '';
   $('#view').innerHTML = `<a class="btn ghost sm mb" href="#learn">${ic('arrow-left', 'flip')} ${t('ln_all')}</a>
-    <article class="card lesson-view ${id === 'firstaid' ? 'firstaid' : ''}"><h2>${ic(l.icon)} ${esc(L(l.title))}</h2><div class="lane"></div><p class="lead">${esc(L(l.intro))}</p>
+    <article class="card lesson-view ${id === 'firstaid' ? 'firstaid' : ''}"><h2>${ic(l.icon)} ${esc(L(l.title))}</h2><div class="lane"></div>
+        <p class="lead">${esc(L(l.intro))}</p>
     ${id === 'firstaid' ? `<a class="btn r lg" href="tel:1122">${ic('phone')} ${t('al_call1122')}</a>` : ''}
     <ol class="steps stagger">${l.points.map(p => `<li>${esc(L(p))}</li>`).join('')}</ol>${signs}</article>
-    <div class="between mt"><a class="btn ghost" href="#learn/quiz">${ic('help')} ${t('qz_title')}</a>${next ? `<a class="btn y" href="#learn/${next.id}">${esc(L(next.title))} ${ic('arrow-right', 'flip')}</a>` : ''}</div>`;
+    <div class="between mt">
+        <a class="btn ghost" href="#learn/quiz">${ic('help')} ${t('qz_title')}</a>${next ? `<a class="btn y" href="#learn/${next.id}">${esc(L(next.title))} ${ic('arrow-right', 'flip')}</a>` : ''}</div>`;
 }
 
 function renderQuiz() {
@@ -7731,13 +8351,16 @@ function renderQuiz() {
   const picked = QZ.picks[QZ.i];
   const answered = picked != null;
   $('#view').innerHTML = `<a class="btn ghost sm mb" href="#learn">${ic('arrow-left', 'flip')} ${t('ln_all')}</a>
-    <section class="card quiz"><div class="between"><span class="chip y">${t('qz_q', { i: QZ.i + 1, n: QUIZ.length })}</span><div class="bar grow qbar"><i data-w="${((QZ.i + (answered ? 1 : 0)) / QUIZ.length) * 100}"></i></div></div>
+    <section class="card quiz"><div class="between"><span class="chip y">${t('qz_q', { i: QZ.i + 1, n: QUIZ.length })}</span><div class="bar grow qbar">
+        <i data-w="${((QZ.i + (answered ? 1 : 0)) / QUIZ.length) * 100}"></i></div></div>
     <h2 class="qtext">${esc(L(q.q))}</h2><div class="opts">${q.opts.map((o, i) => {
       const cls = !answered ? '' : i === q.a ? 'right' : i === picked ? 'wrong' : '';
       return `<button type="button" class="opt ${cls}" data-o="${i}" ${answered ? 'disabled' : ''}>${ic(cls === 'right' ? 'check-circle' : cls === 'wrong' ? 'x' : 'circle')} ${esc(L(o))}</button>`;
     }).join('')}</div>
-    <div aria-live="polite">${answered ? `<div class="note ${picked === q.a ? '' : 'y'} mt">${ic(picked === q.a ? 'check-circle' : 'info')}<span><b>${t(picked === q.a ? 'qz_right' : 'qz_wrong')}</b> ${esc(L(q.why))}</span></div>
-      <button type="button" class="btn y mt" id="qzNext">${QZ.i === QUIZ.length - 1 ? t('qz_finish') : t('next')} ${ic('arrow-right', 'flip')}</button>` : ''}</div></section>`;
+    <div aria-live="polite">${answered ? `<div class="note ${picked === q.a ? '' : 'y'} mt">${ic(picked === q.a ? 'check-circle' : 'info')}<span>
+        <b>${t(picked === q.a ? 'qz_right' : 'qz_wrong')}</b> ${esc(L(q.why))}</span></div>
+      <button type="button" class="btn y mt" id="qzNext">${QZ.i === QUIZ.length - 1 ? t('qz_finish') : t('next')} ${ic('arrow-right', 'flip')}</button>` : ''}</div>
+          </section>`;
   $$('.opt[data-o]').forEach(b => (b.onclick = () => {
     QZ.picks[QZ.i] = Number(b.dataset.o);
     rerender();
@@ -7767,10 +8390,14 @@ function renderQuizResult() {
   const score = QZ.picks.filter((p, i) => p === QUIZ[i].a).length;
   const missed = QUIZ.map((q, i) => ({ q, i })).filter(x => QZ.picks[x.i] !== x.q.a);
   $('#view').innerHTML = `<section class="card quiz-res"><div class="row"><div class="ring">${ringSvg(score / QUIZ.length)}<b class="num">${score}</b></div>
-    <div class="grow"><h2>${t('qz_done', { s: score, n: QUIZ.length })}</h2><p class="muted small">${t(score >= 10 ? 'qz_great' : score >= 7 ? 'qz_good' : 'qz_try')}</p></div></div>
-    ${missed.length ? `<h3 class="mt">${t('qz_review')}</h3><ol class="steps">${missed.map(x => `<li><b>${esc(L(x.q.q))}</b><br><span class="small">${esc(L(x.q.opts[x.q.a]))} — ${esc(L(x.q.why))}</span></li>`).join('')}</ol>` : ''}
-    <h3 class="mt">${t('qz_history')}</h3><div class="row">${S.quiz.attempts.slice(0, 8).map(a => `<span class="chip">${fmtDate(a.ts, { day: 'numeric', month: 'short' })}: ${a.score}/${QUIZ.length}</span>`).join('')}</div>
-    <div class="row mt"><button type="button" class="btn y" id="qzAgain">${ic('refresh')} ${t('qz_again')}</button><a class="btn ghost" href="#learn">${t('ln_all')}</a></div></section>`;
+    <div class="grow"><h2>${t('qz_done', { s: score, n: QUIZ.length })}</h2>
+        <p class="muted small">${t(score >= 10 ? 'qz_great' : score >= 7 ? 'qz_good' : 'qz_try')}</p></div></div>
+    ${missed.length ? `<h3 class="mt">${t('qz_review')}</h3><ol class="steps">${missed.map(x => `<li><b>${esc(L(x.q.q))}</b><br>
+        <span class="small">${esc(L(x.q.opts[x.q.a]))} — ${esc(L(x.q.why))}</span></li>`).join('')}</ol>` : ''}
+    <h3 class="mt">${t('qz_history')}</h3>
+        <div class="row">${S.quiz.attempts.slice(0, 8).map(a => `<span class="chip">${fmtDate(a.ts, { day: 'numeric', month: 'short' })}: ${a.score}/${QUIZ.length}</span>`).join('')}</div>
+    <div class="row mt"><button type="button" class="btn y" id="qzAgain">${ic('refresh')} ${t('qz_again')}</button>
+        <a class="btn ghost" href="#learn">${t('ln_all')}</a></div></section>`;
   $('#qzAgain').onclick = () => {
     Object.assign(QZ, { i: 0, picks: [], done: false });
     rerender();
@@ -7798,9 +8425,13 @@ function renderInbox(arg) {
   if (arg === 'log') inboxTab = 'log';
   else if (arg === 'inbox') inboxTab = 'inbox';
   const unread = unreadCount();
-  $('#view').innerHTML = `<div class="between mb"><div class="seg" role="tablist"><button type="button" role="tab" data-tab="inbox" class="${inboxTab === 'inbox' ? 'on' : ''}" aria-selected="${inboxTab === 'inbox'}">${ic('bell')} ${t('ib_inbox')} ${unread ? `<span class="chip r">${unread}</span>` : ''}</button>
-      <button type="button" role="tab" data-tab="log" class="${inboxTab === 'log' ? 'on' : ''}" aria-selected="${inboxTab === 'log'}">${ic('list')} ${t('ib_log')}</button></div>
-      <div class="row">${inboxTab === 'inbox' ? `<button type="button" class="btn ghost sm" id="ibAll">${ic('check')} ${t('ib_markAll')}</button><button type="button" class="btn ghost sm" id="ibClear">${ic('trash')} ${t('ib_clear')}</button>` : `<button type="button" class="btn ghost sm" id="lgCsv">${ic('download')} CSV</button><button type="button" class="btn ghost sm" id="lgPrint">${ic('printer')} ${t('print')}</button>`}</div></div>
+  $('#view').innerHTML = `<div class="between mb"><div class="seg" role="tablist">
+      <button type="button" role="tab" data-tab="inbox" class="${inboxTab === 'inbox' ? 'on' : ''}" aria-selected="${inboxTab === 'inbox'}">${ic('bell')} ${t('ib_inbox')} ${unread ? `<span class="chip r">${unread}</span>` : ''}</button>
+      <button type="button" role="tab" data-tab="log" class="${inboxTab === 'log' ? 'on' : ''}" aria-selected="${inboxTab === 'log'}">${ic('list')} ${t('ib_log')}</button>
+          </div>
+      <div class="row">${inboxTab === 'inbox' ? `<button type="button" class="btn ghost sm" id="ibAll">${ic('check')} ${t('ib_markAll')}</button>
+          <button type="button" class="btn ghost sm" id="ibClear">${ic('trash')} ${t('ib_clear')}</button>` : `<button type="button" class="btn ghost sm" id="lgCsv">${ic('download')} CSV</button>
+          <button type="button" class="btn ghost sm" id="lgPrint">${ic('printer')} ${t('print')}</button>`}</div></div>
     <section class="card">${inboxTab === 'inbox' ? notificationsHtml() : logHtml()}</section>`;
   $$('[data-tab]').forEach(b => (b.onclick = () => go('inbox/' + b.dataset.tab)));
   if (inboxTab === 'inbox') bindNotifications();
@@ -7809,8 +8440,10 @@ function renderInbox(arg) {
 
 function notificationsHtml() {
   if (!S.inbox.length) return `<div class="empty">${ic('bell')}${t('ib_empty')}</div>`;
-  return `<div class="list stagger">${S.inbox.map(n => `<button type="button" class="li ${n.read ? '' : 'unread'}" data-n="${n.id}"><span class="ico ${n.level || 'c'}">${ic(n.icon)}</span>
-    <span class="grow"><b>${t(n.key + 't', localVars(n.vars))}</b><small>${t(n.key + 'b', localVars(n.vars))} · ${ago(n.ts)}</small></span>${n.read ? '' : '<span class="dot-new" aria-hidden="true"></span>'}</button>`).join('')}</div>`;
+  return `<div class="list stagger">${S.inbox.map(n => `<button type="button" class="li ${n.read ? '' : 'unread'}" data-n="${n.id}">
+      <span class="ico ${n.level || 'c'}">${ic(n.icon)}</span>
+    <span class="grow"><b>${t(n.key + 't', localVars(n.vars))}</b><small>${t(n.key + 'b', localVars(n.vars))} · ${ago(n.ts)}</small>
+        </span>${n.read ? '' : '<span class="dot-new" aria-hidden="true"></span>'}</button>`).join('')}</div>`;
 }
 
 function bindNotifications() {
@@ -7841,7 +8474,9 @@ function logHtml() {
   if (!S.log.length) return `<div class="empty">${ic('list')}${t('ib_logEmpty')}</div>`;
   const groups = {};
   S.log.forEach(l => (groups[isoDay(l.ts)] = groups[isoDay(l.ts)] || []).push(l));
-  return Object.entries(groups).map(([day, items]) => `<h3 class="day">${fmtDay(new Date(day + 'T12:00').getTime())}</h3><div class="list">${items.map(l => `<div class="li"><span class="ico">${ic(l.icon)}</span><span class="grow">${t(l.key, localVars(l.vars))}</span><small class="muted num">${fmtTime(l.ts)}</small></div>`).join('')}</div>`).join('');
+  return Object.entries(groups).map(([day, items]) => `<h3 class="day">${fmtDay(new Date(day + 'T12:00').getTime())}</h3>
+      <div class="list">${items.map(l => `<div class="li"><span class="ico">${ic(l.icon)}</span><span class="grow">${t(l.key, localVars(l.vars))}</span>
+      <small class="muted num">${fmtTime(l.ts)}</small></div>`).join('')}</div>`).join('');
 }
 
 function bindLog() {
@@ -7869,21 +8504,29 @@ function renderSettings() {
       ${sw('stCalm', s.calm, t('st_calm'))}</div></section>
     <section class="card"><h2>${ic('siren')} ${t('st_alarm')}</h2><div class="stack">
       ${sw('stSound', s.sound, t('st_sound'))}
-      <div class="range"><label for="stVol">${t('st_volume')}</label><output>${Math.round(s.volume * 100)}%</output><input type="range" id="stVol" min="0.2" max="1" step="0.1" value="${s.volume}"></div>
+      <div class="range"><label for="stVol">${t('st_volume')}</label><output>${Math.round(s.volume * 100)}%</output>
+          <input type="range" id="stVol" min="0.2" max="1" step="0.1" value="${s.volume}"></div>
       ${sw('stVib', s.vibrate, t('st_vibrate') + (SENS.vibrate ? '' : ' — ' + t('st_noVibrate')))}
       ${sw('stHaz', s.hazardWarn, t('st_hazardWarn'))}
-      <div class="row"><button type="button" class="btn ghost sm" id="stTest">${ic('volume')} ${t('eng_testTone')}</button><a class="btn ghost sm" href="#engine">${ic('sliders')} ${t('st_countdownLink', { n: S.engine.countdown })}</a></div></div></section>
+      <div class="row"><button type="button" class="btn ghost sm" id="stTest">${ic('volume')} ${t('eng_testTone')}</button>
+          <a class="btn ghost sm" href="#engine">${ic('sliders')} ${t('st_countdownLink', { n: S.engine.countdown })}</a></div></div></section>
     <section class="card"><h2>${ic('activity')} ${t('st_sensors')}</h2><div class="row">${sensorChips()}</div>
       <ul class="limits mt">${['st_lim1', 'st_lim2', 'st_lim3', 'st_lim4'].map(k => `<li>${ic('info')} ${t(k)}</li>`).join('')}</ul>
-      <div class="row mt"><button type="button" class="btn ghost sm" id="stMotion">${ic('activity')} ${t('st_askMotion')}</button><button type="button" class="btn ghost sm" id="stGeo">${ic('locate')} ${t('st_testGeo')}</button>
-      <button type="button" class="btn ghost sm" id="stBle">${ic('helmet')} ${t('st_helmetBle')}</button><button type="button" class="btn ghost sm" id="stBg">${ic('moon')} ${t('st_background')}</button></div></section>
+      <div class="row mt"><button type="button" class="btn ghost sm" id="stMotion">${ic('activity')} ${t('st_askMotion')}</button>
+          <button type="button" class="btn ghost sm" id="stGeo">${ic('locate')} ${t('st_testGeo')}</button>
+      <button type="button" class="btn ghost sm" id="stBle">${ic('helmet')} ${t('st_helmetBle')}</button>
+          <button type="button" class="btn ghost sm" id="stBg">${ic('moon')} ${t('st_background')}</button></div></section>
     <section class="card"><h2>${ic('database')} ${t('st_data')}</h2><div class="stack">
       ${sw('stDemo', s.demo, t('st_demo'))}<p class="tiny muted">${t('st_demoNote')}</p>
       <p class="small">${t('st_storage', { kb: fmtN(store.bytes() / 1024, 0) })}${S.meta.lastBackup ? ' · ' + t('st_lastBackup', { d: fmtDate(S.meta.lastBackup) }) : ''}</p>
-      <div class="row"><button type="button" class="btn y sm" id="stExport">${ic('download')} ${t('st_export')}</button><button type="button" class="btn ghost sm" id="stImport">${ic('upload')} ${t('st_import')}</button>
-      <button type="button" class="btn ghost sm" id="stReset">${ic('refresh')} ${t('st_reset')}</button><button type="button" class="btn r sm" id="stWipe">${ic('trash')} ${t('st_wipe')}</button></div></div></section>
-    <section class="card"><h2>${ic('help')} ${t('st_help')}</h2><div class="row"><button type="button" class="btn ghost sm" id="stTour">${ic('sparkles')} ${t('replayTour')}</button>
-      <button type="button" class="btn ghost sm" id="stKeys">${ic('keyboard')} ${t('shortcuts')}</button><a class="btn ghost sm" href="#about">${ic('info')} ${t('nav_about')}</a></div>
+      <div class="row"><button type="button" class="btn y sm" id="stExport">${ic('download')} ${t('st_export')}</button>
+          <button type="button" class="btn ghost sm" id="stImport">${ic('upload')} ${t('st_import')}</button>
+      <button type="button" class="btn ghost sm" id="stReset">${ic('refresh')} ${t('st_reset')}</button>
+          <button type="button" class="btn r sm" id="stWipe">${ic('trash')} ${t('st_wipe')}</button></div></div></section>
+    <section class="card"><h2>${ic('help')} ${t('st_help')}</h2><div class="row">
+        <button type="button" class="btn ghost sm" id="stTour">${ic('sparkles')} ${t('replayTour')}</button>
+      <button type="button" class="btn ghost sm" id="stKeys">${ic('keyboard')} ${t('shortcuts')}</button>
+          <a class="btn ghost sm" href="#about">${ic('info')} ${t('nav_about')}</a></div>
       <p class="tiny muted mt">${t('st_notCertified')}</p></section></div>`;
   bindSettings();
 }
@@ -8052,7 +8695,9 @@ function paletteIndex() {
 function openPalette() {
   closeModal();
   const p = $('#palette');
-  p.innerHTML = `<div class="palbox"><input class="inp" id="palIn" type="search" placeholder="${t('searchAll')}" aria-label="${t('searchAll')}" autocomplete="off" dir="auto"><div class="palres" id="palRes" role="listbox"></div><div class="palhint">${t('palHint')}</div></div>`;
+  p.innerHTML = `<div class="palbox">
+      <input class="inp" id="palIn" type="search" placeholder="${t('searchAll')}" aria-label="${t('searchAll')}" autocomplete="off" dir="auto">
+      <div class="palres" id="palRes" role="listbox"></div><div class="palhint">${t('palHint')}</div></div>`;
   p.classList.add('on');
   const index = paletteIndex();
   const draw = () => {
@@ -8063,7 +8708,8 @@ function openPalette() {
     $('#palRes').innerHTML = palItems.map((it, i) => {
       const head = it.group !== lastGroup ? `<div class="pg">${t(it.group)}</div>` : '';
       lastGroup = it.group;
-      return `${head}<button type="button" role="option" data-i="${i}" class="${i === 0 ? 'on' : ''}">${ic(it.icon)}<span dir="auto">${esc(it.label)}</span><small dir="auto">${esc(it.sub)}</small></button>`;
+      return `${head}<button type="button" role="option" data-i="${i}" class="${i === 0 ? 'on' : ''}">${ic(it.icon)}<span dir="auto">${esc(it.label)}</span>
+          <small dir="auto">${esc(it.sub)}</small></button>`;
     }).join('') || `<div class="empty">${t('sg_none')}</div>`;
     $$('#palRes [data-i]').forEach(b => (b.onclick = () => runPal(Number(b.dataset.i))));
     if (q) announce(t('sg_count', { n: palItems.length }));
@@ -8072,7 +8718,7 @@ function openPalette() {
   $('#palIn').onkeydown = palKeys;
   p.onclick = e => e.target === p && closePalette();
   draw();
-  setTimeout(() => $('#palIn').focus(), 30);
+  $('#palIn').focus();
 }
 
 function palKeys(e) {
@@ -8152,8 +8798,10 @@ function showTourStep() {
   const last = tourStep === TOUR.length - 1;
   $('#tourTip').innerHTML = `<span class="chip y">${t('stepXofY', { x: tourStep + 1, y: TOUR.length })}</span><h4>${t(step.k + 't')}</h4><p>${t(step.k + 'b')}</p>
     <div class="between"><div class="dots">${TOUR.map((_, i) => `<i class="${i === tourStep ? 'on' : ''}"></i>`).join('')}</div>
-    <div class="row"><button type="button" class="btn ghost sm" id="tourSkip">${t('skip')}</button>${tourStep ? `<button type="button" class="btn ghost sm" id="tourBack" aria-label="${t('back')}">${ic('chevron-left', 'flip')}</button>` : ''}
-    <button type="button" class="btn sm y" id="tourNext">${last ? t('done') : t('next')} ${ic(last ? 'check' : 'chevron-right', last ? '' : 'flip')}</button></div></div>`;
+    <div class="row">
+        <button type="button" class="btn ghost sm" id="tourSkip">${t('skip')}</button>${tourStep ? `<button type="button" class="btn ghost sm" id="tourBack" aria-label="${t('back')}">${ic('chevron-left', 'flip')}</button>` : ''}
+    <button type="button" class="btn sm y" id="tourNext">${last ? t('done') : t('next')} ${ic(last ? 'check' : 'chevron-right', last ? '' : 'flip')}</button>
+        </div></div>`;
   placeTip(el);
   $('#tourSkip').onclick = endTour;
   $('#tourNext').onclick = () => {
@@ -8217,12 +8865,18 @@ const STUDENT_TODOS = [
 ];
 
 function renderAbout() {
-  $('#view').innerHTML = `<section class="card about-hero"><div class="row"><span class="mark big">${$('.rail .brand').innerHTML}</span><div class="grow"><h2>${t('appName')} — ${t('tagline')}</h2><p>${t('ab_pitch')}</p></div></div></section>
+  $('#view').innerHTML = `<section class="card about-hero"><div class="row"><span class="mark big">${$('.rail .brand').innerHTML}</span>
+      <div class="grow"><h2>${t('appName')} — ${t('tagline')}</h2><p>${t('ab_pitch')}</p></div></div></section>
     <div class="note r mt">${ic('alert')}<span>${t('ab_notCertified')}</span></div>
-    <div class="grid2 mt"><section class="card"><h2>${ic('check-circle')} ${t('ab_does')}</h2><ul class="ticks">${['ab_d1', 'ab_d2', 'ab_d3', 'ab_d4', 'ab_d5'].map(k => `<li>${ic('check')} ${t(k)}</li>`).join('')}</ul></section>
-      <section class="card"><h2>${ic('x')} ${t('ab_cannot')}</h2><ul class="ticks no">${['ab_c1', 'ab_c2', 'ab_c3', 'ab_c4'].map(k => `<li>${ic('x')} ${t(k)}</li>`).join('')}</ul></section></div>
-    <section class="card mt"><h2>${ic('code')} ${t('ab_students')}</h2><p class="small muted">${t('ab_studentsSub')}</p><div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t('ab_ext')}</th><th>${t('ab_level')}</th><th>${t('ab_start')}</th></tr></thead>
-      <tbody>${STUDENT_TODOS.map(x => `<tr><td><b>${t(x.k)}</b><small class="blk muted">${t(x.k + 'H')}</small></td><td><span class="chip ${x.level === 'Hard' ? 'r' : 'y'}">${t('lvl_' + x.level)}</span></td><td><code>${x.fn}</code></td></tr>`).join('')}</tbody></table></div></section>
+    <div class="grid2 mt"><section class="card"><h2>${ic('check-circle')} ${t('ab_does')}</h2>
+        <ul class="ticks">${['ab_d1', 'ab_d2', 'ab_d3', 'ab_d4', 'ab_d5'].map(k => `<li>${ic('check')} ${t(k)}</li>`).join('')}</ul></section>
+      <section class="card"><h2>${ic('x')} ${t('ab_cannot')}</h2>
+          <ul class="ticks no">${['ab_c1', 'ab_c2', 'ab_c3', 'ab_c4'].map(k => `<li>${ic('x')} ${t(k)}</li>`).join('')}</ul></section></div>
+    <section class="card mt"><h2>${ic('code')} ${t('ab_students')}</h2><p class="small muted">${t('ab_studentsSub')}</p><div class="tbl-wrap">
+        <table class="tbl"><thead><tr><th>${t('ab_ext')}</th><th>${t('ab_level')}</th><th>${t('ab_start')}</th></tr></thead>
+      <tbody>${STUDENT_TODOS.map(x => `<tr><td><b>${t(x.k)}</b><small class="blk muted">${t(x.k + 'H')}</small></td><td>
+          <span class="chip ${x.level === 'Hard' ? 'r' : 'y'}">${t('lvl_' + x.level)}</span></td><td><code>${x.fn}</code></td></tr>`).join('')}</tbody></table>
+          </div></section>
     <section class="card mt"><h2>${ic('info')} ${t('ab_data')}</h2><p class="small">${t('ab_dataBody')}</p><p class="small">${t('ab_credits')}</p></section>`;
 }
 
@@ -8262,8 +8916,11 @@ function renderNav() {
 }
 
 function openMoreSheet() {
-  const sh = openModal(`${sheetHead(t('more'), 'menu')}<div class="more-grid">${MORE.map(r => `<a href="#${r}" data-close>${ic(ROUTES[r].icon, 'lg')}<span>${t('nav_' + r)}</span></a>`).join('')}</div>
-    <div class="row mt"><button type="button" class="btn ghost sm" id="mSearch">${ic('search')} ${t('search')}</button><button type="button" class="btn ghost sm" id="mTour">${ic('sparkles')} ${t('replayTour')}</button><button type="button" class="btn ghost sm" id="mKeys">${ic('keyboard')} ${t('shortcuts')}</button></div>`);
+  const sh = openModal(`${sheetHead(t('more'), 'menu')}<div class="more-grid">${MORE.map(r => `<a href="#${r}" data-close>${ic(ROUTES[r].icon, 'lg')}<span>${t('nav_' + r)}</span>
+      </a>`).join('')}</div>
+    <div class="row mt"><button type="button" class="btn ghost sm" id="mSearch">${ic('search')} ${t('search')}</button>
+        <button type="button" class="btn ghost sm" id="mTour">${ic('sparkles')} ${t('replayTour')}</button>
+        <button type="button" class="btn ghost sm" id="mKeys">${ic('keyboard')} ${t('shortcuts')}</button></div>`);
   $$('[data-close]', sh).forEach(a => (a.onclick = closeModal));
   $('#mSearch', sh).onclick = openPalette;
   $('#mTour', sh).onclick = startTour;
@@ -8273,7 +8930,8 @@ function openMoreSheet() {
 function renderBanner() {
   const b = $('#banner');
   if (!b) return;
-  b.innerHTML = RIDE.on && RIDE.minimized ? `<div class="strip">${ic('bike')}<span class="grow">${t('bn_ride', { km: fmtN(RIDE.stats.km, 1), t: clock(RIDE.tNow) })}</span><button type="button" class="btn sm" id="bnHud">${ic('maximize')} ${t('rd_backToHud')}</button></div>` : '';
+  b.innerHTML = RIDE.on && RIDE.minimized ? `<div class="strip">${ic('bike')}<span class="grow">${t('bn_ride', { km: fmtN(RIDE.stats.km, 1), t: clock(RIDE.tNow) })}</span>
+      <button type="button" class="btn sm" id="bnHud">${ic('maximize')} ${t('rd_backToHud')}</button></div>` : '';
   if ($('#bnHud')) $('#bnHud').onclick = restoreHud;
 }
 
