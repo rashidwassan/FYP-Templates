@@ -32,8 +32,15 @@ Start with [`IDEAS.md`](IDEAS.md) for the full backlog of 90 ideas, or open [`in
 | 18 | #66 | Ludo | `projects/18-ludo` | 4,498 | Classic Ludo with four AI levels including an expectimax Expert, round-robin tournaments, replay viewer, achievements, player statistics, a guided tutorial and custom boards |
 | 19 | #74 | Rickshaw Rush | `projects/19-rickshaw-rush` | 4,214 | Pseudo-3D Karachi endless runner with passengers, fuel and traffic, a truck-art garage, seeded daily challenge with ghost replay and trip analytics |
 | 20 | #77 | Zameendar | `projects/20-zameendar-farm-sim` | 3,927 | Sixty-month farm strategy game with canal water, soil health, pests, markets, bank and arhti credit, challenges and a season planner |
+| 21 | #86 | PromptCraft | `projects/21-promptcraft` | 5,751 | Prompt engineering game: 30 levels judged by explainable rubrics, a playground with A/B tests and cost estimates, a prompt linter, lessons and optional live AI |
+| 22 | #87 | CodeBuddy | `projects/22-codebuddy` | 9,655 | Coding mentor for kids: sandboxed JavaScript and Python, a step-through visualiser, turtle art, blocks to code, error help in Urdu and 24 lessons |
+| 23 | #88 | CampusHub | `projects/23-campushub` | 7,130 | Campus portal: lost and found with map pins and verified claims, notices, events, timetable and free rooms, societies, ride share and moderated feedback |
+| 24 | #89 | ScholarTrack | `projects/24-scholartrack` | 6,552 | 52 scholarships with an eligibility quiz, application pipeline, document vault, essay editor, referee templates, deadline calendar and funding calculator |
+| 25 | #90 | FraudShield | `projects/25-fraudshield` | 7,238 | Scam checker for Urdu, Roman Urdu and English messages, links and job ads, plus from-scratch classifiers and an isolation-forest transaction lab |
+| 26 | #46 | Karyana Khata | `projects/26-karyana-khata` | 6,818 | Urdu-first shop ledger: inventory, quick sale with thermal receipts, udhaar ledger with ageing and reminders, suppliers, cash book and profit and loss |
+| 27 | #50 | Mahfooz | `projects/27-mahfooz` | 7,307 | Women's safety companion: press-and-hold SOS with location, safe journeys, fake call, an encrypted incident journal, rights guides and discreet mode |
 
-All 20 projects are built: 94,425 lines of app code in total, between 3,571 and 7,856 lines each. Each folder has an `index.html` (the whole app) and a `README.md` (getting started, problem, features, architecture, domain logic, student extensions).
+All 27 projects are built: 144,876 lines of app code in total, between 3,571 and 9,655 lines each. Each folder has an `index.html` (the whole app) and a `README.md` (getting started, problem, features, architecture, domain logic, student extensions).
 
 ## Conventions
 
