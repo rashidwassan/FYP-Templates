@@ -367,3 +367,40 @@ Build: In-browser diagnostics on the phone being sold (screen, touch, speakers, 
 **95. Sawaar — Crash Detection for Motorcyclists** ★★★ (Pakistan)
 Problem: Punjab recorded 43,160 road crashes and 434 deaths in May 2026 alone, and motorcycles are involved in roughly 70–80 % of crashes.
 Build: Ride HUD with motion sensors and GPS, a crash-detection state machine (impact, tumble, stillness) with countdown and prepared alerts, a signal lab with labelled synthetic traces (speed breakers, potholes, drops, crashes) and precision/recall/ROC evaluation, ride coach, medical ID card with QR, maintenance and fuel log, fleet dashboard.
+
+## Part F — User additions (96–106)
+
+Built as projects 33–44. Idea #18 (Sukoon) is expanded into project 38. The requested "Community SOS & Offline Mesh Emergency Communication App" is folded into idea #93 (Rabta, project 30) as a Community SOS module rather than built twice.
+
+**96. Sach — Fake News & Deepfake Media Verification** ★★★ (Pakistan)
+Build: Claim extraction and matching against a fact-check archive (TF-IDF, Roman-Urdu normalisation), manipulation cues and a trainable classifier; image forensics (metadata, content-credential detection, error level analysis, copy-move detection, perceptual hashing); video keyframe checks; case files and printable fact-check reports.
+
+**97. Intikhab — Resume Screening & Objective Candidate Ranking** ★★★ (Pakistan)
+Build: PDF/DOCX resume parsing, skill taxonomy, BM25 and weighted rubric scoring with explanations, blind screening, adverse-impact (four-fifths) checks, pipeline, structured interview scorecards with inter-rater agreement.
+
+**98. Sanad — Tamper-Proof Digital Certificate Verification** ★★★ (Pakistan)
+Build: Signed certificates batched into Merkle trees anchored on a simulated proof-of-authority ledger of institutions, QR verification, selective disclosure of fields, revocation registry, holder wallet and audit log.
+
+**99. Nami — IoT Smart Irrigation & Soil Health Monitor** ★★★ (Pakistan)
+Build: Web Serial / Web Bluetooth sensor link with calibration and a simulator, FAO-56 soil-water balance and closed-loop valve control with rain lockout, soil health card, water productivity analytics, ESP32 sketch.
+
+**100. Nabz — Early Disease Risk Prediction Dashboard (Diabetes & Cardiovascular)** ★★★ (Pakistan)
+Build: Published risk scores implemented exactly, a logistic-regression model trained on synthetic data with ROC/AUC and calibration, what-if coach, clinic cohort stratification and follow-up queue. Screening estimate, not a diagnosis.
+
+**101. Amanat — Transparent NGO Fund Tracking on a Ledger** ★★★ (Pakistan)
+Build: Double-entry accounting in a signed, hash-chained append-only ledger with multi-signature approvals, restricted-fund tracing to donors with Merkle receipts, Benford's-law and duplicate-payment audit analytics, public transparency page.
+
+**102. Nigran — Online Exam Proctoring with Anti-Cheat Analytics** ★★★ (global)
+Build: Exam builder and runtime with consent, integrity signals on a timeline (tab switches, paste bursts, face presence), collusion analytics on answer similarity, proctor review with human decisions, item analysis.
+
+**103. Dastarkhwan — Food Waste Tracking & Donation Redistribution** ★★ (Pakistan)
+Build: Waste logs and forecasting, surplus listings with a food-safety clock, fair NGO matching, vehicle routing with time windows for volunteer pickups, impact reports.
+
+**104. Maidan — Grassroots Sports Talent Analytics Hub** ★★ (Pakistan)
+Build: Athlete profiles, fitness test battery with percentile norms, sport performance stats and Elo ratings, a transparent talent index adjusted for relative age, training load (ACWR), optional pose-estimation technique analysis, tournaments.
+
+**105. Bistar — Hospital Bed & ICU Capacity Network** ★★★ (Pakistan)
+Build: City network of hospitals and ward bed grids, admit/transfer/discharge, referral routing by capability and availability, Holt–Winters occupancy forecasts, Erlang C capacity planning, surge alerts.
+
+**106. Barq — EV Charging Queue & Load-Balancing Network** ★★★ (Pakistan)
+Build: Reservations and virtual queues, station recommendation and batch assignment, smart charging under transformer limits (EDF, water-filling), discrete-event simulation comparing policies, driver and operator views.
