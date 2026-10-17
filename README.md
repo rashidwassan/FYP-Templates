@@ -83,3 +83,9 @@ Open any `projects/*/index.html` in Chrome, Edge, Firefox or Safari. For camera,
 ## Contributing / PRs
 
 Each project lands as its own pull request from a `claude/project-NN-slug` branch into `main`, containing only `projects/NN-slug/`.
+
+## License
+
+Released under the [MIT License](LICENSE). You may use, copy, modify and share the templates, including in your own FYP, as long as the copyright notice and license text stay with the code. Your university's academic-integrity rules still apply: agree with your supervisor how you use a template, credit it in your report, and make sure the work you submit as your own is your own.
+
+Seed data, prices, tariffs, contacts and rules inside the apps are illustrative. Verify them on official sources before relying on them. Fonts and libraries that the apps load from Google Fonts and public CDNs keep their own licenses.
