@@ -899,7 +899,8 @@ html[lang="ur"] .reasons li { line-height: 2; }
 /* ---------- print (A4 reports) ---------- */
 @media print {
   @page { size: A4; margin: 14mm; }
-  :root, [data-theme="dark"] { --bg: #fff; --surface: #fff; --surface-2: #f6f2ea; --surface-3: #ece5d6; --line: #ddd2bf; --line-2: #c9b99c; --ink: #1b1813; --ink-2: #4b443a; --ink-3: #776e61; --sun: #d98a06; --sun-soft: #fbe8c2; --batt: #0c6c67; --grid: #4d5c77; --imp: #d9573a; --exp: #3a8a5b; --load: #7a54a6; color-scheme: light; }
+  :root, [data-theme="dark"] { --bg: #fff; --surface: #fff; --surface-2: #f6f2ea; --surface-3: #ece5d6; --line: #ddd2bf; --line-2: #c9b99c; --ink: #1b1813; --ink-2: #4b443a; --ink-3: #776e61; --sun: #d98a06; --sun-soft: #fbe8c2; --batt: #0c6c67; --grid: #4d5c77; --imp: #d9573a; --exp: #3a8a5b; --load: #7a54a6;
+    --exp-soft: #d9ede0; --imp-soft: #f9ddd3; --batt-soft: #d4ebe7; --grid-soft: #e0e5ee; --load-soft: #ece3f6; --warn-soft: #fbefd4; --sun-ink: #7a4b00; color-scheme: light; }
   body { background: #fff !important; }
   body > *:not(#printArea) { display: none !important; }
   #printArea { display: block !important; }
@@ -913,7 +914,7 @@ html[lang="ur"] .reasons li { line-height: 2; }
   .r-tbl, .doc .tbl { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 8px 0; }
   .r-tbl th, .r-tbl td, .doc .tbl th, .doc .tbl td { border: 1px solid #ddd2bf; padding: 4px 6px; text-align: start; }
   .r-chart svg { display: block; margin: 6px 0; break-inside: avoid; }
-  .r-list { padding-inline-start: 18px; }
+  .r-list { padding-inline-start: 28px; }
   .r-list li { margin: 3px 0; }
   .r-foot { margin-top: 18px; padding-top: 6px; border-top: 1px solid #ddd2bf; font-size: 8.5pt; color: #776e61; }
   .doc .ic { display: none; }
@@ -4426,7 +4427,7 @@ const HOME = { k: null, playing: 0, res: null };
 
 const FLOW_LAYOUTS = {
   wide: { w: 760, h: 340, sun: [112, 96], home: [648, 96], batt: [112, 262], grid: [648, 262], hub: [380, 182], gen: [380, 312], arc: [380, 30, 120, 26] },
-  tall: { w: 360, h: 470, sun: [72, 132], home: [288, 132], batt: [72, 378], grid: [288, 378], hub: [180, 256], gen: [180, 440], arc: [180, 18, 92, 26] },
+  tall: { w: 360, h: 470, sun: [72, 132], home: [288, 132], batt: [72, 378], grid: [288, 378], hub: [180, 256], gen: [180, 440], arc: [180, 18, 66, 24] },
 };
 
 function renderHome() {
@@ -6070,9 +6071,15 @@ function drawHealthCharts(h, days, served) {
   mountChart($('#bhHist'), w => xyChart(w, { h: 200, n: 10, unit: t('bh_cyclesUnit'), xLabels: i => (w < 420 && i % 2 ? null : `${i * 10}`),
     series: [{ type: 'bars', vals: h.hist, cls: 'hist-bar', width: 0.78 }],
     tips: i => `<b>${t('bh_dodRange', { a: i * 10, b: i * 10 + 10 })}</b>${tipRow('var(--sun)', t('bh_count'), nf(h.hist[i], 1))}` }));
-  mountChart($('#bhFade'), w => xyChart(w, { h: 210, n: h.proj.length, yMin: 50, yMax: 100, ticks: 5, unit: '%', xLabels: i => (i % (w < 500 ? 3 : 1) === 0 ? String(i) : null),
-    cursor: Math.min(h.proj.length - 1, served), series: [{ type: 'dash', value: 80, cls: 'eol-line', label: t('bh_lEol') }, { type: 'line', vals: h.proj.map(p => p.soh), cls: 'soc', draw: true }],
-    tips: i => `<b>${t('tr_year', { y: i })}</b>${tipRow('var(--batt)', t('bh_lSoh'), nf(h.proj[i].soh, 1) + '%')}` }));
+  mountChart($('#bhFade'), w => xyChart(w, { ...fadeSpec(h), h: 210, xLabels: i => (i % (w < 500 ? 3 : 1) === 0 ? String(i) : null), cursor: Math.min(h.proj.length - 1, served),
+    tips: i => tipHtml(t('tr_year', { y: i }), [['var(--batt)', t('bh_lSoh'), nf(h.proj[i].soh, 1) + '%']]) }));
+}
+
+/** Capacity projection chart: the axis floor drops below 50 % in 10 % steps when the projection does. */
+function fadeSpec(h) {
+  const yMin = Math.min(50, Math.floor(Math.min(...h.proj.map(p => p.soh)) / 10) * 10);
+  return { n: h.proj.length, yMin, yMax: 100, ticks: (100 - yMin) / 10, unit: '%',
+    series: [{ type: 'dash', value: 80, cls: 'eol-line', label: t('bh_lEol') }, { type: 'line', vals: h.proj.map(p => p.soh), cls: 'soc', draw: true }] };
 }
 
 // ---------- What-if sizing: re-run the optimizer over the logged days with a changed system ----------
@@ -6976,8 +6983,7 @@ function printHealthReport(h, days) {
       <tr><td>${t('bh_kThru')}</td><td>${nf(h.thru, 1)}</td></tr><tr><td>${t('bh_kEol')}</td><td>${h.eolYears ?? '15+'}</td></tr>
       <tr><td>${t('bh_cycleLoss')}</td><td>${nf(h.cycleLoss, 2)}%</td></tr><tr><td>${t('bh_calLoss')}</td><td>${nf(h.calLoss, 2)}%</td></tr></tbody></table>
     <div class="r-chart">${svgOf(xyChart(PRINT_W, { h: 200, n: 10, unit: t('bh_cyclesUnit'), xLabels: i => `${i * 10}`, series: [{ type: 'bars', vals: h.hist, cls: 'hist-bar' }] }))}
-      ${svgOf(xyChart(PRINT_W, { h: 200, n: h.proj.length, yMin: 50, yMax: 100, ticks: 5, unit: '%', xLabels: i => String(i),
-        series: [{ type: 'dash', value: 80, cls: 'eol-line' }, { type: 'line', vals: h.proj.map(p => p.soh), cls: 'soc' }] }))}</div>
+      ${svgOf(xyChart(PRINT_W, { ...fadeSpec(h), h: 200, xLabels: i => String(i) }))}</div>
     <h2>${t('bh_advice')}</h2><ul class="r-list">${healthAdvice(h, S.system).map(a => `<li>${esc(t(a.key, a.vars))}</li>`).join('')}</ul>
     <p>${t('bh_approx')}</p>${reportFoot()}</div>`;
   printDoc(html);

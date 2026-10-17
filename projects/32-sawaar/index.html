@@ -1380,6 +1380,22 @@ html[lang="ur"] .tile .s, html[lang="ur"] .li small { line-height: 1.9; }
 /* ---------- print ---------- */
 @media print {
   @page { size: A4; margin: 12mm; }
+  :root, html[data-theme] {
+    --bg: #fff;
+    --bg-2: #f4f4f4;
+    --panel: #fff;
+    --panel-2: #f2f2f2;
+    --panel-3: #e4e4e4;
+    --line: #cfcfcf;
+    --line-2: #b5b5b5;
+    --ink: #111;
+    --ink-2: #333;
+    --muted: #555;
+    --cyan: #08788a;
+    --green: #13804a;
+    --red: #cf2a1f;
+    --yellow-text: #7a5a00;
+  }
   body { background: #fff !important; color: #111; }
   .app, #hud, #alarm, #toasts, #modal, #scrim, #tour, .palette, .skip { display: none !important; }
   #printArea { display: block !important; }
@@ -1391,9 +1407,13 @@ html[lang="ur"] .tile .s, html[lang="ur"] .li small { line-height: 1.9; }
   .pdoc .chip { border: 1px solid #999; background: #fff !important; color: #111 !important; }
   .pdoc svg text { fill: #333 !important; }
   .pdoc .cm-c { border: 1px solid #999; }
+  .pdoc .cm-c.good { background: color-mix(in srgb, #13804a calc(var(--a) * 55%), #fff); }
+  .pdoc .cm-c.bad { background: color-mix(in srgb, #cf2a1f calc(var(--a) * 55%), #fff); }
   .pcols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: center; }
   .print-cards { display: flex; gap: 8mm; flex-wrap: wrap; margin: 6mm 0; }
-  .print-cards .wcard { width: 85.6mm; height: 54mm; aspect-ratio: auto; box-shadow: none; border: 1px dashed #999; border-top-width: 10px; }
+  .print-cards .wcard { width: 85.6mm; height: 54mm; aspect-ratio: auto; box-shadow: none; border: 1px dashed #999; }
+  .print-cards .wcard.front { border-top: 10px solid #ffcc1a; }
+  .print-cards .wcard.back { border-top: 10px solid #0b0d10; }
   .print-sticker .sticker { width: 90mm; margin: 0; }
   .heat .hm-bg { fill: #f2f2f2; }
   .bar { border: 1px solid #ccc; }
@@ -2739,7 +2759,7 @@ Object.assign(STR, {
   ib_clearQ: ['Delete all notifications?', 'تمام اطلاعات حذف کریں؟'],
   ib_empty: ['No notifications', 'کوئی اطلاع نہیں'],
   ib_logEmpty: ['Nothing logged yet', 'ابھی کچھ درج نہیں'],
-  n_servicet: ['{item} is due', '{item} کا وقت ہو گیا'],
+  n_servicet: ['Service due: {item}', 'سروس کا وقت: {item}'],
   n_serviceb: ['Log it in Maintenance when done', 'ہو جائے تو دیکھ بھال میں درج کریں'],
   n_weeklyt: ['Weekly summary: {km} km, score {score}', 'ہفتہ وار خلاصہ: {km} کلومیٹر، اسکور {score}'],
   n_weeklyb: ['See trends and a tip in Ride coach', 'رائیڈ کوچ میں رجحان اور مشورہ دیکھیں'],
@@ -3519,7 +3539,7 @@ function demoSeed() {
   s.fleetAlerts = seedFleetAlerts();
   s.recordings = seedRecordings();
   s.crashLog = seedCrashLog(s.trips);
-  s.inbox = seedInbox();
+  s.inbox = seedInbox(s.trips);
   s.log = seedLog();
   s.meta = { version: 1, seededAt: now(), lastBackup: null };
   return s;
@@ -3534,11 +3554,14 @@ function seedCrashLog(trips) {
   ];
 }
 
-function seedInbox() {
+function seedInbox(trips) {
   const n = (key, vars, icon, route, hoursAgo, read = false, level = '') => ({ id: uid('n'), ts: now() - hoursAgo * HOUR, key, vars, icon, route, level, read });
+  const week = trips.filter(x => x.start > now() - 7 * DAY);
+  const km = Math.round(sum(week.map(x => x.km)));
+  const score = week.length ? Math.round(mean(week.map(x => x.score))) : 0;
   return [
-    n('n_service', { item: 'brakes' }, 'wrench', 'garage', 3, false, 'r'),
-    n('n_weekly', { km: 74, score: 84 }, 'trending-up', 'coach', 20),
+    n('n_service', { item: 'brakes' }, 'wrench', 'garage/service', 3, false, 'r'),
+    n('n_weekly', { km, score }, 'trending-up', 'coach', 20),
     n('n_badge', { badge: 'helmet10' }, 'award', 'coach', 30),
     n('n_hazard', { n: 2 }, 'pothole', 'hazards', 50, true),
     n('n_falseAlarm', { s: 6 }, 'shield-check', 'engine', 9 * 24, true),
@@ -8011,28 +8034,42 @@ function hotspotGrid(cityId, kind) {
   return { grid, cols, rowsN, b };
 }
 
-function heatCardHtml() {
-  const { grid, cols, rowsN, b } = hotspotGrid(FLEET.city, FLEET.kind);
+/** The heatmap itself (SVG, top hotspots, note) for one city: used on screen and in the printed report. */
+function heatSvgHtml(cityId, kind) {
+  const { grid, cols, rowsN, b } = hotspotGrid(cityId, kind);
   const max = Math.max(1, ...grid.flat());
   const cw = 640 / cols;
   const ch = 400 / rowsN;
   const color = f => (f < 0.5 ? `color-mix(in srgb, var(--cyan) ${Math.round(30 + f * 120)}%, transparent)` : `color-mix(in srgb, var(--red) ${Math.round((f - 0.5) * 200)}%, var(--yellow))`);
   const cells = grid.flatMap((row, r) => row.map((n, c) => (n ? `<rect x="${(c * cw).toFixed(1)}" y="${(r * ch).toFixed(1)}" width="${(cw - 2).toFixed(1)}" height="${(ch - 2).toFixed(1)}" rx="4" style="fill:${color(n / max)}">
       <title>${n}</title></rect>` : ''))).join('');
-  const labels = CITIES[FLEET.city].places.map(p => `<text class="hm-l" x="${(((p.lng - b.w) / (b.e - b.w)) * 640).toFixed(1)}" y="${(((b.n - p.lat) / (b.n - b.s)) * 400).toFixed(1)}">${esc(L(p.n))}</text>`).join('');
-  const top = topHotspots(grid, cols, rowsN, b);
+  const labels = CITIES[cityId].places.map(p => `<text class="hm-l" x="${(((p.lng - b.w) / (b.e - b.w)) * 640).toFixed(1)}" y="${(((b.n - p.lat) / (b.n - b.s)) * 400).toFixed(1)}">${esc(L(p.n))}</text>`).join('');
+  const top = topHotspots(cityId, grid, cols, rowsN, b);
+  return `<svg class="heat" viewBox="0 0 640 400" role="img" aria-label="${t('fl_hotspots')} ${esc(L(CITIES[cityId].name))}">
+      <rect class="hm-bg" width="640" height="400" rx="10"/>${cells}${labels}</svg>
+    <ol class="small mt">${top.map(h => `<li>${t('fl_hotItem', { n: h.n, p: L(h.place.n) })}</li>`).join('')}</ol><p class="tiny muted">${t('fl_heatNote')}</p>`;
+}
+
+function heatCardHtml() {
   return `<div class="between"><h2>${ic('flame')} ${t('fl_hotspots')}</h2><div class="row">
       <div class="seg" id="flCity">${['lhr', 'khi'].map(c => `<button type="button" data-c="${c}" class="${FLEET.city === c ? 'on' : ''}">${L(CITIES[c].name)}</button>`).join('')}</div>
     <select class="inp sel-sm" id="flKind" aria-label="${t('fl_kind')}">
         <option value="all">${t('all')}</option>${COACH_KINDS.map(k => `<option value="${k}" ${FLEET.kind === k ? 'selected' : ''}>${t('ev_' + k)}</option>`).join('')}</select>
         </div></div>
-    <svg class="heat" viewBox="0 0 640 400" role="img" aria-label="${t('fl_hotspots')}"><rect class="hm-bg" width="640" height="400" rx="10"/>${cells}${labels}</svg>
-    <ol class="small mt">${top.map(h => `<li>${t('fl_hotItem', { n: h.n, p: L(h.place.n) })}</li>`).join('')}</ol><p class="tiny muted">${t('fl_heatNote')}</p>`;
+    ${heatSvgHtml(FLEET.city, FLEET.kind)}`;
 }
 
-function topHotspots(grid, cols, rowsN, b) {
-  const cells = grid.flatMap((row, r) => row.map((n, c) => ({ n, lat: b.n - ((r + 0.5) / rowsN) * (b.n - b.s), lng: b.w + ((c + 0.5) / cols) * (b.e - b.w) })));
-  return cells.filter(c => c.n).sort((a, c) => c.n - a.n).slice(0, 3).map(c => ({ n: c.n, place: CITIES[FLEET.city].places.reduce((best, p) => (haversine(p, c) < haversine(best, c) ? p : best)) }));
+/** Cells are credited to their nearest neighbourhood, then the three busiest neighbourhoods are listed. */
+function topHotspots(cityId, grid, cols, rowsN, b) {
+  const places = CITIES[cityId].places;
+  const byPlace = new Map();
+  grid.forEach((row, r) => row.forEach((n, c) => {
+    if (!n) return;
+    const at = { lat: b.n - ((r + 0.5) / rowsN) * (b.n - b.s), lng: b.w + ((c + 0.5) / cols) * (b.e - b.w) };
+    const place = places.reduce((best, p) => (haversine(p, at) < haversine(best, at) ? p : best));
+    byPlace.set(place, (byPlace.get(place) || 0) + n);
+  }));
+  return [...byPlace].sort((x, y) => y[1] - x[1]).slice(0, 3).map(([place, n]) => ({ place, n }));
 }
 
 function fleetAlertsHtml() {
@@ -8116,7 +8153,7 @@ function printFleetReport() {
   printDoc(`<div class="pdoc"><h1>${t('appName')} — ${t('fl_reportTitle', { m: month })}</h1><p class="small">${t('fl_demoNote')}</p>
     <table class="tbl"><thead><tr><th>${t('fl_rider')}</th><th>km</th><th>${t('k_score')}</th><th>${t('fl_harsh')}</th><th>${t('fl_helmetShort')}</th>
         <th>${t('fl_incidents')}</th></tr></thead><tbody>${body}</tbody></table>
-    <h2>${t('fl_hotspots')}</h2>${heatCardHtml()}<h2>${t('fl_alerts')}</h2><ul>${alerts}</ul>
+    ${['lhr', 'khi'].map(c => `<h2>${t('fl_hotspots')} — ${esc(L(CITIES[c].name))}</h2>${heatSvgHtml(c, 'all')}`).join('')}<h2>${t('fl_alerts')}</h2><ul>${alerts}</ul>
     <h2>${t('fl_recs')}</h2><ul>${['fl_rec1', 'fl_rec2', 'fl_rec3'].map(k => `<li>${t(k)}</li>`).join('')}</ul></div>`);
   logEvent('lg_print', { what: t('fl_report') }, 'printer');
 }
@@ -8676,7 +8713,7 @@ function paletteIndex() {
   add('sg_actions', 'fuel', t('gr_addFill'), '', () => go('garage/fuel'));
   add('sg_actions', 'help', t('qz_title'), '', () => go('learn/quiz'));
   S.trips.slice(0, 40).forEach(tr => add('sg_trips', 'route', tripTitle(tr), `${fmtDate(tr.start)} · ${fmtN(tr.km, 1)} km · ${tr.score}`, () => go('trips/' + tr.id)));
-  S.hazards.forEach(h => add('sg_hazards', hazardType(h.type).icon, t('hz_' + h.type), L(h.note) || L(CITIES[h.city].name), () => {
+  S.hazards.forEach(h => add('sg_hazards', hazardType(h.type).icon, t('hz_' + h.type), [L(h.note), L(CITIES[h.city].name), ago(h.ts)].filter(Boolean).join(' · '), () => {
     HZ.city = h.city;
     HZ.sel = h.id;
     go('hazards');
