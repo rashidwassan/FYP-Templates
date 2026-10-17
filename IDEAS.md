@@ -345,3 +345,25 @@ Build: Searchable database with eligibility quiz, per-application pipeline (elig
 **90. FraudShield — Scam & Fraud Detection for Digital Payments** ★★★ (Pakistan)
 Problem: 92 % of retail payments are digital (SBP, March 2026); reported cybercrime rose 35 % in 2025; one estimate puts annual digital-fraud losses near $9.3 billion.
 Build (pick one or combine): scam SMS/WhatsApp detector for Urdu, Roman Urdu and English (rule features + small TF.js text classifier, explainable red flags, report button); fake job-ad checker (red-flag scoring, registered-company lookup checklist); anomaly detection on synthetic transaction data (isolation-forest style scoring, dashboard of flagged transactions, analyst review queue).
+
+## Part E — Tech and innovation (91–95)
+
+**91. Dhoop — Solar Battery Optimizer** ★★★ (Pakistan)
+Problem: Since 2026, new solar users are on net billing at about Rs 11 per exported unit instead of about Rs 26, so households now store power in batteries instead of exporting it (about 6 GW of batteries imported since January 2024), with no tool to decide when to charge, export or run heavy loads.
+Build: Solar position and clear-sky model for tomorrow's output, appliance loads with shiftable windows, a day-ahead dynamic-programming optimiser over battery state of charge, net metering vs net billing vs proposed evening-rate comparison, load-shedding reserve, inverter log analytics, rainflow battery-wear estimate, experimental Web Bluetooth battery link.
+
+**92. Zer-e-Zameen — Village Groundwater Twin** ★★★ (Pakistan)
+Problem: Punjab's farm tubewells grew from about 334,000 (1994) to over 1.2 million (2024), and cheap solar pumping is linked to falling water tables; villages have no way to see the effect of their choices.
+Build: Finite-difference aquifer model of a village (wells, canals, recharge) with mass-balance checks, readings logger and calibration, Hargreaves ET0 and crop water demand, 10-year scenario lab (crop switch, quotas, rotation, recharge ponds, drought), water budget and fair quotas, village meeting mode.
+
+**93. Rabta — Messaging When the Network Is Down** ★★★ (Pakistan; disaster)
+Problem: Floods and glacial lake outbursts cut roads and mobile towers for days; families and volunteers lose contact exactly when they need it most.
+Build: Serverless WebRTC chat between phones on one Wi-Fi or hotspot, paired by QR codes; store-and-forward mesh routing with a simulator comparing strategies; CRDT boards for missing persons, needs and resources; signed and optionally encrypted messages; data-over-sound fallback; experimental LoRa radio bridge over Web Serial.
+
+**94. Marammat — Used Phone Health Certificate** ★★ (Pakistan)
+Problem: Rising prices are pushing people to repair and buy used phones, but buyers have no trusted way to check a device, and e-waste is mostly handled informally.
+Build: In-browser diagnostics on the phone being sold (screen, touch, speakers, mic loopback, cameras, sensors, battery state, benchmarks, IMEI checksum), grading and price estimate, a digitally signed certificate with QR verification, repair estimator and repair-shop job cards, device passport, buyer safety and data-wipe guides.
+
+**95. Sawaar — Crash Detection for Motorcyclists** ★★★ (Pakistan)
+Problem: Punjab recorded 43,160 road crashes and 434 deaths in May 2026 alone, and motorcycles are involved in roughly 70–80 % of crashes.
+Build: Ride HUD with motion sensors and GPS, a crash-detection state machine (impact, tumble, stillness) with countdown and prepared alerts, a signal lab with labelled synthetic traces (speed breakers, potholes, drops, crashes) and precision/recall/ROC evaluation, ride coach, medical ID card with QR, maintenance and fuel log, fleet dashboard.
